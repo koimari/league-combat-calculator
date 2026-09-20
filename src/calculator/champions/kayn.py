@@ -1,4 +1,4 @@
-"""Kayn — full-entry reviewed CP10.3 module.
+"""Kayn: full-entry reviewed module.
 
 Option key consumed by the shared parser: "form".
 """

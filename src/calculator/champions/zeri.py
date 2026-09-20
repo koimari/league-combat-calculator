@@ -1,17 +1,12 @@
-"""Zeri — CP10.10 full-entry-reviewed packet module.
+"""Zeri: full-entry-reviewed packet module.
 
-E5-2 fix — Spark Surge (E): the reviewed packet emitted the Lightning
-Rounds per-round bonus ("Burst Fire Bonus Magic Damage" 22-30 + 20% AP)
-as ONE flat magic hit and left the Lightning Rounds mechanic out of
-scope.  The wiki prose (data/champions.json E): "Afterwards, she gains
-Lightning Rounds for 5 seconds, empowering Burst Fire to deal bonus
-magic damage to the first enemy hit, increased by 0% : 100% (+ 0% :
-30%) (based on critical strike chance)".  Burst Fire fires 7 rounds
-(the E2-sourced Total/per-round ratio on Q), so the E prices 7 rounds
-of the per-round bonus, scaled linearly by crit chance between the two
-sourced endpoints (x1 at 0% crit, x2.3 at 100% crit).  The dash itself
-deals no damage.  Secondary targets ("Burst Fire Secondary Target
-Damage" 80-100%) are outside this single-target model.
+E (Spark Surge) grants Lightning Rounds for 5 seconds, empowering Burst Fire to
+deal bonus magic damage to the first enemy hit, increased by up to 100% on
+critical strike chance.  Burst Fire fires seven rounds, the cached Total over
+per-round ratio on Q, so E prices seven rounds of the per-round bonus, scaled
+linearly by crit chance between the two sourced endpoints, times one at 0% crit
+and 2.3 at 100%.  The dash itself deals no damage, and the secondary-target
+rounds are outside this single-target model.
 """
 
 from collections.abc import Mapping

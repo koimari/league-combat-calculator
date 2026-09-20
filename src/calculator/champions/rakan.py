@@ -1,21 +1,16 @@
-"""Rakan — revision-backed offensive slot map.
+"""Rakan: revision-backed offensive slot map.
 
-Gleaming Quill and Grand Entrance each deal one magic-damage instance. The
-Quickness damages each enemy at most once per cast, so every selected enemy
-receives one hit. Fey Feathers and Battle Dance do not damage enemies.
-
-E8d ally-support: Q (Gleaming Quill) heals Rakan and nearby allies (cached
-Heal 40-230 by level + 55% AP; scope self_and_all_teammates) — the event is
-authored by the engine's ally-support scanner from cached leveling at the Q
-cast time.  E (Battle Dance) is a zero-damage cast so the scanner prices its
-sourced ally shield (150.0 at rank 5, 0 AP); the free recast within 5
+Q (Gleaming Quill) and W (Grand Entrance) each deal one magic-damage instance.
+The Quickness damages each enemy at most once per cast, so every selected enemy
+receives one hit.
+Q also heals Rakan and nearby allies, the event authored by the ally-support
+scanner from cached leveling at the Q cast.  E (Battle Dance) is a zero-damage
+cast, so the scanner prices its sourced ally shield; the free recast within 5
 seconds re-applies it and is not modeled.
-
-P (Fey Feathers) is ``modeled`` through the ``self_shield_events`` channel,
-not through the scanner: the periodic self-shield (30 : 247.94 by level +
-95% AP — 247.94 at level 18) rides the Q cast, which is the only channel a
-shield-only passive has (a passive is never cast, so no packet can hang on
-it).  The out-of-combat refresh cadence stays state.
+P (Fey Feathers) is modeled through the ``self_shield_events`` channel rather
+than the scanner: the periodic self-shield rides the Q cast, the only channel a
+shield-only passive has, because a passive is never cast and no packet can hang
+on it.  The out-of-combat refresh cadence stays state.
 """
 
 from typing import Any

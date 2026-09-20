@@ -1,6 +1,7 @@
-"""LeBlanc — full-entry reviewed CP10.3 module.
+"""LeBlanc: full-entry reviewed module.
 
-Option keys consumed by the shared parser: "q_consume", "e_chain_complete", "r_mimic".
+Option keys consumed by the shared parser: "q_consume", "e_chain_complete",
+"r_mimic".
 """
 
 import math

@@ -1,21 +1,16 @@
-"""Xayah — reviewed packet slots plus the E3 Clean Cuts stack mechanic.
+"""Xayah: reviewed packet slots plus the Clean Cuts stack mechanic.
 
-E3 additions over the CP10.9 packet module:
-- P (Clean Cuts) becomes an explicit stack state: each ability cast
-  generates 3 stacks (up to 5) and each basic attack consumes one stack
-  to shoot a Feather. The feather deals the triggering attack's damage
-  to the PRIMARY target — no single-target damage delta — and 35% /
-  45% / 55% (based on level) AD to OTHER enemies, priced through the
-  ``clean_cuts_secondary_targets`` option. What the stacks materially
-  change is the planted feather count that detonates through E.
-- E (Bladecaller) prices the detonation: per-feather damage
-  ("Physical Damage Per Feather", flat + 40% bonus AD) times the
-  recalled feather count. The count is a user option
-  (``bladecaller_feathers``, default 7 = the expected contribution: 5
-  Clean Cuts-empowered autos + 2 Q daggers; the sourced maximum of 12
-  adds R's 5 feathers). The fight model cannot simulate how many
-  empowered autos land before E, so the count is priced explicitly —
-  the module convention for auto-rate stack systems.
+P (Clean Cuts) is explicit stack state: each ability cast generates three stacks
+to a cap of five, and each basic attack consumes one to shoot a Feather.  The
+feather deals the triggering attack's damage to the PRIMARY target, so there is
+no single-target delta, and a per-level share of AD to OTHER enemies, priced
+through ``clean_cuts_secondary_targets``.  What the stacks materially change is
+the planted feather count E detonates.
+E (Bladecaller) prices that detonation: the cached per-feather row times the
+recalled feather count.  The fight model cannot simulate how many empowered
+autos land before E, so the count is the explicit ``bladecaller_feathers``,
+default 7 for five Clean Cuts autos and two Q daggers, against a sourced maximum
+of 12 that includes R's five feathers.
 """
 
 import re

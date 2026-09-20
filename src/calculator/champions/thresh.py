@@ -1,19 +1,12 @@
-"""Thresh — reviewed packet slots plus the E3 soul-stack passive.
+"""Thresh: reviewed packet slots plus the soul-stack passive.
 
-E3 addition over the CP10.8 packet module:
-- P (Damnation) becomes a BUFF-phase stack slot: each Soul grants 1
-  ability power and 1 bonus armor. The stack count is a user option
-  (``souls``, default 40 — the expected mid-game state); the model
-  cannot simulate lantern-passive soul farming, so the pre-stacked
-  count is priced (module convention for permanent scaling). The AP
-  feeds Q/W/E/R scaling because P runs first in the BUFF phase; the
-  armor is published as a stat buff for the fight's defensive side.
-
-Coverage: W (Dark Passage) deals no enemy damage — the pinned reviewed
-packet declares it ``kind: "no_damage"`` and this module does not
-reassign the slot, so W emits that sourced zero row. The ally-support
-Dark Passage shield priced through the ally scanner (ASSUMPTIONS below)
-is a separate, already-modeled mechanism.
+P (Damnation) is a BUFF-phase stack slot: each Soul grants 1 ability power and 1
+bonus armor.  The model cannot simulate lantern-passive soul farming, so the
+count is the ``souls`` option, default 40 for the expected mid-game state.  The
+ability power feeds Q, W, E and R scaling because P runs first in the BUFF
+phase, and the armor is published as a stat buff for the fight's defensive side.
+W (Dark Passage) deals no enemy damage and emits a sourced zero row.  The
+ally-support Dark Passage shield the scanner prices is a separate mechanism.
 """
 
 from typing import Any

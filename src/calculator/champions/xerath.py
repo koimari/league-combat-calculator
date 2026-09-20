@@ -1,19 +1,14 @@
-"""Xerath — CP10.10 full-entry-reviewed packet module, plus the E9-3 R fix.
+"""Xerath: full-entry-reviewed packet module.
 
-E9-3: Rite of the Arcane (R) is a multi-recast channel.  The reviewed
-packet priced ONE Arcane Barrage ("Magic Damage" per-shot row); the
-cached JSON carries "Number of Recasts" (4/5/6) and "Total Magic
-Damage" (680/1100/1620 + 180/225/270% AP == per-shot x recasts).  The
-module now prices all recasts at the sourced 0.627-second cadence, and
-the E3-stacks worklist entry (Arcane Perfection: "Maximum Stacks" 3/4/5
-and "Increased Damage per Stack" 20/25/30 + 5% AP) is modeled through
-the ``r_arcane_perfection`` option — each barrage beyond the first
-carries the accumulated per-stack bonus (capped at the sourced Maximum
-Stacks), 0 by default so the unoptioned price is the sourced Total row.
-
-Coverage: P (Mana Surge) restores mana on his basic attacks. A resource
-refund is an axis the engine does not have, so the slot is out of
-scope.
+R (Rite of the Arcane) is a multi-recast channel, so it prices every recast at
+the sourced 0.627-second cadence: the cached "Number of Recasts" row times the
+per-shot row equals the cached "Total Magic Damage".
+Arcane Perfection rides the same slot through ``r_arcane_perfection``: each
+barrage past the first carries the accumulated per-stack bonus, capped at the
+cached Maximum Stacks, and the option is 0 by default so the unoptioned price is
+the sourced Total row.
+P (Mana Surge) restores mana on his basic attacks.  A resource refund is an axis
+this engine does not have, so the slot is out of scope.
 """
 
 from typing import Any

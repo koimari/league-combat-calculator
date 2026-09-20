@@ -1,18 +1,14 @@
-"""Milio — CP10.4 full-entry-reviewed packet module.
+"""Milio: full-entry-reviewed packet module.
 
-E2 DoT fix: W (Cozy Campfire) heals 25 sourced ticks (Heal per Tick x25 ==
-Total Heal) via this module's ``derive_self_healing``.
-
-E8d ally-support: W (Cozy Campfire, Total Heal 70-150 + 15% AP, scope
-one_teammate) and R (Breath of Life, Heal 150-350 + 50% AP, scope
-self_and_all_teammates) heal allies, and E (Warm Hugs, Shield Strength
-45-165 + 45% AP, scope one_teammate) shields one.  W's ally half is the
-sourced Total Heal delivered as one lump packet at the cast — the per-tick
-cadence is priced only for Milio's own self-heal stream below, and the
-scanner fails closed on "Heal per Tick" packets without an authored
-cadence.  R's heal is authored here and fanned out to allies by the
-participant timeline (Milio is in ``support_effects._MODULE_AUTHORED_HEAL_SLOTS``
-so the scanner defers).
+W (Cozy Campfire) and R (Breath of Life) heal allies and E (Warm Hugs) shields
+one.  W's ally half is the sourced Total Heal delivered as one lump packet at
+the cast, because the per-tick cadence is priced only for Milio's own self-heal
+stream below and the scanner fails closed on a "Heal per Tick" packet with no
+authored cadence.  R's heal is authored here and fanned out to allies by the
+participant timeline, Milio sitting in
+``support_effects._MODULE_AUTHORED_HEAL_SLOTS`` so the scanner defers.
+Milio's own W self-heal is 25 sourced ticks, the per-tick row times 25 equalling
+the cached Total Heal, through ``derive_self_healing``.
 """
 
 import re

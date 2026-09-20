@@ -1,19 +1,14 @@
-"""Katarina — reviewed packet slots plus the E3 dagger-spin passive.
+"""Katarina: reviewed packet slots plus the dagger-spin passive.
 
-Option keys consumed by this module's parsers: "p_daggers" (spin
-count, read by the P proc resolver below) and "r_daggers" (Death
-Lotus dagger count, consumed by this module's R parser).
-
-E3 fix over the CP10.3 packet module:
-- P (Voracity / Sinister Steel) already procs per dagger retrieval, but
-  the shared ``extract_named("Bonus Magic Damage")`` walk resolves the
-  AP modifier's garbled unit ("% / 80% / 90% / 100% (based on level")
-  to ZERO — the spin silently lost its AP ratio. This module prices the
-  dagger spin exactly: level-scaled flat (68 : 240) + 60% bonus AD +
-  the level-band AP ratio (70% / 80% / 90% / 100% at levels 1-5 /
-  6-10 / 11-15 / 16+). The retrieval count stays the ``p_daggers``
-  option (default 1 — one dagger pickup, e.g. W's or Q's landing
-  dagger; the model cannot simulate dagger pickups mid-fight).
+Option keys consumed by this module's parsers: ``p_daggers``, the spin count
+read by the P proc resolver, and ``r_daggers``, the Death Lotus dagger count.
+P (Voracity) procs per dagger retrieval, and the shared
+``extract_named("Bonus Magic Damage")`` walk resolves its AP modifier's garbled
+unit to ZERO, silently losing the ratio, so the module prices the dagger spin
+itself: a level-scaled flat plus 60% bonus AD plus the level-band AP ratio, 70%
+through 100% over levels 1 to 5, 6 to 10, 11 to 15 and 16 up.  The retrieval
+count stays ``p_daggers``, default 1, because the model cannot simulate dagger
+pickups mid-fight.
 """
 
 from typing import Any

@@ -1,6 +1,7 @@
-"""Lillia — full-entry reviewed CP10.3 module.
+"""Lillia: full-entry reviewed module.
 
-Option keys consumed by the shared parser: "p_ticks", "q_outer_edge", "w_epicenter", "r_wake".
+Option keys consumed by the shared parser: "p_ticks", "q_outer_edge",
+"w_epicenter", "r_wake".
 """
 
 from dataclasses import replace

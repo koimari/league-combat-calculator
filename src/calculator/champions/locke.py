@@ -1,19 +1,13 @@
-"""Locke — full-entry reviewed module, plus the P1 W grey-health heal.
+"""Locke: full-entry reviewed module.
 
 Option keys consumed by this module: "q_casts", "soul_nails", "e_dash".
-
-P1 addition over the reviewed packet:
-- W (Soul Ignition) recast heal is now authored by the E8a grey-health
-  primitive (GREY_HEALTH_RULE_CHAMPIONS + participant_timeline):
-  "stores an amount of grey health ... equal to 100% of the
-  post-mitigation damage he takes from enemy champions, up to a cap"
-  (cached W prose; cap = the "Damage taken grey health cap" leveling row
-  40/60/80/100/120 by W rank + 100% AP).  Each W cast opens a 6-second
-  storage window and the automatic recast at 6 s heals the stored pool.
-  The health-cost add and the missing-health bonus ("increased by up to
-  40 : 200 (based on level) (+ 20% AP) based on his missing health")
-  remain documented dynamic-self-state boundaries — the deterministic
-  pool is the sourced 100%-of-damage-taken term.
+W (Soul Ignition)'s recast heal is authored by the shared grey-health
+primitive: W stores grey health equal to 100% of the post-mitigation damage
+Locke takes from enemy champions, up to the cached "Damage taken grey health
+cap" row, each cast opening a 6-second storage window whose automatic recast
+heals the stored pool.  The health-cost add and the missing-health bonus stay
+documented dynamic-self-state boundaries; the deterministic pool is the sourced
+100%-of-damage-taken term.
 """
 
 from typing import Any

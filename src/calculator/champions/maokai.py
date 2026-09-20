@@ -1,19 +1,14 @@
-"""Maokai — Sapling Toss brush empowerment burn (E4 summon damage).
+"""Maokai: Sapling Toss brush empowerment burn.
 
-Why E is non-generic:
-- E (Sapling Toss) throws a Sapling that explodes on the first nearby
-  enemy (the reviewed CP10.4 packet prices this single "Magic Damage"
-  explosion).  A Sapling thrown into brush is EMPOWERED: its explosion
-  deals 66.7% damage to non-minion targets AND attaches two Saplings to
-  the target that explode every 0.75 seconds over 1.5 seconds.  The
-  empowered total is the cache's "Total Magic Damage" leveling row and
-  the burn is its "Total Attached Sapling Damage" row (2 ticks of the
-  "Magic Damage per Instance" row) — the E2 DoT tick-count convention.
-  The ``sapling_empowered`` option (default on — brush saplings are the
-  standard usage) swaps the plain explosion for the empowered
-  explosion + burn.
-- P/Q/W/R keep the reviewed CP10.4 packet pricing (P is the periodic
-  Sap Magic empowered-auto state).
+E (Sapling Toss) throws a Sapling that explodes on the first nearby enemy.  A
+Sapling thrown into brush is EMPOWERED: its explosion deals 66.7% damage to
+non-minion targets AND attaches two Saplings that explode every 0.75 seconds
+over 1.5 seconds.  The empowered total is the cache's "Total Magic Damage" row
+and the burn is its "Total Attached Sapling Damage" row, two ticks of the
+per-instance row.  ``sapling_empowered``, default on because brush saplings are
+the standard usage, swaps the plain explosion for the empowered one plus burn.
+P, Q, W and R keep their packet pricing, P being the periodic Sap Magic
+empowered-auto state.
 """
 
 from __future__ import annotations

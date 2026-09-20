@@ -1,18 +1,13 @@
-"""Sett — Pit Grit right-punch combo system.
+"""Sett: the Pit Grit right-punch combo system.
 
-Stack mechanics modeled (E3):
-- P (Pit Grit): Sett's basic attacks alternate between a Left Punch and
-  a Right Punch on-attack.  The Right Punch is the combo's empowered
-  hit: it gains 50 bonus range, attacks at 8x the Left Punch's attack
-  speed, and deals bonus physical damage equal to 5 : 100 (based on
-  level) (+ 55% bonus AD).  ``p_right_punches`` is the explicit count
-  of Right Punches in the fight window (each auto stream alternates, so
-  roughly half of the autos are Right Punches); 0 prices the state row.
-
-Q (Knuckle Down), W (Haymaker), E (Facebreaker) and R (The Show
-Stopper) keep the reviewed CP10.7 packet pricing. All numeric values
-are read from the champion JSON data; the 55% bonus AD ratio is corroborated
-by the binary RightPunchBonus coefficient.
+P (Pit Grit) alternates Sett's basic attacks between a Left Punch and a Right
+Punch on-attack.  The Right Punch is the empowered hit: 50 bonus range, eight
+times the Left Punch's attack speed, and bonus physical damage worth a per-level
+flat plus 55% bonus AD, the ratio corroborated by the binary's
+``RightPunchBonus`` coefficient.  ``p_right_punches`` is the explicit count of
+Right Punches in the fight window, roughly half the autos, and 0 prices the
+state row.
+Q, W, E and R keep their packet pricing.
 """
 
 from __future__ import annotations

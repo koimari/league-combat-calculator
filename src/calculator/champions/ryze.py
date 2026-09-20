@@ -1,11 +1,9 @@
-"""Ryze — CP10.7 full-entry-reviewed packet module.
+"""Ryze: full-entry-reviewed packet module.
 
-Coverage: P (Arcane Mastery) converts ability power into maximum mana,
-which the rest of Ryze's kit then scales off. That is a self resource
-buff with no enemy-damage formula, and the pinned reviewed packet
-(``static/reviewed-packets.json``) declares P ``kind: "no_damage"`` with
-its own sourced reason, so the slot is emitted as a sourced zero row
-rather than left unmodeled.
+P (Arcane Mastery) converts ability power into maximum mana, which the rest of
+the kit then scales off.  That is a self resource buff with no enemy-damage
+formula, so the slot is emitted as a sourced zero row rather than left
+unmodeled.
 """
 
 from .contract_vocabulary import coverage

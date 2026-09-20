@@ -1,16 +1,13 @@
-"""Leona — full-entry reviewed CP10.3 module.
+"""Leona: full-entry reviewed module.
 
-E8c addition over the reviewed module:
-- W (Eclipse) is defense, not a shield: cached leveling rows carry a
-  per-instance "Flat Damage Reduction" (8/12/16/20/24, prose-capped at
-  50% of the damage instance) plus bonus armor and bonus magic
-  resistance (20/27.5/35/42.5/50 + 20% of bonus, 3s, extended 3s when
-  the detonation hits).  The shared ledger's shield events price
-  absorbing barriers, and its stat-buff events carry no armor/MR axis,
-  so Eclipse is documented as mitigation state with the sourced
-  constants pinned here — no flat shield amount is invented.  The W
-  detonation damage keeps its reviewed packet read.
-
+W (Eclipse) is defense, not a shield: its cached leveling rows carry a
+per-instance "Flat Damage Reduction", prose-capped at half the damage instance,
+plus bonus armor and bonus magic resistance for 3 seconds, extended 3 more when
+the detonation hits.  The shared ledger's shield events price absorbing
+barriers and its stat-buff events carry no armor or magic-resistance axis, so
+Eclipse is documented as mitigation state with the sourced constants pinned
+here and no flat shield amount invented.  The W detonation damage is an
+ordinary read.
 Option key consumed by the shared parser: "p_marks".
 """
 

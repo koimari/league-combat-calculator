@@ -1,20 +1,15 @@
-"""Zoe — CP10.11 full-entry-reviewed packet module.
+"""Zoe: full-entry-reviewed packet module.
 
-E5-2 fix — Spell Thief (W): the reviewed packet collapsed the passive
-to ONE flat bolt (15-55 + 10% AP, the "Magic Damage Per Bolt" row).
-Wheeeee summons THREE bolts ("she shoots one bolt at a time at the
-nearest non-sleeping enemy"), so the damage is the wiki's "Total Magic
-Damage" row (45-165 + 30% AP == 3 x per-bolt at every rank,
-data/champions.json W).  The stolen Spell Shard actives (Heal, Barrier,
-Smite) are modeled as an explicit ``w_summoner`` option: none of them
-deals damage to enemy champions in this calculator's scope (Heal heals
-the caster, Barrier shields, Smite damages monsters), so each variant
-is a documented no-damage row instead of being collapsed into a bolt.
-
-Coverage: R (Portal Jump) blinks Zoe out and back — a reposition with a
-movement-speed lock and an attack reset, and no enemy-damage row (the
-pinned packet declares the slot ``kind: "no_damage"``), so R is
-``no_damage``.  Mobility itself stays an axis the engine does not have.
+W (Spell Thief) summons THREE bolts, one at a time at the nearest non-sleeping
+enemy, so the damage is the cached "Total Magic Damage" row, exactly three times
+the per-bolt row at every rank.
+The stolen Spell Shard actives are an explicit ``w_summoner`` option, and none
+of them damages an enemy champion in this calculator's scope: Heal heals the
+caster, Barrier shields and Smite damages monsters, so each variant is a
+documented no-damage row rather than being collapsed into a bolt.
+R (Portal Jump) blinks Zoe out and back, a reposition with a movement-speed lock
+and an attack reset and no enemy-damage row, so it is ``no_damage``.  Mobility
+itself stays an axis this engine does not have.
 """
 
 from typing import Any

@@ -1,18 +1,15 @@
-"""Trundle — CP10.8 full-entry-reviewed packet module.
+"""Trundle: full-entry-reviewed packet module.
 
-P (King's Tribute) heals "1.8% : 5.94% (based on level) of their maximum
-health" whenever a nearby enemy dies (cached P prose; the level row is
-mislabelled ``Max Health Damage``).  A duel simulates no wave and no
-takedown, so the count is the ``p_nearby_deaths`` option and the P row
-carries the sourced per-death amount for the self-heal rule to place.
-
-W (Frozen Domain) is the kit's attack-speed steroid — the compiled
-no-damage row is replaced by the shared ``stat_buff`` slot so the cached
-"Bonus Attack Speed" row reaches the auto stream.
-
-E (Pillar of Ice) is a ``no_damage`` slot: its 34-50% slow rides a
-control event with the cached duration and magnitude, while the terrain
-and the creation knockback have no engine axis.
+P (King's Tribute) heals a per-level share of a dying nearby enemy's maximum
+health; the cached level row is mislabelled "Max Health Damage".  A duel
+simulates no wave and no takedown, so the count is ``p_nearby_deaths`` and the P
+row carries the sourced per-death amount for the self-heal rule to place.
+W (Frozen Domain) is the kit's attack-speed steroid, so its compiled no-damage
+row is replaced by the shared ``stat_buff`` slot and the cached "Bonus Attack
+Speed" row reaches the auto stream.
+E (Pillar of Ice) is a ``no_damage`` slot: its slow rides a control event with
+the cached duration and magnitude, while the terrain and the creation knockback
+have no engine axis.
 """
 
 from typing import Any

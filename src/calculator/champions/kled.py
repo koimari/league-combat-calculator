@@ -1,19 +1,16 @@
-"""Kled — full-entry reviewed CP10.3 module.
+"""Kled: full-entry reviewed module.
 
 Option keys consumed by the shared parser: "q_pull", "charge_fraction".
-
-Skaarl the Cowardly Lizard (P): while mounted, damage dealt to the duo
-is suffered by Skaarl, whose 400 : 1400 (based on level) base health is
-the mounted pool (data/champions.json P "Bonus Damage" leveling row).
-The dismount/remount cycle is a revive-boundary pattern (like Aatrox's
-ghost atom) and is NOT implemented: the E8a grey-health primitive
+P (Skaarl the Cowardly Lizard): while mounted, damage dealt to the duo is
+suffered by Skaarl, whose per-level base health is the mounted pool, the cached
+P "Bonus Damage" leveling row.  The dismount and remount cycle is a
+revive-boundary pattern and is NOT implemented: the shared grey-health primitive
 authors no Skaarl heal, and the pool is documented here as a boundary.
-W (Violent Tendencies) is the 4-attack empowered burst; its fourth-hit
-bonus is modeled by the CP10.3 packet.  Q (Pocket Pistol, the dismounted
-Q) applies Grievous Wounds: the e8-interactions worklist
-(data/worklists/e8-interactions.json) lists the Pocket Pistol GW, and
-the wound rides the module's Q damage receipts at the patch-wide
-40%-for-3s constants (healing_reduction module).
+W (Violent Tendencies) is the four-attack empowered burst, its fourth-hit bonus
+modeled by the packet.
+Q (Pocket Pistol), the dismounted Q, applies Grievous Wounds: the wound rides
+the module's Q damage receipts at the patch-wide 40%-for-3s constants that
+``healing_reduction`` owns.
 """
 
 from typing import Any

@@ -1,20 +1,15 @@
-"""Yone — Gathering Storm (Q3) stack system.
+"""Yone: the Gathering Storm stack system.
 
-Stack mechanics modeled (E3):
-- Q (Mortal Steel): Gathering Storm stacks up to 2 (6-second window).
-  At 2 stacks the next Q cast consumes them to become the Q3 whirlwind.
-  The whirlwind deals the SAME sourced damage as a normal Q — the
-  empower is a 0.75-second knock-up (CC state, not damage).
-  ``q_gathering_storm`` is the explicit pre-stack state.
-- P (Way of the Hunter): the soul-mark / spirit-form store is a state
-  row.
-- E (Soul Unbound) (E9-3): Spirit Form stores a portion of the
-  post-mitigation physical and magic damage dealt to champions, then the
-  recast deals that stored amount as true damage. The fight engine applies
-  this from the authored ability and auto-attack event ledger.
-
-W (Spirit Cleave) and R (Fate Sealed) read the sourced physical and magic
-rows. All numeric values are read from the champion JSON data.
+Q (Mortal Steel) stacks Gathering Storm to two over a 6-second window, and the
+next Q consumes them for the Q3 whirlwind, which deals the SAME sourced damage:
+the empower is a 0.75-second knock-up, not a number.  ``q_gathering_storm`` is
+the explicit pre-stack state.
+P (Way of the Hunter) is a state row for the soul-mark and spirit-form store.
+E (Soul Unbound) stores a portion of the post-mitigation physical and magic
+damage dealt to champions, and the recast deals that stored amount as true
+damage, which the fight engine applies from the authored ability and auto-attack
+event ledger.
+W (Spirit Cleave) and R (Fate Sealed) read the sourced physical and magic rows.
 """
 
 from __future__ import annotations

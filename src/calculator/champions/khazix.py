@@ -1,7 +1,6 @@
-"""Kha'Zix — full-entry reviewed CP10.3 module.
+"""Kha'Zix: full-entry reviewed module.
 
 Option keys consumed by the shared parser: "p_ready", "q_isolated".
-
 Void Spike's heal pays once per cast whether or not the explosion damaged
 anyone, so ``SELF_HEALING_RULE`` is the slot, the sourced row and the source
 name it is published under.

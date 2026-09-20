@@ -1,10 +1,9 @@
-"""Kennen — full-entry reviewed CP10.3 module.
+"""Kennen: full-entry reviewed module.
 
-P (Mark of the Storm) is a per-target stack walk: every ability hit and
-every four-stack Electrical Surge attack applies one mark, and the third
-mark against a target consumes them all as a stun.  The slot walks the
-fight's own hit stream through that cycle rather than marking one cast.
-
+P (Mark of the Storm) is a per-target stack walk: every ability hit and every
+four-stack Electrical Surge attack applies one mark, and the third mark against
+a target consumes them all as a stun.  The slot walks the fight's own hit stream
+through that cycle rather than marking one cast.
 Option keys consumed by the shared parser: "w_empowered", "r_bolts",
 "mark_stacks".
 """

@@ -1,19 +1,14 @@
-"""Lee Sin — full-entry reviewed CP10.3 module with the two-stage Q.
+"""Lee Sin: full-entry reviewed module with the two-stage Q.
 
-E9-2 gap fix: the reviewed-packets asset carries Resonating Strike
-(120-360 + 180% bonus AD, Q[1]) as a Q variant while the batch pinned
-Lee Sin's Q to the Sonic Wave row only.  In-game the combo is two
-stages: Sonic Wave marks the target, and the recast Resonating Strike
-consumes the mark to deal physical damage increased by 0% : 100% (based
-on target's missing health) — interpolated between the cached Minimum
-and Maximum Physical Damage rows.  The two-stage Q is now the default
-(``q_recast`` option, on) with the recast priced at the target's live
-missing-health fraction, so a fresh target takes the sourced minimum and
-a low target takes up to the maximum.
-
-P (Flurry) stays a documented no-damage row; R's collision splash is
-single-target-irrelevant; the Safeguard W shield is authored by the
-E8c support scanner.
+Q is two stages: Sonic Wave marks the target and the recast, Resonating Strike,
+consumes the mark for physical damage increased by 0 to 100% on the target's
+missing health, interpolated between the cached Minimum and Maximum Physical
+Damage rows.  The two-stage Q is the default under ``q_recast``, priced at the
+target's live missing-health fraction, so a fresh target takes the sourced
+minimum and a low one up to the maximum.
+P (Flurry) stays a documented no-damage row, R's collision splash is irrelevant
+to a single target, and the Safeguard W shield is authored by the support
+scanner.
 """
 
 from typing import Any

@@ -1,22 +1,12 @@
-"""Skarner — CP10.7 full-entry-reviewed packet module.
+"""Skarner: full-entry-reviewed packet module.
 
-P1-3 closures:
-
-- W (Seismic Bastion) shield: the reviewed packet priced only the
-  shockwave's magic damage.  The cached W description sources the
-  shield: "shielding himself equal to 8% of his maximum health for 2.5
-  seconds" — the W damage event now carries a ``self_shield_events``
-  payload (the E8c interface) for 8% of Skarner's maximum health over
-  2.5s.
-
-- E (Ixtal's Impact): the packet manifest lists E as a formula slot
-  (wiki_attribute "Physical Damage") while MODULE_COVERAGE declared it
-  out_of_scope — an inconsistency.  The damage lands when the charged
-  target collides with terrain; the deterministic single-target model
-  assumes the collision and prices the sourced "Physical Damage" row
-  (30-150 + 120% bonus AD + 6% of his maximum health by rank).  The
-  "of his maximum health" term is not a generic scaling unit, so the
-  parser adds it explicitly from the same leveling row.
+W (Seismic Bastion) deals the shockwave's magic damage and shields Skarner: the
+W damage event carries a ``self_shield_events`` payload for the sourced 8% of
+his maximum health over 2.5 seconds.
+E (Ixtal's Impact) damages when the charged target collides with terrain, which
+the deterministic single-target model assumes, so it prices the sourced
+"Physical Damage" row.  That row's "of his maximum health" term is not a generic
+scaling unit, so the parser adds it explicitly from the same leveling row.
 """
 
 from typing import Any

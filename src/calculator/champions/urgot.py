@@ -1,19 +1,15 @@
-"""Urgot — CP10.9 full-entry-reviewed packet module (E9-2 fixes).
+"""Urgot: full-entry-reviewed packet module.
 
-E9-2 gap fixes over the packet module:
-- W (Purge) is a 4-second channel firing at a fixed 3.0 attack speed:
-  12 sourced shots (3.0 AS x 4s), each dealing the "Modified Physical
-  Damage" row (12 + 20-34% AD), at a 1/3s cadence.  The packet priced
-  ONE shot, understating the core DPS.
-- P (Echoing Flames) is modeled as the leg on-hit: each shotgun leg
-  that fires deals 40% : 100% (based on level) AD (+ 2% : 6% (based on
-  level) of the target's maximum health) physical damage.  The leg
-  rotation/cooldown cadence is combat state, so the user sets how many
-  legs fire (``p_legs``, default 1).
-- R (Fear Beyond Death) prices the chem-drill's initial physical damage
-  row; the Mercy recast below 25% maximum health is an execution — a
-  kill boundary, documented like Pyke's R (not priced as damage).
-- E (Disdain) shield stays authored by the E8c support scanner.
+W (Purge) is a 4-second channel firing at a fixed 3.0 attack speed, so it prices
+twelve sourced shots at a one-third-second cadence, each the "Modified Physical
+Damage" row.  Pricing one shot understates the core damage per second.
+P (Echoing Flames) is the leg on-hit: each shotgun leg that fires deals a
+per-level share of AD plus a per-level share of the target's maximum health.
+The leg rotation cadence is combat state, so ``p_legs`` sets how many fire.
+R (Fear Beyond Death) prices the chem-drill's initial physical damage row; the
+Mercy recast below 25% maximum health is an execution, a kill boundary rather
+than damage.
+E (Disdain) has its shield authored by the support scanner.
 """
 
 from typing import Any

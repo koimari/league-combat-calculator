@@ -1,21 +1,14 @@
-"""Rell — CP10.6 full-entry-reviewed packet module.
+"""Rell: full-entry-reviewed packet module.
 
-E2 DoT fix: R (Magnet Storm) prices 8 sourced 0.25s ticks
-(this module's packet timing declaration).
-
-P1-2 fixes:
-- P (Break the Mold) is now an ONHIT slot: each basic attack deals
-  bonus magic damage equal to 5% of Rell's total armor plus 5% of her
-  total magic resistance (the ordered pair is rooted in the binary's
-  OnHitDamage calculation).
-- W (Ferromancy: Crash Down) shield: the support scanner now targets
-  Rell herself (its self-target marker list was missing the
-  description's "granting herself" phrasing), emitting the sourced
-  Shield Strength (20 : 100 by rank + 11% maximum health).
-- E (Full Tilt) coverage flag: the packet manifest carries E as a
-  formula slot and the module prices it (Bonus Magic Damage 5% : 7% by
-  rank of the target's maximum health + 3% per 100 AP); MODULE_COVERAGE
-  marks it modeled.
+P (Break the Mold) is an ONHIT slot: each basic attack deals bonus magic damage
+equal to 5% of Rell's total armor plus 5% of her total magic resistance, the
+ordered pair rooted in the binary's ``OnHitDamage`` calculation.
+W (Ferromancy: Crash Down) shields Rell herself, so the support scanner targets
+her: its self-target marker list needs the description's "granting herself"
+phrasing to emit the sourced Shield Strength.
+E (Full Tilt) is a formula slot the module prices, its "Bonus Magic Damage" row
+being a rank-scaled share of the target's maximum health plus 3% per 100 AP.
+R (Magnet Storm) prices eight sourced 0.25-second ticks.
 """
 
 from typing import Any

@@ -1,21 +1,12 @@
-"""Tryndamere — E5-1 corrected slot map for the archetype engine.
+"""Tryndamere: slot map for the archetype engine.
 
-Why each slot is non-generic:
-
-- Q (Bloodlust) is a heal, NOT damage: the wiki leveling rows for Q are
-  "Maximum Bonus Attack Damage", "Bonus Attack Damage per 1% missing
-  health", "Minimum Heal", "Heal Per 1 Fury", and "Maximum Heal" — no
-  enemy-damage attribute exists.  The previous packet emitted a spurious
-  5 / 10 / 15 / 20 / 25 magic-damage row; it is removed.  The heal itself
-  is authored by ``healing.py`` from the Q cast timeline using the same
-  cache ("Minimum Heal" = 30 / 40 / 50 / 60 / 70 + 30% AP).
-- E (Spinning Slash) is a plain "Physical Damage" read (80 / 120 / 160 /
-  200 / 240 + 100% bonus AD + 80% AP).
-- P (Battle Fury), W (Mocking Shout), and R (Undying Rage) deal no enemy
-  damage and are explicit no-damage slots.
-
-All numeric values are read from the champion JSON data; nothing is
-hardcoded.
+Q (Bloodlust) is a heal, NOT damage: its cached leveling rows are Maximum Bonus
+Attack Damage, Bonus Attack Damage per 1% missing health, Minimum Heal, Heal Per
+1 Fury and Maximum Heal, with no enemy-damage attribute anywhere.  The heal is
+authored by the healing rule from the Q cast timeline off the same cache.
+E (Spinning Slash) is a plain "Physical Damage" read.
+P (Battle Fury), W (Mocking Shout) and R (Undying Rage) deal no enemy damage and
+are explicit no-damage slots.
 """
 
 from typing import Any

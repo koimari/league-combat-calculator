@@ -1,18 +1,14 @@
-"""Nocturne — CP10.5 full-entry-reviewed packet module.
+"""Nocturne: full-entry-reviewed packet module.
 
-E2 DoT fix: E (Unspeakable Horror) prices 4 sourced 0.5s tether ticks
-(this module's packet timing declaration).
-
-W (Shroud of Darkness) is two grants under one slot.  Its *passive*
-half — "Nocturne gains bonus attack speed", the cached "Bonus Attack
-Speed" row (30-50%) — has no duration at all, so it rides a BUFF-phase
-``stat_buff`` at full value whenever W is ranked.  Its active half only
-doubles that row to "Enhanced Bonus Attack Speed" (60-100%) for 5
-seconds "upon successfully blocking a hostile effect", which a damage
-package does not imply: the ``w_spellshield_block`` option arms it, and
-only the difference between the two rows is time-weighted onto the
-5-second window.  W is therefore *modeled*, not the packet's
-zero-damage row: this module replaces that slot.
+E (Unspeakable Horror) prices four sourced 0.5-second tether ticks.
+W (Shroud of Darkness) is two grants under one slot.  Its PASSIVE half, the
+cached "Bonus Attack Speed" row, has no duration at all, so it rides a
+BUFF-phase ``stat_buff`` at full value whenever W is ranked.  Its active half
+only doubles that row to "Enhanced Bonus Attack Speed" for 5 seconds upon
+successfully blocking a hostile effect, which a damage package does not imply:
+``w_spellshield_block`` arms it, and only the difference between the two rows is
+time-weighted onto the 5-second window.  W is therefore modeled here rather than
+the packet's zero-damage row.
 """
 
 from functools import partial

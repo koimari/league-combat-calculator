@@ -1,15 +1,10 @@
-"""Sejuani — CP10.7 full-entry-reviewed packet module, plus the E9-3 W fix.
+"""Sejuani: full-entry-reviewed packet module.
 
-E9-3: Winter's Wrath (W) is a double flail swing.  The reviewed packet
-read only the first "Physical Damage" row (5-45 + 30% AP + 4% of her
-maximum health); the cached JSON also carries the second swing
-(5-85 + 60% AP + 8% max health) and the Total Physical Damage row
-(10-130 + 90% AP + 12% max health).  The module now prices BOTH swing
-rows — each with the "% of her maximum health" term resolved against
-Sejuani's own live max health (the unit is not a generic scaling unit,
-so the module folds it in with a modifier override, the Swain bonus-
-health pattern) — so W matches the in-game 10-130 + 90% AP + 12% max
-health total at every rank.
+W (Winter's Wrath) is a double flail swing, so the module prices BOTH cached
+"Physical Damage" rows rather than the first alone, and their sum matches the
+cached Total Physical Damage row at every rank.  Each row's "% of her maximum
+health" term resolves against Sejuani's own live maximum health through a
+modifier override, that unit not being a generic scaling unit.
 """
 
 from typing import Any

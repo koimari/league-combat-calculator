@@ -1,15 +1,12 @@
-"""Renekton — CP10.6 full-entry-reviewed packet module.
+"""Renekton: full-entry-reviewed packet module.
 
-E2 DoT fix: W (Ruthless Predator) prices 2 strikes; R (Dominus) prices
-30 sourced 0.5s ticks (this module's packet timing declaration).
-
-Coverage: P (Reign of Anger) is the Fury meter that empowers the next
-ability. Its empowered rows are priced on the abilities themselves; all
-three cached P effects (generation/decay, the 50-Fury empower gate, the
-sub-50%-health rule) carry zero leveling rows, and the pinned reviewed
-packet declares P ``kind: "no_damage"`` on that basis. P is a cast slot
-here, so it emits that sourced zero-damage row: MODULE_COVERAGE reads
-"no_damage", not "out_of_scope".
+W (Ruthless Predator) prices two strikes and R (Dominus) prices thirty sourced
+0.5-second ticks.
+P (Reign of Anger) is the Fury meter that empowers the next ability, and its
+empowered rows are priced on the abilities themselves.  All three cached P
+effects, generation and decay, the 50-Fury empower gate and the sub-50%-health
+rule, carry zero leveling rows, so P is a cast slot emitting a sourced
+zero-damage row.
 """
 
 from functools import partial

@@ -1,11 +1,9 @@
-"""Kayle — full-entry reviewed CP10.3 module.
+"""Kayle: full-entry reviewed module.
 
 Option keys consumed by the shared parser: "p_exalted", "e_empowered".
-
-E8d ally-support: W (Celestial Blessing) heals the selected teammate.  The
-event is authored by the engine's ally-support scanner from the cached W
-leveling (Heal 55-155 + 25% AP; scope one_teammate) at the W cast time; the
-module declares W in SLOTS so the fight rotation casts it.
+W (Celestial Blessing) heals the selected teammate.  The event is authored by
+the engine's ally-support scanner from the cached W leveling at the W cast time,
+and W is declared in SLOTS so the fight rotation casts it.
 """
 
 from typing import Any

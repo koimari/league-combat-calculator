@@ -1,21 +1,16 @@
-"""Volibear — reviewed packet slots plus the E3 stack mechanics.
+"""Volibear: reviewed packet slots plus the stack mechanics.
 
-E3 additions over the CP10.9 packet module:
-- P (The Relentless Storm) becomes a BUFF-phase stack slot: each of up
-  to 5 stacks grants 5% (+ 3% per 100 AP) bonus attack speed (25% + 15%
-  per 100 AP fully stacked), and at 5 stacks basic attacks gain
-  Lightning Claws on-hit bonus magic damage (level-scaled flat + 45%
-  AP). Unset, the count derives: the stacks ride the swing ramp that
-  the attacks and casts stack, and the same count arms Lightning Claws
-  as a retained threshold, live for as long as the last stack is.
-  ``relentless_storm_stacks`` still states a level for a reader who
-  wants one.
-- W (Frenzied Maul) prices the Wounded 2nd bite: the first cast marks
-  the target Wounded for 8 seconds and the next cast on the same
-  target deals 50% (+ 25% per 100 bonus AD) increased damage. The
-  ``w_wounded`` option (default True) selects the already-marked bite —
-  the one-rotation model casts W once, so this is the sourced
-  empowered cast rather than a simulated apply-then-recast sequence.
+P (The Relentless Storm) is a BUFF-phase stack slot: each of up to five stacks
+grants bonus attack speed, and at five stacks basic attacks gain Lightning Claws
+on-hit bonus magic damage.  Unset, the count derives: the stacks ride the swing
+ramp the attacks and casts stack, and the same count arms Lightning Claws as a
+retained threshold, live for as long as the last stack is.
+``relentless_storm_stacks`` still states a level for a reader who wants one.
+W (Frenzied Maul) prices the Wounded second bite: the first cast marks the
+target Wounded for 8 seconds and the next cast on the same target deals
+increased damage.  ``w_wounded``, default True, selects the already-marked bite,
+because the one-rotation model casts W once, so that is the sourced empowered
+cast rather than a simulated apply-then-recast sequence.
 """
 
 from typing import Any

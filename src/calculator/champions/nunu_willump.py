@@ -1,22 +1,17 @@
-"""Nunu & Willump — CP10.5 packet module with the E9-1 Q gap fix.
+"""Nunu & Willump: full-entry-reviewed packet module.
 
-E9-1 closes the remaining audit gap: Q (Consume) was priced from the
-minion/monster "Non-Champion True Damage" row (400-1200) — the wrong
-basis for a champion-combat calculator.  This module prices the
-"Champion Magic Damage" row (60-220 + 65% AP + 5% bonus health)
-instead, and the champion Q self-heal (Base Champion Heal 39-111 +
-54% AP + 6% bonus health, 50% empowered below half maximum health) is
-authored by healing.py's HEALING_RULE_CHAMPIONS rule.
-
-E2 already fixed E (Snowball Barrage) to the 3-snowball volley; W and R
-damage are modeled.  P (Call of the Freljord) grants "20% bonus attack
-speed and 10% bonus movement speed" whenever the duo damage an enemy
-champion, and successive triggers extend the 4-second window — so the
-attack-speed half rides a BUFF-phase ``stat_buff`` the fight's own
-damage holds up.  Its movement speed has no stat_buff key, and Willump's
-cone cleave lands on secondary targets a 1v1 does not have.  P is
-therefore *modeled*, not the packet's zero-damage row: this module
-replaces that slot.
+Q (Consume) prices the "Champion Magic Damage" row, not the minion and monster
+"Non-Champion True Damage" row beside it, which is the wrong basis for a
+champion-combat calculator.  Its champion self-heal, empowered by half below
+half maximum health, is authored by the healing rule.
+E (Snowball Barrage) is the three-snowball volley, and W and R damage are
+modeled.
+P (Call of the Freljord) grants bonus attack speed and movement speed whenever
+the duo damage an enemy champion, successive triggers extending the 4-second
+window, so the attack-speed half rides a BUFF-phase ``stat_buff`` the fight's
+own damage holds up.  Its movement speed has no key, and Willump's cone cleave
+lands on secondary targets a duel does not have.  P is therefore modeled here
+rather than the packet's zero-damage row.
 """
 
 from typing import Any
