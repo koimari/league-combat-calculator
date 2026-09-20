@@ -39,18 +39,4 @@ def canonical_patch(value: object) -> PatchIdentity:
     )
 
 
-def public_patch(value: object) -> str:
-    return canonical_patch(value).public_patch
-
-
-def client_patch(value: object) -> str:
-    return canonical_patch(value).client_patch
-
-
-__all__ = [
-    "PatchIdentity",
-    "PatchIdentityError",
-    "canonical_patch",
-    "client_patch",
-    "public_patch",
-]
+__all__ = ["PatchIdentity", "PatchIdentityError", "canonical_patch"]
