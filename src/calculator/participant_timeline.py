@@ -5001,7 +5001,14 @@ def build_participant_timeline(
     """
 
     def compose(pass_index: int, patch: ParamPatch | None) -> Any:
-        """One pass of this composition, patched by its predecessor."""
+        """One pass of this composition, patched by its predecessor.
+
+        A closure and not a `partial` over `_compose_pass`, even though it
+        forwards fourteen arguments unchanged: `params`, `pair_result_cache`,
+        `search_context` and `include_receipt` are rebound by the combat-event
+        loop below, so a bind taken before the loop would freeze the values
+        the first pass saw.
+        """
         return _compose_pass(
             champion_data,
             level,
