@@ -9,9 +9,10 @@ P (Stone Skin) is modeled as a ``stat_buff`` of bonus armor the survival side
 reads; its health regeneration is not priced.
 W (Warrior Trickster) is ``out_of_scope`` on the clone's SWING COUNT, not its
 per-hit output.  The damage RATIO is sourced twice, as the entry's only
-leveling row and as the binary's ``CloneDamageMod``, while the RATE is sourced
-nowhere: the binary carries no clone CharacterRecord at all, so there is no
-clone base attack speed for E's bonus to apply to.  Shaco's route past a
+leveling row, "Clone Outgoing Damage", and as the binary's ``CloneDamageMod``,
+while the RATE is sourced nowhere: the binary carries no clone CharacterRecord
+at all, so there is no clone base attack speed for the Nimbus Strike bonus to
+apply to, and Crushing Blow grants no attack speed.  Shaco's route past a
 missing rate does not transfer, because his clone is commanded and the swing
 count is something a player states, while Wukong's attacks on its own, so the
 same option would invent the number the game decides.  The copied Cyclone has

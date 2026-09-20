@@ -14,9 +14,9 @@ P's nonstandard critical strike is documented, not approximated: the
 wiki records 175% + 30% where this kernel's ``crit_effectiveness``
 scales the crit probability and ``state.crit_multiplier`` is global, and
 at an ordinary Sylas build's zero crit chance both readings agree.
-R (Hijack) stays ``out_of_scope`` because its damage is another
-champion's ultimate.  Every attacker resolves to one validated contract,
-so importing a foreign R at a rank of its own is a kernel project.
+R (Hijack) stays ``out_of_scope``: its damage is another champion's ultimate.
+Every attacker resolves to one validated contract, so modelling it needs a
+cross-champion ultimate-import kernel.
 """
 
 import re
