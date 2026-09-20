@@ -1,26 +1,21 @@
 """One home for what a charge ability's cooldown means.
 
-A charge ability carries two cached timers twelve times apart: ``cooldown``
-is the short gap the game enforces between two casts already banked (Rumble
-E: 0.5s), and ``rechargeRate`` is what it costs to bank one cast at all (6s).
+A charge ability carries two cached timers twelve times apart: ``cooldown`` is
+the short gap the game enforces between two casts already banked, Rumble E's
+0.5s, and ``rechargeRate`` is what it costs to bank one cast at all, 6s.
 Pricing the first as the recast cadence schedules a cast every half second,
-which is the defect this module closes: the repo's own Rumble notes measured
-16 basic-ability casts in a ten-second fight where the kit affords about
-three.
-
+which put 16 basic-ability casts in a ten-second fight where the kit affords
+about three.
 So ``cooldown`` on an engine entry means one thing everywhere: the time to
-regain one cast. For a charge slot that is the recharge, and a slot whose
-cached ability carries a ``rechargeRate`` either prices it already or
-declares a :class:`ChargeRule`, which prices it here. A slot that prices the
-short timer by accident fails its parse naming both numbers; the cache
-decides which slots are charge slots, so a champion reworked into charges
-fails the day its cache changes rather than quietly gaining casts.
-
+regain one cast.  For a charge slot that is the recharge, and a slot whose
+cached ability carries a ``rechargeRate`` either prices it already or declares a
+:class:`ChargeRule`, which prices it here.  A slot that prices the short timer by
+accident fails its parse naming both numbers, and the CACHE decides which slots
+are charge slots, so a champion reworked into charges fails the day its cache
+changes rather than quietly gaining casts.
 How many casts a slot banks is cached too, in one of two shapes: a
-``Maximum charges`` leveling row (Gangplank E 3/3/4/4/5, Teemo R 3/4/5,
-Taric Q 1/2/3/4/5) or the stocking sentence every other charge ability
-carries ("Rumble periodically stocks an Electro Harpoon charge, up to a
-maximum of 2"). Nothing here invents a count: a slot whose cache states
+``Maximum charges`` leveling row or the stocking sentence every other charge
+ability carries.  Nothing here invents a count: a slot whose cache states
 neither fails, and only a module's reviewed ``charges`` answers it.
 """
 

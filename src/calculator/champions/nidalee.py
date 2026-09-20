@@ -1,28 +1,18 @@
-"""Nidalee — CP10.5 full-entry-reviewed packet module.
+"""Nidalee: full-entry-reviewed packet module.
 
-E2 DoT fix: W Bushwhack (human-form trap) prices 4 sourced 1s ticks
-(this module's packet timing declaration); the Pounce variant is untouched.
-
-E4 summon: W Bushwhack is a summoned trap.  The E2 pricing already
-models one sprung trap's full 4-second DoT; ``w_traps`` (default 1,
-capped at 10 — the level-18 trap cap "4 / 6 / 8 / 10 (based on level)")
-prices additional pre-placed traps detonating during the fight, each as
-its own full DoT: unlike Teemo's shrooms, Bushwhack traps have no
-refresh note in the source, so every sprung trap deals its own damage.
-
-Boundary: the E4 worklist note says "armor shred", but the current
-patch has none — the cached leveling rows carry only the DoT
-("Magic Damage Per Tick" / "Total Magic Damage"), and the live game
-files (Community Dragon ``BushwhackAbility``) contain only the
-``DamagePerSecond`` calculation.  Nothing is invented; the trap's
-outgoing damage is the DoT above, and the armor-shred note is recorded
-as stale in this module.
-
-Coverage: P (Prowl) grants movement speed in brush and marks a Hunted
-target, and R (Aspect of the Cougar) is the form swap itself — movement
-speed and transform, axes the engine does not have. Cougar form is still
-reachable: the ``w_variant`` packet option selects the cougar abilities
-directly, so R has no state of its own left to price.
+W Bushwhack is a summoned trap and one sprung trap prices its full 4-second DoT,
+four sourced 1-second ticks.  ``w_traps``, default 1 and capped at the sourced
+level-18 trap cap of 10, prices additional pre-placed traps detonating during
+the fight, each as its own full DoT: unlike Teemo's shrooms, Bushwhack carries
+no refresh note anywhere in the source.  The Pounce variant is untouched.
+The trap has no armor shred on this patch: the cached leveling rows carry the
+DoT alone, and ``BushwhackAbility`` in the game files holds only the
+``DamagePerSecond`` calculation.
+P (Prowl) grants movement speed in brush and marks a Hunted target, and R
+(Aspect of the Cougar) is the form swap itself, so both are movement and
+transform, axes this engine lacks.  Cougar form stays reachable: the
+``w_variant`` option selects the cougar abilities directly, so R has no state
+of its own left to price.
 """
 
 from __future__ import annotations

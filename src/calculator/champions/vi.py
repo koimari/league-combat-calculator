@@ -1,27 +1,21 @@
-"""Vi — sourced one-rotation damage and Denting Blows ordering.
+"""Vi: sourced one-rotation damage and Denting Blows ordering.
 
-The certified sequence is Q -> E -> R. Q and the primary-target E attack
-each apply one Denting Blows stack. When either hit consumes the third stack,
-the passive damage is priced at the target's old armor and its 20% armor
-reduction is applied only to later hits. E is represented as the attack it
-modifies on the primary target and as cone damage on secondary roster targets.
-
-Timed fights walk W's stack cycle over the merged hit stream (Braum-pattern
-module walk): ambient autos plus Q hits — E's empowered attacks ride the
-ambient stream itself, so they are already counted as the swings they
-consume, and only with no stream do E casts force their own attacks.  An
-autos-only fight casts nothing, so its stream is the ambient swings.  Stacks
-expire 4 seconds after the last application, every third hit procs the
-%max-health damage as an authored exact event, and the 20% shred is carried
-as a 4-second ``target_debuff`` on the first ranked cast slot (Q, else E)
-whenever the walk procs at least once.
-
-P (Blast Shield) is the kit's one defensive row: "Periodically, Vi's next
-ability hit grants her a shield equal to 12% of her maximum health for 3
-seconds."  It has no cast and no damage, so it reaches the ledger as a
-``self_shield_events`` payload on the first ranked damage slot — the
-ability hit the wiki says activates it — and the coverage map names that
-channel (``module_contract.COVERAGE_CHANNELS``).
+The certified sequence is Q, E, R.  Q and the primary-target E attack each apply
+one Denting Blows stack, and when either hit consumes the third, the passive
+damage is priced at the target's old armor and its 20% armor reduction reaches
+only later hits.  E is the attack it modifies on the primary target and cone
+damage on secondary roster targets.
+A timed fight walks W's stack cycle over the merged hit stream: ambient autos
+plus Q hits.  E's empowered attacks ride the ambient stream itself, so they are
+already counted as the swings they consume, and only with no stream do E casts
+force their own attacks; an autos-only fight casts nothing, so its stream is the
+ambient swings.  Stacks expire 4 seconds after the last application, every third
+hit procs the %max-health damage as an authored exact event, and the shred is
+carried as a 4-second ``target_debuff`` on the first ranked cast slot whenever
+the walk procs at least once.
+P (Blast Shield) is the kit's one defensive row and has no cast and no damage,
+so it reaches the ledger as a ``self_shield_events`` payload on the first ranked
+damage slot, the ability hit the wiki says activates it.
 """
 
 import math

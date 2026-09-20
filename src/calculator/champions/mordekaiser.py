@@ -1,28 +1,19 @@
-"""Mordekaiser — CP10.4 full-entry-reviewed packet module.
+"""Mordekaiser: full-entry-reviewed packet module.
 
-P (Darkness Rise) rides the swing stream as two rows: ``passive`` is the
-40% AP bonus magic damage on every basic attack, and
-``passive_darkness_rise`` is the aura, walked from the third stacking hit
-(basic attacks, Q casts, E claws) to the fight end at one tick per
-second; the reviewed packet had priced neither.
-
-E8a: the W (Indestructible) grey-health receipts live in the shared
-participant-timeline primitive, which stores 45% of post-mitigation
-damage dealt + 7.5% of pre-mitigation damage taken as Potential Shield
-(capped at 30% of maximum health) and pays the recast heal
-("Shield to Healing" 35/37.5/40/42.5/45% by W rank) at the earliest
-recast time (W cast + 0.5 s per the wiki).  The module keeps pricing W
-as a non-damaging state-only slot; the engine's cast timeline still
-schedules the W cast that arms the recast.
-
-R (Realm of Death) deals no damage either, but it "consumes the target's
-soul ..., healing himself for 10% of their maximum health".  That share
-of *another unit's* maximum health is the one number the self-heal rule
-cannot read — the rule never sees target stats — so the slot prices it
-here, against the champion this pair fight targets, and the rule places
-it at the R cast.  The stat theft in the same sentence (10% of the
-target's AP, attack speed, maximum health, resistances and AD, granted
-to Mordekaiser for 7 seconds) has no engine axis and stays documented.
+P (Darkness Rise) rides the swing stream as two rows: ``passive`` is the 40% AP
+bonus magic damage on every basic attack, and ``passive_darkness_rise`` is the
+aura, walked from the third stacking hit, basic attacks and Q casts and E claws,
+to the fight end at one tick per second.
+W (Indestructible) is a non-damaging state slot whose grey-health receipts live
+in the shared participant-timeline primitive: it stores a share of damage dealt
+and damage taken as Potential Shield under a maximum-health cap, and pays the
+recast heal at the earliest recast time, half a second after the W cast.  The
+engine's cast timeline still schedules the W cast that arms it.
+R (Realm of Death) deals no damage either, but it heals Mordekaiser for 10% of
+the TARGET's maximum health.  A share of another unit's maximum health is the
+one number the self-heal rule cannot read, the rule never seeing target stats,
+so the slot prices it here against this pair fight's target and the rule places
+it at the R cast.  The stat theft in the same sentence has no engine axis.
 """
 
 import math

@@ -1,27 +1,16 @@
-"""Zac — CP10.10 full-entry-reviewed packet module.
+"""Zac: full-entry-reviewed packet module.
 
-E3 boundary: the worklist assigns Zac no damage-relevant stack mechanic.
-The passive's Goo chunks heal Zac (4% : 8.47% max health per chunk) and
-reduce W's cooldown; the resurrection is a death passive. Neither
-changes outgoing damage, so no stack slot is added.
-
-Coverage: P is ``modeled`` through the revive channel, not through its
-own packet row; Q/W/E/R price their cached damage rows.
-
-E4 boundary: the E4-3 worklist skips Zac — R (Let's Bounce!) is the
-self-movement rework, not a summoned unit (the "Champion summoned
-units" page lists only Zac's Cell Division Bloblets, which are a death
-passive with no outgoing damage).  No summon slot is added; the
-reviewed bounce packet pricing is unchanged.
-
-P (Cell Division) emits a named state row with no damage part.  The
-packet generator reads a ``targetMaxHp`` ratio there, but the cached
-prose pays it off ZAC — "Zac will consume it to heal for 4% : 8.47%
-(based on level) of HIS maximum health" — under the same "Max Health
-Damage" attribute name ``derive_self_healing`` below reads for the heal
-ledger.  A self-heal has no place in the damage vocabulary, so the slot
-publishes none; the revive and the chunk heal are what the engine prices
-for it, through the two channels ``COVERAGE_CHANNELS`` names.
+Q, W, E and R price their cached damage rows; R (Let's Bounce!) is a
+self-movement rework, not a summon, so no summon slot exists.
+P (Cell Division) emits a named state row with no damage part.  The packet
+generator reads a ``targetMaxHp`` ratio there, but the cached prose pays it off
+ZAC, healing him for a per-level share of HIS maximum health under the same
+"Max Health Damage" attribute name ``derive_self_healing`` reads below.  A
+self-heal has no place in the damage vocabulary, so the slot publishes none.
+P is therefore modeled through the two channels ``COVERAGE_CHANNELS`` names, the
+revive and the chunk heal, rather than through a packet row of its own.  Neither
+the Goo chunks nor the resurrection changes outgoing damage, so no stack slot is
+added for them.
 """
 
 from dataclasses import replace

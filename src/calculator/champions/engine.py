@@ -1,25 +1,20 @@
-"""Slot-archetype engine — runs any champion from a slot map.
+"""Slot-archetype engine: runs any champion from a slot map.
 
-A champion is described by a **slot map**: ``{slot_key: slot_parser}``.
-A slot parser is a plain function ``SlotCtx -> entry dict | None``,
-produced either by an archetype factory in ``slotlib`` (configured with
-data, over the JSON walk in ``slot_extract``, the entry dicts in
-``slot_entries`` and the control atoms in ``slot_control``) or written as a
-custom function in the champion's own module.
-
-Slots are evaluated **phase by phase** in ``PHASE_ORDER``
-(BUFF -> DEBUFF -> DAMAGE -> ONHIT -> AMP), and in slot-map insertion
-order within a phase. BUFF/DEBUFF parsers mutate the shared
-``ctx.stats`` / ``ctx.target`` contexts, so damage slots always see
-buffed stats — an engine guarantee, not a per-module comment. Parsers
-carry their phase as a ``.phase`` attribute stamped by their factory;
-plain functions without one default to DAMAGE. ``ctx.results`` is
-readable within a phase, so a cross-slot dependent lists after its
-dependency in the map.
-
-Engine contract: any non-None entry a parser returns IS emitted —
-including zero-damage entries (stat-buff ultimates must never silently
-vanish). Dropping a non-damaging slot is the parser's decision.
+A champion is described by a slot map, ``{slot_key: slot_parser}``.  A slot
+parser is a plain function ``SlotCtx -> entry dict | None``, produced either by
+an archetype factory in ``slotlib``, configured with data over the cache walk in
+``slot_extract``, the entry dicts in ``slot_entries`` and the control atoms in
+``slot_control``, or written as a custom function in the champion's own module.
+Slots are evaluated phase by phase in ``PHASE_ORDER``, BUFF then DEBUFF then
+DAMAGE then ONHIT then AMP, and in slot-map insertion order within a phase.
+BUFF and DEBUFF parsers mutate the shared ``ctx.stats`` and ``ctx.target``
+contexts, so damage slots always see buffed stats; that is an engine guarantee,
+not a per-module comment.  Parsers carry their phase as a ``.phase`` attribute
+stamped by their factory and default to DAMAGE without one.  ``ctx.results`` is
+readable within a phase, so a cross-slot dependent lists after its dependency.
+Engine contract: any non-None entry a parser returns IS emitted, zero-damage
+entries included, because a stat-buff ultimate must never silently vanish.
+Dropping a non-damaging slot is the parser's decision.
 """
 
 from collections.abc import Callable, Mapping

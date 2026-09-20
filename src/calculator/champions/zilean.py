@@ -1,24 +1,18 @@
-"""Zilean — CP10.10 full-entry-reviewed packet module.
+"""Zilean: full-entry-reviewed packet module.
 
-Only Q deals damage.  R is priced as the Chronoshift revive below, so it
-is ``modeled`` through that channel rather than through its own row.  The
-other three slots carry no sourced damage/heal/shield number at all, so
-they are ``no_damage`` rather than unmodelled mechanics:
-
-  - P (Time in a Bottle) has empty cached leveling — it grants Zilean and
-    a selected ally experience only.
-  - W (Rewind) has empty cached leveling; it "reduces the remaining
-    cooldowns of Time Bomb and Time Warp by 10 seconds each", and the
-    fight engine's rotation is a static per-fight cast count, so a
-    mid-fight cooldown refund changes nothing it prices.  What it *does*
-    change is reachable through the ``q_second_bomb`` state below: a
-    Q -> W -> Q sequence is how the second bomb lands inside the first
-    one's fuse.
-  - E (Time Warp) carries only a "Movement Speed Modifier" row
-    (40/55/70/85/99%, a slow on an enemy or a haste on an ally), and
-    ``ability_spec.ACTION_BLOCKING_CC_KINDS`` deliberately excludes
-    "slow", so a pure movement-speed change creates no action downtime
-    either.
+Only Q deals damage.  R is priced as the Chronoshift revive below, so it is
+modeled through that channel rather than a row of its own, and the other three
+slots carry no sourced damage, heal or shield number at all.
+P (Time in a Bottle) has empty cached leveling and grants experience only.
+W (Rewind) has empty cached leveling and reduces two cooldowns by 10 seconds
+each, which changes nothing the engine prices, the rotation being a static
+per-fight cast count.  What it does change is reachable through the
+``q_second_bomb`` state below: a Q, W, Q sequence is how the second bomb lands
+inside the first one's fuse.
+E (Time Warp) carries only a "Movement Speed Modifier" row, a slow on an enemy
+or a haste on an ally, and ``ability_spec.ACTION_BLOCKING_CC_KINDS`` excludes
+"slow" deliberately, so a pure movement-speed change creates no action downtime
+either.
 """
 
 from dataclasses import replace

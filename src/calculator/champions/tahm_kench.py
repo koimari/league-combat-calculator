@@ -1,26 +1,20 @@
-"""Tahm Kench's acquired-taste and defensive-state packets.
+"""Tahm Kench: acquired-taste and defensive-state packets.
 
-E (Thick Skin) stays off the slot map — it damages nothing, and a slot
-would invent a cast — so ``MODULE_COVERAGE`` states it ``no_damage``
-rather than leaving the derived ``out_of_scope`` of an unmodeled gap.
-All three cached E effects are ``affects: "Self"`` (the grey-health
-store, the out-of-combat consume-to-heal, the grey-to-shield active);
-the wiki parser's "Max Health Damage" leveling attribute on the second
-one is its generic name for that self percent-of-max-health restore, not
-damage dealt to an enemy — the same misparse as Rek'Sai P.
-The mechanic itself is priced elsewhere: the shared grey-health
-primitive (``participant_timeline._grey_health_receipts``, reached
-through ``healing.GREY_HEALTH_RULE_CHAMPIONS``) reads E's rank off the
-skill order and works the incoming ledger. Runtime probe, level 18 / E
-rank 5 / one enemy dealing 314.4 post-mitigation: ``grey_health_stored``
-147.75 (0.47 x, the rank row) and a ``Thick Skin (grey health)`` heal of
-147.75 four seconds after the last hit — which lands only when the fight
-leaves him those four seconds, exactly as the wiki states. The E ACTIVE
-(grey health converted into a 2.5 s shield) rides the same primitive: the
-pool is walk state, so a parse-time ``attach_self_shield`` payload cannot
-read it, and the presses are authored beside the consume heal from the
-incoming ledger under the ``e_convert_grey_shield`` option. E remains
-absent from ``parse_abilities``' output, so no cast row is invented.
+E (Thick Skin) stays off the slot map, because it damages nothing and a slot
+would invent a cast, so ``MODULE_COVERAGE`` states it ``no_damage`` rather than
+deriving the ``out_of_scope`` of an unmodelled gap.  All three cached E effects
+affect Self, and the parser's "Max Health Damage" attribute on the second is its
+generic name for a percent-of-maximum-health self restore, not damage dealt, the
+same misparse as Rek'Sai P.
+The mechanic is priced elsewhere: the shared grey-health primitive, reached
+through ``healing.GREY_HEALTH_RULE_CHAMPIONS``, reads E's rank off the skill
+order and works the incoming ledger.  A level-18 probe at E rank 5 against 314.4
+post-mitigation stored 147.75 and healed the same four seconds after the last
+hit, which lands only when the fight leaves him those four seconds.
+The E ACTIVE, grey health converted into a 2.5-second shield, rides the same
+primitive: the pool is walk state, so a parse-time ``attach_self_shield``
+payload cannot read it, and the presses are authored beside the consume heal
+from the incoming ledger under ``e_convert_grey_shield``.
 """
 
 from typing import Any

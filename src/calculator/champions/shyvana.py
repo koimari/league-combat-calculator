@@ -1,26 +1,18 @@
-"""Shyvana's human/dragon combat states, self-shield, and timed packets.
+"""Shyvana: human and dragon combat states, self-shield, and timed packets.
 
-E9-3: Inferno Aegis (W) now carries the sourced self-shield
-('Shield Strength' + 12% bonus health, plus the per-nearby-champion
-'Increased shield per champion' increment) as an E8c
-``self_shield_events`` payload — the shield is granted at the cast and
-consumed by the one-second recast.  The dragon-form recast heal
-(60 : 104.71 by level + 4% : 8.47% by level missing health when the
-explosion hits a champion) is authored by the healing rule in
-``healing.py`` (HEALING_RULE_CHAMPIONS), keyed on the W recast damage
-events and gated on the ``dragon_form`` option; the support scanner
-defers both (see ``support_effects._MODULE_AUTHORED_SHIELD_SLOTS`` and
-``_MODULE_AUTHORED_HEAL_SLOTS``).
-
-P (Scalemail) is the ``scalemail_stacks`` option's one consumer: the
-per-stack resists live in the cached effect prose alone, so
-``_scalemail_per_stack`` reads them out of that sentence.  Its
-``no_damage`` disposition is sourced on both sides of the cache — the
-entry's two effects are the stack-generation rule and the resist grant
-with ``damageType`` null and ``affects`` "Self", and the game data's
-``ShyvanaPassiveAbility/ShyvanaPassive`` carries only the DataValues
-``BonusArmor``/``BonusMagicResist``/``PassiveScale`` (0.3 each) and the
-four ``Stacks_Per_*`` counts, with no damage node of any kind."""
+W (Inferno Aegis) carries the sourced self-shield, its "Shield Strength" row
+plus 12% bonus health and the per-nearby-champion increment, as a
+``self_shield_events`` payload granted at the cast and consumed by the
+one-second recast.  The dragon-form recast heal is authored by the healing rule,
+keyed on the W recast damage events and gated on ``dragon_form``; the support
+scanner defers both halves.
+P (Scalemail) is the one consumer of ``scalemail_stacks``: the per-stack resists
+live in the cached effect prose alone, so ``_scalemail_per_stack`` reads them
+out of that sentence.  Its ``no_damage`` disposition is sourced on both sides of
+the cache, the entry's two effects being the stack rule and a Self-affecting
+resist grant with a null ``damageType``, and the game data's passive record
+carrying only bonus resist values and stack counts with no damage node.
+"""
 
 import re
 from typing import Any

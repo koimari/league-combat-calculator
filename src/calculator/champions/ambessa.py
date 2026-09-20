@@ -1,27 +1,20 @@
-"""Ambessa — slot map for the archetype engine.
+"""Ambessa: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- Q is TWO JSON entries under one slot: Q1 (Cunning Sweep, index 0)
-  and Q2 (Sundering Slam, index 1). Both are ``by_option(sweetspot)``
-  attr picks (default True = "Increased Physical Damage"); Q2 reads
-  ``source=("Q", 1)`` with ``cooldown_from=("Q", 0)`` — the engine's
-  slot keys map to themselves, so the synthetic "Q2" results key needs
-  no engine support — and a thin wrapper stamps the ``recast_of: "Q"``
-  marker damage.py uses to chain the recast after Q1.
-- R (Public Execution) is a ``stat_buff`` (% armor penetration the
-  fight engine applies — not a parse-time scaling stat, so no
-  apply_to) that also carries its active "Physical Damage".
-- W (Repudiation) always models the empowered hit — the "Increased
-  Physical Damage" attribute the classifier would not pick.
-- E (Lacerate) hits twice — the "Total Physical Damage" attribute.
-- P (Drakehound's Step) is a custom fn: per-proc damage is a per-LEVEL
-  base plus a bonus-AD ratio that lives only in the description text
-  (regex-extracted, see ``_parse_passive_damage``), multiplied by the
-  ``passive_procs`` option (default 4) — the shape proc_damage emits,
-  but the extraction is not attribute-driven.
-
-All numeric values are read from the champion JSON data (the passive's
-AD ratio from its description text); nothing is hardcoded.
+Q is TWO cached entries under one slot, Q1 (Cunning Sweep) and Q2 (Sundering
+Slam).  Both pick their attribute on ``sweetspot``; Q2 reads ``source=("Q", 1)``
+with ``cooldown_from=("Q", 0)``, and a thin wrapper stamps the ``recast_of``
+marker ``damage.py`` uses to chain the recast after Q1.  The engine's slot keys
+map to themselves, so the synthetic Q2 results key needs no engine support.
+R (Public Execution) carries its active "Physical Damage" and a ``stat_buff`` of
+percent armor penetration, which the fight engine applies, so there is no
+``apply_to``: it is not a parse-time scaling stat.
+W (Repudiation) always models the empowered hit, the "Increased Physical Damage"
+attribute the classifier would not pick.
+E (Lacerate) hits twice, so it reads "Total Physical Damage".
+P (Drakehound's Step) is a per-LEVEL base plus a bonus-AD ratio that lives only
+in the description text, extracted by ``_parse_passive_damage`` and multiplied
+by ``passive_procs``.  The shape is what ``proc_damage`` emits, but the
+extraction is not attribute-driven.
 """
 
 import re

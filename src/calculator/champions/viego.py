@@ -1,27 +1,17 @@
-"""Viego — CP10.9 full-entry-reviewed packet module, plus the E9-3 Q/R fixes.
+"""Viego: full-entry-reviewed packet module.
 
-E9-3: the reviewed packet priced Q and R from the health-ratio rows ONLY
-(Q: the %current-health on-hit with a zero base; R: the %missing-health
-bonus), dropping the sourced active damage:
-- Q (Blade of the Ruined King) now prices the ACTIVE "Physical Damage"
-  row (25-85 + 70% AD), keeps the passive %current-health on-hit
-  ("Bonus Physical Damage" 2-6% + the "Minimum Bonus Damage" 10-30
-  floor) on the engine's every-auto on-hit path, and prices the
-  mark-consuming second strike ("20% AD (+ 15% AP)" wiki prose, the E8d
-  possession note's second-strike row) through the q_second_strike
-  option.
-- R (Heartbreaker) now prices the 120% AD base strike (wiki prose: "All
-  targets hit are dealt 120% AD physical damage") PLUS the
-  %missing-health bonus ("Physical Damage" row: 12/16/20% + 5% per 100
-  bonus AD of the target's missing health) as a live hp-scaled part.
-
-W damage is unchanged.  E (Harrowed Path) prices the one grant the
-engine has a channel for: "while inside the mist, Viego gains bonus
-attack speed", the cached "Bonus Attack Speed" row (30-50%) scaled by
-the explicit ``e_mist_uptime`` share of the fight spent on his own
-trail.  Its movement speed and camouflage have no channel.  P stays an
-emitted zero row — possession assumes another champion's whole kit,
-which is inherently out of scope (E8d note).
+Q (Blade of the Ruined King) is three things at once: the ACTIVE "Physical
+Damage" row, the passive %current-health on-hit with its "Minimum Bonus Damage"
+floor on the engine's every-auto path, and the mark-consuming second strike,
+prose-sourced, through ``q_second_strike``.  Pricing only the health-ratio rows
+drops the active entirely.
+R (Heartbreaker) is the 120% AD base strike from wiki prose PLUS the cached
+%missing-health bonus as a live hp-scaled part.
+E (Harrowed Path) prices the one grant the engine has a channel for, the cached
+"Bonus Attack Speed" row scaled by the explicit ``e_mist_uptime`` share of the
+fight spent on his own trail.  Its movement speed and camouflage have none.
+P stays an emitted zero row: possession assumes another champion's whole kit,
+which is out of scope by construction.
 """
 
 from typing import Any

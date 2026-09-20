@@ -1,25 +1,19 @@
-"""Ahri — slot map for the archetype engine.
+"""Ahri: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- Q (Orb of Deception) deals its "Damage Per Pass" twice — magic
-  outgoing, true returning: ``casts=2`` with the mixed split (half
-  magic / half true) reproduces exactly one pass of each type.
-- W (Fox-Fire) is three flames at two damage tiers: two DamageParts
-  (initial + subsequent ``count=2``) so each flame mitigates separately.
-- R (Spirit Rush) is three dashes per activation: one ``count=3`` part
-  plus ``cast_instances=3`` (per-dash item procs), with no cooldown key
-  so damage.py spaces the dashes itself.
-- E (Charm) is a single, event-certified magic hit whose Wiki-authored
-  charm/knockdown marker feeds conditional item triggers such as Fimbulwinter.
-- P (Essence Theft) deals no enemy damage: the module emits a zero-damage
-  receipt for the 9-fragment heal (35 : 95 by level + 20% AP, cached P
-  "Heal" row) so the E1 self-heal rule can author one heal per fight when
-  the user's fragment count has reached 9.  The champion-takedown heal
-  (75 : 165 by level + 30% AP) is a kill boundary the fight model does not
-  produce.
-
-All numeric values are read from the champion JSON data; nothing is
-hardcoded.
+Q (Orb of Deception) deals its "Damage Per Pass" twice, magic outgoing and true
+returning, so ``casts=2`` with a half-magic half-true split reproduces exactly
+one pass of each type.
+W (Fox-Fire) is three flames at two damage tiers, so it is two parts, the
+initial and a ``count=2`` subsequent, and each flame mitigates separately.
+R (Spirit Rush) is three dashes per activation: one ``count=3`` part plus
+``cast_instances=3`` for per-dash item procs, with no cooldown key so
+``damage.py`` spaces the dashes itself.
+E (Charm) is a single event-certified magic hit whose authored charm marker
+feeds conditional item triggers.
+P (Essence Theft) deals no enemy damage: the module emits a zero-damage receipt
+for the nine-fragment heal so the self-heal rule can author one heal per fight
+once the user's fragment count reaches nine.  The champion-takedown heal is a
+kill boundary the fight model does not produce.
 """
 
 from typing import Any
