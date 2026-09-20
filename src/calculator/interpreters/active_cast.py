@@ -31,10 +31,11 @@ from ..item_behavior import (
     RuleFamily,
     typed_payload,
 )
-from ..item_behavior_catalog import behavior_rules, built_per_rule
+from ..item_behavior_catalog import built_per_rule
 from ..item_effects import DamageSource, damage_source
 from ..value_ref import resolve
 from . import damage_formula
+from .rule_selection import rules_of
 
 # The field an active compiles to for inspection: the seconds before the
 # holder could press it again.  Unlike a strike's damage, a cooldown really is
@@ -89,23 +90,15 @@ def active_source(rule: BehaviorRule, ctx: BuildContext) -> DamageSource:
     )
 
 
-def active_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
-    """Every active *owners* declare, in build order."""
-    return tuple(
-        rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.ACTIVE_CAST
-    )
-
-
 def active_sources(
     owners: Sequence[str],
     *,
     facts: FightFacts,
 ) -> tuple[DamageSource, ...]:
     """Every active this build declares, in the build's own purchase order."""
-    return built_per_rule(active_rules(owners), active_source, facts=facts)
+    return built_per_rule(
+        rules_of(owners, RuleFamily.ACTIVE_CAST), active_source, facts=facts
+    )
 
 
 __all__ = [
@@ -115,7 +108,6 @@ __all__ = [
     "NO_INHERITED_LIFESTEAL",
     "ActiveCastInterpretationError",
     "active_fields",
-    "active_rules",
     "active_source",
     "active_sources",
 ]

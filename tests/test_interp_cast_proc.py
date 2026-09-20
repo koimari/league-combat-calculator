@@ -12,6 +12,7 @@ that the row an entry names for itself is still the row the engine publishes.
 import pytest
 
 from src.calculator.interpreters import cast_proc
+from src.calculator.interpreters.rule_selection import rules_of
 from src.calculator.item_behavior import (
     CooldownProcRule,
     EngineLane,
@@ -75,8 +76,8 @@ def test_the_trigger_is_read_off_the_entry_and_defaults_to_the_coarse_row() -> N
     """An entry naming no trigger is on the coarse scheduler, said out loud."""
     declared = {
         rule.owner: rule.payload.trigger
-        for rule in cast_proc.cast_proc_rules(
-            [THRESHOLD, REFUNDING, CHARGED, SHIELDING]
+        for rule in rules_of(
+            [THRESHOLD, REFUNDING, CHARGED, SHIELDING], RuleFamily.CAST_PROC
         )
         if isinstance(rule.payload, CooldownProcRule)
     }
@@ -134,7 +135,7 @@ def test_a_damage_threshold_trigger_carries_its_share_and_window() -> None:
 
 def test_the_shield_group_is_declared_whole_and_only_where_it_exists() -> None:
     """Eclipse's five shield numbers arrive together; nobody else has them."""
-    (rule,) = cast_proc.cast_proc_rules([SHIELDING])
+    (rule,) = rules_of([SHIELDING], RuleFamily.CAST_PROC)
     shield = rule.payload.self_shield
     assert shield is not None
     (gated,) = _slots(SHIELDING).cooldown_procs
@@ -147,7 +148,7 @@ def test_the_shield_group_is_declared_whole_and_only_where_it_exists() -> None:
     )
     assert gated.stack_required == int(entry["stack_required"])  # type: ignore[arg-type]
     assert gated.late_phase is True
-    (plain_rule,) = cast_proc.cast_proc_rules([FLAT])
+    (plain_rule,) = rules_of([FLAT], RuleFamily.CAST_PROC)
     assert plain_rule.payload.self_shield is None
     assert plain_rule.payload.stacks is None
 
@@ -182,7 +183,7 @@ def test_the_ultimate_procs_shred_is_a_declared_absence_where_it_has_none() -> N
     assert plain.mr_reduction == cast_proc.NO_SIBLING
     (plain_rule,) = [
         rule
-        for rule in cast_proc.cast_proc_rules([PLAIN_ULTIMATE])
+        for rule in rules_of([PLAIN_ULTIMATE], RuleFamily.CAST_PROC)
         if isinstance(rule.payload, UltimateProcRule)
     ]
     assert plain_rule.payload.mr_reduction is None
@@ -197,7 +198,7 @@ def test_the_ultimate_procs_shred_is_a_declared_absence_where_it_has_none() -> N
 def test_the_pair_interpreter_compiles_the_clock_each_shape_has() -> None:
     """A cooldown for one shape, a window for the other, both build-time."""
     for owner, key in ((FLAT, "cooldown"), (SHREDDING, "duration")):
-        (rule,) = cast_proc.cast_proc_rules([owner])
+        (rule,) = rules_of([owner], RuleFamily.CAST_PROC)
         ctx = build_context(
             owner,
             FightFacts(

@@ -33,7 +33,7 @@ from ..item_behavior import (
     ShapedChargeRule,
     SwingScheduleRule,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import build_context
 from ..item_effects import (
     CooldownProcEffect,
     DamageSource,
@@ -46,6 +46,7 @@ from ..item_effects import (
 from ..value_ref import AnyValueRef, resolve
 from . import damage_formula
 from .rearmed_swings import SwingSchedule, _merged_schedule
+from .rule_selection import rules_of
 
 # The field a charged strike compiles to: how many times one build can spend
 # it.  A count is a build-time number; the damage it carries is not.
@@ -136,7 +137,7 @@ def strike_mechanic_id(owner: str) -> str:
     """
     rules = [
         rule
-        for rule in charged_strike_rules([owner])
+        for rule in rules_of([owner], RuleFamily.CHARGED_STRIKE)
         if not isinstance(rule.payload, SwingScheduleRule)
     ]
     if not rules:
@@ -297,16 +298,6 @@ class ChargedStrikeSlots:
     swing_schedule: SwingSchedule | None
 
 
-def charged_strike_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
-    """Every charged strike *owners* declare, in build order."""
-    return tuple(
-        rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.CHARGED_STRIKE
-    )
-
-
 def resolve_slots(
     owners: Sequence[str],
     *,
@@ -323,7 +314,7 @@ def resolve_slots(
     shaped: list[CooldownProcEffect] = []
     buff: UltimateAutoBuffEffect | None = None
     schedules: list[SwingScheduleRule] = []
-    for rule in charged_strike_rules(owners):
+    for rule in rules_of(owners, RuleFamily.CHARGED_STRIKE):
         ctx = build_context(rule.owner, facts)
         payload = rule.payload
         if isinstance(payload, EmpoweredHitRule):
@@ -359,7 +350,6 @@ __all__ = [
     "SHAPED_CHARGE_SUFFIX",
     "ChargedStrikeInterpretationError",
     "ChargedStrikeSlots",
-    "charged_strike_rules",
     "resolve_slots",
     "strike_fields",
     "strike_mechanic_id",

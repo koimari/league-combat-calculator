@@ -40,12 +40,11 @@ from src.calculator.interpreters.damage_routing import (
     FLAT_ROUTING_REFERENCES,
     DamageRoutingInterpretationError,
     declared_execution,
-    walk_rules,
 )
+from src.calculator.interpreters.rule_selection import rules_of
 from src.calculator.interpreters.stat_derivation import (
     declared_stat_derivations,
     reference_fields,
-    stat_derivation_rules,
 )
 from src.calculator.interpreters.sustain import declared_sustain
 from src.calculator.item_behavior import (
@@ -238,7 +237,9 @@ def test_every_declared_routing_payload_has_a_reference_row():
     deferral both carry a melee/ranged share, so the fight-free reader stops
     on them instead of picking a range class nobody supplied."""
     declared = {
-        type(rule.payload) for owner in ITEM_EFFECTS for rule in walk_rules([owner])
+        type(rule.payload)
+        for owner in ITEM_EFFECTS
+        for rule in rules_of([owner], RuleFamily.DAMAGE_ROUTING)
     }
     assert declared
     assert declared <= set(FLAT_ROUTING_REFERENCES)
@@ -251,10 +252,13 @@ def test_a_flat_reader_stops_rather_than_defaulting_a_shape_it_cannot_read():
     """Both refusals are raised, not returned as a zero."""
     with pytest.raises(DamageRoutingInterpretationError):
         damage_routing._flat_fields(  # pylint: disable=protected-access
-            walk_rules([_sole("shield_reduction")])[0], EngineLane.PAIR_ENGINE
+            rules_of([_sole("shield_reduction")], RuleFamily.DAMAGE_ROUTING)[0],
+            EngineLane.PAIR_ENGINE,
         )
     with pytest.raises(CritProfileInterpretationError):
-        crit_profile.crit_references(walk_rules([_sole("execute")])[0])
+        crit_profile.crit_references(
+            rules_of([_sole("execute")], RuleFamily.DAMAGE_ROUTING)[0]
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -353,7 +357,7 @@ def test_the_overdrive_note_quotes_the_catalogs_numbers():
     note = _ladder(owner).conditional_notes[0]
     (rule,) = [
         rule
-        for rule in stat_derivation_rules([owner], FlatStatGrantRule)
+        for rule in rules_of([owner], RuleFamily.STAT_DERIVATION, FlatStatGrantRule)
         if rule.mechanic_id.endswith("attack_speed_percent_grant")
     ]
     for melee in (True, False):

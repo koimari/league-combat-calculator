@@ -15,6 +15,7 @@ import pytest
 from src.calculator import item_behavior_catalog
 from src.calculator.ability_spec import Disposition
 from src.calculator.interpreters import charged_strike, rearmed_swings
+from src.calculator.interpreters.rule_selection import rules_of
 from src.calculator.item_behavior import (
     BehaviorRule,
     BehaviorRuleError,
@@ -100,9 +101,9 @@ def test_every_charged_strike_entry_declares_exactly_one_rule() -> None:
 
 def test_firing_once_is_declared_rather_than_inherited_from_an_absence() -> None:
     """A count is a statement about the mechanic, not a missing key."""
-    (once,) = charged_strike.charged_strike_rules([FIRES_ONCE])
+    (once,) = rules_of([FIRES_ONCE], RuleFamily.CHARGED_STRIKE)
     assert once.payload.max_procs.get() == 1.0
-    (several,) = charged_strike.charged_strike_rules([MULTI_PROC])
+    (several,) = rules_of([MULTI_PROC], RuleFamily.CHARGED_STRIKE)
     assert several.payload.max_procs.get() == pytest.approx(
         float(ITEM_EFFECTS[MULTI_PROC]["empowered_auto_count"])  # type: ignore[arg-type]
     )
@@ -110,15 +111,15 @@ def test_firing_once_is_declared_rather_than_inherited_from_an_absence() -> None
 
 def test_the_optional_mechanics_are_declared_records_or_declared_absences() -> None:
     """Energized stacks, the lethality window and the arc, each said or not."""
-    (plain,) = charged_strike.charged_strike_rules([FIRES_ONCE])
+    (plain,) = rules_of([FIRES_ONCE], RuleFamily.CHARGED_STRIKE)
     assert plain.payload.energized is None
     assert plain.payload.temporary_lethality is None
     assert plain.payload.chain_targets is None
-    (voltaic,) = charged_strike.charged_strike_rules([LETHALITY_WINDOW])
+    (voltaic,) = rules_of([LETHALITY_WINDOW], RuleFamily.CHARGED_STRIKE)
     assert voltaic.payload.energized is not None
     assert voltaic.payload.energized.abilities_also_charge is True
     assert voltaic.payload.temporary_lethality is not None
-    (statikk,) = charged_strike.charged_strike_rules([MULTI_PROC])
+    (statikk,) = rules_of([MULTI_PROC], RuleFamily.CHARGED_STRIKE)
     assert statikk.payload.chain_targets is not None
     assert statikk.payload.energized.abilities_also_charge is False
 
@@ -197,7 +198,7 @@ def test_the_empowered_auto_window_declares_five_numbers_and_no_damage() -> None
     assert buff.reduced_crit_ratio == pytest.approx(
         float(entry["reduced_crit_ratio"])  # type: ignore[arg-type]
     )
-    (rule,) = charged_strike.charged_strike_rules([BUFF])
+    (rule,) = rules_of([BUFF], RuleFamily.CHARGED_STRIKE)
     assert rule.zero_policy.disposition is Disposition.STRUCTURAL_ZERO
 
 
@@ -227,7 +228,7 @@ def test_rows_come_out_in_build_order_with_the_registrys_own_names() -> None:
 
 def test_the_pair_interpreter_compiles_the_count_each_shape_has() -> None:
     """A count is a build-time number; the damage it carries is not."""
-    (rule,) = charged_strike.charged_strike_rules([FLAT_REPEAT])
+    (rule,) = rules_of([FLAT_REPEAT], RuleFamily.CHARGED_STRIKE)
     ctx = build_context(
         FLAT_REPEAT,
         FightFacts(

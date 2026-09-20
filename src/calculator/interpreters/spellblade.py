@@ -31,10 +31,11 @@ from ..item_behavior import (
     SpellbladeRule,
     typed_payload,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import build_context
 from ..item_effects import SpellbladeEffect, damage_source
 from ..value_ref import AnyValueRef, resolve
 from . import damage_formula
+from .rule_selection import rules_of
 
 # The field a spellblade compiles to: the seconds before it can arm again.
 SPELLBLADE_COOLDOWN_FIELD = "spellblade_cooldown"
@@ -72,16 +73,6 @@ spellblade_fields = damage_formula.field_reading(
 )
 
 
-def spellblade_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
-    """Every spellblade *owners* declare, in build order."""
-    return tuple(
-        rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.SPELLBLADE
-    )
-
-
 def declares_self_heal(owners: Sequence[str]) -> bool:
     """Whether the spellblade this build arms heals its holder.
 
@@ -89,7 +80,7 @@ def declares_self_heal(owners: Sequence[str]) -> bool:
     actually arms: a second, unarmed one heals nobody, so counting it would
     make the tuple ledger refuse a heal-free fight.
     """
-    armed = spellblade_rules(owners)[:1]
+    armed = rules_of(owners, RuleFamily.SPELLBLADE)[:1]
     return any(
         _payload(rule).self_heal_ap_ratio is not None
         or _payload(rule).self_heal_bonus_health_ratio is not None
@@ -137,7 +128,7 @@ def resolve_slot(
     spellblade a build carries and ignored the rest, because the mechanics are
     mutually exclusive.
     """
-    for rule in spellblade_rules(owners)[:1]:
+    for rule in rules_of(owners, RuleFamily.SPELLBLADE)[:1]:
         return spellblade_effect(
             rule,
             build_context(rule.owner, facts),
@@ -155,5 +146,4 @@ __all__ = [
     "resolve_slot",
     "spellblade_effect",
     "spellblade_fields",
-    "spellblade_rules",
 ]

@@ -12,6 +12,7 @@ its item's name at the point of use.
 import pytest
 
 from src.calculator.interpreters import periodic
+from src.calculator.interpreters.rule_selection import rules_of
 from src.calculator.item_behavior import (
     EngineLane,
     FightFacts,
@@ -72,7 +73,7 @@ def test_each_tag_declares_the_cadence_that_matches_its_engine_record() -> None:
     """The tag is the registry's whole statement of the mechanic's shape."""
     declared = {
         rule.owner: rule.payload.cadence
-        for rule in periodic.periodic_rules([BURN, AURA, ANGUISH])
+        for rule in rules_of([BURN, AURA, ANGUISH], RuleFamily.PERIODIC)
     }
     assert declared == {
         BURN: PeriodicCadence.REFRESHED_BURN,
@@ -152,7 +153,7 @@ def test_the_self_heal_question_is_answered_from_declarations_alone() -> None:
 
 def test_a_burn_with_no_declared_window_is_refused_at_validation() -> None:
     """The cadence's required field is checked, not assumed."""
-    (rule,) = periodic.periodic_rules([BURN])
+    (rule,) = rules_of([BURN], RuleFamily.PERIODIC)
     unwindowed = type(rule)(
         family=rule.family,
         owner=rule.owner,
@@ -175,7 +176,7 @@ def test_a_burn_with_no_declared_window_is_refused_at_validation() -> None:
 
 def test_a_cadence_may_not_carry_another_cadences_field() -> None:
     """Presence is checked in both directions, so neither move is silent."""
-    (rule,) = periodic.periodic_rules([ANGUISH])
+    (rule,) = rules_of([ANGUISH], RuleFamily.PERIODIC)
     misplaced = type(rule)(
         family=rule.family,
         owner=rule.owner,
@@ -198,7 +199,7 @@ def test_a_cadence_may_not_carry_another_cadences_field() -> None:
 
 def test_the_pair_interpreter_compiles_the_cadence_it_can_know() -> None:
     """A clock is a build-time number; the damage it carries is not."""
-    (rule,) = periodic.periodic_rules([ANGUISH])
+    (rule,) = rules_of([ANGUISH], RuleFamily.PERIODIC)
     ctx = build_context(
         ANGUISH,
         FightFacts(

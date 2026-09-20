@@ -360,7 +360,9 @@ def test_a_context_dependent_shape_is_refused_rather_than_guessed(
             ),
         ),
     )
-    monkeypatch.setattr(sustain, "sustain_rules", lambda owners, kind: (ramped,))
+    monkeypatch.setattr(
+        sustain, "rules_of", lambda owners, family, kind=None: (ramped,)
+    )
     with pytest.raises(SustainInterpretationError, match="fight fact"):
         declared_sustain([rule.owner], PostMitigationHealRule)
 

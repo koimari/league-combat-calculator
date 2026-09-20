@@ -31,10 +31,11 @@ from ..item_behavior import (
     RuleFamily,
     typed_payload,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import build_context
 from ..item_effects import BurnEffect, DamageSource, PeriodicEffect, damage_source
 from ..value_ref import resolve
 from . import damage_formula
+from .rule_selection import rules_of
 
 # The field a periodic strike compiles to: the seconds between its packets.
 # Unlike its damage, a cadence really is a build-time number.
@@ -120,22 +121,13 @@ class PeriodicSlots:
     range_units: Mapping[str, float]
 
 
-def periodic_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
-    """Every periodic strike *owners* declare, in build order."""
-    return tuple(
-        rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.PERIODIC
-    )
-
-
 def declares_self_heal(owners: Sequence[str]) -> bool:
     """Whether any declared periodic strike heals its holder, answered from the
     declarations alone rather than from a resolved fight.
     """
     return any(
-        _payload(rule).self_heal_share is not None for rule in periodic_rules(owners)
+        _payload(rule).self_heal_share is not None
+        for rule in rules_of(owners, RuleFamily.PERIODIC)
     )
 
 
@@ -154,7 +146,7 @@ def resolve_slots(
     auras: list[DamageSource] = []
     intervals: list[PeriodicEffect] = []
     range_units: dict[str, float] = {}
-    for rule in periodic_rules(owners):
+    for rule in rules_of(owners, RuleFamily.PERIODIC):
         payload = _payload(rule)
         ctx = build_context(rule.owner, facts)
         interval = resolve(payload.interval, ctx.level)
@@ -203,6 +195,5 @@ __all__ = [
     "PeriodicSlots",
     "cadence_fields",
     "declares_self_heal",
-    "periodic_rules",
     "resolve_slots",
 ]

@@ -35,8 +35,8 @@ from ..item_behavior import (
     compiled_value,
     flat_fields,
 )
-from ..item_behavior_catalog import behavior_rules
 from ..value_ref import AnyValueRef, resolve
+from .rule_selection import rules_of
 
 # The field names a crit-profile rule compiles to.  One per declared number,
 # named for what it *is* rather than for the item it came from.
@@ -175,16 +175,6 @@ class CritProfile:
     cooldown_refund: CooldownRefund | None
 
 
-def crit_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
-    """Every crit-profile rule *owners* bring, in build order."""
-    return tuple(
-        rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.CRIT_PROFILE
-    )
-
-
 def _field(fields: tuple[KernelField, ...], name: str) -> float:
     """One compiled field by name, or a stop naming the question asked."""
     return compiled_value(
@@ -246,7 +236,7 @@ def _fold(
     damage_bonus = 0.0
     forced: ForcedCrit | None = None
     refund: CooldownRefund | None = None
-    for rule in crit_rules(owners):
+    for rule in rules_of(owners, RuleFamily.CRIT_PROFILE):
         fields = compile_fields(rule)
         payload = rule.payload
         if isinstance(payload, CritDamageBonusRule):
@@ -292,6 +282,5 @@ __all__ = [
     "ForcedCrit",
     "crit_fields",
     "crit_references",
-    "crit_rules",
     "declared_crit_profile",
 ]

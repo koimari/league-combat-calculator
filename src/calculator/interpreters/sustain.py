@@ -48,10 +48,10 @@ from ..item_behavior import (
     SustainStatRule,
     sole_declared,
 )
-from ..item_behavior_catalog import behavior_rules
 from ..reference_vocabulary import ValueRefError
 from ..value_ref import resolve, resolve_flat
 from .defense_state import DefenseInterpretationError, DefenseSlot
+from .rule_selection import rules_of
 
 
 class SustainInterpretationError(ValueError):
@@ -159,18 +159,6 @@ class SustainSlot(CompiledSlot):
         return self.rule.owner
 
 
-def sustain_rules(
-    owners: Sequence[str], payload_type: type
-) -> tuple[BehaviorRule, ...]:
-    """Every sustain rule of one shape *owners* bring, in build order."""
-    return tuple(
-        rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.SUSTAIN and isinstance(rule.payload, payload_type)
-    )
-
-
 def declared_sustain(owners: Sequence[str], payload_type: type) -> SustainSlot | None:
     """This build's sustain of one shape, from flat references alone.
 
@@ -198,7 +186,10 @@ def _sole_rule(owners: Sequence[str], payload_type: type) -> BehaviorRule | None
 
     ``None`` is an answer and not a zero: no holder restores health this way."""
     return sole_declared(
-        sustain_rules, owners, payload_type, SustainInterpretationError
+        lambda held, kind: rules_of(held, RuleFamily.SUSTAIN, kind),
+        owners,
+        payload_type,
+        SustainInterpretationError,
     )
 
 
@@ -240,7 +231,7 @@ def stat_grants(owners: Sequence[str], stat: SustainStat) -> tuple[BehaviorRule,
     """
     return tuple(
         rule
-        for rule in sustain_rules(owners, SustainStatRule)
+        for rule in rules_of(owners, RuleFamily.SUSTAIN, SustainStatRule)
         if isinstance(rule.payload, SustainStatRule) and rule.payload.stat is stat
     )
 
@@ -301,7 +292,6 @@ __all__ = [
     "saturating_stat_percent",
     "stat_grants",
     "sustain_fields",
-    "sustain_rules",
     "walk_fields",
     "walk_slot",
 ]

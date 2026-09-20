@@ -12,6 +12,7 @@ that a build holding two spellblades still arms exactly one.
 import pytest
 
 from src.calculator.interpreters import spellblade
+from src.calculator.interpreters.rule_selection import rules_of
 from src.calculator.item_behavior import (
     EngineLane,
     FightFacts,
@@ -110,7 +111,7 @@ def test_the_crit_share_is_capped_at_one_whole_critical_strike() -> None:
 
 def test_a_sibling_a_spellblade_does_not_have_is_a_declared_absence() -> None:
     """``None`` and a sourced rate are different claims about the item."""
-    (plain,) = spellblade.spellblade_rules([PLAIN])
+    (plain,) = rules_of([PLAIN], RuleFamily.SPELLBLADE)
     assert plain.payload.bonus_attack_speed_percent is None
     assert plain.payload.mana_restore_base_ad_ratio is None
     assert plain.payload.self_heal_ap_ratio is None
@@ -122,10 +123,10 @@ def test_a_sibling_a_spellblade_does_not_have_is_a_declared_absence() -> None:
 
 def test_each_sibling_group_is_declared_whole() -> None:
     """Both halves of a two-key sibling arrive together or not at all."""
-    (essence,) = spellblade.spellblade_rules([WITH_CRIT])
+    (essence,) = rules_of([WITH_CRIT], RuleFamily.SPELLBLADE)
     assert essence.payload.mana_restore_base_ad_ratio is not None
     assert essence.payload.mana_restore_crit_ratio is not None
-    (dusk,) = spellblade.spellblade_rules([DOUBLE_ON_HIT])
+    (dusk,) = rules_of([DOUBLE_ON_HIT], RuleFamily.SPELLBLADE)
     assert dusk.payload.self_heal_ap_ratio is not None
     assert dusk.payload.self_heal_bonus_health_ratio is not None
     assert dusk.payload.double_on_hit is True
@@ -133,7 +134,7 @@ def test_each_sibling_group_is_declared_whole() -> None:
 
 def test_half_a_sibling_is_refused_at_validation() -> None:
     """A rule built past the group rule is a stop, not a weaker item."""
-    (dusk,) = spellblade.spellblade_rules([DOUBLE_ON_HIT])
+    (dusk,) = rules_of([DOUBLE_ON_HIT], RuleFamily.SPELLBLADE)
     halved = type(dusk)(
         family=dusk.family,
         owner=dusk.owner,
@@ -162,7 +163,7 @@ def test_a_build_holding_two_spellblades_arms_exactly_one() -> None:
     armed = _armed(SECOND, PLAIN)
     assert armed is not None
     assert armed.source.item_name == SECOND
-    assert len(spellblade.spellblade_rules([SECOND, PLAIN])) == 2
+    assert len(rules_of([SECOND, PLAIN], RuleFamily.SPELLBLADE)) == 2
 
 
 def test_the_self_heal_question_reads_only_the_armed_spellblade() -> None:
@@ -188,7 +189,7 @@ def test_the_row_keeps_the_breakdown_key_the_engine_publishes() -> None:
 
 def test_the_pair_interpreter_compiles_the_cooldown_it_can_know() -> None:
     """A cooldown is a build-time number; the empowered attack's damage is not."""
-    (rule,) = spellblade.spellblade_rules([PLAIN])
+    (rule,) = rules_of([PLAIN], RuleFamily.SPELLBLADE)
     ctx = build_context(
         PLAIN,
         FightFacts(

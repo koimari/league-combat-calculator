@@ -22,11 +22,11 @@ from src.calculator import item_behavior_catalog as catalog
 from src.calculator import item_effects
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.interpreters import INTERPRETERS, stat_derivation
+from src.calculator.interpreters.rule_selection import rules_of
 from src.calculator.interpreters.stat_derivation import (
     StatDerivationInterpretationError,
     declared_stat_derivations,
     reference_fields,
-    stat_derivation_rules,
 )
 from src.calculator.item_behavior import (
     DURABILITY_STATS,
@@ -94,7 +94,7 @@ def _slots(owner: str, payload_type: type, *, melee: bool = True):
                 EngineLane.STAT_RESOLVER,
             ),
         )
-        for rule in stat_derivation_rules([owner], payload_type)
+        for rule in rules_of([owner], RuleFamily.STAT_DERIVATION, payload_type)
     )
 
 
@@ -316,11 +316,13 @@ def test_two_holders_of_a_non_composing_shape_are_a_stop(
     the registry carries exactly one today — which is why the refusal needs a
     test at all: a branch no live build reaches is one nobody has run.
     """
-    rule = stat_derivation_rules([CAST_ECONOMY_HOLDER], ActiveWindowCastEconomyRule)[0]
+    rule = rules_of(
+        [CAST_ECONOMY_HOLDER], RuleFamily.STAT_DERIVATION, ActiveWindowCastEconomyRule
+    )[0]
     monkeypatch.setattr(
         stat_derivation,
-        "stat_derivation_rules",
-        lambda owners, kind: (rule, replace(rule, owner="Second Holder")),
+        "rules_of",
+        lambda owners, family, kind=None: (rule, replace(rule, owner="Second Holder")),
     )
     with pytest.raises(StatDerivationInterpretationError, match="how two of them"):
         stat_derivation.sole_declared_derivation(
@@ -369,7 +371,9 @@ def test_both_lanes_are_registered_and_stamp_their_own_lane() -> None:
     """Two registrations, because a KernelField carries the lane it was built for."""
     for lane in (EngineLane.PAIR_ENGINE, EngineLane.STAT_RESOLVER):
         assert INTERPRETERS[(RuleFamily.STAT_DERIVATION, lane)] is reference_fields
-        rule = stat_derivation_rules([MULTIPLIER_HOLDER], StatMultiplierRule)[0]
+        rule = rules_of(
+            [MULTIPLIER_HOLDER], RuleFamily.STAT_DERIVATION, StatMultiplierRule
+        )[0]
         fields = reference_fields(
             rule,
             catalog.build_context(
@@ -462,7 +466,10 @@ def test_a_level_ramped_derivation_is_refused_rather_than_guessed(
     a fight-free reader is a stop naming the accessor that has a context.
     """
     rule = next(
-        rule for rule in stat_derivation_rules(["Warmog's Armor"], ThresholdRegenRule)
+        rule
+        for rule in rules_of(
+            ["Warmog's Armor"], RuleFamily.STAT_DERIVATION, ThresholdRegenRule
+        )
     )
     ramped = replace(
         rule,
@@ -478,7 +485,7 @@ def test_a_level_ramped_derivation_is_refused_rather_than_guessed(
         ),
     )
     monkeypatch.setattr(
-        stat_derivation, "stat_derivation_rules", lambda owners, kind: (ramped,)
+        stat_derivation, "rules_of", lambda owners, family, kind=None: (ramped,)
     )
     with pytest.raises(StatDerivationInterpretationError, match="fight fact"):
         declared_stat_derivations(["Warmog's Armor"], ThresholdRegenRule)

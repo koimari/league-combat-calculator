@@ -59,7 +59,7 @@ from ..item_behavior import (
     WindowMerge,
     chain_rank,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import build_context
 from .amp_magnitude import (
     AMP_FRACTION_FIELD,
     LIVE_THRESHOLD_FIELD,
@@ -70,6 +70,7 @@ from .amp_magnitude import (
     _declared_field,
     amp_fields,
 )
+from .rule_selection import rules_of
 
 
 @dataclass(frozen=True, slots=True)
@@ -334,21 +335,12 @@ class AmpSlot:
 
 
 def slot_rules(owners: Sequence[str], slot: AmpChainSlot) -> tuple[BehaviorRule, ...]:
-    """Every declared rule *owners* bring to one chain slot, in build order.
-
-    Build order is the order the items were bought, which is the order the
-    engine's own accumulator folded them in.  Preserving it is what makes a
-    migration provably arithmetic-neutral rather than merely equivalent in
-    exact arithmetic.
-    """
+    """Every declared rule *owners* bring to one chain slot, in build order."""
     rank = chain_rank(slot)
     return tuple(
         rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.DELTA_AMP
-        and isinstance(rule.payload, DeltaAmpRule)
-        and rule.payload.lane_chain_rank == rank
+        for rule in rules_of(owners, RuleFamily.DELTA_AMP, DeltaAmpRule)
+        if rule.payload.lane_chain_rank == rank
     )
 
 

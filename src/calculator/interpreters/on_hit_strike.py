@@ -35,6 +35,7 @@ from ..item_behavior_catalog import behavior_rules, built_per_rule
 from ..item_effects import PerHitEffect, damage_source
 from ..value_ref import resolve
 from . import damage_formula
+from .rule_selection import rules_of
 
 # The field a strike rule compiles to for inspection: its term count.  A
 # strike's *number* is not a build-time value — it depends on the target's
@@ -216,23 +217,15 @@ def per_hit_effect(rule: BehaviorRule, ctx: BuildContext) -> PerHitEffect:
     )
 
 
-def strike_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
-    """Every on-hit strike *owners* declare, in build order."""
-    return tuple(
-        rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.ON_HIT_STRIKE
-    )
-
-
 def per_hit_effects(
     owners: Sequence[str],
     *,
     facts: FightFacts,
 ) -> tuple[PerHitEffect, ...]:
     """Every on-hit strike this build declares, its facts threaded, not defaulted."""
-    return built_per_rule(strike_rules(owners), per_hit_effect, facts=facts)
+    return built_per_rule(
+        rules_of(owners, RuleFamily.ON_HIT_STRIKE), per_hit_effect, facts=facts
+    )
 
 
 __all__ = [
@@ -250,5 +243,4 @@ __all__ = [
     "per_hit_effect",
     "per_hit_effects",
     "strike_fields",
-    "strike_rules",
 ]

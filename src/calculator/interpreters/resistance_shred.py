@@ -47,8 +47,9 @@ from ..item_behavior import (
     ResistanceShredRule,
     RuleFamily,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import build_context
 from ..value_ref import resolve
+from .rule_selection import rules_of
 
 # The field names a shred rule compiles to.  ``per_stack`` is a fraction of
 # the target's resistance, never a percentage: the percent conversion is the
@@ -219,11 +220,8 @@ def shred_rules(
     """Every declared shred *owners* bring to one resistance, in build order."""
     return tuple(
         rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.RESISTANCE_SHRED
-        and isinstance(rule.payload, ResistanceShredRule)
-        and rule.payload.resistance is resistance
+        for rule in rules_of(owners, RuleFamily.RESISTANCE_SHRED, ResistanceShredRule)
+        if rule.payload.resistance is resistance
     )
 
 

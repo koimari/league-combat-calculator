@@ -36,7 +36,7 @@ from ..item_behavior import (
     RuleFamily,
     UltimateProcRule,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import build_context
 from ..item_effects import (
     CooldownProcEffect,
     DamageSource,
@@ -45,6 +45,7 @@ from ..item_effects import (
 )
 from ..value_ref import AnyValueRef, resolve
 from . import damage_formula
+from .rule_selection import rules_of
 
 # The field a cast proc compiles to: the seconds before it can arm again.
 PROC_COOLDOWN_FIELD = "proc_cooldown"
@@ -246,16 +247,6 @@ class CastProcSlots:
     ultimate_procs: tuple[UltimateProcEffect, ...]
 
 
-def cast_proc_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
-    """Every cast-triggered proc *owners* declare, in build order."""
-    return tuple(
-        rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.CAST_PROC
-    )
-
-
 def self_shield_owners(owners: Sequence[str]) -> tuple[str, ...]:
     """Every held owner whose cast proc attaches a self shield to its event.
 
@@ -264,7 +255,7 @@ def self_shield_owners(owners: Sequence[str]) -> tuple[str, ...]:
     """
     return tuple(
         rule.owner
-        for rule in cast_proc_rules(owners)
+        for rule in rules_of(owners, RuleFamily.CAST_PROC)
         if getattr(rule.payload, "self_shield", None) is not None
     )
 
@@ -282,7 +273,7 @@ def resolve_slots(
     """
     cooldown_procs: list[CooldownProcEffect] = []
     ultimate_procs: list[UltimateProcEffect] = []
-    for rule in cast_proc_rules(owners):
+    for rule in rules_of(owners, RuleFamily.CAST_PROC):
         ctx = build_context(rule.owner, facts)
         if isinstance(rule.payload, UltimateProcRule):
             ultimate_procs.append(ultimate_proc_effect(rule, ctx))
@@ -305,7 +296,6 @@ __all__ = [
     "UNSPLIT_MULTIPLIER",
     "CastProcInterpretationError",
     "CastProcSlots",
-    "cast_proc_rules",
     "cooldown_proc_effect",
     "proc_fields",
     "repeated_target_multiplier",

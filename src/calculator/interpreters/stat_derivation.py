@@ -39,9 +39,9 @@ from ..item_behavior import (
     StatAvailability,
     sole_declared,
 )
-from ..item_behavior_catalog import behavior_rules
 from ..reference_vocabulary import ValueRefError
 from ..value_ref import resolve, resolve_flat
+from .rule_selection import rules_of
 
 
 class StatDerivationInterpretationError(ValueError):
@@ -139,19 +139,6 @@ class StatSlot(CompiledSlot):
         return self.rule.payload.availability
 
 
-def stat_derivation_rules(
-    owners: Sequence[str], payload_type: type
-) -> tuple[BehaviorRule, ...]:
-    """Every stat-derivation rule of one shape *owners* bring, in build order."""
-    return tuple(
-        rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.STAT_DERIVATION
-        and isinstance(rule.payload, payload_type)
-    )
-
-
 def sole_declared_derivation(
     owners: Sequence[str], payload_type: type
 ) -> StatSlot | None:
@@ -180,7 +167,7 @@ def declared_stat_derivations(
     would invent a restriction the game does not have.
     """
     slots: list[StatSlot] = []
-    for rule in stat_derivation_rules(owners, payload_type):
+    for rule in rules_of(owners, RuleFamily.STAT_DERIVATION, payload_type):
         payload = rule.payload
         names = tuple(
             name
@@ -260,5 +247,4 @@ __all__ = [
     "declared_stat_derivations",
     "reference_fields",
     "sole_declared_derivation",
-    "stat_derivation_rules",
 ]

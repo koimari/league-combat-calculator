@@ -20,6 +20,7 @@ from src.calculator import item_behavior_catalog as catalog
 from src.calculator.ability_spec import Authority
 from src.calculator.interpreters import damage_routing, resistance_shred
 from src.calculator.interpreters.ally_packet import AllyPacketSlot
+from src.calculator.interpreters.rule_selection import rules_of
 from src.calculator.item_behavior import (
     SUBJECT_AUTHORITY,
     AllyProducer,
@@ -864,7 +865,7 @@ def test_no_routing_declaration_is_left_without_a_walk_branch() -> None:
     mechanic whose payload the interpreter has no branch for raises here
     instead of reaching a payload as a silently unstaged rider.
     """
-    rules = damage_routing.walk_rules(sorted(catalog.rule_owners()))
+    rules = rules_of(sorted(catalog.rule_owners()), RuleFamily.DAMAGE_ROUTING)
     assert {rule.mechanic_id for rule in rules} == {
         "deaths_dance.ignore_pain",
         "serpents_fang.shield_bypass",

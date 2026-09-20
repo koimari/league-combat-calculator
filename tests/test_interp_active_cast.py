@@ -12,6 +12,7 @@ declarations rather than one defaulted zero.
 import pytest
 
 from src.calculator.interpreters import active_cast
+from src.calculator.interpreters.rule_selection import rules_of
 from src.calculator.item_behavior import (
     ActiveCastRule,
     EngineLane,
@@ -95,7 +96,7 @@ def test_life_steal_inheritance_is_declared_and_its_absence_is_too() -> None:
     declared = float(ITEM_EFFECTS[LIFESTEALING]["lifesteal_effectiveness"])  # type: ignore[arg-type]
     assert inheriting.lifesteal_effectiveness == pytest.approx(declared)
     assert plain.lifesteal_effectiveness == active_cast.NO_INHERITED_LIFESTEAL
-    (rule,) = active_cast.active_rules([PLAIN])
+    (rule,) = rules_of([PLAIN], RuleFamily.ACTIVE_CAST)
     assert rule.payload.lifesteal_effectiveness is None
 
 
@@ -112,7 +113,7 @@ def test_rows_come_out_in_build_order_with_the_engine_s_own_keys() -> None:
 
 def test_the_pair_interpreter_compiles_the_cooldown_it_can_know() -> None:
     """A cooldown is a build-time number; a strike's damage is not."""
-    (rule,) = active_cast.active_rules([PLAIN])
+    (rule,) = rules_of([PLAIN], RuleFamily.ACTIVE_CAST)
     ctx = build_context(
         PLAIN,
         FightFacts(

@@ -42,7 +42,7 @@ from ..item_behavior import (
     compiled_value,
     flat_fields,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import build_context
 from ..value_ref import AnyValueRef, resolve
 from .damage_deferral import (
     DEFER_DURATION_FIELD,
@@ -51,6 +51,7 @@ from .damage_deferral import (
     Deferral,
 )
 from .defense_state import DefenseSlot
+from .rule_selection import rules_of
 
 # The field names a routing rule compiles to on the pair lane.
 EXECUTE_THRESHOLD_FIELD = "execute_threshold"
@@ -204,9 +205,7 @@ def _sole_rule(owners: Sequence[str], payload_type: type) -> BehaviorRule | None
     compose is a declaration somebody owes, and guessing it here is the silent
     default this campaign exists to remove.
     """
-    found = [
-        rule for rule in walk_rules(owners) if isinstance(rule.payload, payload_type)
-    ]
+    found = list(rules_of(owners, RuleFamily.DAMAGE_ROUTING, payload_type))
     if not found:
         return None
     if len(found) > 1:
@@ -299,21 +298,6 @@ class Venom:
     owner: str
     keep: float
     duration: float
-
-
-def walk_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
-    """Every routing rule *owners* bring, in build order, for the walk lane.
-
-    All three payload shapes: the walk stages the deferral as well, and
-    reading only the two the pair engine prices is how the third would
-    quietly keep arriving from somewhere else.
-    """
-    return tuple(
-        rule
-        for owner in owners
-        for rule in behavior_rules(owner)
-        if rule.family is RuleFamily.DAMAGE_ROUTING
-    )
 
 
 def _walk_fields(  # pylint: disable=too-many-arguments
@@ -427,6 +411,5 @@ __all__ = [
     "walk_deferral",
     "walk_execution",
     "walk_fields",
-    "walk_rules",
     "walk_venom",
 ]
