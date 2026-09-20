@@ -985,6 +985,7 @@ class TestUnchangedBoundaries:
             "min": 0,
             "max": 1,
             "label": "Turret variant (Evolution/Apex)",
+            "rotation": {"role": "irrelevant", "slot": "Q"},
         }
         assert by_key["q_turrets"]["default"] == 3
         assert by_key["q_turrets"]["min"] == 1

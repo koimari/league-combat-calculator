@@ -808,18 +808,21 @@ class TestOptions:
             "min": 0,
             "max": 8,
             "label": "Dauntless Instinct marked attacks",
+            "rotation": {"role": "self_state", "slot": "P"},
         }
         assert by_key["r_terrain"] == {
             "key": "r_terrain",
             "type": "bool",
             "default": False,
             "label": "All Out terrain strike",
+            "rotation": {"role": "irrelevant", "slot": "R"},
         }
         assert by_key["all_out"] == {
             "key": "all_out",
             "type": "bool",
             "default": False,
             "label": "All Out state",
+            "rotation": {"role": "self_state", "slot": "R"},
         }
 
     def test_options_served_by_config_endpoint(self):

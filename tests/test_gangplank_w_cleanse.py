@@ -543,6 +543,7 @@ class TestAbsentOption:
                 "Trial by Fire procs; unset derives them from the cached "
                 "cooldown, which a Powder Keg explosion would reset"
             ),
+            "rotation": {"role": "self_state", "slot": "P"},
             # SR9: the label already said "unset derives them"; the flag is
             # what lets the page actually leave the key out.
             "derives": True,
@@ -552,12 +553,14 @@ class TestAbsentOption:
             "type": "bool",
             "default": False,
             "label": "Cannon Barrage Fire at Will upgrade",
+            "rotation": {"role": "irrelevant", "slot": "R"},
         }
         assert by_key["r_deaths_daughter"] == {
             "key": "r_deaths_daughter",
             "type": "bool",
             "default": False,
             "label": "Cannon Barrage Death's Daughter upgrade",
+            "rotation": {"role": "irrelevant", "slot": "R"},
         }
 
     def test_no_w_option_w_stays_no_damage_stub(self):

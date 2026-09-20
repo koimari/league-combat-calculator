@@ -1418,6 +1418,7 @@ class TestUnchangedBoundaries:
             "max": 4,
             "label": "Ferocity stacks (4 = empowered next)",
             "state": by_key["p_ferocity"]["state"],
+            "rotation": {"role": "self_state", "slot": "P"},
         }
         assert by_key["p_ferocity"]["state"]["max_stacks"] == 4
 
