@@ -66,8 +66,9 @@ baseline with every diff explained in the commit.
 `[tool.ruff.lint] ignore` and `per-file-ignores`, `[tool.simply-elegant]`
 `comment-rules-off` and `comment-per-file-off`, and `[tool.sightline]` `excludes`
 and `rules-off`, each with its reason beside it. Run the tree gate with
-`python <plugin>/hooks/lint_gate.py --tree . --statistics`. The ruff suite is at
-zero, so a finding there is a regression. `.sightline-baseline`
+`python <plugin>/hooks/lint_gate.py --tree . --statistics`. The ruff suite is not
+at zero: 139 findings on this tree, almost all in `tests/`, and the count may only
+fall (a new finding in a file you touched is a regression). `.sightline-baseline`
 holds only what is deferred with a reason, today 59 entries under three rules:
 #27 (53), #14 (3) and #11 (3). A finding under any other rule is a regression,
 not a candidate for the baseline; `sightline baseline .` regenerates the file and

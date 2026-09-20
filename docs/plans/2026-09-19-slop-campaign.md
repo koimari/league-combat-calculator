@@ -54,7 +54,7 @@ section 11) and on the docstrings that cite HANDOVER. The integrator resolves th
 | every wave | `make ci-full` green on the merged tree, both golden compares identical, `pytest -n auto` count reported before and after |
 | A | `git ls-files` down by about 1,500 entries, tracked data down by about 17 MB, `CLAUDE.md` under about 1,600 words with `TRAPS.md` and `architecture.md` holding the moved entries, a test fails when a tracked receipt has no reader and when a tracked JSON holds a machine path |
 | B | `tests/` down by about 13,000 lines, the three contract tests parametrized in `test_module_cc_census.py`, zero `.clear()` on a process-wide cache in `tests/`, zero campaign-named test files |
-| C | `src/` down by about 2,100 lines plus the wrappers, `import src.calculator.quantity` under 100 ms, pylint `--fail-on` widened to `E0102` |
+| C | `src/` down by about 2,100 lines plus the wrappers, `import src.calculator.quantity` under 450 ms from 574 (the 100 ms the audit implied needs `champions/inputs.py` out of the champions package, a Wave E assignment file), pylint `--fail-on` widened to `E0102` |
 | D | each codemod's commit shows identical goldens, `derive_self_healing` takes one `SelfHealCtx`, the seven silent prose readers raise on a miss |
 | E | `scripts/literal_defaults.py` reports zero engine-row sites, `test_literal_defaults.py` deleted, one `InterpretationError`, `SurvivalAction` split with its bench row |
 

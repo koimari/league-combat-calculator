@@ -3101,9 +3101,7 @@ def _grey_health_event_receipt(
     if name == "Tahm Kench":
         if not incoming:
             return None
-        ability_rank = max(
-            1, int(ability_ranks.get("E", 0) or 0) if ability_ranks else 0
-        )
+        ability_rank = int(ability_ranks.get("E", 0) or 0) if ability_ranks else 0
         if ability_rank == 0:
             ability_rank = max(1, int(get_ability_rank("E", level, name)))
         rank_row = _TAHM_E_STORE_MULTI_RANK if enemy_count >= 2 else _TAHM_E_STORE_RANK
