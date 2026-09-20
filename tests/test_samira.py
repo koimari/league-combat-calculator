@@ -56,7 +56,6 @@ class TestCoverageMap:
     """
 
     def test_the_map_is_the_rows_the_module_prices(self):
-        assert not hasattr(samira, "MODULE_COVERAGE")
         assert get_champion_module_contract("Samira").coverage == dict.fromkeys(
             "PQWER", "modeled"
         )

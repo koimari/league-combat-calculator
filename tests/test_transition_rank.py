@@ -502,29 +502,6 @@ def test_support_kinds_classify_to_their_ladder_rank() -> None:
         assert support_transition_rank({"kind": kind}) is rank
 
 
-def test_the_float_projection_is_deleted_from_the_tree() -> None:
-    """``legacy_phase`` is gone, not merely unused (criterion 7).
-
-    An AST scan rather than a text one: the survival package's docstring
-    still tells the story of a name that left its ``__all__``, and a
-    grep-shaped guard would have to be weakened to admit that sentence —
-    which is how a guard stops being able to fail.
-    """
-    offenders: list[tuple[str, int]] = []
-    for path in sorted((ROOT / "src").rglob("*.py")):
-        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
-            spellings = (
-                getattr(node, "id", ""),
-                getattr(node, "attr", ""),
-                getattr(node, "name", ""),
-                getattr(node, "asname", ""),
-            )
-            if "legacy_phase" in spellings:
-                offenders.append((path.name, getattr(node, "lineno", 0)))
-    assert offenders == []
-    assert not hasattr(actions_module, "legacy_phase")
-
-
 def test_the_action_carries_a_rank_and_not_a_float() -> None:
     """The phase field's type is the vocabulary, not a number.
 

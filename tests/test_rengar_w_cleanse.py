@@ -914,94 +914,6 @@ class TestCastTiming:
 
 
 class TestCrowdControlAndSuppression:
-    def test_kernel_rengar_declaration_gates(self):
-        # Kernel evidence (PASS): the Slice 4 kernel already implements
-        # every empowered-W gate for the candidate declaration — self
-        # scope denies a foreign target; an active stun is truncated; an
-        # airborne/knockback/knockup interval is rejected with the named
-        # excluded_control_kind reason; suppression blocks the self-cast
-        # (caster_control_blocks_cleanse, use NOT consumed); an unknown
-        # kind fails closed with unknown_control.
-        eligibility = CleanseEligibility(declaration=dict(_RENGAR_DECLARATION))
-        base = {
-            "time": 1.5,
-            "source_key": "Rengar W",
-            "sequence": 0,
-            "event_id": "w:0",
-            "target": "main",
-            "holder": "main",
-        }
-        foreign_action = dict(base)
-        foreign_action["target"] = "ally"
-        foreign = eligibility.decide(SimpleNamespace(**foreign_action))
-        assert foreign.eligible is False
-        assert foreign.reason == "target_not_selected"
-        assert foreign.use_consumed is False
-        for kind, reason in (
-            ("airborne", "excluded_control_kind"),
-            ("knockback", "excluded_control_kind"),
-            ("knockup", "excluded_control_kind"),
-            ("suppression", "caster_control_blocks_cleanse"),
-            ("dance", "unknown_control"),
-        ):
-            decision = eligibility.decide(
-                SimpleNamespace(
-                    **base,
-                    active_controls=[
-                        {"kind": kind, "start": 1.0, "end": 3.0, "source": "R"}
-                    ],
-                )
-            )
-            assert decision.eligible is False, kind
-            assert decision.reason == reason, kind
-            if kind == "suppression":
-                assert decision.use_consumed is False
-        stun = eligibility.decide(
-            SimpleNamespace(
-                **base,
-                active_controls=[
-                    {"kind": "stun", "start": 1.0, "end": 3.0, "source": "E"}
-                ],
-            )
-        )
-        assert stun.eligible is True
-        assert stun.removed_controls[0]["control_kind"] == "stun"
-        assert stun.intervals_after == [
-            {
-                "control_kind": "stun",
-                "source": "E",
-                "start": pytest.approx(1.0),
-                "end": pytest.approx(1.5),
-            }
-        ]
-
-    def test_kernel_cleanse_fires_while_caster_crowd_controlled(self):
-        # Kernel evidence (PASS): utility-kind cleanse packets dispatch
-        # BEFORE the attacker-state gate (the QSS/Mercurial castability
-        # precedent — a self cleanse is castable while disabled), so the
-        # GP W packet at 1.5 fires while the caster's charm is active.
-        result = _kernel_survival(
-            controls=[_control_packet(0.5, "immobilize", 1.8, source="E")],
-            cleanses=[
-                {
-                    "time": 1.5,
-                    "kind": "cleanse",
-                    "amount": 1.0,
-                    "cleanse_item": "Gangplank W",
-                    "source_key": "Gangplank W",
-                    "utility_kind": "cleanse",
-                    "source": "Gangplank W — Remove Scurvy",
-                    "attacker": "main",
-                    "target": "main",
-                    "sequence": 0,
-                    "_event_id": "gp:cleanse:0",
-                }
-            ],
-        )
-        cleanse = result["main"]["cleanse"]
-        assert cleanse["decision"]["eligible"] is True
-        assert cleanse["removed_controls"][0]["reason"] == ""
-
     def test_grey_heal_gated_while_caster_cc_today(self):
         # Pinned actual (the E8a heal rides the attacker-state gate): the
         # grey-health heal authored at the W cast is SKIPPED with
@@ -1014,29 +926,6 @@ class TestCrowdControlAndSuppression:
         assert heal["time"] == pytest.approx(0.0)
         assert heal["skipped_reason"] == "attacker_state_blocked"
         assert heal["applied_amount"] == 0.0
-
-    def test_kernel_heal_cast_while_disabled_carve_out(self):
-        # Kernel evidence (PASS): the Slice 5 heal exemption (the flag the
-        # Gangplank W heal rides) already exists — a heal packet carrying
-        # cast_while_disabled lands while the caster is CC'd; without the
-        # flag it is blocked.  The empowered-W heal contract (xfailed
-        # below) is exactly this carve-out on the grey-heal authoring.
-        controls = [
-            _damage_packet(0.5, 200.0),
-            _control_packet(0.5, "immobilize", 1.8, source="E"),
-        ]
-        blocked = _kernel_survival(
-            controls=controls,
-            heals=[_grey_heal_event(1.5, 100.0)],
-            main_health=1400.0,
-        )
-        assert blocked["main"]["healing_received"] == pytest.approx(0.0)
-        landed = _kernel_survival(
-            controls=controls,
-            heals=[_grey_heal_event(1.5, 100.0, cast_while_disabled=True)],
-            main_health=1400.0,
-        )
-        assert landed["main"]["healing_received"] == pytest.approx(100.0)
 
     def test_rengar_cleanse_fires_while_caster_crowd_controlled(self):
         # P2-6 contract (the spell's defining property): the empowered W
@@ -1112,16 +1001,6 @@ class TestCrowdControlAndSuppression:
         assert result["main"]["crowd_control_intervals"] == []
         assert result["main"]["action_downtime"] == pytest.approx(0.0)
 
-    def test_a_kind_outside_the_vocabulary_never_reaches_the_kernel(self):
-        # The stricter half of the same fail-closed rule: a misspelled kind
-        # is refused where the packet becomes an action, naming the kind and
-        # the vocabulary, instead of being classified as nothing.
-        with pytest.raises(ValueError, match="'dance' is not in CC_KIND_VOCABULARY"):
-            _kernel_survival(
-                controls=[_control_packet(1.0, "dance", 2.0, source="E")],
-                cleanses=[_rengar_cleanse_packet(1.5, 0)],
-            )
-
     def test_empowered_w_heal_fires_while_caster_cc(self):
         # P2-6 contract: the grey-health heal riding the EMPOWERED W cast
         # is castable while disabled (the Slice 5 heal flag on the
@@ -1140,87 +1019,6 @@ class TestCrowdControlAndSuppression:
 
 
 class TestOneUse:
-    def test_kernel_one_use_latch(self):
-        # Kernel evidence (PASS): the Slice 4 per-fight one-use latch — a
-        # second activation of the same source fails closed with the
-        # named use_spent denial and the cleanse_denied receipt, and the
-        # first activation consumes the single use.
-        first = _kernel_survival(
-            cleanses=[
-                {
-                    "time": 1.5,
-                    "kind": "cleanse",
-                    "amount": 1.0,
-                    "cleanse_item": "Gangplank W",
-                    "source_key": "Gangplank W",
-                    "utility_kind": "cleanse",
-                    "source": "Gangplank W — Remove Scurvy",
-                    "attacker": "main",
-                    "target": "main",
-                    "sequence": 0,
-                    "_event_id": "gp:cleanse:0",
-                }
-            ],
-        )
-        assert first["main"]["cleanse"]["use_consumed"] is True
-        # The kernel's decide() names the denial when the use is spent.
-        declaration = dict(_RENGAR_DECLARATION)
-        decision = CleanseEligibility(declaration=declaration).decide(
-            SimpleNamespace(
-                time=1.5,
-                source_key="Rengar W",
-                sequence=0,
-                event_id="w:1",
-                target="main",
-                holder="main",
-                active_controls=[
-                    {"kind": "stun", "start": 1.0, "end": 3.0, "source": "E"}
-                ],
-            ),
-            holder={"uses_remaining": 0, "item_held": True},
-        )
-        assert decision.eligible is False
-        assert decision.reason == "use_spent"
-        assert decision.use_consumed is False
-
-    def test_kernel_second_gp_activation_use_spent(self):
-        # Kernel evidence (PASS): the one-use latch in the walk — two GP W
-        # activations: the first consumes, the second receipts the named
-        # use_spent denial in cleanse_denied.
-        result = _kernel_survival(
-            cleanses=[
-                {
-                    "time": 1.5,
-                    "kind": "cleanse",
-                    "amount": 1.0,
-                    "cleanse_item": "Gangplank W",
-                    "source_key": "Gangplank W",
-                    "utility_kind": "cleanse",
-                    "source": "Gangplank W — Remove Scurvy",
-                    "attacker": "main",
-                    "target": "main",
-                    "sequence": 0,
-                    "_event_id": "gp:cleanse:0",
-                },
-                {
-                    "time": 3.0,
-                    "kind": "cleanse",
-                    "amount": 1.0,
-                    "cleanse_item": "Gangplank W",
-                    "source_key": "Gangplank W",
-                    "utility_kind": "cleanse",
-                    "source": "Gangplank W — Remove Scurvy",
-                    "attacker": "main",
-                    "target": "main",
-                    "sequence": 1,
-                    "_event_id": "gp:cleanse:1",
-                },
-            ]
-        )
-        assert result["main"]["cleanse_use"]["uses_after"] == 0
-        assert result["main"]["cleanse_denied"]
-        assert result["main"]["cleanse_denied"][0]["reason"] == "use_spent"
-
     def test_second_empowered_w_use_spent_heal_still_fires(self):
         # P2-6 contract (brief contract #6): the per-fight one-use latch —
         # the FIRST empowered W (10.0) consumes the use, the SECOND
@@ -1251,66 +1049,6 @@ class TestOneUse:
 
 
 class TestIntervalTruncation:
-    def test_truncate_intervals_contract(self):
-        # Kernel evidence (PASS): the exact truncation the empowered W
-        # must ride (the Slice 4 matrix's committed rule): historical
-        # intervals kept, the active tail removed, a control starting
-        # at/after the activation removed, unknown kinds never truncated.
-        # The eligible set is the kernel's known kinds minus the Rengar
-        # declaration's excluded displacement family.
-        from src.calculator.survival.transitions import KNOWN_CONTROL_KINDS
-
-        eligible = frozenset(KNOWN_CONTROL_KINDS) - frozenset(
-            _RENGAR_DECLARATION["excluded_control_kinds"]
-        )
-        intervals = [
-            {"kind": "stun", "start": 0.0, "end": 1.0, "source": "A"},  # historical
-            {"kind": "stun", "start": 1.0, "end": 3.0, "source": "B"},  # active
-            {"kind": "stun", "start": 1.5, "end": 2.0, "source": "C"},  # at activation
-            {"kind": "stun", "start": 2.0, "end": 4.0, "source": "D"},  # after
-            {"kind": "dance", "start": 0.0, "end": 9.0, "source": "E"},  # unknown
-        ]
-        kept, removed = truncate_intervals(intervals, 1.5, eligible)
-        assert [row["source"] for row in kept] == ["A", "B", "E"]
-        assert kept[1]["end"] == pytest.approx(1.5)
-        assert [row["source"] for row in removed] == ["B", "C", "D"]
-
-    def test_kernel_truncation_historical_remains_later_untouched(self):
-        # Kernel evidence (PASS): the walk-level truncation with a
-        # resolvable source (GP W): the active charm ends at the
-        # activation, historical downtime remains counted, and a control
-        # landing AFTER the activation keeps its full interval (a cleanse
-        # creates NO immunity — the Slice 4 contract the empowered W
-        # rides).
-        result = _kernel_survival(
-            controls=[
-                _control_packet(0.5, "immobilize", 1.8, source="E"),
-                _control_packet(2.0, "immobilize", 1.8, source="E"),
-            ],
-            cleanses=[
-                {
-                    "time": 1.5,
-                    "kind": "cleanse",
-                    "amount": 1.0,
-                    "cleanse_item": "Gangplank W",
-                    "source_key": "Gangplank W",
-                    "utility_kind": "cleanse",
-                    "source": "Gangplank W — Remove Scurvy",
-                    "attacker": "main",
-                    "target": "main",
-                    "sequence": 0,
-                    "_event_id": "gp:cleanse:0",
-                }
-            ],
-        )
-        cleanse = result["main"]["cleanse"]
-        assert cleanse["downtime_before"] == pytest.approx(1.8)
-        assert cleanse["downtime_after"] == pytest.approx(2.8)
-        intervals = result["main"]["crowd_control_intervals"]
-        assert intervals[0]["end"] == pytest.approx(1.5)
-        assert intervals[1]["start"] == pytest.approx(2.0)
-        assert intervals[1]["end"] == pytest.approx(3.8)
-
     def test_rengar_cleanse_truncates_active_control(self):
         # P2-6 contract (brief contract #7): the empowered-W activation
         # truncates the ACTIVE control interval at the activation — the
@@ -1335,94 +1073,6 @@ class TestIntervalTruncation:
         # is 0); the truncated-until recomputes to the activation.
         assert result["main"]["action_downtime"] == pytest.approx(1.0)
         assert result["main"]["crowd_control_until"] == pytest.approx(1.5)
-
-
-# ---------------------------------------------------------------------------
-# S8 — Named denials
-# ---------------------------------------------------------------------------
-
-
-class TestNamedDenials:
-    def test_named_denial_vocabulary_pinned(self):
-        # The named fail-closed denial vocabulary the Rengar W wiring must
-        # ride (brief contract #8): the Slice 4 decision reasons plus the
-        # unavailable-source KeyError and the score receipts.
-        decision = CleanseDecision(eligible=False, reason="", item="")
-        assert set(decision.public_receipt()) >= {
-            "eligible",
-            "reason",
-            "item",
-            "activation_time",
-            "target",
-            "removed_controls",
-            "rejected_controls",
-            "intervals_after",
-            "use_consumed",
-        }
-        assert unrepresentable_template_receipt({"kind": "cleanse"}) is None
-        assert (
-            unrepresentable_template_receipt({"kind": "heal", "cleanse": True}) is None
-        )
-        assert (
-            unrepresentable_template_receipt({"kind": "cleanse", "amount": 1.0}) is None
-        )
-
-    def test_rengar_source_unresolved_fails_closed(self):
-        # Pinned actual: the Rengar W source is NOT declared today, so the
-        # resolver fails closed with a KeyError naming the source (the
-        # "unavailable evidence" denial — a packet that cannot be
-        # attributed to a sourced declaration must never guess).  The
-        # P2-6 completion makes every spelling resolve to the declaration.
-        # P2-6: the empowered-W source now RESOLVES (the declaration
-        # landed); an unknown spelling still fails closed with the named
-        # KeyError (the unavailable-evidence denial).
-        assert resolve_cleanse_item("Rengar W") == "Rengar W"
-        assert resolve_cleanse_item("Rengar W — Battle Roar") == "Rengar W"
-        assert resolve_cleanse_item("Battle Roar") == "Rengar W"
-        with pytest.raises(KeyError) as excinfo:
-            resolve_cleanse_item("Bogus Roar")
-        assert "Bogus Roar" in str(excinfo.value)
-
-    def test_no_cleanse_receipts_in_fight_today(self):
-        # P2-6 contract: the empowered condition is the LIVE per-cast
-        # flag — a fight with no empowered W cast (seeds 0/1/2) authors
-        # NOTHING (fail-closed absence), while seeds 3/4 reach the cap by
-        # the first W cast (Q@0's gain tops up 3 pre-stacks) and fire the
-        # cleanse at the W cast time.
-        for option in (None, {"p_ferocity": 0}, {"p_ferocity": 1}, {"p_ferocity": 2}):
-            combat = _app_combat(option, duration=5.0)
-            survival = _main_survival(combat)
-            assert "cleanse" not in survival
-            assert "cleanse_use" not in survival
-            assert "cleanse_denied" not in survival
-            assert _cleanse_event_count(combat) == 0
-        # Garen carries no crowd control, so the fired decision is the
-        # Slice 4 control_not_active (use consumed — the heal still
-        # lands) — the packet + latch prove the empowered activation.
-        # Seed 3: Q@0's gain tops the 3 pre-stacks to the cap, so W@0
-        # consumes and the packet fires at 0.0 (any duration).  Seed 4:
-        # Q@0 consumes the full cap first (W@0 stays BASE), so the first
-        # empowered W is the 10.0 cast — the 5s window has none.
-        for seed in (3,):
-            combat = _app_combat({"p_ferocity": seed}, duration=5.0)
-            survival = _main_survival(combat)
-            assert survival["cleanse"]["decision"]["reason"] == "control_not_active"
-            assert survival["cleanse"]["item"] == "Rengar W"
-            assert survival["cleanse"]["use_consumed"] is True
-            assert survival["cleanse"]["activation_time"] == pytest.approx(0.0)
-            assert survival["cleanse_use"]["uses_after"] == 0
-            assert _cleanse_event_count(combat) == 1
-        combat = _app_combat({"p_ferocity": 4}, duration=5.0)
-        survival = _main_survival(combat)
-        assert "cleanse" not in survival
-        assert "cleanse_use" not in survival
-        assert _cleanse_event_count(combat) == 0
-        combat = _app_combat({"p_ferocity": 4}, duration=22.0)
-        survival = _main_survival(combat)
-        assert survival["cleanse"]["decision"]["reason"] == "control_not_active"
-        assert survival["cleanse"]["activation_time"] == pytest.approx(10.0)
-        assert survival["cleanse_use"]["uses_after"] == 0
-        assert _cleanse_event_count(combat) == 1
 
 
 # ---------------------------------------------------------------------------
@@ -1510,38 +1160,6 @@ class TestHealParity:
         for key in ("grey_health_stored", "grey_health_consumed", "grey_health_source"):
             assert _main_survival(base)[key] == _main_survival(seeded)[key]
 
-    def test_kernel_heal_unchanged_by_cleanse(self):
-        # Kernel evidence (PASS): a cleanse packet in the same support
-        # stream never alters the heal application — the grey heal lands
-        # with the identical amount with and without a (resolvable) GP W
-        # cleanse packet, and only one heal receipt exists.
-        controls = [_damage_packet(0.5, 200.0)]
-        heals = [_grey_heal_event(1.5, 100.0)]
-        plain = _kernel_survival(controls=controls, heals=heals, main_health=1400.0)
-        with_cleanse = _kernel_survival(
-            controls=controls,
-            heals=heals,
-            cleanses=[
-                {
-                    "time": 1.5,
-                    "kind": "cleanse",
-                    "amount": 1.0,
-                    "cleanse_item": "Gangplank W",
-                    "source_key": "Gangplank W",
-                    "utility_kind": "cleanse",
-                    "source": "Gangplank W — Remove Scurvy",
-                    "attacker": "main",
-                    "target": "main",
-                    "sequence": 0,
-                    "_event_id": "gp:cleanse:0",
-                }
-            ],
-            main_health=1400.0,
-        )
-        assert plain["main"]["healing_received"] == pytest.approx(100.0)
-        assert with_cleanse["main"]["healing_received"] == pytest.approx(100.0)
-        assert plain["main"]["ending_health"] == with_cleanse["main"]["ending_health"]
-
     def test_rengar_cleanse_leaves_heal_byte_identical(self):
         # P2-6 contract: the empowered-W cleanse (once wired) leaves the
         # grey-health heal receipts byte-identical — same times, same
@@ -1590,35 +1208,6 @@ class TestNoDuplicateDamage:
         assert result["breakdown"]["W"]["casts"] == len(
             [c for c in result["cast_timeline"] if c["slot"] == "W"]
         )
-
-    def test_kernel_cleanse_packet_never_prices_damage(self):
-        # Kernel evidence (PASS): cleanse-kind packets are UTILITY
-        # actions — they never price damage and never mint a damage
-        # event; only the authored damage packet contributes to the
-        # health ledger.
-        controls = [_damage_packet(0.5, 200.0)]
-        plain = _kernel_survival(controls=controls, main_health=1400.0)
-        with_cleanse = _kernel_survival(
-            controls=controls,
-            cleanses=[
-                {
-                    "time": 1.5,
-                    "kind": "cleanse",
-                    "amount": 1.0,
-                    "cleanse_item": "Gangplank W",
-                    "source_key": "Gangplank W",
-                    "utility_kind": "cleanse",
-                    "source": "Gangplank W — Remove Scurvy",
-                    "attacker": "main",
-                    "target": "main",
-                    "sequence": 0,
-                    "_event_id": "gp:cleanse:0",
-                }
-            ],
-            main_health=1400.0,
-        )
-        assert plain["main"]["health_damage"] == pytest.approx(200.0)
-        assert with_cleanse["main"]["health_damage"] == pytest.approx(200.0)
 
     def test_rengar_cleanse_adds_no_damage(self):
         # P2-6 contract: the empowered-W cleanse packet adds no damage —

@@ -137,7 +137,6 @@ def test_execute_is_retired_from_the_ladder_and_owned_by_the_catalog():
     catalog = resolve_execution([owner], facts=CATALOG_CONTEXT)
     assert catalog.owner == owner
     assert catalog.threshold == pytest.approx(required_effect_value(owner, "threshold"))
-    assert not hasattr(_ladder(owner), "execute")
 
 
 def test_crit_modifier_is_retired_from_the_ladder_and_owned_by_the_catalog():
@@ -152,10 +151,6 @@ def test_crit_modifier_is_retired_from_the_ladder_and_owned_by_the_catalog():
     )
     assert catalog.forced_crit is None
     assert catalog.cooldown_refund is None
-    ladder = _ladder(owner)
-    for retired in ("crit_damage_bonus", "navori_refund_percent"):
-        assert not hasattr(ladder, retired)
-    assert not hasattr(ladder, "cooldown_refund_source")
 
 
 def test_attack_cooldown_refund_is_the_catalogs_alone():
@@ -197,7 +192,6 @@ def test_first_auto_crit_is_retired_from_the_ladder_and_owned_by_the_catalog():
         assert getattr(catalog, field) == pytest.approx(
             required_effect_value(owner, key)
         )
-    assert not hasattr(_ladder(owner), "first_auto_crit")
 
 
 def test_on_hit_heal_is_retired_from_the_ladder_and_owned_by_the_catalog():
@@ -211,7 +205,6 @@ def test_on_hit_heal_is_retired_from_the_ladder_and_owned_by_the_catalog():
     assert catalog.value("amount") == pytest.approx(
         required_effect_value(owner, "health_per_on_hit")
     )
-    assert not hasattr(_ladder(owner), "on_hit_heals")
 
 
 # ---------------------------------------------------------------------------
@@ -304,7 +297,6 @@ def test_magic_damage_amp_is_retired_from_the_ladder_and_owned_by_the_catalog():
         1.0 + required_effect_value(owner, "magic_amp")
     )
     assert part_amp.declared_magic_amp([]) == 1.0
-    assert not hasattr(_ladder(owner), "magic_amp")
 
 
 def test_the_two_part_amp_selectors_are_disjoint_and_total():

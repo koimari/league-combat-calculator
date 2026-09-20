@@ -195,6 +195,10 @@ class TestTheDeclarationAndTheRegistryAgreeBothWays:
             if hasattr(module, "SELF_HEALING_RULE")
         }
         assert declared == set(healing.HEALING_RULE_CHAMPIONS)
+        for name in declared:
+            rule = _CHAMPION_MODULES[name].SELF_HEALING_RULE
+            assert rule.champion_name == name
+            assert rule.resolver.__module__ == _CHAMPION_MODULES[name].__name__
 
 
 class TestSelfHealingRuleDeclaration:

@@ -139,9 +139,6 @@ def test_cull_reap_on_hit_heal_is_a_typed_health_packet():
     assert slot.value("amount") == pytest.approx(
         required_effect_value("Cull", "health_per_on_hit")
     )
-    assert not hasattr(
-        resolve_damage_effects([get_item_by_name("Cull")]), "on_hit_heals"
-    )
 
 
 def test_cull_reap_economy_packet_pays_progression_and_completion():

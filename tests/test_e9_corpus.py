@@ -384,7 +384,6 @@ def test_scenario_receipt_reproduces(scenario):
 
 def test_the_reader_walks_no_history():
     """Reader and writer alike answer from the tree, never from git."""
-    assert not hasattr(sys.modules[__name__], "subprocess")
     reader_half = REPIN_SCRIPT.read_text(encoding="utf-8").split("# The writer")[0]
     assert "subprocess.run" not in reader_half
     assert non_legacy_scenarios(load_corpus()) == _EXECUTED

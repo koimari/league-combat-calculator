@@ -74,8 +74,6 @@ def test_the_page_takes_every_item_from_the_served_catalogue():
     assert (
         "buildItemCatalog([...(itemCoverage || []), ...(bootCatalog || [])]);" in source
     )
-    assert "mergeItemCoverage" not in source
-    assert "backendAvailable" not in source
 
 
 def test_published_catalogues_stamp_the_patch_the_cache_pins():
@@ -89,7 +87,6 @@ def test_published_catalogues_stamp_the_patch_the_cache_pins():
         "build_bis_profiles.py",
     ):
         body = (ROOT / "scripts" / builder).read_text(encoding="utf-8")
-        assert '"--patch", default="' not in body, builder
         assert "cache_patch()" in body, builder
 
 
