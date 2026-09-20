@@ -42,7 +42,7 @@ from collections.abc import Iterable
 from typing import Any
 
 from ..ability_atoms import ability_field, ability_payload
-from ..ability_prose import extract_description_duration
+from ..ability_prose import CachedSentence, extract_description_duration
 from ..ability_spec import DamagePart
 from ..healing_helpers import (
     HealAnchor,
@@ -97,6 +97,20 @@ _Q_VARIANT_ATTRS = [
 # the next seconds value in the same sentence is the 4-second recast window.
 # ``tests/test_aatrox.py`` pins the constant against the cached sentence.
 _Q_STRIKE_INTERVAL_SECONDS = 1.0
+
+# Umbral Dash's lifesteal share is prose only: no E leveling row carries
+# it, and the bonus-health term rides the same sentence.
+_UMBRAL_DASH_RATIO = CachedSentence(
+    re.compile(
+        r"heals for\s+(?P<value>\d+(?:\.\d+)?)%\s*"
+        r"\(\+\s*(?P<per_100>\d+(?:\.\d+)?)%\s*per\s*100\s*bonus health",
+        re.IGNORECASE,
+    ),
+    missing=(
+        "Aatrox E (Umbral Dash): the cached active no longer states the "
+        "lifesteal share ('heals for N% (+ N% per 100 bonus health)')"
+    ),
+)
 
 # Which of the three strikes each single-strike attribute prices.  The two
 # "Maximum Non-Minion …" rows are the triad's own sum (per rank, and
@@ -331,17 +345,9 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     passive_payments = ctx.payments(
         HealAnchor.DAMAGING_HIT, lambda source: "passive" in source.lower()
     )
-    e_description = " ".join(
-        effect.get("description", "")
-        for effect in ability_json(ctx.champion_data, "E").get("effects", [])
-    )
-    ratio_match = re.search(
-        r"heals for\s+(\d+(?:\.\d+)?)%\s*\(\+\s*(\d+(?:\.\d+)?)%\s*per\s*100\s*bonus health",
-        e_description,
-        flags=re.IGNORECASE,
-    )
-    base_ratio = float(ratio_match.group(1)) / 100.0 if ratio_match else 0.0
-    per_100 = float(ratio_match.group(2)) / 100.0 if ratio_match else 0.0
+    dash_terms = _UMBRAL_DASH_RATIO.match(ability_json(ctx.champion_data, "E"))
+    base_ratio = float(dash_terms.group("value")) / 100.0
+    per_100 = float(dash_terms.group("per_100")) / 100.0
     e_ratio = base_ratio + per_100 * (
         float(champion_stat(ctx.champion_stats, "bonus_health")) / 100.0
     )

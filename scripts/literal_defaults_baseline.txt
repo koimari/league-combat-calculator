@@ -361,15 +361,11 @@ AUTHORED_DECLARATION|rune_paths/sorcery.py|_compile_waterwalking|dict.get|"effec
 AUTHORED_DECLARATION|rune_pull.py|reparse_cached_rune_effects|dict.get|"slots" 1
 AUTHORED_DECLARATION|stats.py|calculate_total_stats|dict.get|"ability_haste" 1
 AUTHORED_DECLARATION|stats.py|calculate_total_stats|dict.get|"ability_power" 2
-CACHED_SOURCE_ROW|champions/aatrox.py|derive_self_healing|dict.get|"description" 1
-CACHED_SOURCE_ROW|champions/aatrox.py|derive_self_healing|dict.get|"effects" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"attribute" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"effects" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"leveling" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"modifiers" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"values" 1
-CACHED_SOURCE_ROW|champions/alistar.py|derive_self_healing|dict.get|"description" 1
-CACHED_SOURCE_ROW|champions/alistar.py|derive_self_healing|dict.get|"effects" 1
 CACHED_SOURCE_ROW|champions/ambessa.py|_drakehounds_step|dict.get|"description" 1
 CACHED_SOURCE_ROW|champions/ambessa.py|_drakehounds_step|dict.get|"effects" 1
 CACHED_SOURCE_ROW|champions/ambessa.py|_parse_passive_damage|dict.get|"description" 1
@@ -405,8 +401,6 @@ CACHED_SOURCE_ROW|champions/garen.py|derive_self_healing|dict.get|"effects" 1
 CACHED_SOURCE_ROW|champions/garen.py|derive_self_healing|dict.get|"leveling" 1
 CACHED_SOURCE_ROW|champions/garen.py|derive_self_healing|dict.get|"modifiers" 1
 CACHED_SOURCE_ROW|champions/garen.py|derive_self_healing|dict.get|"values" 1
-CACHED_SOURCE_ROW|champions/gragas.py|derive_self_healing|dict.get|"description" 1
-CACHED_SOURCE_ROW|champions/gragas.py|derive_self_healing|dict.get|"effects" 1
 CACHED_SOURCE_ROW|champions/gwen.py|_snip_times|dict.get|"castTime" 1
 CACHED_SOURCE_ROW|champions/jayce.py|_transform_ability|dict.get|"R" 1
 CACHED_SOURCE_ROW|champions/karthus.py|_defile_mana_per_second|dict.get|"modifiers" 1

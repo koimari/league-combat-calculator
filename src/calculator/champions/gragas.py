@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..healing_helpers import ability_json
 from .engine import SlotCtx, build_parser
@@ -14,6 +15,19 @@ from .module_helpers import named_damage, no_damage, ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
+
+# Happy Hour is prose only: no P leveling row carries the share of maximum
+# health one cast pays back.
+_HAPPY_HOUR_SHARE = CachedSentence(
+    re.compile(
+        r"heals himself for\s+(?P<value>\d+(?:\.\d+)?)%\s+of his maximum health",
+        re.IGNORECASE,
+    ),
+    missing=(
+        "Gragas P (Happy Hour): the cached innate no longer states the "
+        "self-heal share ('heals himself for N% of his maximum health')"
+    ),
+)
 
 
 def _happy_hour(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -113,16 +127,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     cast pays one self-heal (actor-wide receipt).
     """
     healing: list[dict] = []
-    p_text = " ".join(
-        effect.get("description", "")
-        for effect in ability_json(ctx.champion_data, "P").get("effects", [])
-    )
-    ratio_match = re.search(
-        r"heals himself for\s+(\d+(?:\.\d+)?)%\s+of his maximum health",
-        p_text,
-        flags=re.IGNORECASE,
-    )
-    ratio = float(ratio_match.group(1)) / 100.0 if ratio_match else 0.0
+    ratio = _HAPPY_HOUR_SHARE.value(ability_json(ctx.champion_data, "P")) / 100.0
     per_cast = ratio * champion_stat(ctx.champion_stats, "health")
     if per_cast > 0.0:
         for cast in ctx.cast_timeline or []:

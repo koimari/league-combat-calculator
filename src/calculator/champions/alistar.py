@@ -50,6 +50,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from ..ability_atoms import ability_payload
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamageClass, DamagePart
 from ..healing_helpers import HealAnchor, ability_json, trigger_fields
 from .engine import SlotCtx, build_parser
@@ -214,6 +215,28 @@ def _triumphant_roar(ctx: SlotCtx) -> dict[str, Any] | None:
 
 _R_DURATION_SOURCE = "Alistar.R[0].effects[0].description"
 
+# Triumphant Roar is prose only: the innate states how many stacks a heal
+# costs and what share of Alistar's maximum health it pays, and no P
+# leveling row carries either.
+_TRIUMPHANT_ROAR_STACKS = CachedSentence(
+    re.compile(r"At\s+(?P<value>\d+)\s+stacks", re.IGNORECASE),
+    missing=(
+        "Alistar P (Triumphant Roar): the cached innate no longer states the "
+        "stack cost of a heal ('At N stacks')"
+    ),
+)
+_TRIUMPHANT_ROAR_SELF_HEAL = CachedSentence(
+    re.compile(
+        r"heal(?:s|ing)? himself for\s+(?P<value>\d+(?:\.\d+)?)%\s+"
+        r"of his maximum health",
+        re.IGNORECASE,
+    ),
+    missing=(
+        "Alistar P (Triumphant Roar): the cached innate no longer states the "
+        "self-heal share ('heals himself for N% of his maximum health')"
+    ),
+)
+
 
 @ranked_slot
 def _unbreakable_will(
@@ -344,20 +367,11 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     receipt can apply.
     """
     healing: list[dict[str, Any]] = []
-    p_text = " ".join(
-        effect.get("description", "")
-        for effect in ability_json(ctx.champion_data, "P").get("effects", [])
-    )
-    stack_match = re.search(r"At\s+(\d+)\s+stacks", p_text, flags=re.IGNORECASE)
-    stack_cap = int(stack_match.group(1)) if stack_match else 0
+    passive = ability_json(ctx.champion_data, "P")
+    stack_cap = int(_TRIUMPHANT_ROAR_STACKS.value(passive))
     if stack_cap <= 0:
         return healing
-    self_match = re.search(
-        r"heal(?:s|ing)? himself for\s+(\d+(?:\.\d+)?)%\s+of his maximum health",
-        p_text,
-        flags=re.IGNORECASE,
-    )
-    self_ratio = float(self_match.group(1)) / 100.0 if self_match else 0.0
+    self_ratio = _TRIUMPHANT_ROAR_SELF_HEAL.value(passive) / 100.0
     casts = sorted(
         ctx.payments(HealAnchor.CAST, "Q") + ctx.payments(HealAnchor.CAST, "W"),
         key=lambda payment: float(payment.event.get("time", 0.0)),
