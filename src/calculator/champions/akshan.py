@@ -1,46 +1,22 @@
-"""Akshan — slot map for the archetype engine.
+"""Akshan: slot map for the archetype engine.
 
-The design's honest ceiling: most of Akshan's numbers live in
-description TEXT rather than leveling data, so this module is mostly
-custom fns over regex extraction — deliberately NOT archetypes, since
-no other champion shares these mechanics.
-
-Why each slot is non-generic:
-- Q (Avengerang) hits on both passes — the "Total Physical Damage"
-  attribute (the classifier would pick the single-pass value).
-- E (Heroic Swing) fires ``e_shots`` shots (option, default 5); the
-  per-shot leveling data uses unusual unit strings ("×" for the flat
-  base, a prose per-100%-bonus-AS ratio) handled by the
-  ``_extract_e_per_shot`` seam.
-- R (Comeuppance) is min-damage-per-bullet × stored bullets, plus two
-  fight-engine scaling constants: crits amplify at 30% effectiveness and
-  missing HP scales the barrage up to +200%.
-- P (Dirty Fighting) is TWO results entries from one JSON passive:
-  ``passive_double_shot`` (every auto fires a second shot at a %AD
-  ratio regex-read from the description) and ``passive`` (the 3-stack
-  magic proc whose level breakpoints and AP ratio are also
-  description text, × the ``passive_procs`` option, default 3).
-- W (Going Rogue) is stealth/revive utility — no enemy-damage attribute
-  of its own.
-
-All numeric values are read from the champion JSON data (several from
-description text). The R scaling values below are rooted in AkshanR's binary;
-the missing-health value is converted from the binary's total multiplier to
-the additive bonus used by this module.
-
-Roadmap session (2026-08-21): closes the single out_of_scope slot (W).
-W (Going Rogue): ``data/champions.json`` Akshan W carries
-``damageType: None`` and every effect row is stealth/mark/resurrection/
-recast-timing text — no HP number against an enemy champion anywhere.
-The one leveling row on the ability ("Bonus Movement Speed" 80-120 by
-rank) is a conditional self-buff ("while facing them if they are within
-5000 units, he gains bonus mana regeneration ... as well as bonus
-movement speed" during camouflage) — situational utility, not a
-default-active steroid for a one-rotation combat calc, so it stays a
-documented, sourced-but-unmodeled rider in ASSUMPTIONS rather than an
-unconditional stat_buff (the Singed R precedent for riders with no
-default-on consumer). Reclassified from out_of_scope to no_damage (an
-atoms-confirmed zero-HP-number effect), not left silently absent.
+Most of Akshan's numbers live in description text rather than leveling data,
+so this module is mostly custom functions over prose extraction.
+Q (Avengerang) hits on both passes, so it reads "Total Physical Damage"; the
+classifier would pick the single-pass value.
+E (Heroic Swing) fires ``e_shots`` shots, default 5.  Its per-shot leveling
+carries unusual unit strings, a multiplication sign for the flat base and a
+prose per-100%-bonus-attack-speed ratio, which ``_extract_e_per_shot`` reads.
+R (Comeuppance) is the minimum damage per bullet times the stored bullets,
+crits amplifying at 30% effectiveness and missing health scaling the barrage
+by up to 200%.  Its constants are rooted in the ``AkshanR`` binary, whose
+total multiplier is converted to the additive bonus this module uses.
+P (Dirty Fighting) is two result entries from one cached passive:
+``passive_double_shot``, a second shot on every auto at a prose AD ratio, and
+``passive``, the three-stack magic proc times ``passive_procs``, default 3.
+W (Going Rogue) is ``no_damage``.  Its one leveling row, bonus movement speed
+while facing a marked target during camouflage, is situational self utility
+and stays a sourced, unmodeled rider in ASSUMPTIONS.
 """
 
 import re

@@ -1,44 +1,20 @@
-"""Shaco — CP10.7 full-entry-reviewed packet module.
+"""Shaco: full-entry-reviewed packet module.
 
-E4 summon: W (Jack in the Box) is a summoned trap.  Once sprung, the box
-remains for 5 seconds and "automatically fire[s] at nearby visible
-enemies every 0.5 seconds" — up to 10 attacks at the sourced cadence.
-Against a single target (the fight model's duel) the box always attacks
-only one enemy, so each shot uses its "Increased Damage" row
-(25/40/55/70/85 + 18% AP by rank) rather than the plain Magic Damage
-row.  One fully-sprung box prices ``w_box_attacks`` x Increased Damage.
-
-- ``w_box_attacks`` (default 10) — the player-controlled uptime: 10 is
-  the box's full sprung lifetime at the sourced 0.5s cadence; reduce it
-  to model the target leaving the box's 450 range mid-fight.
-- The sprung box fear is a typed downtime event. The same instant root and
-  slow remain utility. The full-volley default assumes the box has sprung.
-
-Boundary: box HP/stealth, arm time, trigger radius, targeting AI and
-leash range are state outside the damage model.
-
-P1-2 fixes:
-- E (Two-Shiv Poison): the wiki's execute branch — "increased by 50% if
-  they are below 30% of their maximum health" — is now selectable via
-  the ``e_execute`` option (default False, a full-health target): the
-  sourced "Increased Damage" row (105/142.5/180/217.5/255 by rank +
-  120% bonus AD + 90% AP) replaces the base "Magic Damage" row.
-- R (Hallucinate): the controllable clone is expressed as an option —
-  ``r_clone_attacks`` (default 0) prices that many clone basic attacks
-  (75% of Shaco's total AD physical damage each, wiki Pets prose); the
-  death-explosion Magic Damage row remains the R packet's cast damage.
-
-Coverage-frontier rider: P (Backstab) is the positional auto modifier —
-"Shaco's basic attacks are empowered to deal 20 : 31.18 (based on level)
-(+ 20% bonus AD) bonus physical damage when hitting an enemy from
-behind".  Position is not something a request states, so ``p_procs`` is
-the number of attacks that land from behind; it defaults to the one
-Deceive blinks him into, and the target's facing is otherwise the
-player's problem, not the model's.  Backstab modifies the attack
-(``spelleffects = basic``) rather than applying on-hit, so item on-hit
-effects do not proc from it.  "This damage is affected by critical strike
-modifiers", so the row declares ``crit_effectiveness`` — the on-hit
-channel's half of the axis ability parts already carry.
+W (Jack in the Box) is a summoned trap.  A sprung box lives 5 seconds and
+fires every 0.5 seconds, so ``w_box_attacks`` defaults to its full 10 shots;
+lower it to model the target leaving the box's 450 range.  Against the duel's
+single target each shot takes the "Increased Damage" row rather than the plain
+Magic Damage row, because the box never splits its fire.  Its fear is a typed
+downtime event; box health, arm time and targeting are state.
+E (Two-Shiv Poison) swaps its base row for the sourced "Increased Damage" row
+under ``e_execute``, the wiki's below-30%-maximum-health branch, default off.
+R (Hallucinate) prices ``r_clone_attacks`` clone basic attacks, default 0, at
+75% of Shaco's total AD each; the death explosion is the R cast's own damage.
+P (Backstab) is a positional auto modifier, so ``p_procs`` is the number of
+attacks landing from behind and defaults to the one Deceive blinks him into.
+It modifies the attack (``spelleffects = basic``) rather than applying on-hit,
+so item on-hits do not proc from it, and it declares ``crit_effectiveness``
+because the cache says critical strike modifiers affect it.
 """
 
 from __future__ import annotations

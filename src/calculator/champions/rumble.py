@@ -1,47 +1,22 @@
 """Rumble: packet module over the heat system.
 
-Two cached-row traps this module already pays are in the Champions
-section of ``TRAPS.md``: a ``Bonus Damage`` leveling row that is a
-monster-only cap rather than a damage source, and the
-``% of maximum health`` unit spelling that once fell through
-``champions/scaling.py`` to ``0.0``.
-
-What each slot prices:
-
-- Q (Flamespitter) prices the "Maximum Magic Damage" row, the whole
-  3-second flamethrower, which is 15 ticks of "Magic Damage per Tick"
-  at every rank.  The other Flamespitter rows are Minimum, per-Second
-  and per-Tick views of the same damage.
-- R (The Equalizer) prices all 20 Burning ticks: "Magic Damage per
-  Tick" at 0.25s over up to 5 seconds, which the cache states as a
-  total of 20 instances.
-- P (Junkyard Titan) carries a real sourced on-hit formula in its
-  Overheated effect, a per-level "Bonus Magic Damage" array with one AP
-  and one target-max-health modifier, corroborated term for term by the
-  binary's ``RumbleHeatSystem``.
-- W (Scrap Shield) is a sourced self-shield with no damage row.  Being
-  shield-only it cannot carry ``attach_self_shield``, which rides
-  damage-event rows, so the ally-support scanner prices it at target
-  scope "self" (the Ekko-W precedent, pinned by
-  ``tests/test_support_effects.py``).
-
-Overheat is derived, not declared.  The slot states the cached heat
-rule and the fight's cast plan walks it
-(``fight/rotation/cast_resource_lockout.py``): Heat per basic-ability
-cast, the ceiling, the lockout and the decay, every number read from
-the cached prose, so a reworked cache raises rather than pricing a
-stale constant.  The walk decides how often the bar fills, where each
-lockout sits inside the fight rather than off the end of the horizon,
-how many seconds of bonus attack speed the windows buy, and which
-swings land empowered.  None of the four is a scenario option, and the
-plan can answer them because E is scheduled on its recharge
-(``champions/charge_cadence.py``) and not on the gap between two banked
-harpoons.  The bonus attack speed is the full cached grant rated by the
-share of the fight the windows cover, which is exact because attack
-speed is linear in the bonus percent.
-
-Danger Zone is heat state and stays unpriced: Q, E, R and W price their
-base rows and the Enhanced rows go unread.
+Two cached-row traps it pays are in ``TRAPS.md``: a ``Bonus Damage`` row that
+is a monster-only cap, and the ``% of maximum health`` spelling that fell to 0.
+Q (Flamespitter) prices "Maximum Magic Damage", the whole 3-second
+flamethrower, 15 ticks of "Magic Damage per Tick"; the Minimum, per-Second
+and per-Tick rows are views of the same damage.
+R (The Equalizer) prices all 20 Burning ticks, 0.25s apart over 5 seconds.
+P (Junkyard Titan) carries the real on-hit formula, an Overheated per-level
+"Bonus Magic Damage" array with one AP and one target-max-health modifier.
+W (Scrap Shield) is a sourced self-shield with no damage row; shield-only, it
+cannot carry ``attach_self_shield``, so the scanner prices it at scope "self".
+Overheat is derived, not declared: the slot states the cached heat rule and
+the cast plan walks it, reading Heat per cast, the ceiling, the lockout and
+the decay from cached prose, so a reworked cache raises instead of pricing a
+stale constant.  It places each lockout because E is scheduled on its
+recharge, not the gap between banked harpoons, and rates the cached bonus
+attack speed by the windows' share of the fight.  Danger Zone is heat state:
+every slot prices its base row and the Enhanced rows go unread.
 """
 
 import math

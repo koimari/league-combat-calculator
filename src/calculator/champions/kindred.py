@@ -1,48 +1,21 @@
-"""Kindred — Mark of the Kindred and Mounting Dread (3-stack) systems.
+"""Kindred: the Mark and the three-stack Mounting Dread systems.
 
-Stack mechanics modeled (E3):
-- P (Mark of the Kindred): takedowns on hunted targets collect Marks.
-  Marks grant 75 : 250 (based on marks) bonus basic-attack range,
-  +5% attack speed per mark on Q, and scale E's missing-health term
-  (+0.5% per mark).  ``marks`` is the explicit pre-stack state.
-- E (Mounting Dread): the active shot marks the target; basic attacks
-  against the marked target apply stacks (cap 3).  The third stack
-  directs Wolf to pounce, consuming all stacks to deal the sourced
-  "Additional Physical Damage" (80 : 200 by rank + 100% bonus AD + 5%
-  (+ 0.5% per Mark) of the target's missing health), increased by up to
-  50% based on critical strike chance (wiki prose).  ``e_stacks`` is
-  the explicit pre-stack state; the pounce is priced at 3 stacks.
-
-Q (Dance of Arrows) and R (Lamb's Respite) keep the reviewed CP10.3
-packet pricing.  W (Wolf's Frenzy) is the E4 summon row: Wolf's frenzy
-attacks price the sourced "Magic Damage" leveling with the full
-per-Mark current-health term (+1% per Mark, resolved via the same
-modifier override Mounting Dread uses), over ``w_attacks`` attacks
-(Wolf attacks at 25% of Kindred's bonus attack speed; the count is the
-player-controlled option, default 3 attacks in the window).
-
-Coverage (roadmap session 4, 2026-08-20): every stale ``out_of_scope``
-label closes, with no behavior change -- ``MODULE_COVERAGE`` was simply
-stale for slots the CP10.3 packet review had already closed, the identical
-stale-label pattern Alistar-P/Anivia-P were corrected under in the prior
-roadmap session.  P (Mark of the Kindred) and R (Lamb's Respite) each emit
-an explicit ``no_damage`` row: P's marks are the range/attack-speed/scaling
-state the other slots already read, and R's minimum-health zone is state
-(its end heal is paid by ``derive_self_healing`` below -- the ally scanner
-pays every teammate in the zone and the caster's own copy -- not as enemy
-damage).  Q, W and E each price their own row.
-
-  - Q (Dance of Arrows): the atoms capture (data/atoms/kindred.atoms.json,
-    behavior KindredQ) and the cached leveling both carry a real
-    "Physical Damage" row; ``_dance_of_arrows`` already prices it via
-    ``typed_damage``. Simple mislabel fix.
-  - R (Lamb's Respite): the atoms capture's KindredR rows are
-    ``damage.aoe`` with ``damage_type: null`` (a structural AoE-zone tag,
-    not a priced formula -- the "minimum-health, can't die" zone), plus a
-    self-only ``heal-shield.heal`` (already paid by
-    ``derive_self_healing`` below) and a self buff. No enemy-damage
-    number exists to price; the no-death zone stays state, matching the
-    Kai'Sa-R precedent for a sourced-but-structurally-non-damage rider.
+P (Mark of the Kindred) is a ``no_damage`` row: marks are the state the other
+slots read, granting attack range, +5% attack speed per mark on Q, and +0.5%
+per mark on E's missing-health term.  ``marks`` is the explicit pre-stack
+state.
+E (Mounting Dread) marks the target on the active, and basic attacks against
+it apply stacks to a cap of three.  The third directs Wolf to pounce, spending
+every stack for the cached "Additional Physical Damage" plus its per-Mark
+missing-health term, increased by up to 50% on critical strike chance, which
+the wiki states in prose.  ``e_stacks`` is explicit and the pounce is priced
+at three.
+W (Wolf's Frenzy) is the summon row: Wolf's frenzy attacks price the cached
+"Magic Damage" with its per-Mark current-health term over ``w_attacks``
+attacks, default 3, because Wolf swings at 25% of Kindred's bonus attack speed
+and the count is the player's to assert.
+R (Lamb's Respite) is ``no_damage``: the minimum-health zone is state and its
+end heal is paid by ``derive_self_healing``, not as enemy damage.
 """
 
 from __future__ import annotations

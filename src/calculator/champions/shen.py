@@ -1,50 +1,22 @@
-"""Shen — sourced empowered-attack and energy timeline.
+"""Shen: sourced empowered-attack and energy timeline.
 
-Twilight Assault is not cast damage: it modifies up to three subsequent
-basic attacks with level-, rank-, AP-, and target-max-health-scaled magic
-damage. The module emits the bonus as a three-hit typed part carrying the
-authored swing schedule (the selected first-attack delay, then the
-enhanced-attack-speed cadence), and declares the consumed basic attacks
-through ``empowers_next_auto``. In a one-rotation calculation those attacks
-are forced on the same schedule and the row's ledger sums exactly. In a
-timed fight the engine caps Q casts at the ambient swings that consume them
-and shows those swings on the Q row at the auto row's per-hit value; the
-authored events remain the magic bonus hits, so the row certifies by its
-cast schedule while the ledger prices each bonus instance at its swing.
-
-Shadow Dash is authored at the selected travel distance. Its cooldown begins
-after the dash, so travel time is added to the data's post-effect cooldown.
-It also carries P (Ki Barrier), which fires "after completing an ability's
-effects": the sourced self-shield (``data/champions.json`` Shen P "Shield"
-leveling row — a per-LEVEL flat base, 47 : 128.59, plus a flat 13% bonus
-health modifier that is the same at every level) rides the E cast as a
-``self_shield_events`` payload, because a shield-only slot has no channel of
-its own and a passive is never cast.  The cached notes name Shadow Dash's own
-dash-end as one of Ki Barrier's triggers ("Shadow Dash will grant the shield
-when the dash ends") and this module's certified order is E before Q, so E is
-the first ability to complete in a one-rotation fight.  Ki Barrier's 11-second
-flat cooldown — its own cached row, not affected by ability haste — is longer
-than any one-rotation fight, so Q's own later completion (also a named
-trigger) is not double-counted.
-
-R (Stand United) is a zero-damage cast so the ally-support scanner prices
-the sourced ally shield at its floor (the cached "Minimum Shield Strength"
-row, 120/220/320 + 135% AP + 15% of his bonus health, which
-``support_effects._SHIELD_ATTRIBUTES`` reads floor-before-ceiling); the
-"increased by 0% : 60% (based on target's missing health)" that separates it
-from the "Maximum Shield Strength" row (uniformly 1.6x the minimum at every
-rank) is a live-health condition the scan cannot establish, and the 3-second
-channel's teleport has no numeric representation in this engine at all.
-
-W (Spirit's Refuge) is a pure attack-block zone: the cached ability carries
-``"leveling": []`` for its only effect row (``data/champions.json`` Shen W) —
-no damage, heal or shield numeric attribute of any kind, only a rank-scaled
-cost and cooldown — so the slot emits an explicit ``no_damage`` state row
-rather than staying silently absent.  The engine does carry an attack-block
-convention (``projectile_defense.ProjectileDefense.blocks_basic_attacks``,
-used by Jax's Counter Strike and Fiora's Riposte), but it lives entirely on
-the DEFENDER side of a champion-vs-champion interaction, not in a champion's
-own outgoing ``SLOTS`` map.
+Q (Twilight Assault) is not cast damage: it modifies up to three later basic
+attacks with level-, rank-, AP- and target-max-health-scaled magic, emitted as
+a three-hit typed part carrying the authored swing schedule and declaring the
+consumed attacks through ``empowers_next_auto``, so a timed fight caps Q casts
+at the ambient swings that consume them.
+E (Shadow Dash) is authored at the selected travel distance, and its cooldown
+begins after the dash, so travel time is added to the cached post-effect
+cooldown.  E also carries P (Ki Barrier): a shield-only slot has no channel and
+a passive is never cast, so the sourced self-shield rides the E cast as a
+``self_shield_events`` payload.  Ki Barrier's own 11-second cooldown ignores
+ability haste and outlasts a one-rotation fight, so Q's later completion does
+not pay it twice.
+R (Stand United) is a zero-damage cast whose ally shield the support scanner
+prices at the cached "Minimum Shield Strength" floor; the missing-health
+increase to it is a live condition no scan establishes.
+W (Spirit's Refuge) is ``no_damage``, its cached leveling empty, and the
+engine's attack-block convention lives on the defender side only.
 """
 
 from collections.abc import Mapping

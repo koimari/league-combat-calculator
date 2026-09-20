@@ -1,46 +1,19 @@
-"""Mel — CP10.4 full-entry-reviewed packet module.
+"""Mel: full-entry-reviewed packet module.
 
-E5-2 fixes:
-
-- W (Rebuttal): the reviewed spec read "Replicated Projectile Magic
-  Damage Modifier" (40-60% + 5% per 100 AP) as FLAT magic damage.  That
-  attribute is a percentage of the ORIGINAL enemy projectile's damage;
-  the calculator models no enemy projectile source, so the slot prices
-  no damage (shield + conditional reflection are state, documented).
-
-- R (Golden Eclipse): the reviewed spec read only the flat "Magic
-  Damage" row (125/200/275 + 30% AP) and dropped the per-Overwhelm-
-  stack term.  The wiki row's third modifier is "(4/7/10 + 4% AP) per
-  Overwhelm stack on the target" (data/champions.json R "Magic
-  Damage"), and P's Overwhelm prose says Mel applies a stack for each
-  damage instance.  R now prices the flat row PLUS the per-stack term
-  times an explicit ``r_overwhelm_stacks`` option (default 3 — the
-  Overwhelm stacks accumulated before the blast in a one-rotation
-  combo).  The P stored-damage execute (first stack stores
-  50/60/70/80 + 10% AP, +2/3/4/5 + 0.75% AP per additional stack,
-  consumed when the stored total exceeds the target's current health)
-  is a kill-boundary execute and is documented, not priced as damage.
-
-Roadmap slot session (2026-08-21) closes this module's last two
-``out_of_scope`` rows.  Both labels were stale, for DIFFERENT reasons:
-
-  - P (Searing Brilliance) is now ``modeled``.  The packet asset's stock
-    reason ("no enemy-damage formula for this slot") was simply wrong.
-    The slot carries THREE mechanics and the third is ordinary,
-    priceable damage: "Mel's ability casts each generate 3 stacks of
-    Searing Brilliance for 5 seconds ... Her next basic attack consumes
-    all stacks of Searing Brilliance to additionally fire an equal
-    number of blazing projectiles at the target.  Each projectile deals
-    8 : 30 (based on level) (+ 4% AP) magic damage" (data/champions.json
-    Mel P, third effect, whose two "Per-Level Scaling" rows hold the
-    per-projectile ramp and the 9-projectile maximum).  It is priced as
-    a cast-armed empower window (the Taric Bravado primitive) — see
-    ``_searing_brilliance``.  The Overwhelm execute (mechanic 2) stays a
-    documented kill boundary and does NOT ride the Zeri
-    ``execute_threshold_ratio`` seam — see ``_OVERWHELM_EXECUTE_BOUNDARY``.
-  - W (Rebuttal) becomes ``no_damage`` with a named receipt, replacing
-    the stale ``out_of_scope`` label: the slot owns no damage of its own
-    on any of the three cached sources — see ``_rebuttal``.
+P (Searing Brilliance) is priced as a cast-armed empower window: each ability
+cast generates three stacks and the next basic attack consumes them to fire an
+equal number of projectiles, 8 to 30 by level (+ 4% AP) each, to a sourced
+maximum of nine.
+R (Golden Eclipse) prices the flat "Magic Damage" row plus its third modifier,
+a per-Overwhelm-stack term, times the explicit ``r_overwhelm_stacks``, default
+3, the stacks a one-rotation combo banks before the blast.
+W (Rebuttal) is ``no_damage``.  Its "Replicated Projectile Magic Damage
+Modifier" is a percentage of the ORIGINAL enemy projectile's damage, and this
+calculator models no enemy projectile source, so the shield and the
+conditional reflection are state.
+Overwhelm's stored-damage execute, which fires when the stored total exceeds
+the target's current health, is a kill boundary rather than damage: it is
+documented and deliberately off the ``execute_threshold_ratio`` seam.
 """
 
 import re

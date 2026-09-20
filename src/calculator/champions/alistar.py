@@ -1,48 +1,21 @@
-"""Alistar — slot map for the archetype engine.
+"""Alistar: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- E (Trample) is a custom fn: the cast total is the "Total Magic
-  Damage" attribute (all 10 ticks over 5 s — the classifier would pick
-  the per-tick "Magic Damage" first), plus the empowered-auto bonus
-  that Trample grants once per cast, which scales with champion LEVEL
-  (not rank) and is baked into the cast total rather than emitted as an
-  on-hit. This is a total-attribute read plus an add-once on-hit addend,
-  so the mechanic stays champion-local.
-- Q (Pulverize) / W (Headbutt) are fully generic single-hit magic
-  damage — auto-mode ``simple_damage``.
-- P (Triumphant Roar) is healing only: its slot is a zero-damage
-  receipt carrying the Triumph stacks Alistar walks in with, so
-  ``derive_self_healing`` can complete the seven-stack set inside the
-  fight.  The same cached sentence also heals *allies* for 7% of his
-  maximum health on the same trigger — a different amount than his own
-  5%, which the engine's heal fan-out (``participant_timeline.py``
-  clones one shared ``amount`` to every recipient) cannot express, so it
-  belongs to the ally scanner rather than to this rule.
-- R (Unbreakable Will) IS on the slot map: the engine carries a
-  champion-authored ``self_state_events`` packet of
-  ``kind: "damage_modifier"`` (precedent: Briar E, ``briar.py``'s
-  ``_chilling_scream``; Sivir E, ``sivir.py``'s ``_spell_shield``),
-  consumed by ``participant_timeline._support_effect_templates`` (which
-  folds ``result["self_state_events"]`` into a self-targeted support
-  template) and armed by
-  ``survival.transitions._apply_damage_modifier`` /
-  ``_apply_cross_participant_modifiers``.  R is a zero-damage row: the
-  cast total is 0.0 and the mechanic is entirely the self-state window.
-  The ranked "Damage Reduction" leveling row (55/65/75%) is read through
-  the typed ``required_ranked_attribute_atom`` accessor, exactly like a
-  normal named-attribute read; the "for the next 7 seconds" active
-  window is the cached description's prose ``timing.active_duration``
-  atom (the same helper Briar E and Sivir E use).  The modifier
-  declares physical + magic only — NOT true — because the cached ability
-  note is explicit: "True damage cannot be reduced by any means and
-  will deal full damage to Alistar during Unbreakable Will."  The
-  self-cleanse of Alistar's own CC has no channel in this engine (no
-  champion module clears an already-armed CC on itself) and stays
-  unmodeled, same as before.
-
-
-All numeric values are read from the champion JSON data; nothing is
-hardcoded.
+E (Trample) reads the "Total Magic Damage" attribute, all ten ticks over five
+seconds, because the classifier would pick the per-tick row first.  The
+empowered-auto bonus Trample grants once per cast scales with champion level
+rather than rank and is baked into the cast total rather than emitted as an
+on-hit.
+Q (Pulverize) and W (Headbutt) are generic single-hit magic damage.
+P (Triumphant Roar) heals only.  Its slot is a zero-damage receipt carrying
+the Triumph stacks Alistar walks in with, so ``derive_self_healing`` can
+complete the seven-stack set inside the fight.  The same sentence heals allies
+for 7% of his maximum health against his own 5%, and the heal fan-out clones
+one shared amount to every recipient, so the ally half belongs to the scanner.
+R (Unbreakable Will) is a zero-damage row whose whole mechanic is a
+``self_state_events`` window of ``kind: "damage_modifier"`` carrying the
+ranked 55/65/75% reduction for seven seconds.  It declares physical and magic
+only, never true, because the cached note is explicit that true damage reaches
+him in full.  His self-cleanse has no channel here.
 """
 
 import re

@@ -1,53 +1,21 @@
-"""Kai'Sa — sourced Q/W, ordered Plasma, and a timed shared-timeline model.
+"""Kai'Sa: sourced Q and W, ordered Plasma, and a timed shared timeline.
 
-One-rotation keeps the certified W -> Q sequence: the rotation deliberately
-waits for Void Seeker and its Plasma applications to resolve before casting
-Icathian Rain, so every damage event stays in one unambiguous order.
-
-Timed mode runs the kit on the engine's shared cast timeline instead:
-
-- Plasma stacks persist and re-accumulate across the whole window on the
-  merged basic-attack + Void Seeker application stream, with the sourced
-  4-second stack expiry.  The walked ledger rides Killer Instinct's single
-  timed cast (``post_hit_proc``), which is the one engine path that prices
-  the %missing-health ruptures against the fight's tracked target health.
-- Supercharge's recurring 4-second attack-speed windows are priced as a
-  duration-weighted average attack-speed grant (the engine's swing
-  scheduler is uniform-rate; its item-owned buffed-rate-first window
-  cannot express a mid-window E cadence), including the sourced 0.5s
-  on-attack cooldown refund and the bonus-AS-scaled charge time.
-- Evolved Void Seeker's 75% cooldown refund on champion hit shortens W's
-  timed recast cadence.
-
-The one-rotation W-impact wait (``cast_time`` = travel-inclusive hit time,
-Q offsets shifted behind it) is deliberately confined to the one-rotation
-branch — timed casts occupy their real cast times.
-
-Coverage, which the ``SLOTS`` map alone reads wrong, so the module
-declares it:
-
-- E (Supercharge) and R (Killer Instinct) are ``no_damage``: the first is
-  an attack-speed grant, the second a shield plus a dash whose row exists
-  only to anchor the Plasma ledger.  Q and W price their own damage.
-- P (Second Skin) is ``modeled`` through the ``post_hit_proc`` coverage
-  channel: Plasma publishes its own breakdown row, ``passive_plasma``,
-  carried by W's ``post_hit_proc`` in one-rotation and by R's in timed,
-  so P has no ``SLOTS`` entry of its own and names the channel instead.
-
-Sourced but not priced, with the evidence pinned so a later session can
-wire them without re-deriving:
-
-- E carries no damage node at all — four cached effect rows (charge-up,
-  the 40-80% Bonus Attack Speed window, the on-attack cooldown refund, the
-  stealth evolution) and no damage-calculation node under ``KaisaEAbility``
-  in the game binary (``data/gamefiles/characters/kaisa.bin.json``).
-- R's shield IS sourced: Shield Strength 100/150/200 + 90/135/180% total
-  AD + 120% AP for 2 seconds (cached R effects[0]), corroborated by the
-  binary's ``KaisaR`` (``RBaseValue``, ``RTotalADRatio``, ``RAPRatio`` 1.2,
-  ``RShieldDuration`` 2.0), which also carries the 100 flat mana cost and
-  the per-rank cooldown the wiki JSON does not cache.  The engine's shield
-  ledger rides damage events and R deals none, so the row stays an
-  assumption rather than a priced grant.
+One-rotation keeps the certified W then Q sequence, so Void Seeker and
+its Plasma applications resolve before Icathian Rain and every damage
+event stays in one order.  The travel-inclusive W cast time that buys
+the wait is confined to that branch; timed casts occupy their real ones.
+Timed mode runs the kit on the shared cast timeline.  Plasma stacks
+persist across the window on the merged basic-attack and Void Seeker
+stream with the sourced 4-second expiry, and the walked ledger rides
+Killer Instinct's single timed cast (``post_hit_proc``), the one engine
+path that prices the %missing-health ruptures against tracked target
+health.  Supercharge's recurring 4-second windows become one average
+grant weighted by duration, the swing scheduler being uniform-rate, and
+evolved Void Seeker's 75% refund shortens W's recast cadence.
+E and R are ``no_damage`` and P has no SLOTS entry: Plasma publishes
+``passive_plasma`` through the ``post_hit_proc`` channel, W's in
+one-rotation and R's in timed.  R's sourced shield stays an assumption
+because the shield ledger rides damage events and R deals none.
 """
 
 import math

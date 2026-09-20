@@ -1,49 +1,22 @@
-"""Warwick — CP10.9 packet module with the E9-1 R gap fix and the FC riders.
+"""Warwick: on-hit rider, blood-hunt steroid and a damage-reduction window.
 
-E9-1 closes the remaining audit gap: R (Infinite Duress) was declared
-no_damage although the wiki cache carries "Total Magic Damage"
-175/350/525 + 167% bonus AD over the 1.5-second suppress channel (the
-wiki notes the channel deals magic damage every 0.25 seconds and that
-on-hit/on-attack effects apply 3 times over its duration).  This
-module prices the total as the R cast, which also lets healing.py's
-100%-of-R-damage self-heal rule fire.
-
-The coverage-frontier riders close P and W:
-
-- P (Eternal Hunger) is the kit's on-hit rider — "Warwick deals
-  6 : 60.76 (based on level) (+ 15% bonus AD) (+ 10% AP) bonus magic
-  damage on-hit" — read from the cached per-level row and layered onto
-  every basic attack.  It IS an on-hit, so item on-hit effects do not
-  proc from it; it rides the swing they already proc from.  Its
-  low-health self-heal is paid by the Warwick healing rule off the
-  share this module publishes (``self_heal_share_of_damage``).
-- W (Blood Hunt) is the attack-speed steroid the cache carries, applied
-  through the engine's ``stat_buff`` channel.  The active marks the
-  target "regardless of their current health", so a cast W always
-  grants the base bonus; the doubled tier reads the shared
-  ``target_missing_hp_pct`` option.  Blood Hunt's movement speed has no
-  engine channel and stays unpriced.
-
-E (Primal Howl) closes as ``modeled``.  Its 35-55% Damage Reduction is
-damage *taken* — an axis this engine did not carry when the slot was
-first reviewed, and does carry now: PR 202's champion-authored
-``self_state_events`` packet of ``kind: "damage_modifier"`` (precedent:
-Briar E, ``briar.py``'s ``_chilling_scream``; Alistar R, ``alistar.py``'s
-``_unbreakable_will``), folded by
-``participant_timeline._support_effect_templates`` and armed by
-``survival.transitions._apply_damage_modifier``.  E is a zero-damage
-row: the cast total is 0.0 and the whole mechanic is the self-state
-window.  The ranked "Damage Reduction" leveling row (35/40/45/50/55%)
-is read through the typed ``required_ranked_attribute_atom`` accessor
-and the "for up to 2.75 seconds" window is the same description's prose
-``timing.active_duration`` atom.  The declared classes are the full
-``DamageClass`` set — the Briar-E convention, because the cached E
-description and notes name NO damage-type carve-out (Alistar's
-true-damage exclusion is declared there only because his cached note
-states it outright).  The recast's fear plus 90% slow are crowd control
-the model still does not price, and a *manual* recast (available after
-1 second) would end the window early — the module prices the automatic
-recast the cache describes, which fires "after the duration".
+R (Infinite Duress) prices the cached "Total Magic Damage" over the 1.5-second
+suppress channel, which is also what lets the 100%-of-R self-heal rule fire.
+P (Eternal Hunger) is the kit's on-hit rider, read from the cached per-level
+row and layered onto every basic attack.  Being an on-hit itself, it does not
+proc item on-hits; it rides the swing they already proc from.  Its low-health
+self-heal is paid from the share this module publishes.
+W (Blood Hunt) is the attack-speed steroid, applied through ``stat_buff``.
+The active marks the target regardless of current health, so a cast W always
+grants the base bonus and only the doubled tier reads
+``target_missing_hp_pct``.  Its movement speed has no channel.
+E (Primal Howl) is a zero-damage row whose whole mechanic is a
+``self_state_events`` window of ``kind: "damage_modifier"`` carrying the
+ranked 35 to 55% reduction for up to 2.75 seconds.  It declares the full
+``DamageClass`` set because the cached description names no carve-out, unlike
+Alistar R.  The module prices the automatic recast the cache describes; a
+manual recast would end the window early, and the recast's fear and slow are
+control this model does not price.
 """
 
 from functools import partial

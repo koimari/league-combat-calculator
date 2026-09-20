@@ -1,46 +1,21 @@
-"""Wukong's Stone Skin, empowered attack, and Cyclone timeline.
+"""Wukong: Stone Skin, the empowered attack, and the Cyclone timeline.
 
-Why the Q slot is non-generic:
-- Q (Crushing Blow) is a DEBUFF-phase custom fn: the empowered basic
-  attack's bonus physical damage plus a percentage armor reduction
-  emitted as a ``target_debuff`` (``q_armor_reduction`` option, default
-  True). damage.py applies the shred AFTER the ability's own damage —
-  Q's bonus packet is always priced at full target armor, while
-  everything after it (R ticks, E follow-ups, later Q casts, autos)
-  sees the reduced armor for the debuff's 3 seconds (the Kog'Maw Q
-  rule). In the sustained auto path the empowered swing rides the auto
-  stream, which the fight engine prices against its single time-weighted
-  armor scalar like every other post-Q hit.
-
-Coverage:
-- P (Stone Skin) is ``modeled``: the bonus armor is a ``stat_buff`` row the
-  holder's survival side reads; the health regeneration is not priced.
-- W (Warrior Trickster) is ``out_of_scope``.  The missing axis is the
-  clone's SWING COUNT, not its per-hit output, and the two are sourced
-  differently.  The clone's damage is not a W row at all: the cached
-  slot says it "can basic attack autonomously" for 4 seconds, "can also
-  gain the effects of Crushing Blow and Nimbus Strike's bonus attack
-  speed" (Crushing Blow's effects; Nimbus Strike's bonus attack speed —
-  Crushing Blow grants no attack speed), and "casts Cyclone whenever
-  Wukong does", with everything it deals scaled by the cached "Clone
-  Outgoing Damage" ratio (40/45/50/55/60%).
-  So the RATIO is sourced twice over — it is the entry's only leveling
-  row, and monkeyking.bin.json's MonkeyKingDecoy carries the same
-  numbers as ``CloneDamageMod`` (0.40 : 0.60 over ranks 1-5) — while the
-  RATE is sourced nowhere.  That bin has no clone CharacterRecord at all
-  (only ``Characters/MonkeyKing/CharacterRecords/Root``), MonkeyKingDecoy's
-  DataValues are CloneDamageMod / StealthDuration / CloneDuration /
-  DashSpeed / RangeClamp / MinRange, and every attack-speed node in the
-  file is Wukong's own (the Root record's ``attackSpeed*`` fields and
-  MonkeyKingNimbus's ``AttackSpeed``), so there is no clone base attack
-  speed for E's bonus to even apply to.
-  The one in-repo route past a missing rate does not transfer.  Shaco R
-  prices its clone by making the swing count an explicit player input
-  (``r_clone_attacks``, default 0), which is honest there because that
-  clone is COMMANDED — the count is something the player states.  Wukong's
-  attacks on its own, so the same option would not be reading an input,
-  it would be inventing the number the game decides.  The copied Cyclone
-  has no home either: the engine prices one attacker's cast timeline.
+Q (Crushing Blow) is a DEBUFF-phase slot: the empowered basic attack's bonus
+physical damage plus a percentage armor reduction emitted as a
+``target_debuff`` under ``q_armor_reduction``.  The shred lands after the
+ability's own damage, so Q's packet always meets full armor and everything
+after it meets the reduced armor for three seconds.
+P (Stone Skin) is modeled as a ``stat_buff`` of bonus armor the survival side
+reads; its health regeneration is not priced.
+W (Warrior Trickster) is ``out_of_scope`` on the clone's SWING COUNT, not its
+per-hit output.  The damage RATIO is sourced twice, as the entry's only
+leveling row and as the binary's ``CloneDamageMod``, while the RATE is sourced
+nowhere: the binary carries no clone CharacterRecord at all, so there is no
+clone base attack speed for E's bonus to apply to.  Shaco's route past a
+missing rate does not transfer, because his clone is commanded and the swing
+count is something a player states, while Wukong's attacks on its own, so the
+same option would invent the number the game decides.  The copied Cyclone has
+no home either: the engine prices one attacker's cast timeline.
 """
 
 from typing import Any
