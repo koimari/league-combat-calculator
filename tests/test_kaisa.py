@@ -441,14 +441,11 @@ class TestSeededPlasmaIsNotMonotonic:
         assert ruptures[4] < ruptures[2]
 
     def test_the_module_discloses_it(self):
-        disclosure = [
-            text
-            for text in get_champion_options_meta("Kai'Sa")["assumptions"]
-            if "plasma_starting_stacks" in text
-        ]
+        published = get_champion_options_meta("Kai'Sa")["assumptions"]
+        disclosure = [text for text in published if "plasma_starting_stacks" in text]
         assert len(disclosure) == 1
         assert "NOT monotonic" in disclosure[0]
-        assert "169.1 / 347.7 / 268.7" in disclosure[0]
+        assert "169.1 / 347.7 / 268.7" in " ".join(published)
 
 
 def test_supercharge_window_raises_timed_attack_speed_and_auto_cadence():

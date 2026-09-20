@@ -244,11 +244,10 @@ ASSUMPTIONS = [
     "Rend defaults to one lodged spear; the stack count is explicit and capped at the "
     "sourced 254-stack limit.",
     "Fate's Call and Martial Poise are utility/state effects with no direct enemy damage.",
-    "P (Martial Poise) and R (Fate's Call) carry no sourced damage/heal/shield "
-    "row of their own (P's four effect rows are all empty leveling; R's only "
-    "leveling row is a CC duration, Airborne Duration) — both are no_damage, "
-    "not out_of_scope, and each emits an explicit zero-damage state row "
-    "rather than staying silently absent.",
+    "P (Martial Poise) has four empty leveling rows and R (Fate's Call) only an "
+    "Airborne Duration row.",
+    "Both are no_damage rather than out_of_scope, each emitting an explicit "
+    "zero-damage state row.",
 ]
 
 SOURCES = load_champion_sources("Kalista")

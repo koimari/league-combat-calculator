@@ -188,33 +188,27 @@ parse_abilities = build_parser(SLOTS, "Kled", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Skaarl the Cowardly Lizard (P): the mounted duo's damage is suffered "
-    "by Skaarl, whose 400 : 1400 (based on level) base health is the "
-    "mounted pool (data/champions.json P 'Bonus Damage'); the "
-    "dismount/remount cycle is a revive-boundary pattern (like Aatrox's "
-    "ghost atom) and is not modeled — the E8a grey-health primitive "
-    "authors no Skaarl heal.",
-    "Q Grievous Wounds: REMOVED — Pocket Pistol's wound was deleted in "
-    "V25.14 (the e8-interactions worklist entry is stale; the wiki cache "
-    "carries no Grievous Wounds on either Q entry), so the module declares "
-    "no wound source.",
-    "Base movement speed and attack range are FORM-ATTRIBUTED, not stale: "
-    "data/champions.json carries movespeed 305 / attackRange 250 (the "
-    "DISMOUNTED row of the wiki's two-form stat box) while the 16.16 game "
-    "file Characters/Kled/CharacterRecords/Root carries 345 / 125 (MOUNTED). "
-    "The wiki's own P[1] text reconciles them exactly — dismounting reduces "
-    "movement speed 'by 40 to 305' (345 - 40) and grants '125 total attack "
-    "range' (125 + 125) — and every other cached stat matches the game file "
-    "leaf for leaf. patch_regression therefore reports a permanent, "
-    "patch-independent stat_drift on these two fields (identical flags in "
-    "the committed 16.15 report; the 16.16.1 re-pull changed no Kled leaf) "
-    "and no value is overridden here. Melee/ranged classification is "
-    "unaffected: stats.is_melee reads attackType ('MELEE'), never "
-    "attackRange. Residual: base move speed feeds Swiftmarch's "
-    "adaptive_force_per_total_move_speed (5%), so a Swiftmarch build "
-    "understates adaptive force by 2.0 while the module's modeled abilities "
-    "(E Jousting, R Chaaaaaaaarge!!!) are mounted-only — reconciling the "
-    "form of the cached stat row is escalated, not patched here.",
+    "Skaarl (P) suffers the mounted duo's damage; his 400 to 1400 by level base "
+    "health is the mounted pool.",
+    "That pool is the cached P Bonus Damage row in data/champions.json.",
+    "The dismount and remount cycle is a revive-boundary pattern and is not modeled; "
+    "no Skaarl heal is authored.",
+    "The wiki cache carries no Grievous Wounds on either Q entry, so the module "
+    "declares no wound source.",
+    "Base move speed and attack range are form-attributed: the cache has 305 / 250, "
+    "dismounted.",
+    "The 16.16 game file Root carries 345 / 125, mounted, and every other cached stat "
+    "matches leaf for leaf.",
+    "The cached P text reconciles them: dismounting reduces move speed 'by 40 to 305' "
+    "and grants '125 total'.",
+    "patch_regression therefore reports a permanent stat_drift on those two fields, "
+    "and no value is overridden.",
+    "stats.is_melee reads attackType MELEE, never attackRange, so the classification "
+    "is unaffected.",
+    "Base move speed feeds Swiftmarch's adaptive force, so a Swiftmarch build "
+    "understates it by 2.0.",
+    "The modeled E and R are mounted-only; reconciling the cached row's form is "
+    "escalated, not patched here.",
 ]
 
 # HARDCODED: verify on patch updates.  Kled's Grievous Wounds (the Bear Trap on

@@ -264,29 +264,31 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "The certified sequence is the alive-state W -> Q -> E -> R order "
-    "against each selected target; timed fights recast it on the engine's "
-    "shared cast timeline.",
-    "Wall of Pain reduces the selected target's magic resistance by 25% only "
-    "when its contact option is on; timed fights time-weight the shred over "
-    "its 5-second windows on the W cast schedule.",
+    "The certified sequence is the alive-state W, Q, E, R order against each selected "
+    "target.",
+    "Timed fights recast it on the engine's shared cast timeline.",
+    "Wall of Pain cuts the target's magic resist 25% only when its contact option is "
+    "on.",
+    "Timed fights time-weight the shred over its 5s windows on the W cast schedule.",
     "Lay Waste doubles only for a single selected target; a multi-target hit "
     "automatically uses the shared-target formula.",
-    "In one rotation Defile uses exactly the selected tick count and charges "
-    "mana for the elapsed 0.25-second intervals; timed fights ignore the "
-    "selector and model the toggle as one-second pulses (four sourced ticks, "
-    "one second of the sourced drain each) paid on the ordered resource "
-    "timeline beside Q/W/R, so Defile shuts off at mana exhaustion.",
-    "Toggle pulses are conservative: a pulse begun within the window prices "
-    "its full second of ticks, re-arms only at instants the shared cast "
-    "timeline leaves free (Requiem's channel and cast times can delay it), "
-    "and holds a fixed one-second cadence against ability haste; cooldown "
-    "effects beyond haste (Navori) are not counteracted.",
-    "Lay Waste uses the sourced upper 0.75-second detonation delay because the "
-    "Wiki records its live delay as inconsistent between 0.5 and 0.75 seconds.",
-    "Death Defied is outside the alive-window model in both fight modes: the "
-    "fight engine has no death event for the attacker, so the 7-second "
-    "post-death window stays a documented zero-damage boundary.",
+    "One rotation uses Defile's selected tick count and charges mana for the elapsed "
+    "0.25s intervals.",
+    "A timed fight ignores the selector and pulses the toggle each second: four "
+    "sourced ticks per pulse.",
+    "Pulses are paid on the ordered resource timeline beside Q, W and R, so Defile "
+    "stops at exhaustion.",
+    "Toggle pulses are conservative: a pulse begun in the window prices its full "
+    "second of ticks.",
+    "It re-arms conservatively, only where the cast timeline is free, so Requiem's "
+    "channel can delay it.",
+    "The cadence stays one second against ability haste, and Navori is not "
+    "counteracted.",
+    "Lay Waste uses the sourced upper 0.75s detonation delay: the wiki records 0.5 to "
+    "0.75 inconsistently.",
+    "Death Defied is outside the alive-window model: its 7s post-death window is a "
+    "zero-damage boundary.",
+    "The fight engine has no death event for the attacker.",
 ]
 
 SOURCES = load_champion_sources("Karthus")

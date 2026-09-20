@@ -497,30 +497,26 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Mark of the Kindred stacks (0-25) grant bonus range (75 : 250), Q "
-    "attack speed (+5% per mark) and E missing-health scaling (+0.5% per "
-    "mark); takedown collection is state",
-    "Mounting Dread marks for 4 seconds and stacks on basic attacks (cap "
-    "3); the third stack fires the Wolf pounce, consuming all stacks — "
-    "e_stacks is the explicit pre-stack state (3 prices the pounce)",
-    "The pounce is the sourced Additional Physical Damage (+ 100% bonus "
-    "AD + missing-health term), amplified up to 50% by critical strike "
-    "chance (crit_effectiveness 0.5, wiki prose)",
-    "W (Wolf's Frenzy) prices the sourced Magic Damage leveling over "
-    "w_attacks Wolf attacks, including the per-Mark current-health term "
-    "(1.5% + 1% per Mark); the zone duration and 25%-of-bonus-AS rate are "
-    "state (attack count is the player-controlled option)",
-    "W passive Hunter's Vigor: at 100 stacks (w_hunters_vigor_stacks, "
-    "default 100) the next basic attack heals Kindred for the "
-    "missing-health share of the sourced 47 : 81 (based on level) heal "
-    "(healing.py; the heal is not triggered at full health)",
-    "R (Lamb's Respite) is the reviewed no-damage packet: the minimum-"
-    "health zone and end heal are defensive/utility state, not enemy "
-    "damage (roadmap session 4: reclassified from out_of_scope to "
-    "no_damage, no behavior change)",
-    "Q (Dance of Arrows) is the reviewed physical-damage packet (roadmap "
-    "session 4: reclassified from out_of_scope to modeled, no behavior "
-    "change -- the slot always priced real damage)",
+    "Mark stacks (0 to 25) grant 75 to 250 range, +5% Q attack speed, +0.5% E missing "
+    "health; collection is state.",
+    "Mounting Dread marks for 4s and stacks on basic attacks, cap 3, the third firing "
+    "the Wolf pounce.",
+    "e_stacks is the pre-stack state, and 3 prices the pounce.",
+    "The pounce is the sourced Additional Physical Damage + 100% bonus AD + a "
+    "missing-health term.",
+    "Crit chance amplifies it up to 50%, crit_effectiveness 0.5 from wiki prose.",
+    "W (Wolf's Frenzy) prices the sourced Magic Damage over w_attacks Wolf attacks, "
+    "with 1.5% + 1% per Mark.",
+    "The zone duration and 25%-of-bonus-AS rate are state; the attack count is the "
+    "player-controlled option.",
+    "W's Hunter's Vigor heals at 100 stacks (w_hunters_vigor_stacks, default 100) on "
+    "the next basic attack.",
+    "The heal is the missing-health share of the sourced 47 to 81 by level, and never "
+    "fires at full health.",
+    "R (Lamb's Respite) is a reviewed no-damage packet: the minimum-health zone and "
+    "end heal are state.",
+    "Q (Dance of Arrows) is the reviewed physical-damage packet: the slot prices real "
+    "damage.",
 ]
 
 SOURCES = load_champion_sources("Kindred")

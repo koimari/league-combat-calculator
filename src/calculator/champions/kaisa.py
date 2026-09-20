@@ -611,47 +611,47 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "One-rotation mode is the certified W -> Q sequence: Kai'Sa waits for W "
-    "and Plasma to resolve before casting Q; timed casts run on the real "
-    "shared timeline with no artificial wait",
+    "One rotation is the certified W then Q sequence: W and Plasma resolve before Q "
+    "is cast.",
+    "Timed casts run on the real shared timeline with no artificial wait.",
     "Every Q missile hits one isolated selected target; shared targets would "
     "split the volley",
-    "Q/W evolutions follow permanent item stats and level growth automatically; "
-    "the selector can reproduce a not-yet-evolved or forced test state",
-    "plasma_starting_stacks is deliberately NOT monotonic, and the two "
-    "reasons compound. Seeding 4 makes the very next application the fifth, "
-    "so the flat ramp resets and the applications after it price the BOTTOM "
-    "of the per-prior-stack ladder instead of its top; and the rupture is a "
-    "share of MISSING health, so firing it that early prices it against a "
-    "target the rotation has barely damaged. Probe (level 18, "
-    "Luden's Echo / Shadowflame / Rabadon's Deathcap, one rotation, "
-    "85 effective MR) — the passive_plasma row at 0 / 2 / 4 seeded stacks is "
-    "169.1 / 347.7 / 268.7, and both halves of the drop from 2 to 4 are "
-    "real: flat damage 238.1 -> 192.1 and rupture 109.6 -> 76.6. Seeding "
-    "more Plasma is not the same question as dealing more damage.",
-    "W applies each Plasma stack successively; a fifth-stack rupture uses "
-    "health remaining under the engine's running-damage model (one-rotation: "
-    "after W and the preceding Caustic Wounds hit; timed: after the priced "
-    "W/Q casts and the ledger's earlier Plasma hits)",
-    "Timed Plasma stacks persist and re-accumulate on the merged basic-attack "
-    "+ Void Seeker stream with the sourced 4s expiry; the walk mirrors the "
-    "engine's cadence (autos at attack speed x uptime, W cast at t=0 then on "
-    "its effective cooldown), and only Kai'Sa's own attacks and W apply "
-    "stacks (ally immobilize stacks are not modeled)",
-    "The timed Plasma ledger rides Killer Instinct's single cast, so it is "
-    "priced only when R is ranked and cast — auto-attacks-only fights and "
-    "pre-6 timed fights leave Plasma unpriced (stated gap, not a withhold)",
-    "Killer Instinct's attack reset and 2s shield are not priced: the "
-    "engine's swing stream has no reset channel and its shield ledger rides "
-    "damage events, which R does not deal",
-    "Supercharge is priced as a duration-weighted average attack-speed grant "
-    "(the engine's swing scheduler is uniform-rate): casts at t=0 then on "
-    "its effective cooldown with the sourced 0.5s on-attack refund at the "
-    "pre-window attack rate, each window lasting 4s after the charge; its "
-    "30 mana and charge lockout are not on the cast timeline",
-    "Supercharge's charge time scales 1.2s -> 0.6s with the build's bonus "
-    "attack speed (cached castTime prose); its evolution only grants brief "
-    "invisibility and needs no combat model",
+    "Q and W evolutions follow permanent item stats and level growth; the selector "
+    "can force a test state.",
+    "plasma_starting_stacks is deliberately NOT monotonic, and the two reasons "
+    "compound.",
+    "Seeding 4 makes the next application the fifth, so the flat ramp resets to the "
+    "bottom of the ladder.",
+    "The rupture is a share of missing health, so firing it early prices a barely "
+    "damaged target.",
+    "Probe at level 18, one rotation, 85 effective MR: passive_plasma is 169.1 / "
+    "347.7 / 268.7 at 0 / 2 / 4.",
+    "Both halves of the 2 to 4 drop are real: flat 238.1 to 192.1 and rupture 109.6 "
+    "to 76.6.",
+    "W applies each Plasma stack in turn; a fifth-stack rupture uses health remaining "
+    "under running damage.",
+    "One rotation counts W and the preceding Caustic Wounds hit; timed counts the "
+    "priced casts and hits.",
+    "Timed Plasma stacks persist on the merged basic-attack and Void Seeker stream "
+    "with the sourced 4s expiry.",
+    "The walk mirrors the engine: autos at attack speed x uptime, W at t=0 then on "
+    "its effective cooldown.",
+    "Only Kai'Sa's own attacks and W apply stacks; ally immobilize stacks are not "
+    "modeled.",
+    "The timed Plasma ledger rides Killer Instinct's single cast, so it needs R "
+    "ranked and cast.",
+    "An autos-only or pre-6 timed fight leaves Plasma unpriced, a stated gap rather "
+    "than a withhold.",
+    "Killer Instinct's attack reset and 2s shield are not priced: no reset channel, "
+    "and R deals no damage.",
+    "Supercharge is a duration-weighted average attack-speed grant, the swing "
+    "scheduler being uniform-rate.",
+    "It casts at t=0 then on its effective cooldown, each window 4s after the charge.",
+    "Its sourced 0.5s on-attack refund uses the pre-window rate; 30 mana and the "
+    "lockout are off the timeline.",
+    "Supercharge's charge time scales 1.2s to 0.6s with bonus attack speed (cached "
+    "castTime prose).",
+    "Its evolution grants brief invisibility only and needs no combat model.",
 ]
 
 SOURCES = load_champion_sources("Kai'Sa")

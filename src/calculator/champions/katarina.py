@@ -168,18 +168,16 @@ parse_abilities = build_parser(SLOTS, "Katarina", cc_kinds=MODULE_CC)
 OPTIONS = list(_packet_options)
 ASSUMPTIONS = [
     *list(_packet_assumptions),
-    "Sinister Steel's dagger spin prices the flat level term plus 60% "
-    "bonus AD plus the level-banded AP ratio (70%/80%/90%/100% at "
-    "levels 1-5/6-10/11-15/16+) — the band values are wiki prose "
-    "(module constants) because the JSON's AP-modifier unit is garbled",
-    "The dagger-retrieval count is user-set (``p_daggers``, default 1); "
-    "the 4-second dagger lifetime and pickup positioning are not "
-    "simulated",
+    "Sinister Steel prices the flat level term + 60% bonus AD + 70/80/90/100% AP by "
+    "level band.",
+    "The bands (1-5, 6-10, 11-15, 16+) are wiki prose constants: the JSON AP-modifier "
+    "unit is garbled.",
+    "The dagger-retrieval count is p_daggers (default 1); dagger lifetime and pickup "
+    "are not simulated.",
     "Q's dagger landing, W's toss, and E-onto-dagger pickups are all "
     "counted as the same spin proc",
-    "Death Lotus applies Grievous Wounds for 3 seconds on every dagger "
-    "hit (wiki prose); the coupled timeline refreshes the patch-wide "
-    "40% window per hit",
+    "Death Lotus applies Grievous Wounds for 3s on every dagger hit (wiki prose).",
+    "The coupled timeline refreshes the patch-wide 40% window per hit.",
 ]
 SOURCES = load_champion_sources("Katarina")
 MODULE_COVERAGE = coverage(no_damage="W")

@@ -139,18 +139,17 @@ OPTIONS = [
 ]
 ASSUMPTIONS = [
     "Mantra is an explicit next-ability state; Soulflare and Renewal use the Mantra "
-    "rank rather than silently changing base ranks.",
+    "rank, not base ranks.",
     "Focused Resolve emits one or two sourced magic hits depending on the tether-completion input.",
     "Inspire/Defiance shields and Gathering Fire cooldown refunds remain ally/state utility.",
-    "E (Inspire) shields Karma or the selected teammate the sourced "
-    "Shield Strength (80-280 + 60% AP) for 2.5s (self-or-target scope "
-    "one_teammate with self fallback in a solo fight; selection key "
-    "shield:E:<cast>); the 40% movement speed for 2s is utility state.",
-    "Mantra-empowered Inspire (Defiance) is documented-only: the cached "
-    "R data carries no sourced Defiance shield numbers (the Mantra "
-    "description only names the empowered effect), so the AoE ally "
-    "spread of the enhanced shield fails closed instead of inventing a "
-    "value.",
+    "E (Inspire) shields Karma or the selected teammate for 80 to 280 + 60% AP over "
+    "2.5s, the sourced row.",
+    "Its scope is self-or-target with a self fallback in a solo fight; the 40% move "
+    "speed is utility.",
+    "Mantra-empowered Inspire (Defiance) is documented only: the cached R data "
+    "carries no shield numbers.",
+    "The Mantra text names the effect alone, so the ally spread fails closed rather "
+    "than inventing a value.",
 ]
 SOURCES = load_champion_sources("Karma")
 

@@ -347,22 +347,22 @@ OPTIONS = [
     ),
 ]
 ASSUMPTIONS = [
-    "Every Moment Matters uses the cached level scaling plus explicit "
-    "crit/bonus-AS inputs; its AD grant is applied before later damage.",
-    "Whisper's final round is the 4th shot of the 4-round clip: always a "
-    "crit, adding 15/20/25% (levels 1/6/11) of target missing health. "
-    "p_shot_number is the explicit pre-stack (shots into the clip); "
-    "p_missing_health prices the bonus at the fight engine's static "
-    "target context (the per-auto dynamic missing-health curve is beyond "
-    "the engine's proc model — the expected contribution is priced flat).",
-    "Dancing Grenade exposes bounce/death state, while Deadly Flourish "
-    "and Lotus Trap use their typed source damage once; e_traps (max 2, "
-    "the charge cap) prices the second trap at the 65% reduced row "
-    "(champion struck by another Lotus Trap within 1s).",
-    "Lotus Trap's 35% 2s slow and the reveal are utility the fight model "
-    "does not price; trap arm time and placement are state outside the "
-    "damage model.",
-    "Curtain Call interpolates each bullet's missing-health range and "
-    "keeps the fourth bullet's sourced critical packet separate.",
+    "Every Moment Matters uses the cached level scaling with explicit crit and "
+    "bonus-AS inputs.",
+    "Its AD grant applies before later damage.",
+    "Whisper's 4th shot of the clip always crits and adds 15/20/25% at levels 1/6/11 "
+    "of target missing health.",
+    "p_shot_number is the pre-stack, shots into the clip, and p_missing_health prices "
+    "the bonus.",
+    "The per-auto missing-health curve is outside the proc model, so the contribution "
+    "is priced flat.",
+    "Dancing Grenade exposes bounce state; Deadly Flourish and Lotus Trap use their "
+    "typed source damage once.",
+    "e_traps (max 2, the charge cap) prices the second trap at the 65% reduced row, "
+    "within 1s of the first.",
+    "Lotus Trap's 35% 2s slow and its reveal are utility; arm time and placement are "
+    "state.",
+    "Curtain Call interpolates each bullet's missing-health range, the fourth "
+    "bullet's crit packet apart.",
 ]
 SOURCES = load_champion_sources("Jhin")

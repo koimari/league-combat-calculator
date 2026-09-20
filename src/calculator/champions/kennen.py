@@ -276,19 +276,18 @@ OPTIONS = [
 ]
 ASSUMPTIONS = [
     *list(REVIEWED_MODULE_ASSUMPTIONS),
-    "The Mark of the Storm walk merges the fight's ability casts at the "
-    "Braum-pattern schedule (each learned slot at t=0 and every hasted "
-    "cooldown after) with Slicing Maelstrom's own bolt cadence and, when "
-    "w_empowered is set, the Electrical Surge attack on the first swing "
-    "and every fifth after it; one set of hands and item cooldown refunds "
-    "are not mirrored",
-    "Mark applications are counted against ONE target — the pair fight's "
-    "own — so allied hits and multi-target spread are outside the walk",
-    "E (Lightning Rush) places its recast's bonus attack speed as a "
-    "4-second window at the first E cast (one window per fight); the "
-    "lightning form's 0.5-second minimum before the recast, its no-attack "
-    "time, the crit-extended duration and the cap exemption are not "
-    "modeled, and the Mark walk keeps the base swing cadence.",
+    "The Mark walk merges the fight's casts at each learned slot's t=0 and every "
+    "hasted cooldown after.",
+    "It adds Slicing Maelstrom's bolt cadence and, with w_empowered, the Surge attack "
+    "on swing 1 and every 5th.",
+    "One set of hands and item cooldown refunds are not mirrored.",
+    "Mark applications count against the pair fight's one target, so allied hits and "
+    "spread stay outside.",
+    "E (Lightning Rush) places its recast's bonus attack speed as a 4s window at the "
+    "first E cast.",
+    "E's 0.5s minimum, no-attack time, crit-extended duration and cap exemption are "
+    "not modeled.",
+    "The Mark walk keeps the base swing cadence.",
 ]
 SOURCES = load_champion_sources("Kennen")
 
