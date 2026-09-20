@@ -690,9 +690,9 @@ MODULE_DECLARATION|interpreters/__init__.py|_validate_authority_agreement|getatt
 MODULE_DECLARATION|interpreters/cast_proc.py|self_shield_owners|getattr|"self_shield" 1
 MODULE_DECLARATION|interpreters/defense_state.py|_policy_reference|getattr|name 1
 MODULE_DECLARATION|item_coverage.py|_prices_holder_durability|getattr|field 1
-OPTION_SCHEMA|item_effects.py|_input_option_stat_bonuses|dict.get|"bonus_ap_per_unit" 1
-OPTION_SCHEMA|item_effects.py|_input_option_stat_bonuses|dict.get|"bonus_health_per_unit" 1
-OPTION_SCHEMA|item_effects.py|_input_option_stat_bonuses|dict.get|"bonus_mana_per_unit" 1
+OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_ap_per_unit" 1
+OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_health_per_unit" 1
+OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_mana_per_unit" 1
 OPTION_SCHEMA|item_effects.py|_item_option_schemas|dict.get|"options" 1
 OPTION_SCHEMA|item_effects.py|input_option_float_value|dict.get|"step" 1
 OPTION_SCHEMA|item_effects.py|input_option_float_value|or-default|"step" 1

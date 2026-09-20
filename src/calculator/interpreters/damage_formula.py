@@ -230,6 +230,9 @@ def reads_target_current_health(formula: DamageFormula) -> bool:
     return any(term.basis is Basis.TARGET_CURRENT_HEALTH for term in formula.terms)
 
 
+# Local and structural on purpose: nine payload dataclasses declare
+# ``formula`` and share no base, so this is the only way to name the set, and
+# its two readers are the two functions below it.
 class FormulaPayload(Protocol):
     """A declaration that carries a damage formula."""
 

@@ -111,11 +111,9 @@ def calculate_total_stats(
     # Stateful item inputs are explicit scenario state, not guessed proc
     # counts. Apply their sourced health/mana before conversions (Awe,
     # Muramana, Seraph's) read those totals.
-    _, input_move_speed_percent, input_bonus_health, input_bonus_mana = (
-        input_option_stat_bonuses(items, item_options)
-    )
-    total_item_stats["health"] += input_bonus_health
-    total_item_stats["mana"] += input_bonus_mana
+    input_bonuses = input_option_stat_bonuses(items, item_options)
+    total_item_stats["health"] += input_bonuses.bonus_health
+    total_item_stats["mana"] += input_bonuses.bonus_mana
     is_melee = champion_data.get("attackType", "MELEE") == "MELEE"
     total_item_stats["critical_strike_chance"] += input_option_crit_chance(
         items, item_options, is_melee=is_melee
@@ -208,7 +206,7 @@ def calculate_total_stats(
     )
     move_speed_percent = (
         total_item_stats["move_speed_percent"]
-        + input_move_speed_percent
+        + input_bonuses.move_speed_percent
         + rune_pre_conversion.move_speed_percent
     )
     final_move_speed = resolve_move_speed(move_speed_flat, move_speed_percent)

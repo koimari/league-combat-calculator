@@ -1526,7 +1526,7 @@ class TestCp20ItemState:
         )
         assert item_effects.input_option_stat_bonuses(
             [{"name": "Tear of the Goddess"}], options
-        )[3] == pytest.approx(360.0)
+        ).bonus_mana == pytest.approx(360.0)
         assert (
             item_effects.input_option_value(
                 [{"name": "Umbral Glaive"}],
