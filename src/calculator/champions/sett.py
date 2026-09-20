@@ -28,7 +28,7 @@ from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS
 from .engine import SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
-from .module_helpers import ability_slot, no_damage, ranked_slot
+from .module_helpers import ability_slot, at_level, no_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slot_entries import attach_self_shield, damage_entry
 from .slot_extract import (
@@ -328,11 +328,8 @@ def _level_breakpoint_value(values: tuple[float, ...], level: int) -> float:
     if not values:
         return 0.0
     if len(values) == 6:
-        breakpoints = (1, 6, 11, 16, 17, 18)
-        for index in range(len(breakpoints) - 1, -1, -1):
-            if level >= breakpoints[index]:
-                return float(values[index])
-        return float(values[0])
+        brackets = tuple(zip((18, 17, 16, 11, 6, 1), reversed(values), strict=True))
+        return float(at_level(brackets, level))
     return float(values[min(max(level, 1) - 1, len(values) - 1)])
 
 

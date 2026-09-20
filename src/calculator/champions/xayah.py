@@ -33,7 +33,7 @@ from ..binary_roots import data_value, spell_object
 from ..control_spec import ControlEvent
 from .engine import SlotCtx
 from .inputs import int_option
-from .module_helpers import ability_slot, ranked_slot, steroid_entry
+from .module_helpers import ability_slot, at_level, ranked_slot, steroid_entry
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
@@ -118,10 +118,7 @@ def _clean_cuts_rule(ability: Mapping[str, Any]) -> dict[str, Any]:
 def _secondary_feather_ratio(ability: Mapping[str, Any], level: int) -> float:
     """Level-bracketed 35/45/55% AD secondary-feather damage (P prose)."""
     values = _SECONDARY_FEATHER_RATIO.level_values(ability)
-    for min_level, index in _CLEAN_CUTS_LEVEL_BRACKETS:
-        if level >= min_level:
-            return values[index - 1] / 100.0
-    return values[0] / 100.0
+    return values[at_level(_CLEAN_CUTS_LEVEL_BRACKETS, level) - 1] / 100.0
 
 
 def _secondary_feather_crit_extra(ability: Mapping[str, Any]) -> float:

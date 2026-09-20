@@ -54,7 +54,7 @@ from .armed_procs import cached_stack_terms
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import champion_stat, int_option
-from .module_helpers import ability_slot, no_damage_slot, ranked_slot
+from .module_helpers import ability_slot, at_level, no_damage_slot, ranked_slot
 from .slot_entries import attach_self_shield, damage_entry
 from .slot_extract import (
     ability_name,
@@ -178,14 +178,9 @@ def _parse_passive_proc_damage(
     """
     breakpoints = _DIRTY_FIGHTING_PROC.level_values(passive)
     # Standard 4-breakpoint levels: 1, 6, 11, 16.
-    if level >= 16:
-        base = breakpoints[3]
-    elif level >= 11:
-        base = breakpoints[2]
-    elif level >= 6:
-        base = breakpoints[1]
-    else:
-        base = breakpoints[0]
+    base = at_level(
+        tuple(zip((16, 11, 6, 1), reversed(breakpoints), strict=True)), level
+    )
     ap_ratio = _DIRTY_FIGHTING_AP_RATIO.value(passive) / 100.0
     return base + ap_ratio * champion_stat(stats_context or {}, "ability_power")
 
