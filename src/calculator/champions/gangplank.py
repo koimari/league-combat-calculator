@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from types import MappingProxyType
+from typing import Any, NamedTuple
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
@@ -16,7 +17,7 @@ from .inputs import bool_option, int_option
 from .module_helpers import ability_slot, named_damage, no_damage, ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
-from .source_receipts import load_champion_sources
+from .source_receipts import load_champion_sources, state_receipt
 
 _GANGPLANK_W_SPELL = spell_object("Gangplank", "GangplankW")
 _GANGPLANK_R_SPELL = spell_object("Gangplank", "GangplankR")
@@ -83,15 +84,15 @@ _parrrley = named_damage(
 )
 
 
-# P2 Slice 5 — Remove Scurvy typed declaration.  The heal values are the
-# cached W rows (atom-backed: ability.heal.modifier_0/1/2 +
-# timing.cooldown — hashes verified); the cleanse scope (CC-only,
-# airborne displacement-override) is wiki prose + the game file
-# (canCastWhileDisabled true / cannotBeSuppressed true — the QSS/
-# Mercurial flag pair).  The heal is authored by the E1 self-heal rule
-# (healing.py: flat + 90% AP + 13% missing health, live); the cleanse
-# rides the Slice 4 item-cleanse kernel via one kind="cleanse" packet
-# per W cast.  W stays OUT of outgoing damage.
+# Remove Scurvy's typed declaration.  The heal values are the cached W
+# rows (atom-backed: ability.heal.modifier_0/1/2 + timing.cooldown,
+# hashes verified); the cleanse scope (CC-only, airborne
+# displacement-override) is wiki prose plus the game file
+# (canCastWhileDisabled true / cannotBeSuppressed true, the QSS/
+# Mercurial flag pair).  The heal is authored by the self-heal rule
+# (healing.py: flat + 90% AP + 13% missing health); the cleanse rides
+# the item-cleanse kernel via one kind="cleanse" packet per W cast.
+# W stays OUT of outgoing damage.
 _W_HEAL_FLAT = tuple(
     data_value_at_rank(_GANGPLANK_W_SPELL, "BaseHeal", rank) for rank in range(1, 6)
 )
@@ -102,32 +103,45 @@ _W_COST = (60.0, 70.0, 80.0, 90.0, 100.0)
 _W_EXCLUDED_CONTROL_KINDS = ("airborne", "knockback", "knockup")
 
 
-class _RemoveScurvyRule:
-    """The typed Remove Scurvy declaration (P2 Slice 5).
+class _RemoveScurvyRule(NamedTuple):
+    """The typed Remove Scurvy declaration.
 
     The heal (flat + 90% AP + 13% missing health) and the cleanse are
-    SEPARATE authored effects: the heal is the E1 self-heal receipt, the
-    cleanse is the Slice 4 kernel packet per W cast.  The W cast is the
-    activation — there is NO user toggle (the source supports the cast,
+    SEPARATE authored effects: the heal is the self-heal receipt, the
+    cleanse is one kernel packet per W cast.  The W cast is the
+    activation and there is NO user toggle (the source supports the cast,
     not an optional cleanse); every W cast heals AND cleanses (one-use
     per fight).  The cleanse is CC-only and castable while disabled
     (not under suppression/stasis); the airborne displacement override
     is a named boundary.
     """
 
-    def __init__(self) -> None:
-        self.heal_flat = _W_HEAL_FLAT
-        self.heal_ap_percent = _W_HEAL_AP_PERCENT
-        self.heal_missing_health_percent = _W_HEAL_MISSING_HEALTH_PERCENT
-        self.cooldown = _W_COOLDOWN
-        self.cost = _W_COST
-        self.target_scope = "self"
-        self.excluded_control_kinds = _W_EXCLUDED_CONTROL_KINDS
+    heal: Mapping[str, Any]
+    cooldown: tuple[float, ...]
+    cost: tuple[float, ...]
+    target_scope: str
+    excluded_control_kinds: tuple[str, ...]
+    source: Mapping[str, Any]
 
-    @property
-    def source(self) -> dict[str, Any]:
-        """The provenance receipt (wiki + game file + atom hashes)."""
-        return {
+    def public_receipt(self) -> dict[str, Any]:
+        """The published heal and cleanse contract."""
+        return state_receipt("Gangplank — Remove Scurvy (W)", self)
+
+
+REMOVE_SCURVY_RULE = _RemoveScurvyRule(
+    heal=MappingProxyType(
+        {
+            "flat": _W_HEAL_FLAT,
+            "ap_percent": _W_HEAL_AP_PERCENT,
+            "missing_health_percent": _W_HEAL_MISSING_HEALTH_PERCENT,
+        }
+    ),
+    cooldown=_W_COOLDOWN,
+    cost=_W_COST,
+    target_scope="self",
+    excluded_control_kinds=_W_EXCLUDED_CONTROL_KINDS,
+    source=MappingProxyType(
+        {
             "label": "Local League Wiki cache — Gangplank W template + game file",
             "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Gangplank/W",
             "revision_id": 2864237,
@@ -137,34 +151,17 @@ class _RemoveScurvyRule:
             "game_file": "data/bin/characters/gangplank.bin.json "
             "(BaseHeal, PercentHeal 13, StatByCoefficient 0.9 AP, "
             "canCastWhileDisabled true, cannotBeSuppressed true)",
-            "atoms": [
+            "atoms": (
                 "ability.heal.modifier_0 170a83b48f7844c3",
                 "ability.heal.modifier_1 c8f4c57b1502d6c1",
                 "ability.heal.modifier_2 a89abd1a84627e06",
                 "timing.cooldown 3cab27d68bef338c",
-            ],
+            ),
             "note": "cleanse scope is CC-only, wiki-prose; the airborne "
             "displacement override needs a blink/dash (named boundary).",
         }
-
-    def public_receipt(self) -> dict[str, Any]:
-        """The public declaration receipt (the heal + cleanse contract)."""
-        return {
-            "name": "Gangplank — Remove Scurvy (W)",
-            "heal": {
-                "flat": list(self.heal_flat),
-                "ap_percent": self.heal_ap_percent,
-                "missing_health_percent": self.heal_missing_health_percent,
-            },
-            "cooldown": list(self.cooldown),
-            "cost": list(self.cost),
-            "target_scope": self.target_scope,
-            "excluded_control_kinds": list(self.excluded_control_kinds),
-            "source": dict(self.source),
-        }
-
-
-REMOVE_SCURVY_RULE = _RemoveScurvyRule()
+    ),
+)
 
 
 def _require_w_rows(ability: Mapping[str, Any]) -> None:
