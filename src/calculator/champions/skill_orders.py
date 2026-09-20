@@ -18,6 +18,24 @@ DEFAULT_SKILL_ORDER: list[str] = [
     "W", "E", "E", "R", "E", "E",
 ]
 
+# The three shapes 13 of the overrides share. Each is one maxing order; the
+# first two differ only in the level-2 pick.
+_Q_MAX_THEN_E: list[str] = [
+    "Q", "W", "E", "Q", "Q", "R",
+    "Q", "E", "Q", "E", "R", "E",
+    "E", "W", "W", "R", "W", "W",
+]
+_Q_MAX_THEN_E_E_AT_TWO: list[str] = [
+    "Q", "E", "W", "Q", "Q", "R",
+    "Q", "E", "Q", "E", "R", "E",
+    "E", "W", "W", "R", "W", "W",
+]
+_W_MAX_THEN_Q: list[str] = [
+    "Q", "W", "E", "W", "W", "R",
+    "W", "Q", "W", "Q", "R", "Q",
+    "Q", "E", "E", "R", "E", "E",
+]
+
 # Per-champion overrides. Only champions with non-standard skill orders
 # need entries here. The key is the champion display name.
 # Common patterns:
@@ -25,60 +43,20 @@ DEFAULT_SKILL_ORDER: list[str] = [
 #   W max: W>Q>E
 #   E max: E>Q>W
 _SKILL_ORDERS: dict[str, list[str]] = {
-    # ── W max first ──
-    "Singed": [
-        "Q", "W", "E", "Q", "Q", "R",
-        "Q", "E", "Q", "E", "R", "E",
-        "E", "W", "W", "R", "W", "W",
-    ],
-    # ── W max first ──
-    "Amumu": [
-        "Q", "W", "E", "W", "W", "R",
-        "W", "Q", "W", "Q", "R", "Q",
-        "Q", "E", "E", "R", "E", "E",
-    ],
-    # ── Q max first, then E, then W ──
-    "Dr. Mundo": [
-        "Q", "W", "E", "Q", "Q", "R",
-        "Q", "E", "Q", "E", "R", "E",
-        "E", "W", "W", "R", "W", "W",
-    ],
-    # ── E max second ──
-    "Anivia": [
-        "Q", "E", "W", "Q", "Q", "R",
-        "Q", "E", "Q", "E", "R", "E",
-        "E", "W", "W", "R", "W", "W",
-    ],
-    "Aurelion Sol": [
-        "Q", "W", "E", "Q", "Q", "R",
-        "Q", "E", "Q", "E", "R", "E",
-        "E", "W", "W", "R", "W", "W",
-    ],
-    "Aurora": [
-        "Q", "E", "W", "Q", "Q", "R",
-        "Q", "E", "Q", "E", "R", "E",
-        "E", "W", "W", "R", "W", "W",
-    ],
-    "Camille": [
-        "Q", "E", "W", "Q", "Q", "R",
-        "Q", "E", "Q", "E", "R", "E",
-        "E", "W", "W", "R", "W", "W",
-    ],
-    "Corki": [
-        "Q", "E", "W", "Q", "Q", "R",
-        "Q", "E", "Q", "E", "R", "E",
-        "E", "W", "W", "R", "W", "W",
-    ],
-    "Jarvan IV": [
-        "Q", "E", "W", "Q", "Q", "R",
-        "Q", "E", "Q", "E", "R", "E",
-        "E", "W", "W", "R", "W", "W",
-    ],
-    "Bel'Veth": [
-        "Q", "E", "W", "Q", "Q", "R",
-        "Q", "E", "Q", "E", "R", "E",
-        "E", "W", "W", "R", "W", "W",
-    ],
+    "Singed": _Q_MAX_THEN_E,
+    "Dr. Mundo": _Q_MAX_THEN_E,
+    "Aurelion Sol": _Q_MAX_THEN_E,
+    "Anivia": _Q_MAX_THEN_E_E_AT_TWO,
+    "Aurora": _Q_MAX_THEN_E_E_AT_TWO,
+    "Camille": _Q_MAX_THEN_E_E_AT_TWO,
+    "Corki": _Q_MAX_THEN_E_E_AT_TWO,
+    "Jarvan IV": _Q_MAX_THEN_E_E_AT_TWO,
+    "Bel'Veth": _Q_MAX_THEN_E_E_AT_TWO,
+    # ── Pillar of Flame, Blood Frenzy, Bio-Arcane Barrage, Despair ──
+    "Amumu": _W_MAX_THEN_Q,
+    "Brand": _W_MAX_THEN_Q,
+    "Briar": _W_MAX_THEN_Q,
+    "Kog'Maw": _W_MAX_THEN_Q,
     # ── E max first (Twin Fang is the core spam spell), Q second ──
     "Cassiopeia": [
         "Q", "E", "W", "E", "E", "R",
@@ -88,24 +66,6 @@ _SKILL_ORDERS: dict[str, list[str]] = {
     # ── W start, W max first (soldiers are the kit; standard since V13.7) ──
     "Azir": [
         "W", "Q", "E", "W", "W", "R",
-        "W", "Q", "W", "Q", "R", "Q",
-        "Q", "E", "E", "R", "E", "E",
-    ],
-    # ── W max first (Pillar of Flame is the damage ability) ──
-    "Brand": [
-        "Q", "W", "E", "W", "W", "R",
-        "W", "Q", "W", "Q", "R", "Q",
-        "Q", "E", "E", "R", "E", "E",
-    ],
-    # ── W max first (Blood Frenzy is the steroid; standard jungle order) ──
-    "Briar": [
-        "Q", "W", "E", "W", "W", "R",
-        "W", "Q", "W", "Q", "R", "Q",
-        "Q", "E", "E", "R", "E", "E",
-    ],
-    # ── W max first (standard pattern) ──
-    "Kog'Maw": [
-        "Q", "W", "E", "W", "W", "R",
         "W", "Q", "W", "Q", "R", "Q",
         "Q", "E", "E", "R", "E", "E",
     ],
@@ -121,12 +81,6 @@ _SKILL_ORDERS: dict[str, list[str]] = {
         "Q", "W", "E", "Q", "Q", "Q",
         "Q", "Q", "W", "W", "W", "W",
         "W", "E", "E", "E", "E", "E",
-    ],
-    # ── Q max first, then W ──
-    "Vayne": [
-        "Q", "W", "E", "Q", "Q", "R",
-        "Q", "W", "Q", "W", "R", "W",
-        "W", "E", "E", "R", "E", "E",
     ],
 }
 
