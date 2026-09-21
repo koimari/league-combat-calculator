@@ -345,20 +345,14 @@ def schedule_knights_vow(
 # ---------------------------------------------------------------------------
 #
 # A ``damage_modifier`` packet changes how much damage some *other*
-# participant deals or takes, so the question "which engine owns this
-# mechanic" has to be answered for every one of them.  The answer is an
-# ``ability_spec.Authority`` member, declared in 0A and carried by the
-# packets themselves from C2.  It is also what the coupled golden baseline
-# reads to prove its scenario set covers every producer (runbook R-12).
-#
-# There is exactly one authority table in the repo and it is
-# ``trigger_stream.CAPABILITIES``.  Two tables that agree today are two
-# tables that can disagree tomorrow, so the derivation below reads the
-# registry
-# and the call sites are bound to it by the check underneath.  A seventh
-# producer therefore fails to resolve — loudly, on its first packet — until
-# it is declared, and the same registry is what the coupled golden baseline
-# reads to prove its scenario set covers every producer (runbook R-12).
+# participant deals or takes, so every one of them has to answer "which
+# engine owns this mechanic" with the ``ability_spec.Authority`` member the
+# packet itself carries.  Every block the tables above name, and
+# ``schedule_knights_vow`` here, builds its packets through
+# ``ally_packet_shape._packet``, which resolves that member against
+# ``trigger_stream.CAPABILITIES`` and stops on a producer no capability
+# declares.  That one table is also what the coupled golden baseline reads
+# to prove its scenario set covers every producer (runbook R-12).
 
 
 __all__ = ["derive_item_support_effects", "schedule_knights_vow"]

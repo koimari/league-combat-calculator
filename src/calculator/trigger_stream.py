@@ -1298,8 +1298,8 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         needs=frozenset({Field.TIME}),
         impl="item_support_triggered._fanfare_packets",
     ),
-    # Solstice Sleigh is tuple-incapable by declaration (D-02): its branch is
-    # nested inside the cc loop, and its only protection today is a cached
+    # Solstice Sleigh is tuple-incapable by declaration (D-02): its block runs
+    # per control moment, and its only protection today is a cached
     # ``healthRegen.percent`` coincidence.
     _walk_item(
         "solstice_sleigh.going_sledding",
