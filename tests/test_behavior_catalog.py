@@ -64,7 +64,7 @@ def test_the_catalog_import_runs_the_tag_closure(
         "known_effect_types",
         lambda: frozenset(known_effect_types()) | {"brand_new_mechanic"},
     )
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError, match=r"unmapped=\['brand_new_mechanic'\]"):
         catalog.validate_catalog()
 
 

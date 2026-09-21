@@ -223,7 +223,7 @@ def test_the_declared_constant_is_the_second_rung() -> None:
 
 def test_an_unsourced_owner_raises_rather_than_returning_a_blank_receipt() -> None:
     """No rule is declared against a number nobody can point at."""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="carries no complete citation"):
         receipt_for("ITEM_EFFECTS", "No Such Item")
 
 

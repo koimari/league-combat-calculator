@@ -285,7 +285,7 @@ def test_no_view_module_rounds_outside_the_registry() -> None:
 
 def test_a_field_the_registry_does_not_know_cannot_be_published() -> None:
     """Fail closed: the projection cannot invent a precision for a new leaf."""
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match="has no declared precision"):
         precision.round_field("a_leaf_somebody_added", 1.0)
 
 

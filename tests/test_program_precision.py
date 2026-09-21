@@ -49,7 +49,9 @@ def test_round_field_rounds_at_the_declared_precision() -> None:
 
 def test_round_field_refuses_a_field_it_has_no_precision_for() -> None:
     """``round_field`` is ``digits_for`` plus a call; it fails the same way."""
-    with pytest.raises(KeyError):
+    with pytest.raises(
+        KeyError, match=r"'a_field_nobody_declared' has no declared precision"
+    ):
         precision.round_field("a_field_nobody_declared", 1.0)
 
 
@@ -148,7 +150,7 @@ class TestTheSumPlanCountsEachEventOnce:
             sums.sum_plan({"events": [{"event_id": "d0"}, {"event_id": "d0"}]})
 
     def test_the_refusal_is_on_the_type_not_on_the_builder(self) -> None:
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="publishes event id 'x' twice"):
             sums.SumPlan(members=(("events", "x"), ("events", "x")))
 
     def test_a_row_with_no_id_contributes_no_member(self) -> None:

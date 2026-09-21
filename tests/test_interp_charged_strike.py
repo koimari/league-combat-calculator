@@ -450,7 +450,7 @@ def test_a_window_only_schedule_compiles_to_the_no_sibling_spelling() -> None:
 def test_a_schedule_that_schedules_nothing_is_refused() -> None:
     """A rule carrying neither mechanic raises rather than rating a stream."""
     live = _swing_rule(RAMP)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="one that schedules neither"):
         validate_rule(
             BehaviorRule(
                 family=RuleFamily.CHARGED_STRIKE,

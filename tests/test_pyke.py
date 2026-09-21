@@ -65,17 +65,28 @@ class TestGiftOfTheDrownedOnesStatConversion:
         assert contract.stat_conversion.source == "Gift of the Drowned Ones"
 
     @pytest.mark.parametrize(
-        "declared",
+        ("declared", "refusal"),
         [
-            "1 per 14",
-            BonusHealthConversion(source=" ", attack_damage_ratio=1.0 / 14.0),
-            BonusHealthConversion(source="Gift", attack_damage_ratio=0.0),
-            BonusHealthConversion(source="Gift", attack_damage_ratio=1.5),
+            ("1 per 14", "must be a stat_conversion.BonusHealthConversion"),
+            (
+                BonusHealthConversion(source=" ", attack_damage_ratio=1.0 / 14.0),
+                "must name its source",
+            ),
+            (
+                BonusHealthConversion(source="Gift", attack_damage_ratio=0.0),
+                "attack_damage_ratio 0.0 is not a share of the denied health",
+            ),
+            (
+                BonusHealthConversion(source="Gift", attack_damage_ratio=1.5),
+                "attack_damage_ratio 1.5 is not a share of the denied health",
+            ),
         ],
     )
-    def test_an_unusable_declaration_fails_the_import_gate(self, monkeypatch, declared):
+    def test_an_unusable_declaration_fails_the_import_gate(
+        self, monkeypatch, declared, refusal
+    ):
         monkeypatch.setattr(pyke, "MODULE_STAT_CONVERSION", declared, raising=True)
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match=refusal):
             contract_from_module("Pyke", "pyke", pyke)
 
     def test_a_champion_with_no_declaration_keeps_its_item_health(self):

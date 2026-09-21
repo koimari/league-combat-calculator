@@ -308,7 +308,7 @@ class TestReducedSecondaryHits:
 
     def test_an_undeclared_option_is_refused(self) -> None:
         ctx = _ctx()
-        with pytest.raises(KeyError):
+        with pytest.raises(KeyError, match="which its OPTIONS"):
             reduced_secondary_hits(
                 ctx,
                 self._ability(),

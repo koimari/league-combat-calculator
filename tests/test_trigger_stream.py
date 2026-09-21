@@ -2111,19 +2111,16 @@ def test_echoes_of_helia_clamps_each_number_before_its_branch_chooses():
 
 @pytest.mark.parametrize("item", ["Phage", "Echoes of Helia"])
 def test_a_tuple_ledger_names_the_holder_before_the_bus_can_starve(item):
-    """The declared-holder raise still precedes the bus's own.
+    """The declared-holder raise precedes the bus's own.
 
-    Both holders declare ``Stream.DAMAGE`` now, so ``authored_triggers``
-    would raise ``ProjectionStarvation`` on a tuple ledger — but
-    ``require_event_view`` runs first and both are in the projected set, so
-    the observable failure is the same named error it was before P2b.  That
-    ordering is the whole reason the new raise path is unreachable, which
-    makes it worth a test rather than a sentence.
+    Both holders declare ``Stream.DAMAGE``, so a tuple ledger would starve
+    ``authored_triggers``; ``require_event_view`` runs first and refuses by
+    name, which is what keeps that second raise path unreachable.
     """
     holder = _support_actor("main:Annie", "main", (item,))
     ally = _support_actor("ally:Pantheon", "ally", ())
     result = {"damage_events_tuple": True, "damage_events": [(0.0, 100.0, "Q")]}
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=f"STARVED: .*{item} reads damage_events"):
         derive_item_support_effects(holder, result, [holder, ally])
     assert item in ts.tuple_incapable_items()
 
