@@ -103,13 +103,16 @@ _TRAILING = 2.0  # 1.5 cast + 0.5 recovery
 '''
 
 
-#: One pointer beside the path that holds it, one beside nothing, and one
-#: beside a path that resolves and answers for something else.
+#: One pointer beside the path that holds it, one beside nothing, one beside
+#: a path that resolves and answers for something else, and one beside
+#: evidence, which answers for a tense and not for a citation.
 POINTERS = '''"""Seed."""
 
 # The stages are recorded in docs/campaign-stages.json.
 # Phase 4 ruled it.
 # Phase 4 ruled it, and docs/stages.json records something else.
+# The wiki row Phase 4 priced.
+# The wiki row used to be priced here.
 _KEPT = 1
 '''
 
@@ -255,8 +258,10 @@ def test_a_pointer_beside_a_path_that_resolves_is_not_reported(tmp_path):
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "campaign-stages.json").write_text("{}", encoding="utf-8")
     (tmp_path / "docs" / "stages.json").write_text("{}", encoding="utf-8")
-    hits = scan(root=tmp_path)["pointer"]
-    assert [hit.split(":")[1] for hit in hits] == ["4", "5"], hits
+    found = scan(root=tmp_path)
+    hits = found["pointer"]
+    assert [hit.split(":")[1] for hit in hits] == ["4", "5", "6"], hits
+    assert found["history"] == []
 
 
 def test_prose_beside_a_docstring_answers_to_the_pointer_rule(tmp_path):

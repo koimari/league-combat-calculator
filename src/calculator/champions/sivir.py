@@ -144,8 +144,8 @@ def _ricochet(
 # Sourced from the cached Spell Shield description.  The duration is read
 # through the typed ability-atom accessor (``timing.active_duration``, the
 # description's "for 1.5 seconds" prose atom); the 0.25s heal delay has NO
-# atom in the catalog (prose-only — recorded SOURCE GAP in the slice
-# handover), so it stays a module-authored sourced literal.
+# atom in the catalog (prose-only, a recorded SOURCE GAP), so it stays a
+# module-authored sourced literal.
 _SPELL_SHIELD_HEAL_DELAY_SECONDS = 0.25
 
 

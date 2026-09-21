@@ -1252,7 +1252,7 @@ def run_full(
 ) -> int:
     """Full patch-day run: pull, audit, rebuild catalogs, gates, capture.
 
-    Order (issue #134 — golden capture stays last and conditional): wiki pull,
+    Order, with the golden capture last and conditional: wiki pull,
     economics refresh, source-completeness audit, catalog rebuild
     (bis-profiles included), reviewed-packet currency, full parent-entry audit,
     game-file refresh, staleness vs game files, coverage census, then pytest +

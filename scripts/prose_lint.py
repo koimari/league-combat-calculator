@@ -29,8 +29,9 @@ numbered work phase, a dated decision, a runbook rule, a review stage, a
 named unit of work -- where the reason itself belongs.  A hit is allowed
 when the same line names a repository path that resolves *and* holds the
 citation, which is what keeps ``docs/receipts/campaign-stages.json``
-citable while an unrelated path rescues nothing; prose citing a wiki URL or
-a game file for a number is evidence and is never reported.  It is the one
+citable while an unrelated path rescues nothing.  ``EVIDENCE`` -- a wiki
+URL or a game file, cited for a number -- answers for a tense and never for
+a citation, so it exempts ``history`` alone.  It is the one
 rule that reaches ``TESTS_SCOPE`` as well as ``TARGETS``, and the one that
 reads every string a module states rather than computes: a docstring, the
 note under a constant, a command's help text, and published assumption
@@ -376,15 +377,16 @@ def _cite(
     root: Path,
 ) -> None:
     for offset, raw in enumerate(text.splitlines()):
-        if EVIDENCE.search(raw):
-            continue
         for kind, pattern in rules:
             hits = list(pattern.finditer(raw))
             if not hits:
                 continue
-            if pattern is POINTER and all(
-                _resolves(raw, root, hit.group()) for hit in hits
-            ):
+            if pattern is POINTER:
+                # Evidence answers for a tense, never for a citation: a line
+                # naming the wiki may still cite the project's own history.
+                if all(_resolves(raw, root, hit.group()) for hit in hits):
+                    continue
+            elif EVIDENCE.search(raw):
                 continue
             found[kind].append(f"{where}:{line + offset}: {raw.strip()[:100]}")
             break

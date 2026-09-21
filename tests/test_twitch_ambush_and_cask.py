@@ -215,7 +215,7 @@ class TestBothNumbersAreSourcedTwice:
         """Riot DataValues are rank-0-indexed; the wiki proves it here.
 
         ``StealthDuration`` indices 1..5 are the wiki's
-        ``ability.stealth _duration`` atom exactly, so the same slice of
+        ``ability.stealth _duration`` atom exactly, so the same span of
         ``AttackSpeedMod`` is the rank 1-5 attack speed.
         """
         values = _data_values("TwitchHideInShadows")

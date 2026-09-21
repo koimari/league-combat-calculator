@@ -8,7 +8,7 @@ Ability-template pages are not silently substituted for the parent page: the
 parent's references are recorded so a later module can prove which full entry
 it reviewed.
 
-The wiki query CLI is portable (issue #134): ``--query-tool`` /
+The wiki query CLI is portable: ``--query-tool`` /
 ``LCC_WIKI_QUERY``, then PATH, then the repo-relative vendor checkout.  A
 missing tool is an infrastructure failure (exit 2) reported before any entry
 is audited — never as per-entry ``review_pending``.
@@ -54,7 +54,7 @@ ITEMS_PATH = ROOT / "data" / "items.json"
 PACKET_MANIFEST_PATH = ROOT / "static" / "reviewed-packets.json"
 
 # Resolved path of the read-only ``league-wiki-query`` CLI.  No developer-home
-# default (issue #134): resolution order is --query-tool / LCC_WIKI_QUERY,
+# default: resolution order is --query-tool / LCC_WIKI_QUERY,
 # then PATH, then the repo-relative vendor checkout.
 QUERY_TOOL: Path | None = None
 

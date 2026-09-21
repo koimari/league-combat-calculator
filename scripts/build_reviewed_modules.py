@@ -6,7 +6,7 @@ represented either by a numeric Wiki/Axword packet or by a sourced no-damage
 entry. Runtime modules consume or supersede this evidence; this script never
 writes executable champion modules.
 
-Source supply contract (issue #134): the Wiki index and the Axword Meraki kit
+Source supply contract: the Wiki index and the Axword Meraki kit
 source resolve repo-relative by default (``data/wiki/league-wiki.sqlite3`` and
 the sibling ``lol-strength-analysis`` checkout) and are overridable per run
 with ``--wiki-db`` / ``LCC_WIKI_DB`` and ``--axword-source`` /

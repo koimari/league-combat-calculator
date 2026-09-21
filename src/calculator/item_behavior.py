@@ -24,7 +24,7 @@ duplication until the constraint is remembered:
   ``survival/`` contract — live here, because this is the one module both
   packages may import and a name in a cross-package signature needs a home.
 
-Naming: the unit is a **rule**, never an "atom" (D-44).  ``atomizer.Atom``,
+Naming: the unit is a **rule**, never an "atom".  ``atomizer.Atom``,
 ``atomizer_domains`` and ``rotation_resolver``'s apply-atom keys are three
 live meanings of that word already.
 """

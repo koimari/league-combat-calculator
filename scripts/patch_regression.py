@@ -488,7 +488,7 @@ def _downsample_match(wiki_values, game_values, flat_tolerance: float):
 
 
 def _slices_match(wiki_values, game_values, flat_tolerance: float):
-    """True when any contiguous rank-slice of game_values equals wiki_values."""
+    """True when any contiguous rank span of game_values equals wiki_values."""
     n = len(wiki_values)
     if n == 0 or not game_values:
         return False

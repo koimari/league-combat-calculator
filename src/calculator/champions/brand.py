@@ -209,12 +209,9 @@ SLOTS = {
     "P": _blaze,  # after the damage slots: reads their emissions
 }
 
-# The revision this declaration was read from, in the shape
-# scripts/cast_dependency_audit.py will resolve against the committed
-# wiki audit once this phase's audit slice lands -- that script is not
-# in the tree yet, so today this string is shape-checked and pinned
-# equal to SOURCES by test, nothing more. It is the same parent entry
-# SOURCES publishes below.
+# The revision this declaration was read from, the same parent entry
+# SOURCES publishes below. scripts/cast_dependency_audit.py asks that a
+# declaration carry one.
 _WIKI_SOURCE = "https://wiki.leagueoflegends.com/en-us/Brand@4023911"
 
 # Head only. Q opening is the mechanic below; the rest of the seed

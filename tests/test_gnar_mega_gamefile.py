@@ -1013,8 +1013,8 @@ class TestRegressionSurface:
             # The patch-day orchestrator fetches the gnar/gnarbig authority
             # pair, so its test module names them.
             "test_patch_update.py",
-            # The binary-rooting campaign's certification tests re-derive
-            # the Mega deltas from both tracked roots (batch 10).
+            # The binary-root certification tests re-derive the Mega deltas
+            # from both tracked roots.
             "test_binary_roots.py",
         }
 

@@ -367,12 +367,9 @@ MODULE_CC = {
     "R": "none",
 }
 
-# The revision these declarations were read from, in the shape
-# scripts/cast_dependency_audit.py will resolve against the committed
-# wiki audit once this phase's audit slice lands -- that script is not
-# in the tree yet, so today this string is shape-checked and pinned
-# equal to SOURCES by test, nothing more. It is the same parent entry
-# SOURCES publishes below.
+# The revision these declarations were read from, the same parent entry
+# SOURCES publishes below. scripts/cast_dependency_audit.py asks that a
+# declaration carry one.
 _WIKI_SOURCE = "https://wiki.leagueoflegends.com/en-us/Syndra@4024662"
 
 _STUN_RIDES_A_SPHERE = (
