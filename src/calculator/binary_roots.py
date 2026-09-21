@@ -30,17 +30,17 @@ def champion_key(name: str) -> str:
     return _NONALNUM.sub("", str(name).lower())
 
 
-def _dig(obj: object, *keys: str, want: type | tuple[type, ...]) -> Any:
-    """Walk one JSON hop chain, naming the whole path when it does not land.
+def _dig(obj: object, *keys: str, want: type | tuple[type, ...], label: str) -> Any:
+    """Walk one JSON hop chain, raising on the hop that does not land.
 
-    Every hop but the last must be a mapping and the last must be an instance
-    of ``want``; nothing here substitutes a default for a hop that is missing.
+    ``want`` types the last hop and ``label`` names the caller's lookup, so a
+    refusal says what was asked for as well as where the walk died.
     """
     node: object = obj
     for key in keys:
         node = node.get(key) if isinstance(node, Mapping) else None
     if not isinstance(node, want):
-        raise RuntimeError(f"binary path {'.'.join(keys)} not found or unusable")
+        raise RuntimeError(f"{label}: {'.'.join(keys)} not found or unusable")
     return node
 
 
@@ -106,11 +106,12 @@ def character_record_root(champion_name: str) -> dict[str, Any]:
 
 
 def record_value(root: Mapping[str, Any], field: str) -> float:
-    """One ModifiableFloat-style record field's ``baseValue``, snapped the
-    same way :func:`data_value` snaps spell DataValues."""
-    return _snapped(
-        _dig(root, field, "baseValue", want=(int, float)), f"record field {field!r}"
-    )
+    """One ModifiableFloat-style record field's ``baseValue``, snapped like
+    :func:`data_value`; absent and unusable are distinct refusals."""
+    entry = root.get(field) if isinstance(root, Mapping) else None
+    if not isinstance(entry, Mapping) or "baseValue" not in entry:
+        raise RuntimeError(f"record field {field!r} not found")
+    return _snapped(entry["baseValue"], f"record field {field!r} baseValue")
 
 
 def _breakpoint_level(step: Any) -> float:
@@ -173,6 +174,7 @@ def _formula_parts(spell_obj: dict[str, Any], calculation_name: str) -> list:
         calculation_name,
         "mFormulaParts",
         want=list,
+        label=f"calculation {calculation_name!r}",
     )
     if not parts:
         raise RuntimeError(f"calculation {calculation_name!r} has no formula parts")
@@ -273,21 +275,19 @@ def _data_value_at_index(
     spell_obj: dict[str, Any], value_name: str, value_index: int, index_label: str
 ) -> float:
     """Read one finite, snapped entry from a named DataValue row."""
-    for row in _dig(spell_obj, "mSpell", "DataValues", want=list):
+    label = f"DataValue {value_name!r}"
+    for row in _dig(spell_obj, "mSpell", "DataValues", want=list, label=label):
         if not isinstance(row, Mapping) or row.get("name") != value_name:
             continue
         values = row.get("values")
         if not isinstance(values, list) or not values:
-            raise RuntimeError(
-                f"DataValue {value_name!r}: present but carries no values row"
-            )
+            raise RuntimeError(f"{label}: present but carries no values row")
         if value_index >= len(values):
             raise RuntimeError(
-                f"DataValue {value_name!r}: {index_label} unavailable "
-                f"in {len(values)}-entry row"
+                f"{label}: {index_label} unavailable in {len(values)}-entry row"
             )
-        return _snapped(values[value_index], f"DataValue {value_name!r} {index_label}")
-    raise RuntimeError(f"DataValue {value_name!r} not found")
+        return _snapped(values[value_index], f"{label} {index_label}")
+    raise RuntimeError(f"{label} not found")
 
 
 def data_value(spell_obj: dict[str, Any], value_name: str) -> float:

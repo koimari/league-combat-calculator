@@ -54,11 +54,9 @@ def test_character_bin_returns_the_parsed_dump():
 
 
 def test_missing_champion_fails_closed(tmp_path, monkeypatch):
-    from src.calculator import binary_roots
-
-    monkeypatch.setattr(binary_roots, "_BIN_DIR", tmp_path)
+    monkeypatch.setattr("src.calculator.binary_roots._BIN_DIR", tmp_path)
     with pytest.raises(RuntimeError, match="character binary unavailable"):
-        binary_roots.character_bin("Nobody")
+        character_bin("Nobody")
 
 
 def test_spell_object_lookup_is_exact_and_fail_closed():
@@ -84,7 +82,7 @@ def test_data_value_failures_are_named_not_zero():
         data_value(e, "GravityIncPerBreakpoint")
     with pytest.raises(RuntimeError, match="not found"):
         data_value(e, "NoSuchDataValue")
-    with pytest.raises(RuntimeError, match=r"mSpell\.DataValues not found or unusable"):
+    with pytest.raises(RuntimeError, match=r"DataValue 'X': mSpell\.DataValues"):
         data_value({"mSpell": {}}, "X")
     with pytest.raises(RuntimeError, match="non-finite"):
         data_value({"mSpell": {"DataValues": [{"name": "X", "values": [1e999]}]}}, "X")
@@ -494,22 +492,24 @@ class TestBatch10GnarCrossFile:
 
         mini = character_record_root("Gnar")
         mega = character_record_root("GnarBig")
-        assert (
-            record_value(mega, "baseHPModifiable")
-            - record_value(mini, "baseHPModifiable")
-        ) == MEGA_BONUS_HEALTH[0]
-        assert (
-            record_value(mega, "hpPerLevelModifiable")
-            - record_value(mini, "hpPerLevelModifiable")
-        ) == MEGA_BONUS_HEALTH[1]
+
+        def delta(field: str) -> float:
+            return record_value(mega, field) - record_value(mini, field)
+
+        assert delta("baseHPModifiable") == MEGA_BONUS_HEALTH[0]
+        assert delta("hpPerLevelModifiable") == MEGA_BONUS_HEALTH[1]
         assert MEGA_BONUS_AD == (6.0, 2.3)
         assert MEGA_BONUS_ARMOR == (4.0, 3.0)
         assert MEGA_BONUS_MR == (3.0, 3.5)
         assert MEGA_ATTACK_SPEED_LOSS == (0.0, 5.5)
 
-    def test_character_record_root_fail_closed(self):
+    def test_record_reads_fail_closed_naming_the_field(self):
         with pytest.raises(RuntimeError):
             character_record_root("Nobody")
+        with pytest.raises(RuntimeError, match=r"record field 'f' not found"):
+            record_value({}, "f")
+        with pytest.raises(RuntimeError, match=r"'f' baseValue: unusable value 'x'"):
+            record_value({"f": {"baseValue": "x"}}, "f")
 
 
 class TestBatch11JayceStance:
