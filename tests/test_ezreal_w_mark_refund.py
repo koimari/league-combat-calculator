@@ -1,4 +1,4 @@
-"""P1 Slice 13 — Ezreal W (Essence Flux) mark-refund certification (RLM-2 C).
+"""Ezreal W (Essence Flux) mark-refund certification (RLM-2 C).
 
 Contract under test: the mark-detonation mana refund declared by
 ``src/calculator/champions/ezreal.py`` (``mark_refund`` on the W slot) and

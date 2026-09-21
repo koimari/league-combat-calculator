@@ -1,4 +1,4 @@
-"""P2 Slice 6 — Rengar empowered W (Battle Roar) champion cleanse
+"""Rengar empowered W (Battle Roar) champion cleanse
 (test-matrix owner: RLM-2 C).
 
 Focused TDD matrix for Rengar's EMPOWERED W (Battle Roar) cleanse — the
@@ -26,10 +26,10 @@ from all crowd control".  CURRENT RUNTIME FACTS (verified before pinning):
   damage taken in the last 1.5 s, paid at every W cast ("the active
   heals 100% of the stored pool"; wiki note "Grey health will not be
   consumed").  The authored heal carries NO ``cast_while_disabled`` flag
-  today (unlike the Slice 5 Gangplank W heal): while the caster is
+  today (unlike the Gangplank W heal): while the caster is
   crowd-controlled the heal is skipped with ``attacker_state_blocked``;
   with no control active it lands per cast.
-- The Slice 4/5 champion-cleanse kernel (``CHAMPION_CLEANSE_DECLARATIONS``
+- The champion-cleanse kernel (``CHAMPION_CLEANSE_DECLARATIONS``
   + the per-W-cast packet authoring in ``participant_timeline``
   ``_support_effect_templates`` + the utility-kind dispatch in
   ``survival.transitions._apply_cleanse`` + the one-use latch + the
@@ -68,9 +68,9 @@ Contract sections (numbered as in the RLM-2 C brief):
       activation-time == empowered cast time contract xfailed).
   S5  Crowd control + suppression gates (kernel evidence PASS; the
       wired Rengar packets + the heal castability carve-out xfailed).
-  S6  One-use behavior (the Slice 4 latch; the second empowered W
+  S6  One-use behavior (the latch; the second empowered W
       -> use_spent + cleanse_denied contract xfailed; heal per cast).
-  S7  Interval truncation (the Slice 4 truncate_intervals contract; the
+  S7  Interval truncation (the truncate_intervals contract; the
       Rengar-packet truncation xfailed).
   S8  Named denials (the vocabulary; the unavailable-source KeyError;
       the invalid-Ferocity-state API denials; the today-absence pins).
@@ -427,7 +427,7 @@ def _grey_heal_event(
 
 def _rengar_cleanse_packet(time: float, index: int) -> dict:
     """The P2-6 candidate packet shape (the GP W authoring mirror): the
-    empowered-W cast at ``time`` rides the Slice 4 kernel with the
+    empowered-W cast at ``time`` rides the kernel with the
     Rengar W source.  Unresolvable today (KeyError — the unavailable-
     evidence denial); the resolver contract is pinned in S8."""
     return {
@@ -453,7 +453,7 @@ def _kernel_survival(
     duration: float = 10.0,
     main_health: float = 3000.0,
 ) -> dict:
-    """Kernel-level survival run (the Slice 4/5 evidence path)."""
+    """Kernel-level survival run (the evidence path)."""
     combatants = [
         _dummy_combatant("enemy", "enemy"),
         _dummy_combatant("main", "main", health=main_health),
@@ -548,7 +548,7 @@ class TestSourceAndTypedValues:
         # window, the 100% monster-heal mod, and the ammo recharge
         # 16..10; the EMPOWERED RengarWEmp record carries
         # canCastWhileDisabled + cannotBeSuppressed (the QSS/Mercurial
-        # flag pair the Slice 5 declaration documents) and the
+        # flag pair the declaration documents) and the
         # TotalDamageEmpowered 50..240 + 80% AP formula.
         game = _game_file()
         base = game["Characters/Rengar/Spells/RengarWAbility/RengarW"]
@@ -651,7 +651,7 @@ class TestSourceAndTypedValues:
     def test_w_empowered_cc_immunity_mechanic(self):
         # Genuinely-absent mechanic: the game file's CCImmuneDuration 1.5
         # (the post-cast CC immunity) is NOT in the wiki wording the
-        # module prices — the Slice 4 no-immunity contract (controls
+        # module prices — the no-immunity contract (controls
         # landing after the activation are untouched) is the pinned
         # behavior until the coordinator decides the immunity modeling.
         game = _game_file()
@@ -999,7 +999,7 @@ class TestCrowdControlAndSuppression:
 
     def test_empowered_w_heal_fires_while_caster_cc(self):
         # P2-6 contract: the grey-health heal riding the EMPOWERED W cast
-        # is castable while disabled (the Slice 5 heal flag on the
+        # is castable while disabled (the heal flag on the
         # empowered branch only — the game file's RengarWEmp
         # canCastWhileDisabled true; the base RengarW record lacks the
         # flag).  Absent today: the heal is attacker-state-gated.
@@ -1423,7 +1423,7 @@ class TestUnchangedBoundaries:
         assert by_key["p_ferocity"]["state"]["max_stacks"] == 4
 
     def test_champion_and_item_cleanse_tables_untouched(self):
-        # The Slice 4 item cleanses and the Slice 5 Gangplank W cleanse
+        # The item cleanses and the Gangplank W cleanse
         # are unchanged boundaries: the declarations/sources stay exactly
         # the three items + Gangplank W; Rengar W is the coordinator's
         # ADDITION, never a mutation of the existing rows.

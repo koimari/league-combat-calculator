@@ -1,4 +1,4 @@
-"""P2 Slice 4 cleanse-eligibility kernel tests (owner-owned).
+"""Cleanse-eligibility kernel tests (owner-owned).
 
 Complements the RLM-2 acceptance matrix (tests/test_cleanse_eligibility.py)
 with owner-level kernel coverage: the sourced declarations, the decision

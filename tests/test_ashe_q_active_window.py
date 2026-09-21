@@ -1,4 +1,4 @@
-"""P1 Slice 11 — Ashe Q (Ranger's Focus) 6-second active window + the
+"""Ashe Q (Ranger's Focus) 6-second active window + the
 timing atom label correction (test-matrix owner: RLM-2 C).
 
 Focused TDD matrix for Ashe's Q six-second active window.  CURRENT

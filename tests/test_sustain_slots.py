@@ -71,7 +71,7 @@ def _main_survival(payload):
 
 
 # ---------------------------------------------------------------------------
-# Slice 5 — self-heal with a cached row and no rule
+# Self-heal with a cached row and no rule
 # ---------------------------------------------------------------------------
 
 
@@ -261,7 +261,7 @@ class TestAlistarTriumphantRoar:
 
 
 # ---------------------------------------------------------------------------
-# Slice 7 — the residue: a home exists, and what routes to it
+# The residue: a home exists, and what routes to it
 # ---------------------------------------------------------------------------
 
 

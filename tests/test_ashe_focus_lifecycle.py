@@ -1,4 +1,4 @@
-"""P1 Slice 10 — Ashe "Ranger's Focus" live stack lifecycle (test-matrix
+"""Ashe "Ranger's Focus" live stack lifecycle (test-matrix
 owner: RLM-2 C).
 
 Focused TDD matrix for Ashe's Focus live stack lifecycle.  CURRENT RUNTIME

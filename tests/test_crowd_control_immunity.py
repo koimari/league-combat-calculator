@@ -1,4 +1,4 @@
-"""P2 Slice 3 crowd-control immunity acceptance matrix — Morgana E Black Shield.
+"""Crowd-control immunity acceptance matrix — Morgana E Black Shield.
 
 This file is the RLM-2 acceptance-matrix suite for the planned orthogonal
 typed control-eligibility contract (``src/calculator/crowd_control_eligibility.py``,
@@ -57,7 +57,7 @@ CONTRACT API THIS MATRIX COMMITS THE OWNER TO (six separation concerns):
      only): {recipient, shield_source, source_atoms, window, active_until,
      reason_immunity_ended ("expired" | "drained" | "fight_end" | None),
      eligibility, blocked, decisions} (R12).
-Row status conventions (same as the P2 Slice 1/2 matrices):
+Row status conventions (same as the sibling acceptance matrices):
 - "CURRENT" rows assert behavior the tree already satisfies today.  The
   behavior assertions pass against today's walk; the contract-API
   assertions in the same row (marked ``_require_contract()``) fail until

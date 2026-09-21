@@ -1,4 +1,4 @@
-"""Slice 4 of the utility-axis census: the stat grants the engine dispatches.
+"""The utility-axis census: the stat grants the engine dispatches.
 
 Nineteen slots across seventeen champions emitted a zero-damage row whose
 cached leveling the fight engine could already fold in — ``stat_buff``'s

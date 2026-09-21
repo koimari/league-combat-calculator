@@ -1,4 +1,4 @@
-"""P4 Slice 14 — Darius W (Crippling Strike) kill-triggered cooldown
+"""Darius W (Crippling Strike) kill-triggered cooldown
 reduction + mana refund (test-matrix owner: RLM-2 C).
 
 Focused TDD matrix for the sourced W kill rule.  CURRENT RUNTIME FACTS

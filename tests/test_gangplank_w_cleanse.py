@@ -1,4 +1,4 @@
-"""P2 Slice 5 — Gangplank W (Remove Scurvy) champion cleanse (test-matrix
+"""Gangplank W (Remove Scurvy) champion cleanse (test-matrix
 owner: RLM-2 C).
 
 Focused TDD matrix for Gangplank's W (Remove Scurvy) champion cleanse.
@@ -36,12 +36,12 @@ CURRENT RUNTIME FACTS (verified before pinning):
   the heal is skipped with ``attacker_state_blocked`` and never lands
   (Remove Scurvy cannot currently be cast while CC'd, which defeats the
   spell's purpose).  The P2-5 cleanse wiring must decide the
-  castability carve-out (the Slice 4 self-scope precedent: QSS/Mercurial
+  castability carve-out (the self-scope precedent: QSS/Mercurial
   utility cleanses dispatch BEFORE the attacker gate and are castable
   while disabled but NOT under suppression).
 - There is NO cleanse: no ``cleanse``/``cleanse_use``/``cleanse_denied``
   survival rows, no utility cleanse events (``cleanse.event_count`` 0),
-  no crowd-control truncation, no one-use latch.  The Slice 4 kernel
+  no crowd-control truncation, no one-use latch.  The kernel
   (``cleanse_eligibility.py``) owns the typed contract the W must ride;
   ``resolve_cleanse_item("Remove Scurvy")`` FAILS CLOSED today with a
   KeyError naming the source (the "unavailable source" denial) — the
@@ -61,7 +61,7 @@ Contract sections (numbered as in the RLM-2 C brief):
       is the pinned actual).
   S3  Explicit activation (the w option activates the cleanse at an
       explicit time; the heal's missing-health evaluation point pinned;
-      separate heal + cleanse receipts; the Slice 4 decision shape).
+      separate heal + cleanse receipts; the decision shape).
   S4  Target + timing (Self scope; activation time vs the cast
       timeline; the one-use latch and use_spent).
   S5  Crowd control + suppression gates (active-control truncation;
@@ -735,7 +735,7 @@ class TestExplicitActivation:
 
 class TestTargetAndTiming:
     def test_kernel_self_scope_denies_foreign_target(self):
-        # Kernel evidence (PASS): the Slice 4 kernel already implements
+        # Kernel evidence (PASS): the kernel already implements
         # the self-scope contract the W must ride — a self declaration
         # denies a packet whose recipient is not the holder with the
         # named target_not_selected reason, consuming nothing.
@@ -790,7 +790,7 @@ class TestTargetAndTiming:
         # covers the engine row).
 
     def test_w_second_activation_fails_closed_use_spent(self):
-        # P2-5 contract: the one-use latch (Slice 4) — a second W
+        # P2-5 contract: the one-use latch — a second W
         # activation in the same fight fails closed with the named
         # use_spent denial, the latch receipt shows the consumed use,
         # and the second activation truncates nothing further.  Absent
@@ -807,7 +807,7 @@ class TestTargetAndTiming:
 
     def test_w_activation_without_control_consumes_use(self):
         # P2-5 contract: an activation with no control active still
-        # consumes the one use (Slice 4 control_not_active semantics —
+        # consumes the one use (control_not_active semantics —
         # the heal fires, the cleanse receipts the denial).  Absent.
         combat = _app_combat({}, {"Q": 5, "W": 0, "E": 0, "R": 0})
         survival = _main_survival(combat)
@@ -823,7 +823,7 @@ class TestTargetAndTiming:
 
 class TestCrowdControlAndSuppression:
     def test_kernel_self_scope_airborne_and_suppression_rules(self):
-        # Kernel evidence (PASS): the Slice 4 kernel already implements
+        # Kernel evidence (PASS): the kernel already implements
         # every W gate — an airborne interval is rejected with the named
         # excluded_control_kind reason (the displacement-override
         # boundary), a suppression interval blocks the self-cast with
@@ -892,7 +892,7 @@ class TestCrowdControlAndSuppression:
 
     def test_w_cleanse_truncates_active_control_at_activation(self):
         # P2-5 contract: the W cleanse truncates the ACTIVE control
-        # interval at the activation (the Slice 4 truncate_intervals
+        # interval at the activation (the truncate_intervals
         # contract) — the charm [0, 1.8] ends at 0.25, action_downtime
         # drops to 0.25, the receipt names the removed tail.  Absent.
         combat = _app_combat({}, {"Q": 5, "W": 0, "E": 5, "R": 0})
@@ -1141,7 +1141,7 @@ class TestIntervalTruncation:
 
     def test_w_rides_slice4_truncate_intervals_kernel(self):
         # Kernel evidence (PASS): the exact truncation the W must ride
-        # (the Slice 4 matrix's committed rule): historical intervals
+        # (the matrix's committed rule): historical intervals
         # kept, the active tail removed, a control starting at/after the
         # activation removed entirely by the pure function (the walk
         # never passes a control landing later — a cleanse creates no
@@ -1172,7 +1172,7 @@ class TestIntervalTruncation:
 class TestNamedDenials:
     def test_named_denial_vocabulary_pinned(self):
         # The named fail-closed denial vocabulary the W wiring must ride
-        # (brief contract #7): the Slice 4 decision reasons plus the
+        # (brief contract #7): the decision reasons plus the
         # unavailable-source KeyError and the score receipts.
         from src.calculator.cleanse_eligibility import CleanseDecision
 
@@ -1410,7 +1410,7 @@ class TestUnchangedBoundaries:
         assert "Death's Daughter=on" in upgraded["R"]["detail"]
 
     def test_w_does_not_touch_item_cleanse_surface(self):
-        # The Slice 4 ITEM cleanses are an unchanged boundary (brief
+        # The ITEM cleanses are an unchanged boundary (brief
         # contract #10): the item declarations and the one-use latch
         # stay the three declared items; Gangplank's W adds a champion
         # source without disturbing them.

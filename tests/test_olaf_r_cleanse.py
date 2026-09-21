@@ -326,7 +326,7 @@ def _kernel_survival(
     duration: float = 10.0,
     main_health: float = 3000.0,
 ) -> dict:
-    """Kernel-level survival run (the Slice 3/4/5/6/7/8 evidence path)."""
+    """Kernel-level survival run (the evidence path)."""
     combatants = [
         _dummy_combatant("enemy", "enemy"),
         _dummy_combatant("main", "main", health=main_health),
@@ -399,7 +399,7 @@ def _candidate_declaration() -> dict:
 
 def _ragnarok_cleanse_packet(time: float) -> dict:
     """The P2-9 candidate cleanse packet shape (the GP/Rengar mirror:
-    per R cast, at the cast time, self scope, the Slice 4 kernel)."""
+    per R cast, at the cast time, self scope, the kernel)."""
     return {
         "time": time,
         "kind": "cleanse",
@@ -418,7 +418,7 @@ def _ragnarok_cleanse_packet(time: float) -> dict:
 
 
 def _ragnarok_immunity_packet(time: float) -> dict:
-    """The P2-9 candidate immunity packet (the Slice 3 arm: a shield
+    """The P2-9 candidate immunity packet (the arm: a shield
     packet with crowd_control_immunity_while_shield, 3s window)."""
     return {
         "time": time,
@@ -898,7 +898,7 @@ class TestCleanseOfActiveControls:
         assert decision.use_consumed is False
 
     def test_kernel_cleanse_decision_shape_with_candidate_declaration(self):
-        # PASS kernel evidence: the Slice 4 CleanseEligibility with the
+        # PASS kernel evidence: the CleanseEligibility with the
         # CANDIDATE Olaf R declaration (self scope, the displacement
         # exclusion) produces the exact decision shape the R must ride —
         # the active immobilize interval is clamped, its tail removed,
@@ -1003,7 +1003,7 @@ class TestCleanseOfActiveControls:
         # forced displacement needs a blink/dash; the stun UNDER the
         # airborne is a separate removable interval — the named boundary).
         # Kernel-level contract: a cleanse packet authored at the cast
-        # rides the Slice 4 kernel with the candidate exclusion set.
+        # rides the kernel with the candidate exclusion set.
         combat = _app_combat(enemy="Ahri")
         survival = survival_of(combat)
         assert set(
@@ -1193,7 +1193,7 @@ class TestImmunityWindow:
     def test_r_immunity_surface_in_app_fight(self):
         # P2-9 contract: the app fight's survival row carries the
         # crowd_control_immunity receipt from the R cast — the same row
-        # the Slice 3 machinery produces for the shield grant.  MERGE:
+        # the machinery produces for the shield grant.  MERGE:
         # the window opens on the cast the fight booked and runs the
         # sourced 3 seconds from there.
         combat = _app_combat(enemy="Garen")
@@ -1740,7 +1740,7 @@ class TestSameTimeOrdering:
     def test_walk_order_cleanse_then_immunity_then_stat_buff_at_cast(self):
         # PASS kernel evidence (the brief's contract #10): at the R cast
         # time the authoring emits the packets in the walk's support
-        # band; the Slice 4 cleanse decision reads the ACTIVE intervals
+        # band; the cleanse decision reads the ACTIVE intervals
         # at the activation (the intervals already in the ledger), the
         # immunity arms a NEW window, and the stat buff is a NEW timed
         # row — the three receipts coexist at one timestamp without
@@ -1899,7 +1899,7 @@ class TestScoreFailClosed:
             )
             is None
         )
-        # The Slice 8 resist arm is representable (it only arms state).
+        # The resist arm is representable (it only arms state).
         assert (
             unrepresentable_template_receipt(
                 {"kind": "crowd_control_resist", "amount": 0.0}

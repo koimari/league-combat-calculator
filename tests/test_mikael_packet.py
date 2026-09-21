@@ -8,7 +8,7 @@ OBSERVABLES the P1-3G acceptance rules require and runs against today's
 source: every behavior that already exists must pass now; genuinely absent
 contract pieces are ``xfail`` with reason ``awaiting P3-3G ...``.
 
-Altitude note (disjoint from the P2 Slice 4 matrix): the cleanse kernel
+Altitude note (disjoint from the matrix): the cleanse kernel
 itself (``cleanse_eligibility`` declarations, ``CleanseEligibility.decide``,
 ``truncate_intervals``, the R1-R27 row matrix) is owned by
 ``tests/test_cleanse_eligibility.py`` and its consumers; the QSS/Mercurial

@@ -453,7 +453,7 @@ def _movement_packet(
 def _black_shield_template(
     time: float = 0.0, amount: float = 320.0, duration: float = 5.0
 ) -> dict:
-    """The authored Black Shield support template (Slice 3 style)."""
+    """The authored Black Shield support template."""
     return {
         "time": time,
         "kind": "shield",
@@ -468,7 +468,7 @@ def _black_shield_template(
 
 
 def _spell_shield_template(time: float = 0.0, duration: float = 3.0) -> dict:
-    """One timed spell-shield template (Slice 2 style, e.g. Sivir E)."""
+    """One timed spell-shield template (e.g. Sivir E)."""
     return {
         "time": time,
         "kind": "spell_shield",
@@ -1808,7 +1808,7 @@ def test_r16_spell_shield_blocked_control_not_present_at_cleanse():
 
 
 def test_r16_immunity_blocked_control_not_present_at_cleanse():
-    """Timeline: a control blocked by Black Shield immunity (Slice 3) is
+    """Timeline: a control blocked by Black Shield immunity is
     NOT present at cleanse time — the blocked receipt stands, zero downtime,
     and the later cleanse names control_not_active."""
     combatants = [

@@ -300,7 +300,7 @@ def _milio_cleanse_packet(
 ) -> dict:
     """The P2-7 packet shape (the GP/Rengar authoring mirror): one
     cleanse packet per R-cast recipient at the cast time, riding the
-    Slice 4 kernel with the Milio R source.  The ``group`` is the
+    cleanse kernel with the Milio R source.  The ``group`` is the
     per-cast one-use latch key — every recipient of ONE cast shares it
     (the runtime authoring rides the E8d heal fan-out's group)."""
     return {
@@ -346,7 +346,7 @@ def _kernel_survival(
     duration: float = 10.0,
     main_health: float = 3000.0,
 ) -> dict:
-    """Kernel-level survival run (the Slice 4/5/6 evidence path)."""
+    """Kernel-level survival run (the evidence path)."""
     combatants = [
         _dummy_combatant("enemy", "enemy"),
         _dummy_combatant("main", "main", health=main_health),
@@ -745,7 +745,7 @@ class TestScope:
         assert len(_main_heals(combat)) == 1  # the self copy is separate
 
     def test_kernel_self_scope_denies_foreign_target(self):
-        # Kernel evidence (PASS): the Slice 4 kernel's self-scope rule —
+        # Kernel evidence (PASS): the kernel's self-scope rule —
         # a declaration whose target_scope is "self" denies a packet
         # whose recipient is not the holder with the named
         # target_not_selected reason, consuming nothing.  The P2-7
@@ -838,7 +838,7 @@ class TestControlExclusions:
         assert "airborne" in description
 
     def test_kernel_excluded_control_kind_rule(self):
-        # Kernel evidence (PASS): the Slice 4 kernel already implements
+        # Kernel evidence (PASS): the kernel already implements
         # the exclusion contract the R must ride — an airborne interval
         # is rejected with the named excluded_control_kind reason (the
         # non-airborne boundary), an active stun is truncated, and a
@@ -947,7 +947,7 @@ class TestCastabilityGate:
         # heal rides the walk's attacker-state gate — while the CASTER
         # is crowd-controlled (Ahri's charm at t=0) the self copy AND the
         # fan-out copies are skipped with attacker_state_blocked and
-        # never land.  This is the OPPOSITE of the Slice 5/6 heal
+        # never land.  This is the OPPOSITE of the heal
         # carve-out (GP W / Rengar empowered W carry cast_while_disabled):
         # Milio's R "cannot be used while affected by cast-inhibiting
         # crowd control", so a CC'd caster authors NO effect.
@@ -965,7 +965,7 @@ class TestCastabilityGate:
         assert survival_of(combat, "main")["healing_received"] > 0.0
 
     def test_kernel_suppression_blocks_self_cast_use_not_consumed(self):
-        # Kernel evidence (PASS): the Slice 4 kernel already implements
+        # Kernel evidence (PASS): the kernel already implements
         # the suppression half of the castability gate — an active
         # suppression at a self-scope activation fails closed with the
         # named caster_control_blocks_cleanse denial, the interval is
@@ -1012,7 +1012,7 @@ class TestCastabilityGate:
         # cleanse receipts exist at all.
         combat = _app_combat(enemy="Ahri")
         main = survival_of(combat, "main")
-        # The gated path (the Slice 4 R22 contract): the whole cast is
+        # The gated path (the R22 contract): the whole cast is
         # blocked by the attacker crowd-control gate — NO cleanse row on
         # the blocked targets, the use receipt names the gate (NOT
         # consumed), nothing truncates, the heal stays blocked.
@@ -1061,7 +1061,7 @@ class TestCastabilityGate:
             ],
             duration=10.0,
         )
-        # The gated path writes the USE receipt only (the Slice 4 R22
+        # The gated path writes the USE receipt only (the R22
         # contract — no cleanse row on the blocked target): the use is
         # NOT consumed and the suppression interval is untouched.
         assert "cleanse" not in result["main"]
@@ -1078,7 +1078,7 @@ class TestCastabilityGate:
 
 class TestOneUseAndCooldown:
     def test_kernel_one_use_latch(self):
-        # Kernel evidence (PASS): the Slice 4 per-fight one-use latch —
+        # Kernel evidence (PASS): the per-fight one-use latch —
         # a second activation of the same source fails closed with the
         # named use_spent denial and the cleanse_denied receipt, while
         # the first activation consumes the single use.
@@ -1134,7 +1134,7 @@ class TestOneUseAndCooldown:
         # declaration must RECEIPT; the ENGINE enforces the cooldown via
         # the cast_timeline (rank-3 R casts once per 130s — one cast in
         # a 30s fight), and the KERNEL never enforces a cooldown (the
-        # Slice 4 latch is the only per-fight boundary).  The module
+        # cleanse latch is the only per-fight boundary).  The module
         # parse cooldown is 0.0 today (the packet module does not
         # publish it).
         r = _r_ability()
@@ -1380,7 +1380,7 @@ class TestRepeatedCasts:
 class TestTruncation:
     def test_truncate_intervals_contract(self):
         # Kernel evidence (PASS): the exact truncation the R must ride
-        # (the Slice 4 matrix's committed rule): historical intervals
+        # (the matrix's committed rule): historical intervals
         # kept, the active tail removed, a control starting at/after the
         # activation removed, unknown kinds never truncated.
         intervals = [
@@ -1400,7 +1400,7 @@ class TestTruncation:
         # source (GP W): the active charm ends at the activation,
         # historical downtime remains counted, and a control landing
         # AFTER the activation keeps its full interval (a cleanse creates
-        # NO immunity — the Slice 4 contract the R rides).
+        # NO immunity — the contract the R rides).
         result = _kernel_survival(
             controls=[
                 _control_packet(0.5, "immobilize", 1.8, source="E"),

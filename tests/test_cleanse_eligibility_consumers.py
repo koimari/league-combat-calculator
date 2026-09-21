@@ -1,4 +1,4 @@
-"""P2 Slice 4 cleanse walk-integration consumer tests (owner-owned).
+"""Cleanse walk-integration consumer tests (owner-owned).
 
 Timeline-level walk integration (through
 ``participant_timeline._simulate_survival``), app-level self-cast actives
@@ -6,7 +6,8 @@ Timeline-level walk integration (through
 heal+cleanse marker, and what the compiled score compiler stages for each.
 Roster-level compiled/receipt parity is ``test_compiled_support_parity.py``.
 
-file-length-ok: one acceptance matrix per slice, and this is Slice 4's.
+file-length-ok: one acceptance matrix per kernel, and this is the cleanse
+kernel's.
 """
 
 import pytest

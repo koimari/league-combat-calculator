@@ -1,4 +1,4 @@
-"""P2 Slice 8 — Dr. Mundo P (Goes Where He Pleases) champion passive
+"""Dr. Mundo P (Goes Where He Pleases) champion passive
 (test-matrix owner: RLM-2 C).
 
 Focused TDD matrix for Dr. Mundo's passive — the immunity-to-the-next-
@@ -48,7 +48,7 @@ cooldown.  CURRENT RUNTIME FACTS (verified before pinning):
   agree on the 60→15 endpoints); MaxHealthRegen = 0.004 + 0.0005/level
   with +0.001/+0.0015/+0.002 breakpoints at 7/13/16 (matches the
   cached per-0.5s row rounded to 2dp).
-- The Slice 4/5/6/7 champion-cleanse kernel
+- The champion-cleanse kernel
   (``CHAMPION_CLEANSE_DECLARATIONS`` — Gangplank W, Rengar W, Milio R —
   + the per-cast packet authoring + ``_apply_cleanse`` + the one-use
   latch + the ``cleanse``/``cleanse_use``/``cleanse_denied`` receipts)
@@ -462,7 +462,7 @@ def _kernel_survival(
     duration: float = 10.0,
     main_health: float = 3000.0,
 ) -> dict:
-    """Kernel-level survival run (the Slice 4/5/6/7 evidence path)."""
+    """Kernel-level survival run (the evidence path)."""
     combatants = [
         _dummy_combatant("enemy", "enemy"),
         _dummy_combatant("main", "main", health=main_health),
@@ -1722,8 +1722,8 @@ class TestUnchangedBoundaries:
         }
 
     def test_kernel_truncation_contract_unchanged(self):
-        # The Slice 4 interval-truncation kernel is an unchanged boundary
-        # (the committed Slice 5/6/7 matrix rule): historical intervals
+        # The interval-truncation kernel is an unchanged boundary
+        # (the committed matrix rule): historical intervals
         # kept, an active interval's tail removed (end clamped), a
         # control starting at/after the activation removed entirely by
         # the pure function (the walk's caller contract passes only

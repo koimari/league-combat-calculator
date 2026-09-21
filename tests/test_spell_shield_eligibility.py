@@ -1,4 +1,4 @@
-"""P2 Slice 2 spell-shield acceptance matrix — Sivir E + Annul items.
+"""Spell-shield acceptance matrix — Sivir E + Annul items.
 
 This file is the RLM-2 acceptance-matrix suite for the spell-shield
 eligibility/use lifecycle added to ``src/calculator/delivery_eligibility.py``
@@ -12,7 +12,7 @@ and ``test_interaction_atoms.py``: kernel unit tests with minimal
 _Action/_Attacker classes for pure kernel cases, and ``src.app`` ->
 ``POST /api/calculate`` consumer tests for end-to-end cases.
 
-Row status conventions (same as the P2 Slice 1 matrix):
+Row status conventions (same as the sibling acceptance matrices):
 - "CURRENT" rows assert behavior the tree already satisfies today.
 - "NEW-CONTRACT" rows assert the kernel API the owner commits to
   (``de.SpellShieldAcceptance``, ``de.SpellShieldEligibility``,

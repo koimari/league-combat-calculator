@@ -1,4 +1,4 @@
-"""P1 Slice 12 (RLM-2 C) — Jayce W per-basic-attack mana restore: TDD matrix.
+"""Jayce W per-basic-attack mana restore: TDD matrix.
 
 Pins the P1-12 completion contract for Jayce's W-slot passive mana restore
 (15-25 by W rank, per modeled basic attack, both stances) against the
