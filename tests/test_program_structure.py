@@ -1,4 +1,4 @@
-"""Phase 4's structural gates: one constructor, one direction, one budget.
+"""The structural gates: one constructor, one direction, one budget.
 
 Four properties this phase claims about the *tree* rather than about any
 one module, each asserted here because none of them belongs to a module's
@@ -9,10 +9,10 @@ own front door:
   survivor.
 * **One direction.**  ``program -> survival`` and never back, so the kernel
   keeps a hot loop that cannot dispatch on a logical type.
-* **One allocation budget** (R-28, criterion 17).  S4 is the single stage
-  the campaign gates allocation at, and the margin is read from
-  ``campaign-fingerprints.json`` rather than from prose.
-* **View purity** (criterion 3).  No view, and no ``src/`` function a view
+* **One allocation budget.**  The coupled evaluation is where allocation
+  is gated, and the margin is read from
+  ``docs/receipts/campaign-fingerprints.json`` rather than from prose.
+* **View purity.**  No view, and no ``src/`` function a view
   can call, performs arithmetic.  The resolver and its counting rule are
   ``tests/view_purity.py``; the reading is here.
 """

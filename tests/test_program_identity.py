@@ -1,4 +1,4 @@
-"""Phase 4 S1 — event identity, and the four id strings it must reproduce.
+"""Event identity, and the four id strings it must reproduce.
 
 ``program/identity`` is the front door for the logical layer's identity
 vocabulary.  Its whole claim is a byte-identity claim: whatever grammar the
@@ -11,7 +11,7 @@ from the same inputs its producer uses and asserts equality.  The second
 asserts the legacy formats are *still spelled that way in the tree* -- a
 byte-identity test whose reference is a string typed into the test file goes
 stale the moment a producer changes, and would then pass while the claim is
-false, which is this campaign's own failure shape.
+false, which is a claim nobody can check.
 """
 
 from pathlib import Path

@@ -1,4 +1,4 @@
-"""Phase 4 S4 — the arming dedupe, asserted in both directions.
+"""The arming dedupe, asserted in both directions.
 
 ``program/amp`` is the front door for amplification authorship.  A second
 holder of an aura arms nothing new and a second holder of a per-holder
@@ -14,7 +14,7 @@ from src.calculator.trigger_stream import HolderStacking
 
 
 class TestArmingDedupeIsDeclaredInBothDirections:
-    """D-66: an aura arms once, a per-holder mechanic arms per holder."""
+    """An aura arms once, a per-holder mechanic arms per holder."""
 
     def test_two_holders_of_an_aura_collide_on_one_key(self) -> None:
         first = amp.arm_key(4, "abyssal_mask.unmake", 0, HolderStacking.IDEMPOTENT_AURA)

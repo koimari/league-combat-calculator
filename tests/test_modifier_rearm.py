@@ -13,12 +13,12 @@ attack.
 Neither had a symptom, because ``_apply_cross_participant_modifiers`` writes
 ``support_damage_multiplier`` once per applying modifier and the receipt
 therefore published the **last** factor rather than the product.  A number
-the model computed that its own receipt contradicts is this campaign's
+the model computed that its own receipt contradicts is the
 subject, so the fix belongs where the modifier arms and the test belongs
 here.
 
 Two different *holders* still keep two modifiers.  Whether they should is
-:class:`~src.calculator.trigger_stream.HolderStacking`'s question and D-66's
+:class:`~src.calculator.trigger_stream.HolderStacking`'s question and its
 ``ArmingLedger`` is the one place it is answered; this rule must not become a
 second answer to it.
 """
@@ -138,7 +138,7 @@ class TestOneHolderArmsOneModifier:
         assert "refresh" not in action.event
 
     def test_two_holders_keep_two_modifiers(self, walk):
-        """PER_HOLDER's answer stays D-66's; this rule is not a second one."""
+        """PER_HOLDER keeps its own answer; this rule is not a second one."""
         state, ctx = walk
         _arm(state, ctx, source=EXPOSE, at=1.5, duration=4.0, holder=_HOLDER)
         _arm(state, ctx, source=EXPOSE, at=2.0, duration=4.0, holder=_SECOND_HOLDER)

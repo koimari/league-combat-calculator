@@ -1,10 +1,10 @@
 """The outcome ledger: write-once, and one named way to change its mind.
 
-D-64.  Two properties carry this module and both are tested as refusals
+Two properties carry this module and both are tested as refusals
 rather than as capabilities: a second answer to a question already answered
 raises, and the only revision that does not raise is one carrying a member of
 a one-member reason enum.  A ledger that merely *documents* write-once is the
-prose-outruns-code shape the campaign exists to kill.
+prose-outruns-code shape the ledger exists to refuse.
 """
 
 from __future__ import annotations
@@ -92,7 +92,7 @@ def test_a_slotless_action_records_nothing() -> None:
 
 
 def test_a_refusal_is_recorded_as_a_reason_and_not_as_a_zero() -> None:
-    """The campaign's invariant at ledger granularity."""
+    """The zero-versus-absent invariant at ledger granularity."""
     ledger = outcome_state.OutcomeLedger()
     ledger.skip(action(5), "target_dead")
     outcome = ledger.get(5)
@@ -129,7 +129,7 @@ def test_scheduling_a_walk_authored_heal_fails_closed() -> None:
 
 
 def test_annotations_are_dropped_unless_the_ledger_is_annotating() -> None:
-    """Verbosity is a flag on one ledger, not a second ledger (S3's ruling)."""
+    """Verbosity is a flag on one ledger, not a second ledger."""
     quiet = outcome_state.OutcomeLedger()
     quiet.annotate(action(0), overkill=5.0)
     assert quiet.get(0).overkill == 0.0
@@ -184,7 +184,7 @@ def test_a_refused_transition_reads_as_a_structural_zero_carrying_its_reason() -
 
 
 def test_a_field_with_no_write_and_no_refusal_reads_as_starved() -> None:
-    """The campaign's invariant where the leaf is born.
+    """The zero-versus-absent invariant where the leaf is born.
 
     The ledger holds neither a number nor a refusal for this slot, so it
     cannot say whether the rule ran -- and answering 0.0 would be exactly the
@@ -247,7 +247,7 @@ def test_a_total_over_a_starved_member_raises_rather_than_counting_it_as_zero() 
 
 
 class TestAtMostOneAppliedContribution:
-    """D-62's other half, and the half a write-once field does not cover.
+    """Uniqueness's other half, and the half a write-once field misses.
 
     Write-once is keyed by ``(slot, field)``: it stops one transition
     answering the same question twice and says nothing about a *second
@@ -381,7 +381,7 @@ class TestTheReceiptWalkRunsIt:
     Both properties above are refusals, and a refusal that never ranges over
     a real fight is indistinguishable from one that cannot fire.  So this
     class asserts the ledger is the receipt adapter's companion, that a live
-    coupled walk actually fills it, and that D-62's uniqueness is enforced on
+    coupled walk actually fills it, and that uniqueness is enforced on
     the production object rather than on a ledger a test built.
     """
 

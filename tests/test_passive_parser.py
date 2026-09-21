@@ -1,6 +1,6 @@
 """Front-door tests for the item passive parser.
 
-The larger item-effect suites retain their campaign history.  This file gives
+The larger item-effect suites cover the registry.  This file gives
 the production module a direct navigation point for parser changes.
 """
 

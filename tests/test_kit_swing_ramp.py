@@ -122,7 +122,7 @@ class TestTheWalkerMergesTwoRamps:
         assert len(times) > len(self._times())
 
     def test_a_build_ramp_and_a_kit_ramp_add_rather_than_overwrite(self):
-        """The trap the Jax slice was written around: one ramp winning.
+        """The trap the Jax ramp was written around: one ramp winning.
 
         Each keeps its own stack clock, because their durations differ, and
         one attack lands a stack on each, so the pair beats either alone.

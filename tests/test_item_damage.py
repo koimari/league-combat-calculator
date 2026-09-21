@@ -5122,7 +5122,7 @@ class TestCollectorThreshold(_FightHarness):
 
 
 class TestOnHitItemSwingEvents(_FightHarness):
-    """On-hit item rows author per-swing damage events (phase 1).
+    """On-hit item rows author per-swing damage events.
 
     Every on-hit application in these fights rides a simulated auto
     swing, so the item rows stamp their events at those swing times and
@@ -5219,7 +5219,7 @@ class TestOnHitItemSwingEvents(_FightHarness):
 
 
 class TestSingleProcAndScheduledEventAuthoring(_FightHarness):
-    """Single-proc and scheduled effects author real event times (phase 2).
+    """Single-proc and scheduled effects author real event times.
 
     On-hit-once procs ride their triggering swing, Titanic's Crescent
     rides cooldown-gated swings, Stormsurge stamps the ledger moment its

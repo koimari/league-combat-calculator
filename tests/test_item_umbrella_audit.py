@@ -40,7 +40,7 @@ def test_the_committed_receipt_is_what_a_fresh_audit_produces():
     and 211 reasons inside it while its counts stayed identical, so every
     commit body could truthfully say "209/209, target_blocked 0" and no gate
     anywhere could see that the committed file did not match the code.
-    R-36 wants a machine-derived receipt to move **with** the slice that moves
+    A machine-derived receipt moves **with** the change that moves
     it, and this is what makes that a rule rather than a habit.
     """
     committed = json.loads(RECEIPT_PATH.read_text(encoding="utf-8"))

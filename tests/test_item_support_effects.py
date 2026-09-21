@@ -892,7 +892,7 @@ class TestDeclaredDamageAndAttackClasses:
     def test_the_declarations_agree_with_the_cached_wiki_text(self):
         """Every restriction is read off the cached entry, never assumed.
 
-        The two axes read different phrases, which is the whole of D-04:
+        The two axes read different phrases, which is the whole point:
         "from all sources" says nothing about damage class — Unmake says it
         while restricting to magic — so it is the *attack* axis that phrase
         settles, and the damage axis is settled by the class or the
@@ -1074,9 +1074,9 @@ class TestEventViewTupleGate:
         ``tuple_incapable_items()``, whose membership is pinned item for
         item in ``tests/test_trigger_stream.py``.  It was asserted equal to
         the hand set ``EVENT_VIEW_SUPPORT_ITEMS`` until P2c deleted that set
-        (D-98's flip).
+        (the one-symbol flip).
 
-        Phase 4's S5 moved the *site*, not the claim: the clause is now the
+        The *site* moved, not the claim: the clause is now the
         ``RAW_ROW_STREAM_HOLDER`` adequacy condition, so ``pipeline`` holds no
         clause of its own and the derivation is read from one probe in
         ``ledger_adequacy``.  The
@@ -1127,18 +1127,18 @@ class TestEventViewTupleGate:
         assert sites == []
 
     def test_solstice_sleigh_enters_by_derivation(self):
-        """D-02: it is a crowd-control reader, so the projection holds it."""
+        """It is a crowd-control reader, so the projection holds it."""
         sleigh = trigger_stream.CAPABILITIES["solstice_sleigh.going_sledding"]
         assert trigger_stream.Stream.CC in sleigh.reads
         assert "Solstice Sleigh" in trigger_stream.tuple_incapable_items()
         # ...and health regen is not why it is protected: the reason is the
-        # declaration above, which is what D-02 asked the test to pin.
+        # declaration above, which is what this pins.
         assert trigger_stream.holders_in(
             [{"name": "Solstice Sleigh"}], trigger_stream.tuple_incapable_items()
         )
 
     def test_fimbulwinter_is_an_event_view_member_that_reads_event_id(self):
-        """D-03: dropping it disarms a fail-closed raise downstream."""
+        """Dropping it disarms a fail-closed raise downstream."""
         assert "Fimbulwinter" in trigger_stream.enriched_view_items()
         everlasting = inspect.getsource(item_support_everlasting._everlasting_packets)
         # The shield carries its trigger's event id, and an unenriched shield

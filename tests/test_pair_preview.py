@@ -1,9 +1,10 @@
 """A pair-engine preview is published, and never summed.
 
-Bloodsong's Expose Weakness was the campaign's one frozen
+Bloodsong's Expose Weakness was the last frozen
 ``DivergenceReceipt``: the pair engine amplified one coarse row once for the
 whole fight, the walk armed a timed modifier per spellblade proc, and neither
-was named the answer.  Phase 4 S7 named one.  The pool of amplified damage is
+was named the answer.  The walk is that answer, because the pool of
+amplified damage is
 every roster attacker's damage inside a live window on one enemy — a roster
 input — so the walk owns the mechanic, prices the holder's own packets like
 everyone else's, and the pair reading survives as a declared ``THEORETICAL``
@@ -182,7 +183,7 @@ def test_removing_the_item_removes_the_amplification_entirely():
     """Zero, and not the preview, is what a missing coupled half leaves.
 
     The control run holds no Bloodsong at all, so nothing amplifies and
-    nothing falls back to a pair-authored figure.  A slice that deleted the
+    nothing falls back to a pair-authored figure.  A change that deleted the
     coupled interpreter and left the preview standing would fail here on a
     number rather than on a structural claim.
     """

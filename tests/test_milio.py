@@ -36,7 +36,7 @@ class TestReviewedCrowdControl:
 
 
 class TestFiredUpRider:
-    """Milio P prices the burn the enchanted hit applies (census slice 6)."""
+    """Milio P prices the burn the enchanted hit applies."""
 
     def test_the_burn_reaches_the_total(self):
         """Level 18, no items: the enchanted hits the fight affords.

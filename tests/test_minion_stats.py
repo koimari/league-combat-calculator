@@ -336,7 +336,7 @@ def test_the_default_fight_is_untouched_by_any_of_this():
 
 
 def test_a_minion_class_fight_without_a_type_stays_caller_shaped():
-    """The label-only fight the target-class slice introduced still works."""
+    """The label-only fight the target class introduced still works."""
     config = FightConfig(
         target_health=1234.0,
         target_armor=7.0,

@@ -118,7 +118,7 @@ def test_public_metadata_keeps_the_certified_sequence():
 
 
 # ---------------------------------------------------------------------------
-# Timed mode (campaign criterion 3): runtime probes through calculate_payload.
+# Timed mode: runtime probes through calculate_payload.
 # ---------------------------------------------------------------------------
 
 

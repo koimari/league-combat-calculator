@@ -4203,7 +4203,7 @@ def test_the_walk_executes_off_the_declaration_and_not_off_the_pair_stamp():
 
     That is the whole property the retirement bought, and it is unprovable
     from the covering scenario -- no committed coupled roster holds The
-    Collector -- which is why Amendment P asks for a fixture per owner.
+    Collector -- which is why this family wants a fixture per owner.
     """
     source = _dummy_combatant("source", "main", health=100.0)
     target = _dummy_combatant("target", "enemy", health=100.0)
@@ -5829,7 +5829,7 @@ def test_a_short_bonus_sequence_stops_rather_than_misaligning():
 
 
 class TestThePairCacheKeyCarriesEveryInputThatPricedIt:
-    """Phase 4 S8 — one key function, and the resource ledger is in it.
+    """One key function, and the resource ledger is in it.
 
     A cached pair packet is replayed for every later evaluation whose key
     matches, so a priced-in input missing from the key is a stale packet
@@ -5880,7 +5880,7 @@ class TestThePairCacheKeyCarriesEveryInputThatPricedIt:
 
 
 class TestCatalystIsTwoPassesAndNotARecursion:
-    """Phase 4 S8 — D-70's four clauses, over the live mana-spent heal.
+    """The four pass clauses, over the live mana-spent heal.
 
     Catalyst of Aeons' Eternity restore is a function of the incoming damage
     the fight itself produces, so the composition has to be priced twice.

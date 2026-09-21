@@ -1,4 +1,4 @@
-"""Wave 1D: engine-side coarse-row producers author real damage events.
+"""Engine-side coarse-row producers author real damage events.
 
 Every test is a runtime probe through the public ``calculate_payload``
 pipeline (timed mode, autos included, level 18) asserting that the named
@@ -727,7 +727,7 @@ class TestEmpoweredRowsAuthorTheSwingsTheyConsumed:
         All four of these empowers reset the attack timer, so the swing
         lands with the cast — the instant the reconstruction has always
         placed this damage at, which is why authoring it moves no number.
-        The row's damage came from the stream's trailing swings (wave 1E
+        The row's damage came from the stream's trailing swings (the
         prices the move there), and those sit at the far end of a long
         fight: timing the events from them would post a cast's damage
         seconds before or after the cast that forced it.

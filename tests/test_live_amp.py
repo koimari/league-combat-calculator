@@ -2,8 +2,8 @@
 
 Shadowflame's Cinderbloom is the one amplifier in the tree whose pool does
 not exist until the walk runs: it reads the target's health *at the instant
-of the hit*, under fire from a whole roster.  Phase 4 S7 gave the mechanic to
-the walk for exactly that reason, and the shape the ruling names is a rider —
+of the hit*, under fire from a whole roster.  The walk owns the mechanic for
+exactly that reason, and the shape it takes is a rider —
 an :class:`~src.calculator.survival.actions.LiveAmp` field on the damage
 action itself rather than an event of its own.
 
@@ -219,7 +219,7 @@ def test_a_spell_shielded_trigger_emits_no_bonus():
         ],
         _target(1000.0),
         # The kernel's spell-shield gate is the typed eligibility contract
-        # (P2 Slice 2), not the legacy ``spell_shield_until`` projection the
+        # rather than the legacy ``spell_shield_until`` projection the
         # branch this fixture predates read; arming the contract is what
         # "a shield is up" now means.
         state_edits=lambda states: states[0].update(

@@ -45,7 +45,7 @@ class TestTheVocabularyIsClosed:
 
 
 class TestTheShippedDefault:
-    """The umbrella's recorded H2 ruling: *deferred, default shipped*."""
+    """No ability declares a reviewed scope, so the default ships."""
 
     def test_unreviewed_reads_as_single_target_on_the_pair_defender(self):
         reviewed, _ = scope.reviewed_scope(scope.Unreviewed(ability="Syndra E"))

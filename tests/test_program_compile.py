@@ -1,4 +1,4 @@
-"""Phase 4 S4 — the one constructor, and what it refuses.
+"""The one constructor, and what it refuses.
 
 file-length-ok: the module under test is the one-constructor boundary, and
 one suite per boundary is what keeps its field list provable in one place.

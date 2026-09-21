@@ -1,4 +1,4 @@
-"""Phase 4 S4/S8 — a second pricing is a second pass, declared and bounded.
+"""A second pricing is a second pass, declared and bounded.
 
 ``program/dependency`` is the front door for cross-pass work.  What it has to
 buy over the recursive path is boundedness and a type: a dependency declares
@@ -8,7 +8,7 @@ malformed build, and passes are shared rather than summed.
 
 S4 landed the declaration; S8 lands :func:`~.dependency.run_passes`, the
 driver that consumes it, and the properties asserted of the driver are the
-four D-70 rules: one call per pass, never a call from inside a pass, the
+four rules: one call per pass, never a call from inside a pass, the
 later pass differing from its predecessor only by a :class:`ParamPatch`, and
 a budget that runs out raising rather than recursing.
 """
@@ -106,7 +106,7 @@ def _finishes(answer: str):
 
 
 class TestTheDriverRunsEachPassOnceAndNeverFromInsideOne:
-    """D-70's shape: rebuilt per pass, and the walk is never re-entered."""
+    """Rebuilt per pass, and the walk is never re-entered."""
 
     def test_one_pass_is_enough_when_nothing_is_requested(self) -> None:
         seen: list[tuple[int, object]] = []

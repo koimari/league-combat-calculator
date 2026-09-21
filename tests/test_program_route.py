@@ -1,4 +1,4 @@
-"""Phase 4 S4 — subject resolution is total, and an empty answer is a raise.
+"""Subject resolution is total, and an empty answer is a raise.
 
 ``program/route`` is the front door for delivery.  The property it exists to
 buy is not "ten policies exist"; it is that a policy the context cannot

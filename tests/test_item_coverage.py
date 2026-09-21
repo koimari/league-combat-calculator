@@ -798,7 +798,7 @@ def test_guardians_horn_target_coverage_uses_typed_flat_reduction():
 
 
 def test_fimbulwinter_is_event_certified_and_not_optimizer_blocked():
-    """The 20%-maximum-mana gate is sourced (rev 3984419, campaign U11a), so
+    """The 20%-maximum-mana gate is sourced (rev 3984419), so
     the ``*_gate_status`` refusal does not fire here and the item stays a
     modelled, rankable candidate."""
     coverage = item_probe.attacker_coverage(get_item_by_name("Fimbulwinter"))
@@ -954,7 +954,7 @@ def test_every_holder_survival_field_is_a_field_of_a_declared_payload() -> None:
     """The rename guard on the one clause that reads payload field names.
 
     A field this set names and no payload declares would silently stop
-    matching, which is exactly the shape of failure the campaign exists to
+    matching, which is exactly the shape of failure the ladder exists to
     remove: the clause would go on returning ``False`` and the item would go
     on publishing ``not_target_relevant``.
     """
@@ -1024,10 +1024,10 @@ def test_an_owner_the_migration_has_not_reached_still_publishes_as_modelled() ->
 
     The difference between *unmigrated* and *uninterpreted* is the whole
     reason counter 3's population and ``review_pending`` are two sets: an
-    entry whose family no slice has declared is behaviour the engines still
+    entry whose family nothing has declared is behaviour the engines still
     run, and publishing it as unmodelled would be a refusal the migration
     invented.  That sentence lived in a docstring, carrying a member count
-    that a later slice falsified — so it is asserted here, over whatever the
+    that a later change falsified — so it is asserted here, over whatever the
     population happens to be, and it retires with the population.
     """
     for owner in sorted(undeclared_owners()):

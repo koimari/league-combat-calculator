@@ -1399,7 +1399,7 @@ class TestItemSourceGate:
 
 
 class TestAllyEffectLines:
-    """D-47: the hand-authored ally table is refresh-inert, so patch day says so."""
+    """The hand-authored ally table is refresh-inert, so patch day says so."""
 
     def _shop(self, **moved):
         """A cached shop holding every hand-authored item, some values moved."""

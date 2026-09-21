@@ -541,7 +541,7 @@ def test_score_only_still_takes_the_tuple_ledger_for_a_plain_build():
 
 
 def test_solstice_sleighs_protection_is_membership_not_its_health_regen():
-    """D-02: pinning the cached-stat coincidence would pin the wrong reason."""
+    """Pinning the cached-stat coincidence would pin the wrong reason."""
     annie = get_champion("Annie")
     sleigh = get_item_by_name("Solstice Sleigh")
     stats = calculate_total_stats(annie, 18, [sleigh])

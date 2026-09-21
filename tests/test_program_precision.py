@@ -68,7 +68,7 @@ def _round_call_sites(path: Path) -> list[int]:
 
 
 def test_the_registry_is_the_only_module_in_program_that_rounds() -> None:
-    """D-71's scope clause, as a test on the package rather than a rule.
+    """The scope clause, as a test on the package rather than a rule.
 
     Migration frontier counter 6 gates the same property from the outside;
     this is the inside view, so a new ``program/`` module that rounds fails
@@ -89,7 +89,7 @@ class TestTheSumPlanCountsEachEventOnce:
     """Criterion 14's ``SumPlan`` clause, which had no mechanism at all.
 
     The receipt publishes three event panels and a reader that wants every
-    event of a fight unions them.  D-65's note is that three sources are
+    event of a fight unions them.  Three sources are
     unioned with only a comment preventing a double count -- and the
     measurement says the comment was not enough: a Redemption Intervention
     is published on ``events`` as damage and on ``support_events`` as the

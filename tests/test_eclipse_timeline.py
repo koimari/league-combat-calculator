@@ -92,7 +92,7 @@ def test_eclipse_arms_on_two_distinct_ability_casts() -> None:
             # the rule, the pre-mitigation magnitude, the attack class that
             # decides which of the holder's amps it earns, and no resistance,
             # because this packet met the fight's published figure.
-            # Five positions since umbrella Amendment R, Ruling 1: the fifth
+            # Five positions, because the fifth
             # is the basic-attack swing composition, and an item proc no swing
             # delivered carries None there and is priced exactly as before.
             # MERGE: the declared magnitude is 100.0, not 80.0 -- the
@@ -130,7 +130,7 @@ def test_eclipse_prefers_authored_ability_hit_time() -> None:
             "damage": 100.0,
             "damage_type": "physical",
             "event_precision": "hit",
-            # Five positions since umbrella Amendment R, Ruling 1: the fifth
+            # Five positions, because the fifth
             # is the basic-attack swing composition, and an item proc no swing
             # delivered carries None there and is priced exactly as before.
             # MERGE: the declared magnitude is 100.0, not 80.0 -- the

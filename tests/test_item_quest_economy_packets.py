@@ -72,7 +72,7 @@ def _tear_ledger_result(
     """Build the fight-result resource_ledger section through the kernel.
 
     The engine's mana ledger is the single source of truth for Manaflow
-    (P3 slice 1): each authored cast at ``cast_times`` is a proven accepted
+    each authored cast at ``cast_times`` is a proven accepted
     eligible hit (the engine only drives hits for accepted casts), so the
     kernel's ``ManaflowLedger.hit`` produces the same receipts the packet
     projection consumes.

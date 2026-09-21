@@ -1,7 +1,7 @@
-"""Phase 4 S4 — four rungs, and the two failure rungs mean different things.
+"""Four rungs, and the two failure rungs mean different things.
 
 ``program/rung`` is the front door for "which engine priced this, and why not
-the fast one".  The property under test is D-69's: a declared roster mechanic
+the fast one".  The property under test is that a declared roster mechanic
 takes :class:`ReceiptWalk` with a named cause and never
 :class:`SearchPoisoned`, and every decision projects onto exactly one
 published counter label, so a histogram accounts for 100% of evaluations by
@@ -18,7 +18,7 @@ from src.calculator.work_counters import Rung as CounterRung
 
 
 class TestTheLadderIsFourStates:
-    """D-69, counted from the declaration rather than from prose."""
+    """Counted from the declaration rather than from prose."""
 
     def test_the_union_has_four_members(self) -> None:
         assert len(rung.RUNGS) == 4
@@ -102,7 +102,7 @@ class TestTheLadderIsReachableFromProduction:
     """Criterion 16's third clause, which had nothing that could fail it.
 
     "``SearchPoisoned`` appears only for genuine invariant errors, never for
-    a declared roster mechanic" was vacuous: the union D-69 rules had **zero
+    a declared roster mechanic" was vacuous: the union had **zero
     construction sites** in ``src/``.  The composition recorded
     ``work_counters.Rung`` labels directly, so the decision layer -- the half
     that carries the *reason* a label cannot -- was reachable only from this

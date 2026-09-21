@@ -1,4 +1,4 @@
-"""Phase 4 S5: the declared adequacy conditions behind two narrowed results.
+"""The declared adequacy conditions behind two narrowed results.
 
 Two halves.  The structural half pins the module's four tables against each
 other — every condition declared once, probed once, and the one clause both
@@ -150,7 +150,7 @@ def test_every_condition_is_declared_and_probed_exactly_once():
     assert set(ledger_declarations.DECLARATIONS) == set(C)
     probed = list(lp.LEDGER_CONDITIONS) + list(lp.SHIELD_OUTCOME_CONDITIONS)
     assert set(probed) == set(C)
-    # Thirteen ledger clauses — D-38's ten plus the keystone self-heal, the
+    # Thirteen ledger clauses — the original ten plus the keystone self-heal, the
     # ordered interaction metadata and the self-shield proc — and two
     # shield-outcome ones, sharing one, so the fifteen probe slots cover
     # fourteen distinct conditions.

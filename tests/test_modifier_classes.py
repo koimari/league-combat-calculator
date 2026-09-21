@@ -1,4 +1,4 @@
-"""What a cross-participant damage modifier applies to (C3, D-04).
+"""What a cross-participant damage modifier applies to.
 
 Two vocabularies and one predicate.  A damage packet *belongs to* one
 :class:`DamageClass` and one :class:`AttackClass`; a ``damage_modifier``
@@ -104,7 +104,7 @@ class TestPacketClasses:
 
 
 class TestTheDeclarationIsRequired:
-    """D-04: both axes, no default, empty banned — enforced where it arms."""
+    """Both axes, no default, empty banned — enforced where it arms."""
 
     def test_a_complete_declaration_is_returned_unchanged(self):
         action = _packet(
@@ -187,7 +187,7 @@ class TestOnePredicateDecidesApplicability:
             )
 
     def test_the_attack_axis_is_live_and_not_decorative(self):
-        """D-26: no shipped producer restricts to one attack class, so the
+        """No shipped producer restricts to one attack class, so the
         branch is proven with a synthetic declaration rather than left
         untested because nothing reaches it today."""
         basic_only = _modifier(

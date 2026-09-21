@@ -275,7 +275,7 @@ class TestTheWholeCalculateResponse:
     top-level ``breakdown``, ``cast_timeline`` and ``damage_events`` -- were
     outside a check whose criterion says "every numeric leaf of the
     /api/calculate payload".  ``/api/bis`` and ``/api/optimize`` were given
-    whole-payload treatment in the same slice; this endpoint was not, and
+    whole-payload treatment; this endpoint did not, and
     nothing recorded the difference.
     """
 
@@ -311,8 +311,8 @@ class TestTheWholeCalculateResponse:
         # ``champion_stats.attack_damage`` is deliberately not in that list:
         # the endpoint rounds it to an int on the wire and an int carries no
         # entry, by the same rule that keeps a build's ``gold`` bare.  The
-        # rule is the map's, not this slice's, and changing either the wire
-        # type or the rule is its own slice with its own baseline move.
+        # rule is the map's, and changing either the wire type or the rule
+        # moves a baseline.
         assert isinstance(response["champion_stats"]["attack_damage"], int)
         assert "champion_stats.attack_damage" not in dispositions
         assert all(path.split(".")[0] != "combat" for path in dispositions)
@@ -369,7 +369,7 @@ class TestTheCalculatePayload:
         A leaf path is where a reader finds a number, so the republication
         carries its own entries: a consumer reading
         ``objective.focus_survival.ending_health`` and finding no entry has
-        been handed exactly the undispositioned number this campaign is
+        been handed exactly the undispositioned number the map is
         about.  The entries agree with the original's, because the same
         ``serialize_leaf`` call shape produced both.
         """
@@ -489,7 +489,8 @@ def _optimize() -> Mapping:
 class TestTheTwoScoreServingPayloads:
     """``/api/bis`` and ``/api/optimize`` — the score view's published surfaces.
 
-    D-23 already covers their ``withheld[]`` and exclusion count.  What this
+    The coverage half already covers their ``withheld[]`` and exclusion
+    count.  What this
     class pins is the other half of umbrella criterion 1: the numbers they
     publish carry dispositions too, or the two largest numeric surfaces in the
     calculator serve undispositioned numbers while every other criterion
