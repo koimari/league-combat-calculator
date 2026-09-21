@@ -4,8 +4,8 @@ The catalog's whole value is that it *cannot* be silently incomplete.  A new
 effect tag, a new ``ActionKind`` or a new ``DefenseMechanic`` has
 to be given a family before the module will import, and a module that will
 not import fails collection rather than running with a hole in it.  Each of
-those three closures therefore ships with the red it can reproduce on demand
-(runbook R-05), driven through the validator's own seam — because a gate
+those three closures therefore ships with the red it can reproduce on
+demand, driven through the validator's own seam — because a gate
 nobody has seen fail is indistinguishable from a gate that always passes,
 which is what a declaration table prevents.
 """
@@ -48,7 +48,7 @@ def test_the_tag_map_is_total_and_single_valued() -> None:
 
 
 def test_a_new_effect_tag_fails_the_catalog() -> None:
-    """R-05's red for the tag closure, through the validator's seam."""
+    """The red for the tag closure, through the validator's seam."""
     with pytest.raises(RuntimeError, match="unmapped"):
         catalog._validate_tag_closure(  # pylint: disable=protected-access
             frozenset(known_effect_types()) | {"brand_new_mechanic"}
@@ -98,7 +98,7 @@ def test_every_action_kind_has_a_family() -> None:
 
 
 def test_a_new_action_kind_fails_the_catalog() -> None:
-    """R-05's red for the ActionKind closure."""
+    """The red for the ActionKind closure."""
     with pytest.raises(RuntimeError, match="ActionKind"):
         catalog._validate_action_kind_closure(  # pylint: disable=protected-access
             frozenset(ActionKind) | {"a_new_transition"}
@@ -122,7 +122,7 @@ def test_every_defense_mechanic_is_declared_or_cited() -> None:
 
 
 def test_a_new_defense_mechanic_fails_the_catalog() -> None:
-    """R-05's red for the defensive closure."""
+    """The red for the defensive closure."""
     with pytest.raises(RuntimeError, match="unmapped"):
         catalog._validate_defense_source_closure(  # pylint: disable=protected-access
             frozenset(DefenseMechanic) | {"a_new_defence"}
@@ -153,7 +153,7 @@ def test_the_delta_amp_family_is_fully_migrated() -> None:
 def test_an_unnamed_delta_amp_tag_fails_the_catalog(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """R-05's red for the partial-migration closure."""
+    """The red for the partial-migration closure."""
     monkeypatch.setattr(catalog, "MIGRATED_DELTA_AMP_TAGS", frozenset())
     with pytest.raises(RuntimeError, match="unnamed"):
         catalog.validate_catalog()
@@ -334,7 +334,7 @@ class TestBuiltPerRule:
 
 
 def test_an_unexplained_certified_mechanic_fails_the_catalog() -> None:
-    """R-05's red for the certification closure, through the validator's seam.
+    """The red for the certification closure, through the validator's seam.
 
     A certified mechanic withholds a whole calculation when the timeline is
     coarse.  Certifying one with a blank reason would make that refusal

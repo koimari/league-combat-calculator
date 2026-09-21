@@ -948,7 +948,7 @@ def test_every_fixture_item_name_resolves():
     it first — the eager module-level dict this table replaced failed at
     collection instead.  Resolving the whole vocabulary in one place restores
     a single named failure that says which name went away, and the negative
-    half proves the resolution can fail at all (R-05).
+    half proves the resolution can fail at all.
     """
     names = sorted(
         {name for fixture in REGISTRY_FIXTURES for name in fixture.items}
@@ -967,7 +967,7 @@ def test_every_fixture_item_name_resolves():
 
 
 def test_the_rung_pin_rejects_a_mis_declared_rung():
-    """The rung pin's own red, on demand (R-05).
+    """The rung pin's own red, on demand.
 
     A pinned fixture's rung is asserted by the pin rather than by
     :func:`_assert_contract`, so a pin that never checked the rung would be
@@ -1020,7 +1020,7 @@ def test_every_registry_key_has_a_candidate_and_an_ally_fixture():
 
 
 def test_an_undeclared_producer_fails_the_coverage_check():
-    """The coverage check's own red, on demand (R-05).
+    """The coverage check's own red, on demand.
 
     A seventh ``damage_modifier`` producer with no fixture is reported for
     both sides; nothing about the check can pass by being silent.
@@ -1034,7 +1034,7 @@ def test_an_undeclared_producer_fails_the_coverage_check():
 
 
 def test_a_second_producer_on_a_covered_item_fails_the_coverage_check(monkeypatch):
-    """The red for the case item-granularity coverage could not see (R-05).
+    """The red for the case item-granularity coverage could not see.
 
     A producer added as a *second* packet on an item some fixture already
     equips and already fires — the shape ``Dream Maker`` ships and the shape
@@ -1165,7 +1165,7 @@ class TestTheWalkPricesADeclarationAgainstWhatItMeets:
         assert price == (300.0, None, "")
 
     def test_a_missing_baseline_is_refused_by_name(self):
-        """R-05: the refusal the walk receipts, reproduced on demand.
+        """The refusal the walk receipts, reproduced on demand.
 
         A fight that published no effective resistance leaves the walk
         nothing to mitigate against.  The refusal is a named reason and a
@@ -1180,7 +1180,7 @@ class TestTheWalkPricesADeclarationAgainstWhatItMeets:
         assert price.refusal == NO_RESISTANCE_PUBLISHED
 
     def test_a_damage_class_no_resistance_answers_for_is_refused(self):
-        """R-05's second red: an unrecognized class is not paid in full.
+        """The second red: an unrecognized class is not paid in full.
 
         Paying it raw would be a mitigation decision taken by silence.
         """
@@ -1228,8 +1228,8 @@ def test_the_strike_back_prices_through_the_shared_arithmetic():
 #: case that changes it says so rather than quietly comparing two fights.
 DECLARED_SUBJECT_MR = 67.0
 
-#: How a `DeclaredPacket` construction is counted in `src/` (R-29's rule
-#: stated so the count is reproducible): this pattern over every `.py` file
+#: How a `DeclaredPacket` construction is counted in `src/`, stated so the
+#: count is reproducible: this pattern over every `.py` file
 #: under `src/calculator/`, with `survival/pricing.py` excluded because the
 #: line that declares the class matches it and a definition is not a
 #: construction.
@@ -1279,7 +1279,7 @@ def declared_packet_construction_sites(
 ) -> tuple[str, ...]:
     """Every `src/` file that builds a declared packet, its own home aside.
 
-    `sources` is the seam the negative below drives (R-05): a scan that
+    `sources` is the seam the negative below drives: a scan that
     cannot be made to report something is indistinguishable from a scan that
     found nothing.
     """
@@ -1401,7 +1401,7 @@ class TestTheWalkPricesADeclaredPacketItself:
         assert row["declared_price"]["resistance"] is None
 
     def test_an_unpriceable_declaration_pays_nothing_and_says_why(self):
-        """R-05's red for the walk-side arm, through the real kernel.
+        """The red for the walk-side arm, through the real kernel.
 
         A fight that published no effective magic resistance leaves the raw
         value nothing to be mitigated against.  The packet then pays its own
@@ -1545,7 +1545,7 @@ class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
         assert SurvivalAction().declared is None
 
     def test_the_inertness_scan_has_a_permanent_injection_seam(self):
-        """R-05: a second composition site is a finding, on demand."""
+        """A second composition site is a finding, on demand."""
         injected = {
             PRICING_MODULE: "class DeclaredPacket(NamedTuple):\n",
             "src/calculator/interpreters/spellblade.py": (
@@ -1753,7 +1753,7 @@ class TestTheFromDeclarationPriceReproducesThePairEngines:
         assert price.resistance == float(result[PRICING_EQUIVALENCE.resistance_field])
 
     def test_the_comparison_is_not_vacuous_and_can_fail(self):
-        """R-05's permanent negative for the fixture, in two directions.
+        """The permanent negative for the fixture, in two directions.
 
         An equality between two numbers proves nothing until both are known
         to be non-trivial and the equality is known to be breakable. The raw
@@ -2048,7 +2048,7 @@ class TestTheDeclaredAmpTermReproducesThePairEngines:
         )
 
     def test_dropping_the_term_would_be_visible(self, seed):
-        """R-05's red for the term itself, on the seed that carries it.
+        """The red for the term itself, on the seed that carries it.
 
         The deletion the term exists to forbid, made a measurable event: a
         packet priced with no amp falls short of the pair engine's number by
@@ -2295,7 +2295,7 @@ class TestTheLethalityWindowPacketPricesAtTheArmourItMet:
                 assert reading.priced(LETHALITY_SEED, packet).amount == damage
 
     def test_pricing_at_the_published_baseline_deletes_the_window(self):
-        """R-05's red for the term, and the forbidden reading, measured.
+        """The red for the term, and the forbidden reading, measured.
 
         The forbidden branch is not an error the tree can raise — it is
         a smaller number.  So it is priced here and the shortfall asserted: the
@@ -2360,7 +2360,7 @@ class TestTheLiandryRepriceKeepsTheDeclarationInStep:
         assert max(raws) > min(raws)
 
     def test_dropping_the_carry_would_lose_the_declaration_entirely(self):
-        """R-05's red for the carry, at the seam that would drop it.
+        """The red for the carry, at the seam that would drop it.
 
         The reprice hands the row a freshly built tick list.  Run the same
         replacement without the carry and the ticks come back carrying no
@@ -2392,7 +2392,7 @@ class TestTheLiandryRepriceKeepsTheDeclarationInStep:
         assert carried.routing_provenance() is None
 
     def test_a_replacement_the_carry_cannot_join_is_refused(self):
-        """R-05's second red: a positional carry that cannot say which tick.
+        """The second red: a positional carry that cannot say which tick.
 
         Refused only where a declaration actually rides one of the authored
         ticks — a burn nobody has retired has nothing to carry, and raising
@@ -3397,7 +3397,7 @@ class TestTheSwingCompositionReproducesThePairEngines:
         assert priced == pytest.approx(float(row["total_damage"]), rel=1e-12)
 
     def test_dropping_the_transported_term_is_visible_where_it_is_armed(self, case):
-        """R-05's red for the term, and the reason an inert fixture is not enough.
+        """The red for the term, and the reason an inert fixture is not enough.
 
         The transported half of the composition is Rock Solid, and this prices
         the same declaration with it zeroed.  Where the defender does not hold
@@ -3739,7 +3739,7 @@ class TestARoutedPacketIsTheSourceFamilysNumber:
         assert routed.raw_amount == 100.0 * share
 
     def test_a_share_that_is_not_a_fraction_is_refused_by_name(self):
-        """R-05's red for the composition: a router cannot amplify what it routes.
+        """The red for the composition: a router cannot amplify what it routes.
 
         Refused rather than clamped, because paying the smaller number would
         be this function silently deciding a question its caller got wrong.

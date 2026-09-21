@@ -337,7 +337,7 @@ def test_a_build_declaring_none_answers_none_rather_than_zero() -> None:
 def test_a_context_dependent_shape_is_refused_rather_than_guessed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """R-05's red: the accessor cannot answer for a shape it cannot resolve.
+    """The red: the accessor cannot answer for a shape it cannot resolve.
 
     A level ramp needs a level and this accessor has none.  Returning the
     ramp's low end would be a number nobody asked for, so the refusal names

@@ -680,8 +680,8 @@ def _enemy_targets(champion, slot, time=2.0, options=None):
 
 
 # The pro picks read off this repo's own scoreboard corpus
-# (tests/fixtures/scoreboard/labels.json): the popularity order the campaign
-# verifies first, since no pick-rate feed is cached here.
+# (tests/fixtures/scoreboard/labels.json): the popularity order these checks
+# verify first, since no pick-rate feed is cached here.
 _CORPUS_PICKS = [
     ("Ahri", "Q"),
     ("Orianna", "Q"),

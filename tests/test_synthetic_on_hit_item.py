@@ -174,7 +174,7 @@ class TestTheItemThatDeclaresEverything:
         assert repr(_fight_total([NAME])) == repr(_fight_total([TWIN]))
 
     def test_the_step_that_prices_it_is_the_step_it_declares(self, install):
-        """D3's loop, closed for an item nobody hand-listed anywhere."""
+        """The loop closed for an item nobody hand-listed anywhere."""
         install()
         trace = calculate_payload(
             {**REQUEST, "items": [NAME]}, deterministic=True, trace=True

@@ -1378,7 +1378,7 @@ class TestTheRotationMemosInvalidateOnData:
 # The committed record of which surface would notice if a declaration were
 # deleted lives in ``docs/cast-dependency-audit.json`` --
 # ``declared_dependency_activation[].load_bearing_routes`` -- beside every
-# other declaration-level ledger (R-36).  A disposition kept in a suite is a
+# other declaration-level ledger.  A disposition kept in a suite is a
 # disposition a reader of the receipt cannot see, and this suite is the
 # SECOND opinion on it: it re-measures the routes here, over the live tree
 # and by different code from the audit's, and asserts the two agree.  The

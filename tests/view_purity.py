@@ -7,7 +7,7 @@ The criterion is deliberately not path-scoped.  "No module under
 the five view modules would pass on exactly the arrangement the sentence was
 written to forbid.  So this module resolves the call graph and walks that.
 
-**The counting rule, stated so the number is reproducible** (R-29):
+**The counting rule, stated so the number is reproducible**:
 
 *Roots.*  The five view front doors -- ``score``, ``breakdown``,
 ``survival``, ``tdd``, ``receipt`` -- plus every other module-level function
@@ -165,7 +165,7 @@ class Impurity:
 def _sources(overrides: Mapping[str, str] | None = None) -> dict[str, str]:
     """Every ``src/calculator`` module's text, keyed by dotted module name.
 
-    ``overrides`` is the seam R-05 asks a new gate to ship with: a fixture
+    ``overrides`` is the seam a new gate ships with: a fixture
     hands doctored text for one module and the check fails on command,
     rather than a claim that it once failed during
     development.

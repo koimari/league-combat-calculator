@@ -819,7 +819,7 @@ class TestOwnerIsPresentIffSplit:
         assert packet["kind"] == "shield"
 
     def test_the_declaration_never_reaches_the_packet_payload(self):
-        """R-17: a semantic commit may not move a serialized receipt's shape."""
+        """A semantic commit may not move a serialized receipt's shape."""
         assert "authority" not in self._modifier()
 
 

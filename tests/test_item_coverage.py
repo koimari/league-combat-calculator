@@ -899,7 +899,7 @@ def test_calculation_item_coverage_accepts_runaan_secondary_bolt_model():
 # 3.8's second half replaced ``_TARGET_MODELED_REASONS``,
 # ``_TARGET_EVENT_CERTIFIED_REASONS`` and ``_TARGET_BLOCKED_REASONS`` with a
 # status computed from declarations.  The derivation landed beside them with
-# its delta asserted item by item (runbook R-31), the ladder flipped onto it,
+# its delta asserted item by item, the ladder flipped onto it,
 # and the tables are gone; what stands here now is the population each rung
 # answers for and the two rename guards on the clauses that read a field name
 # or a registry key.
@@ -1139,7 +1139,7 @@ def test_the_five_statuses_partition_into_eligible_and_refusal() -> None:
 
 
 def test_a_status_nobody_classified_is_ineligible_on_both_lanes() -> None:
-    """Fail closed, demonstrated rather than described (R-05).
+    """Fail closed, demonstrated rather than described.
 
     The fixture is a status outside both whitelists — what a sixth member
     would be on the commit that adds it and before anyone rules on what it

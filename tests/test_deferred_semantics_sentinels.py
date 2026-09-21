@@ -468,7 +468,7 @@ class TestCommandWindowsMergeByRefresh:
             )
 
     def test_the_check_is_live_and_not_vacuous(self):
-        """R-05: the same predicate, over a pair that does overlap."""
+        """The same predicate, over a pair that does overlap."""
         slot = command_slot()
         duration = slot.value(amp_magnitude.WINDOW_DURATION_FIELD)
         overlapping = slot.trigger_windows([0.0, duration / 2.0])

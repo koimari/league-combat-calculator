@@ -72,7 +72,7 @@ def missing_fixtures(
     """Every ``(key, side)`` a required key is owed and does not have.
 
     One pure function over three sets, so the check's own red is reproducible
-    on demand instead of being a claim about the past (R-05).
+    on demand instead of being a claim about the past.
     """
     return tuple(
         sorted(

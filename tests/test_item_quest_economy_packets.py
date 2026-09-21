@@ -1,6 +1,6 @@
-"""CP20 remaining item gaps — quest/economy/state/resource/vision packets.
+"""Quest, economy, state, resource and vision packets.
 
-Covers the six items in ``docs/cp20-remaining-item-gaps.json``:
+Covers six items:
 
 - Cull: Reap on-hit healing, 100-minion progression, 350-gold payout.
 - Phage: Rage melee/ranged movement speed, 2-second duration.

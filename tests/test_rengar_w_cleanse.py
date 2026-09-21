@@ -698,8 +698,8 @@ class TestBaseVsEmpowered:
 
     def test_empowered_uses_level_array_base_uses_rank_array(self):
         # The base prices the RANK array (per-rank 5 rows), the empower
-        # prices the LEVEL array (per-level 20 rows) — the reviewed CP10.6
-        # misread boundary the module pins in its assumptions.
+        # prices the LEVEL array (per-level 20 rows) — the misread boundary
+        # the module pins in its assumptions.
         base = _leveling("Magic Damage")
         ferocity = _leveling("Bonus Magic Damage", ferocity=True)
         assert len(base["modifiers"][0]["values"]) == 5

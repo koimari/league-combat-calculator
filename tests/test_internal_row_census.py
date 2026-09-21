@@ -66,7 +66,7 @@ def test_the_damage_row_keys_the_serializer_reads_are_universal():
 
 
 def test_a_moved_universal_set_is_reported_rather_than_absorbed():
-    """The permanent negative (R-05): the gate can fail on demand."""
+    """The permanent negative: the gate can fail on demand."""
     measured = census.measure()
     measured["streams"]["damage_events"]["universal"].append("not_a_real_key")
     assert measured != _committed()

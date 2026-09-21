@@ -52,7 +52,7 @@ def _called_name(node: ast.Call) -> str:
     Both spellings, because a gate that counted only ``f(...)`` is silent on
     the one rewrite that would defeat it: ``import transitions`` and call
     ``transitions.f(...)``.  The counting rule is stated here so the number
-    a criterion is read against is reproducible (R-29).
+    a criterion is read against is reproducible.
     """
     if isinstance(node.func, ast.Name):
         return node.func.id
@@ -158,7 +158,7 @@ class TestOneDirection:
 
 
 class TestTheAllocationBudget:
-    """R-28's one allocation gate, at the one stage that declares it."""
+    """The one allocation gate, at the one stage that declares it."""
 
     def test_the_probe_stays_within_its_declared_margin(self) -> None:
         """Criterion 17, read from the receipt and never from prose.
@@ -224,7 +224,7 @@ class TestViewPurity:
         assert unresolved == set(UNRESOLVED_ALLOWED)
 
     def test_a_sum_inside_a_view_fails_the_check(self) -> None:
-        """R-05: the gate ships with a red it can reproduce on demand."""
+        """The gate ships with a red it can reproduce on demand."""
         from tests.view_purity import impurities
 
         doctored = (SRC / "program" / "views" / "tdd.py").read_text(encoding="utf-8")

@@ -192,7 +192,7 @@ class TestOneWalkPerPassAtRuntime:
     engine has not been *written*.  It says nothing about a composition that
     enters the one engine twice per pass under two names, which is the shape
     the incident actually had -- so the property is read at runtime, off the
-    same threaded sink every other work counter uses (R-24), and never off a
+    same threaded sink every other work counter uses, and never off a
     monkey-patched module attribute.
 
     The pass count is the roster's own: ``pass_count`` over the declared
@@ -345,7 +345,7 @@ class TestOneWalkPerPassAtRuntime:
         assert sink.walk_invocations == 1
 
     def test_with_no_sink_installed_the_counter_costs_one_is_none_test(self) -> None:
-        """R-24's other half: the seam is inert when nobody is measuring."""
+        """The seam's other half: it is inert when nobody is measuring."""
         ctx, _ = one_participant_context()
         walk_module.walk([damage_action(1.0)], ctx)  # no sink; must not raise
 
@@ -481,7 +481,7 @@ class TestEveryViewOfOneRequestProjectsOneWalk:
             result.projected(origin=walk_module.WalkOrigin())
 
     def test_a_second_walk_would_not_pass_that(self, monkeypatch) -> None:
-        """R-05: the check ships with a red it can produce on demand.
+        """The check ships with a red it can produce on demand.
 
         Two walks of the same fight are equal and are not identical, which
         is the whole reason the assertion is written on identity.  The

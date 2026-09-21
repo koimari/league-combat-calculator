@@ -2,8 +2,7 @@
 
 Every check here is about the *instrument*, never about a champion's numbers:
 what `compare` ignores, what `fingerprint` counts, which producers the coupled
-scenario set reaches, and whether each new gate can be made to fail on demand
-(runbook R-05).
+scenario set reaches, and whether each new gate can be made to fail on demand.
 """
 
 import ast
@@ -79,7 +78,7 @@ def coupled():
 
 
 # ---------------------------------------------------------------------------
-# Provenance exclusion (R-14) and the fingerprint domain
+# Provenance exclusion and the fingerprint domain
 # ---------------------------------------------------------------------------
 
 
@@ -101,7 +100,7 @@ class TestProvenanceExclusion:
         assert set(metadata) >= gs.COMPARE_EXCLUDED_PROVENANCE
 
     def test_dropping_git_head_from_the_exclusion_set_turns_compare_red(self):
-        """R-05: the gate's own red, reproducible on demand.
+        """The gate's own red, reproducible on demand.
 
         `compare` pops exactly `COMPARE_EXCLUDED_PROVENANCE`; with `git_head`
         out of that set, two captures of one unchanged tree differ on every
@@ -154,7 +153,7 @@ class TestFingerprint:
 
 
 # ---------------------------------------------------------------------------
-# Classified diffs (R-15)
+# Classified diffs
 # ---------------------------------------------------------------------------
 
 
@@ -191,7 +190,7 @@ class TestLeafReport:
         assert gs.qualifies_for_investigation(diff)
 
     def test_a_flat_damage_move_qualifies_below_ten_percent(self):
-        """The systematic single-digit-percent move R-15's third clause catches."""
+        """The systematic single-digit-percent move the third clause catches."""
         (diff,) = gs.leaf_report(
             {"s": {"total_damage": 1000.0}}, {"s": {"total_damage": 1002.0}}
         )
@@ -266,7 +265,7 @@ _MIDDLE_REMOVED = _events(
 
 
 class TestIdentityKeyedListMatching:
-    """R-15's membership transitions, keyed on the event's own identity.
+    """Membership transitions, keyed on the event's own identity.
 
     Removing a row from an event list shifts every later ordinal.
     Paired by position, that manufactures value diffs between two *different*
@@ -290,7 +289,7 @@ class TestIdentityKeyedListMatching:
         assert "/s/events[2]/source" not in paths
 
     def test_the_same_removal_without_identities_manufactures_value_changes(self):
-        """R-05's permanent negative: the defect, reproducible on demand.
+        """The permanent negative: the defect, reproducible on demand.
 
         Identical fixture, ``event_id`` stripped, so the only difference is
         whether the members can be paired by identity.  Positional pairing
@@ -378,7 +377,7 @@ class TestIdentityKeyedListMatching:
         assert diff.path == "/s/rows[1]/a"
 
     def test_a_membership_transition_qualifies_for_investigation(self):
-        """R-15 already carries both members of the closed transition set."""
+        """The threshold already carries both members of the transition set."""
         (diff,) = gs.leaf_report(_THREE_ROWS, _MIDDLE_REMOVED)
         assert gs.qualifies_for_investigation(diff)
 
@@ -442,7 +441,7 @@ class TestOriginOrdinalIdentity:
         assert "/s/cast_timeline[1]/resource_cost" not in paths
 
     def test_stripping_the_ordinal_reproduces_the_substitution(self):
-        """R-05's permanent negative, on the identity this commit adds.
+        """The permanent negative, on the identity this commit adds.
 
         Identical fixture with ``ordinal`` dropped, so the only difference is
         whether the rows can be paired by identity.  Positional pairing then
@@ -535,7 +534,7 @@ class TestBareStringListIdentity:
         assert diffs[0].identity is None
 
     def test_a_numeric_list_keeps_its_value_diffs(self):
-        """Numbers are excluded on purpose: R-15 grades them by magnitude."""
+        """Numbers are excluded on purpose: they are graded by magnitude."""
         (diff,) = gs.leaf_report(
             {"s": {"ticks": [10.0, 20.0]}}, {"s": {"ticks": [10.0, 20.0, 30.0]}}
         )
@@ -554,7 +553,7 @@ class TestBareStringListIdentity:
         assert diffs["/s/ticks[2]"] == "absent_to_value"
 
     def test_a_membership_transition_on_a_string_still_owes_an_investigator(self):
-        """Widening the pairing widens no threshold: R-15 still qualifies it."""
+        """Widening the pairing widens no threshold: it still qualifies."""
         diffs = gs.leaf_report(
             {"s": {"setup": ["Q"]}}, {"s": {"setup": ["E", "Q", "R"]}}
         )
@@ -562,7 +561,7 @@ class TestBareStringListIdentity:
 
 
 # ---------------------------------------------------------------------------
-# The coupled baseline (R-11, R-12)
+# The coupled baseline
 # ---------------------------------------------------------------------------
 
 
@@ -576,7 +575,7 @@ class TestCoupledCoverage:
         )
 
     def test_a_seventh_producer_without_a_scenario_fails_the_capture(self):
-        """R-12's whole point: the producer set is read, so coverage cannot rot."""
+        """The whole point: the producer set is read, so coverage cannot rot."""
         producers = gs.cross_participant_producers() | {
             "Unequipped Relic — Seventh Wonder"
         }
@@ -648,7 +647,7 @@ class TestCoupledCoverage:
 
 
 class TestDeferralFamilyCoverage:
-    """R-12's second reading: no receipt-walk deferral family is unseen.
+    """The coverage set's second reading: no deferral family is unseen.
 
     A covering scenario is the first act of a family's retirement, because
     against a family the baseline holds no roster for, the expected
@@ -695,7 +694,7 @@ class TestDeferralFamilyCoverage:
             assert set(items) == declared[family]
 
     def test_a_family_no_scenario_equips_fails_the_capture(self):
-        """The permanent negative (R-05), driven through the ``families`` seam."""
+        """The permanent negative, driven through the ``families`` seam."""
         families = dict(gs.receipt_walk_families())
         families["fifteenth_family"] = frozenset({"Unequipped Relic — Seventh Wonder"})
         with pytest.raises(ValueError, match="fifteenth_family"):
@@ -752,7 +751,7 @@ class TestDeferralFamilyCoverage:
 
 
 class TestHolderAmpCoverage:
-    """R-12's third reading: no static holder amp goes unarmed.
+    """The coverage set's third reading: no static holder amp goes unarmed.
 
     Arming them is a covering scenario's job.  The pair engine applies the
     holder's own amplifiers to
@@ -809,7 +808,7 @@ class TestHolderAmpCoverage:
                         assert resolved.owner == owner
 
     def test_an_amp_no_scenario_arms_fails_the_capture(self):
-        """The permanent negative (R-05), driven through the ``amps`` seam."""
+        """The permanent negative, driven through the ``amps`` seam."""
         amps = dict(gs.holder_amp_declarations())
         amps["fourth_part_amp"] = frozenset({"Unarmed Relic — Eighth Wonder"})
         with pytest.raises(ValueError, match="fourth_part_amp"):
@@ -865,7 +864,7 @@ class TestHolderAmpCoverage:
 
 
 class TestRepricingWindowCoverage:
-    """R-12's fourth reading: no re-pricing window goes unarmed.
+    """The coverage set's fourth reading: no re-pricing window goes unarmed.
 
     Arming them is a covering scenario's job.  The pair engine re-prices
     packets it already authored
@@ -929,7 +928,7 @@ class TestRepricingWindowCoverage:
             assert DefenseField.THRESHOLD_HEALTH_BONUS in written
 
     def test_a_window_no_scenario_arms_fails_the_capture(self):
-        """The permanent negative (R-05), driven through the ``windows`` seam."""
+        """The permanent negative, driven through the ``windows`` seam."""
         windows = dict(gs.repricing_window_declarations())
         windows["third_repricing_window"] = (
             frozenset({"Unarmed Relic — Ninth Wonder"}),
@@ -1131,7 +1130,7 @@ def _declared_swing_value(owner, term):
 
 
 class TestSwingTermCoverage:
-    """R-12's fifth reading: no target-side swing term goes unarmed.
+    """The coverage set's fifth reading: no swing term goes unarmed.
 
     Arming them is a covering scenario's job.
     ``survival.pricing.price_declared_packet`` carries what
@@ -1206,7 +1205,7 @@ class TestSwingTermCoverage:
                 assert term in written
 
     def test_a_swing_term_no_scenario_arms_fails_the_capture(self):
-        """The permanent negative (R-05), driven through the ``swing_terms`` seam."""
+        """The permanent negative, driven through the ``swing_terms`` seam."""
         terms = dict(gs.swing_term_declarations())
         terms["fourth_swing_term"] = frozenset({"Unarmed Relic — Ninth Wonder"})
         with pytest.raises(ValueError, match="fourth_swing_term"):
@@ -1374,7 +1373,7 @@ class TestSwingTermCoverage:
 
 
 def _q2_row_was_absent_before_c6(scenario):
-    """Did an oracle receipt read this scenario's ``Q2`` row as absent (R-19)?
+    """Did an oracle receipt read this scenario's ``Q2`` row as absent?
 
     The pre-fix end of C6's transition, taken from the independent receipt
     that adjudicated it rather than from a value restated here.  Exactly one
@@ -1565,7 +1564,7 @@ def declared_exact_new_scenarios():
 
 
 class TestExactBaseline:
-    """R-13: golden equality is two decimals, so bit-exactness needs its own file."""
+    """Golden equality is two decimals, so bit-exactness needs its own file."""
 
     def test_the_exact_capture_reproduces_the_committed_totals(self):
         captured = gs.capture_coupled(
@@ -1676,7 +1675,7 @@ class TestFingerprintsReceipt:
         assert "SR6" in receipt["retired_why"]
 
     def test_the_digest_moves_when_a_total_moves(self):
-        """The permanent negative (R-05): the gate can fail on demand."""
+        """The permanent negative: the gate can fail on demand."""
         snapshot = _load(COUPLED_EXACT)
         scenario = sorted(snapshot["coupled_scenarios"])[0]
         key = sorted(snapshot["coupled_scenarios"][scenario])[0]
@@ -1689,7 +1688,7 @@ class TestFingerprintsReceipt:
         assert gs.exact_values_digest(snapshot) != before
 
     def test_the_ratio_denominator_comes_from_the_receipt(self):
-        """R-15's 1% clause reads a field, never a figure from a document."""
+        """The 1% clause reads a field, never a figure from a document."""
         receipt = _load(self.RECEIPT)
         assert gs.receipt_numeric_leaves(gs.PAIR_SNAPSHOT_KIND) == (
             receipt["golden"]["numeric_leaves"]
@@ -1730,12 +1729,12 @@ class TestOrdinalAddressingSubstitutesEvents:
 
 
 class TestTheExactBaselineHoldsTheDerivedScenarioSet:
-    """R-12's set, read off the committed file rather than described.
+    """The covering set, read off the committed file rather than described.
 
-    The exact capture is R-12's coupled set plus the four bench rosters, and
+    The exact capture is the coupled set plus the four bench rosters, and
     nothing else — stated as two containments rather than one equality,
     because a covering scenario declared but not yet captured is the one
-    legal gap between them (R-17: the capture is its own commit).
+    legal gap between them, the capture being its own commit.
     """
 
     @staticmethod
@@ -1762,7 +1761,7 @@ class TestTheExactBaselineHoldsTheDerivedScenarioSet:
         assert derived - held <= declared_exact_new_scenarios()
 
     def test_the_rounded_baseline_did_not_gain_the_bench_rosters(self):
-        """R-01 row 3 compares the *rounded* baseline; only the exact one moved."""
+        """The compare gate reads the *rounded* baseline; only the exact moved."""
         from scripts.bench_coupled_optimizer import SCENARIOS
 
         rounded = _load(COUPLED_BASELINE)

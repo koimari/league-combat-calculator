@@ -210,7 +210,7 @@ class TestInferredKindCoverage:
         assert len(gap["dated"]) == len("YYYY-MM-DD")
 
     def test_deleting_the_gap_turns_the_audit_red(self) -> None:
-        """The gate can reproduce its own red on demand (R-05).
+        """The gate can reproduce its own red on demand.
 
         The acknowledged-gap list lives in the committed receipt rather
         than inside the tool, and this is the seam that proves the
@@ -243,7 +243,7 @@ class TestDeclarations:
             assert set(routes) <= set(DECLARATION_ROUTES), row
 
     def test_a_declaration_on_no_route_fails_the_audit(self) -> None:
-        """The gate reproduces its own red on demand (R-05).
+        """The gate reproduces its own red on demand.
 
         A declaration nothing would miss is exactly how a retired hand
         seed comes back: plausible prose in a field a validator accepts,
@@ -270,7 +270,7 @@ class TestDeclarations:
         assert any("load-bearing on nothing" in reason for reason in reasons), reasons
 
     def test_the_confirmed_by_inference_route_has_a_positive_case(self) -> None:
-        """R-05 for the one route no live declaration takes.
+        """The red for the one route no live declaration takes.
 
         ``confirmed_by_inference`` is a published member of
         ``DECLARATION_ROUTES`` and ``_record_routes`` reads it, but no
@@ -416,7 +416,7 @@ class TestDeclarations:
     def test_head_only_follows_the_declarations_and_not_a_list(
         self, monkeypatch
     ) -> None:
-        """R-05: the field moves when a seeded champion starts declaring.
+        """The field moves when a seeded champion starts declaring.
 
         A hand-listed ``head_only`` would read identically today and stay
         right by luck.  This makes Lux declare and asserts the frontier

@@ -1849,7 +1849,7 @@ def _run_four_champion_issue_18_cp11_probe(
     orianna_e_rank: int,
     mondo_r_rank: int,
 ):
-    """Issue-18 CP11 probe for ordered, multi-participant ranked inputs."""
+    """Probe for ordered, multi-participant ranked inputs."""
     payload = {
         "champion": "Aatrox",
         "level": 18,
@@ -5749,7 +5749,7 @@ def test_a_participant_declaring_no_regeneration_compiles_none():
 
 
 def test_a_short_window_sequence_stops_rather_than_misaligning():
-    """R-05's red: the sequence is participant-index-aligned or it is wrong."""
+    """The red: the sequence is participant-index-aligned or it is wrong."""
     combatants = [_regen_combatant("Doran's Shield"), _regen_combatant()]
 
     with pytest.raises(ValueError, match="participant-index-aligned"):
@@ -5819,7 +5819,7 @@ def test_a_participant_declaring_no_below_half_bonus_compiles_zero():
 
 
 def test_a_short_bonus_sequence_stops_rather_than_misaligning():
-    """R-05's red: the state builder's sequence is aligned or it is wrong."""
+    """The red: the state builder's sequence is aligned or it is wrong."""
     from src.calculator.survival import build_states
 
     combatants = [_regen_combatant("Immortal Path"), _regen_combatant()]

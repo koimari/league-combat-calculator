@@ -1413,7 +1413,7 @@ class TestModuleCcApplication:
 
     def test_an_undeclared_slot_may_not_author_a_kind(self) -> None:
         """The pointer cannot go stale: authoring a kind for a slot
-        ``MODULE_CC`` does not name is the second home D5 retires."""
+        ``MODULE_CC`` does not name is a second home, so it is refused."""
         parse = build_parser(
             {"Q": self._two_part_slot("stun", None)},
             "TestChamp",

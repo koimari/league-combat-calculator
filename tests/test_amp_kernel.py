@@ -346,7 +346,7 @@ def _template(**overrides):
 def test_the_template_refusal_admits_the_kind_and_still_names_its_own():
     """Clause 1: the kind is not refused categorically.
 
-    The negative half is what makes the positive one mean something (R-05):
+    The negative half is what makes the positive one mean something:
     an amount only the walk can price, and a deferred transition, are still
     declined by name, so "admits ``damage_modifier``" is not "admits
     anything spelled ``damage_modifier``".
@@ -444,7 +444,7 @@ def test_a_compiled_damage_row_says_how_it_was_delivered():
 
 
 def test_a_light_ledger_row_cannot_carry_a_modifier():
-    """Clause 3, second half: the fail-closed pair, and its own red (R-05).
+    """Clause 3, second half: the fail-closed pair, and its own red.
 
     The engine's light tuple ledger carries no per-packet delivery
     metadata, so an armed modifier restricted by attack class cannot be

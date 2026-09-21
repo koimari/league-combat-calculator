@@ -1,4 +1,4 @@
-"""Regression tests for the CP20 runtime item-coverage audit."""
+"""Regression tests for the runtime item-coverage audit."""
 
 import json
 
@@ -49,7 +49,7 @@ def test_the_committed_receipt_is_what_a_fresh_audit_produces():
 
 
 def test_the_receipt_gate_names_the_field_that_moved():
-    """R-05's red for that gate, permanent and on demand.
+    """The red for that gate, permanent and on demand.
 
     A comparison's negative is a comparison: the committed receipt with one
     entry's reason perturbed **in memory**, nothing written and the file on

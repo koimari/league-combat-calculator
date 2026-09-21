@@ -206,7 +206,7 @@ class TestRungLadder:
         )
 
     def test_every_pair_fight_goes_through_the_counted_wrapper(self):
-        """R-24: the residual is only a property of this module if every
+        """The residual is only a property of this module if every
         pair fight is counted, and the only way to guarantee that is for
         there to be exactly one call to ``run_fight`` in the file."""
         source = (REPO_ROOT / "src/calculator/participant_timeline.py").read_text(

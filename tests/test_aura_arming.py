@@ -153,7 +153,7 @@ class TestTheAuraPricesItsOwnTimestamp:
         assert all(self._amped(event) for event in opening)
 
     def test_the_holder_s_own_opening_damage_is_still_skipped(self):
-        """C2's owner handshake survives being armed earlier (R-30)."""
+        """The owner handshake survives being armed earlier."""
         opening = [
             event
             for event in self._events()

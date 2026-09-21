@@ -1,4 +1,4 @@
-"""Roster-wide census of where a kit's crowd control is declared (D5).
+"""Roster-wide census of where a kit's crowd control is declared.
 
 ``MODULE_CC`` is the one declaration site, and it names every champion
 slot the module emits. A slot whose control is one answer keeps the
@@ -240,7 +240,7 @@ def _authored_kinds(entries: list[dict]) -> set[str]:
 
 
 def test_every_module_names_every_slot_it_emits():
-    """The count D5 moves: no champion slot is left for a later reader to
+    """The count this census holds: no champion slot is left for a reader to
     guess at, because an absent slot and a reviewed "none" read alike."""
     unnamed = {
         (name, slot)

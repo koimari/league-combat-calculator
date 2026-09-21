@@ -12,7 +12,7 @@ program nor the result -- a module-level cache, a request, a second walk --
 and that is precisely the shape ("a number that reached a view by some other
 route") the one-walk criterion was written against.
 
-**The rule, stated so the verdict is reproducible** (R-29):
+**The rule, stated so the verdict is reproducible**:
 
 *The haystack.*  Every ``float`` reachable from the ``Program`` and the
 ``WalkResult`` handed to the view -- dataclass fields, the kernel's state
@@ -238,7 +238,7 @@ def _invented(scenario: str, label: str) -> dict[str, float]:
 
 
 def test_a_view_that_adds_is_caught_by_this_fixture() -> None:
-    """R-05: the check ships with the red it exists to reproduce.
+    """The check ships with the red it exists to reproduce.
 
     The doctored view emits every survival number one part in a billion off
     the walk's own -- the smallest lie the rounding rules could

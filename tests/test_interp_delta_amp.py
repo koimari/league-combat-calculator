@@ -646,8 +646,8 @@ def test_every_amp_declares_the_one_compiled_kernel_answer() -> None:
 
 # ── the derivation beside the legacy set, and the asserted delta ───────
 
-# Every mechanic the H5 flip moves, enumerated before it moves them.  This is
-# the delta R-31 requires an asserted set for: the flip is one symbol, so
+# Every mechanic the H5 flip moves, enumerated before it moves them.  The
+# delta is asserted as a set because the flip is one symbol, so
 # without a committed population its blast radius would be whatever the tree
 # happened to contain on the day, discovered afterwards rather than declared.
 #

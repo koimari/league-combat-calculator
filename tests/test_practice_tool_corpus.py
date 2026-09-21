@@ -8,9 +8,9 @@ numbers, which is the gate the corpus exists to be.
 
 A scenario's ``sha`` is provenance -- the commit its receipt was last probed
 at, written by ``scripts/repin_corpus.py`` and never dereferenced here, so the
-corpus gates a shallow checkout as fully as a clone.  The legacy four
-(cp21-*/e0-*/vladimir-*) predate the E-series rework, are enumerated in
-``LEGACY_SCENARIO_IDS`` and are re-verified only by a deliberate re-capture.
+corpus gates a shallow checkout as fully as a clone.  The legacy four are
+enumerated in ``LEGACY_SCENARIO_IDS`` and are re-verified only by a
+deliberate re-capture.
 
 Every expected number below was produced by probing ``/api/calculate``;
 nothing is hand-invented (each scenario carries its formula in
@@ -377,7 +377,7 @@ def test_scenario_receipt_reproduces(scenario):
 
 
 # ---------------------------------------------------------------------------
-# The gate itself (R-22): the executed set, and a red it can reproduce
+# The gate itself: the executed set, and a red it can reproduce
 # ---------------------------------------------------------------------------
 
 

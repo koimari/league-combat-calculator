@@ -904,7 +904,7 @@ def test_every_walk_packet_literal_is_quoted_by_a_claim_or_withheld() -> None:
 
 
 def test_a_packet_added_to_an_already_claimed_item_is_reported() -> None:
-    """The red the totality check ships with (R-05), through its own seam.
+    """The red the totality check ships with, through its own seam.
 
     Dream Maker is the case that motivated the check: it is a claimed item
     whose claim quotes one of its two packets, so a holder-level frontier key
@@ -1492,7 +1492,7 @@ def test_a_fresh_classification_capture_on_the_tip_diffs_to_zero() -> None:
 
 
 def test_the_capture_gate_names_the_record_that_moved() -> None:
-    """The red this gate can reproduce on demand (R-05), as a permanent test.
+    """The red this gate can reproduce on demand, as a permanent test.
 
     A comparison's negative is a comparison, so the fixture is the committed
     receipt with one published reason perturbed in memory — nothing is
@@ -1916,7 +1916,7 @@ def test_the_issue_ref_carrier_is_derived_from_the_item_s_own_claim_lanes() -> N
 def test_a_tracked_review_on_no_claim_lane_stops_the_corpus(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """R-05's red for the routing check, reproducible on demand.
+    """The red for the routing check, reproducible on demand.
 
     A ref routed nowhere would be published by ``review_issue_refs`` and
     carried by no claim — a tracked gap with no receipt.  The load tier

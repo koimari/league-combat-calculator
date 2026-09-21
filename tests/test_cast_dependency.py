@@ -937,7 +937,7 @@ class TestAnEmptyCarrierShadowsNothing:
             contract_from_module("Synthetic", "synthetic", module)
 
     def test_no_registered_champion_carries_a_shadowing_carrier(self) -> None:
-        """The population this correction was measured against (R-20)."""
+        """The population this correction was measured against."""
         shadowed = []
         for name in _CHAMPION_MODULES:
             contract = get_champion_module_contract(name)

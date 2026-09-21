@@ -260,7 +260,7 @@ def test_every_declared_memo_names_what_stales_it() -> None:
 
 
 def test_a_governance_with_no_invalidator_is_not_constructible() -> None:
-    """R-05: the declaration refuses the empty set rather than storing it."""
+    """The declaration refuses the empty set rather than storing it."""
     with pytest.raises(ValueError, match="says nothing"):
         data_registry.MemoGovernance(invalidated_by=frozenset(), why="because")
 

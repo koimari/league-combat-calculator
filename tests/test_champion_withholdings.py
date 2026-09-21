@@ -1,4 +1,4 @@
-"""Focused CP8 regression tests for the nine former withholdings."""
+"""Focused regression tests for the nine former withholdings."""
 
 import pytest
 

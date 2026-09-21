@@ -38,7 +38,7 @@ def _counters(bench, **fields):
 
 
 class TestResidual:
-    """``pair fights - evaluations x enemies`` (R-25)."""
+    """``pair fights - evaluations x enemies``."""
 
     def test_a_perfectly_cached_search_has_a_zero_residual(self, bench):
         counters = _counters(bench, public_evaluations=100, pair_run_fight_calls=200)
@@ -50,7 +50,7 @@ class TestResidual:
 
 
 class TestVoidRule:
-    """R-09: a truncated search is void, never a counter."""
+    """A truncated search is void, never a counter."""
 
     def _body(self, **overrides):
         body = {
@@ -85,7 +85,7 @@ class TestVoidRule:
 
 
 class TestDeterminismProbe:
-    """R-08: only a counter that repeats exactly may be equality gated."""
+    """Only a counter that repeats exactly may be equality gated."""
 
     def _repeat(self, evaluations, pair_calls, rungs=None):
         return {
@@ -121,11 +121,11 @@ class TestDeterminismProbe:
 
 
 class TestRoutingComparison:
-    """R-01 row 11, and the red it can reproduce on demand (R-05).
+    """The routing comparison, and the red it can reproduce on demand.
 
-    The row demands that forcing every coupled evaluation onto the receipt
-    walk elects the same build and scores it the same.  Before this suite the
-    row had no code that could say otherwise: the two JSON blobs were paired
+    It demands that forcing every coupled evaluation onto the receipt
+    walk elects the same build and scores it the same.  Without this suite the
+    comparison has no code that can say otherwise: two JSON blobs paired
     by a reader, so the gate could not fail, which is the exact shape the
     gate exists to remove.  ``routing_comparison``'s ``report`` argument
     is the seam, the way ``score`` is ``check_ratchet``'s.
@@ -170,9 +170,9 @@ class TestRoutingComparison:
         assert "Serylda's Grudge" in failure
 
     def test_a_void_routing_is_reported_rather_than_compared(self, bench):
-        """R-09: a truncated run measured the machine, so it may not be read
+        """A truncated run measured the machine, so it may not be read
         as agreement — silence on a void run is the absent-but-assumed-green
-        counter R-09 forbids."""
+        counter the void rule forbids."""
         voided = self._report(void=True, reason="every repeat reported truncated")
         (failure,) = bench.routing_divergences(self._report(), voided)
         assert "receipt-walk routing voided" in failure
@@ -226,7 +226,7 @@ class TestRoutingComparison:
 
 
 class TestScenarioSet:
-    """R-27: the fourth scenario exists to make an immobilize visible."""
+    """The fourth scenario exists to make an immobilize visible."""
 
     def test_four_scenarios_each_with_a_probe_build(self, bench):
         assert set(bench.SCENARIOS) == set(bench.PROBE_BUILDS)
@@ -284,7 +284,7 @@ def _authors_an_immobilize(champion: str) -> bool:
 
 
 class TestAllocationReading:
-    """Criterion 4: one command emits the probe beside the counters (R-28)."""
+    """Criterion 4: one command emits the probe beside the counters."""
 
     def test_every_report_gains_its_peak(self, bench, monkeypatch):
         monkeypatch.setattr(bench, "allocation_probe", lambda name: 4096)

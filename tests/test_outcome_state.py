@@ -446,7 +446,7 @@ class TestTheReceiptWalkRunsIt:
         assert all(reason for reason in refused)
 
     def test_the_production_ledger_refuses_a_double_count(self) -> None:
-        """R-05's seam: the live path's uniqueness fails on demand."""
+        """The seam: the live path's uniqueness fails on demand."""
 
         ledger = receipt_ledger.ReceiptLedger(
             actions=[], index_of={}, compile_event=lambda *a, **k: None

@@ -114,7 +114,7 @@ def test_the_gate_measures_the_same_population_this_file_does() -> None:
 
 
 def test_the_assertion_sees_a_planted_site(tmp_path: Path) -> None:
-    """The check goes red on demand rather than being trusted (R-05)."""
+    """The check goes red on demand rather than being trusted."""
     planted_root = tmp_path / "champions"
     planted_root.mkdir()
     planted = planted_root / "_zero_policy_negative_fixture.py"

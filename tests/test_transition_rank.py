@@ -158,7 +158,7 @@ def test_the_sort_key_carries_the_slot_and_not_the_rank() -> None:
 # The guard below is positional, not name-based: it finds the *slots* that
 # carry a phase and rejects a numeric literal anywhere inside the expression
 # filling one.  The counting rule is stated here so the population is
-# reproducible rather than judged (R-29's idiom).  A phase slot is:
+# reproducible rather than judged.  A phase slot is:
 #
 #   1. the ``phase=`` keyword of any call;
 #   2. the positional argument a definition in the population names

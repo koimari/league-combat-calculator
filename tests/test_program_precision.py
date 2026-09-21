@@ -140,7 +140,7 @@ class TestTheSumPlanCountsEachEventOnce:
         assert plan.of("support_events") == ()
 
     def test_one_panel_publishing_one_id_twice_is_not_a_plan(self) -> None:
-        """R-05: the check ships with a red it can produce on demand.
+        """The check ships with a red it can produce on demand.
 
         This is the half with no benign reading -- a panel repeating its own
         id makes that panel's own rows repeat -- so it raises where the

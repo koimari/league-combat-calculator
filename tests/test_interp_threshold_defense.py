@@ -296,7 +296,7 @@ def test_a_declaration_without_the_cadence_key_stops_rather_than_guesses(
 def test_two_declared_temporary_health_lifelines_stop_rather_than_guess(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """R-05's red: the pools that raise carry no owner, so two is a stop.
+    """The red: the pools that raise carry no owner, so two is a stop.
 
     One item declares the mechanic today, so the second is planted.  A
     receipt naming the wrong holder is worse than a refusal, which is why

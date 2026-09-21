@@ -18,7 +18,7 @@ from tests.app_config import app_config
 
 
 class TestTheGuardGoesRedOnDemand:
-    """R-05: the check is driven by a real leak, not trusted empty."""
+    """The check is driven by a real leak, not trusted empty."""
 
     def test_a_changed_config_key_is_reported_and_put_back(self):
         before = process_state.snapshot()

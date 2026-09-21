@@ -458,7 +458,7 @@ def test_a_build_declaring_no_threshold_regeneration_answers_empty() -> None:
 def test_a_level_ramped_derivation_is_refused_rather_than_guessed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """R-05's red, and the reason the two families share one check.
+    """The red, and the reason the two families share one check.
 
     ``value_ref.resolve_flat`` is what decides "level-independent", so this
     refusal and the sustain family's are the same refusal — a ramp reaching
@@ -636,7 +636,7 @@ def test_a_restricted_channel_is_not_counted_as_runtime_behaviour(owner: str) ->
 
 
 def test_a_channel_that_names_no_channel_is_refused() -> None:
-    """R-05's red: the declaration's one structural field, emptied.
+    """The red: the declaration's one structural field, emptied.
 
     ``None`` and not a wrong string, because a string is already refused one
     rung earlier by the policy walk — the branch this case exists for is the

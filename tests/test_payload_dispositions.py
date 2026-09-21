@@ -647,7 +647,7 @@ class TestAWithheldComponentMakesEveryTotalReadingItWithheld:
         assert total.quantity.receipts == (self.RECEIPT,)
 
     def test_the_absent_leaf_would_otherwise_have_folded_as_a_zero(self) -> None:
-        """R-05: the red this gate reproduces on demand.
+        """The red this gate reproduces on demand.
 
         The payload has no number at that path, so the serving surface's own
         ``.get(..., 0.0)`` yields ``0.0`` -- and folding *that* gives a

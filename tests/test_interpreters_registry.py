@@ -606,7 +606,7 @@ def test_every_dated_gap_row_routes_to_a_lane_the_registry_serves() -> None:
 def test_a_route_the_registry_does_not_serve_is_refused(
     via, unregister: bool, complaint: str, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """R-05's red for the route clause, one shape per way a route can lie.
+    """The red for the route clause, one shape per way a route can lie.
 
     ``spellblade``'s compiled lane is the subject because its real route —
     the pair engine — is the one every packet-fed row stands on, so each

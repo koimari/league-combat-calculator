@@ -4,7 +4,7 @@ Every assertion A1-A9 below is written as a pure function over its inputs —
 the scanned module text, or the capability registry — and every one of them
 is exercised twice: once against the live tree, where it must pass, and once
 against an injected mutation, where it must fail.  That second call is the
-permanent seam R-05 requires: a check whose red is remembered rather than
+permanent seam this suite requires: a check whose red is remembered rather than
 reproducible is indistinguishable from a check that cannot fail.
 """
 
@@ -1061,7 +1061,7 @@ def test_a1_cc_kind_is_parsed_only_where_the_allowlist_says():
 
 
 def test_a1_has_a_permanent_injection_seam():
-    """R-05: A1's red is reproducible on demand, not remembered."""
+    """A1's red is reproducible on demand, not remembered."""
     injected = _with(
         live_sources(),
         "src/calculator/economy.py",
@@ -1135,7 +1135,7 @@ def test_a3_every_packet_emitting_impl_guards_exactly_what_it_declares():
 
 
 def test_a3_has_a_permanent_injection_seam():
-    """R-05: add an unregistered ``in names`` guard and A3 goes red."""
+    """Add an unregistered ``in names`` guard and A3 goes red."""
     path = "src/calculator/item_support_quests.py"
     sources = live_sources()
     injected = _with(
@@ -1192,7 +1192,7 @@ def test_a5_no_consumer_branches_on_the_opaque_receipt_token():
 
 
 def test_a5_has_a_permanent_injection_seam():
-    """R-05: add a ``cc_kind`` comparison and A5 goes red."""
+    """Add a ``cc_kind`` comparison and A5 goes red."""
     injected = _with(
         live_sources(),
         "src/calculator/economy.py",
@@ -1245,7 +1245,7 @@ def test_a6_the_takedown_stream_has_one_reader_and_one_synthesizer():
 
 
 def test_a6_has_a_permanent_injection_seam():
-    """R-05: widen the takedown set, or add a second synthesizer, and A6 fails."""
+    """Widen the takedown set, or add a second synthesizer, and A6 fails."""
     widened = dict(ts.CAPABILITIES)
     widened["axiom_arc.flux"] = _capability(
         mechanic="axiom_arc.flux",
@@ -1309,7 +1309,7 @@ def test_a7_the_immobilize_vocabulary_lives_only_in_the_vocabulary_module():
 
 
 def test_a7_has_a_permanent_injection_seam():
-    """R-05: re-type the set outside the vocabulary module and A7 goes red."""
+    """Re-type the set outside the vocabulary module and A7 goes red."""
     injected = _with(
         live_sources(),
         "src/calculator/economy.py",
@@ -1468,7 +1468,7 @@ def test_a_divergence_reference_that_resolves_in_nothing_is_still_rejected():
 
 
 def test_a8_has_a_permanent_injection_seam():
-    """R-05: break a packet_source, an unpaired defect, or a pair half."""
+    """Break a packet_source, an unpaired defect, or a pair half."""
     broken = dict(ts.CAPABILITIES)
     broken["abyssal_mask.unmake"] = _capability(
         mechanic="abyssal_mask.unmake",
@@ -1579,7 +1579,7 @@ def test_a9_every_declared_stream_is_load_bearing():
 
 
 def test_a9_has_a_permanent_injection_seam():
-    """R-05: empty a declared stream and every capability reading it fails."""
+    """Empty a declared stream and every capability reading it fails."""
 
     def _cc_dropped(result, *, streams, holder=""):
         """The typo: one declared stream silently never gets built."""
@@ -1692,11 +1692,9 @@ def test_a_holder_scoped_packet_half_is_not_a_cross_participant_producer(monkeyp
 
 
 def test_the_coupled_producer_source_reads_the_capability_registry():
-    """R-12 — the instrument and the packet compiler read one table.
+    """The instrument and the packet compiler read one table.
 
-    P2a landed the instrument's reading beside the ``ast``-derived table it
-    replaces and asserted the two equal; P2c deleted that table, so
-    what this now pins is that the two *readings* of ``CAPABILITIES`` — the
+    What this pins is that the two *readings* of ``CAPABILITIES`` — the
     baseline instrument's producer set and the packet compiler's
     owner-iff-``SPLIT`` table — still name the same producers.
     """
@@ -1706,7 +1704,7 @@ def test_the_coupled_producer_source_reads_the_capability_registry():
 
 
 def test_a_seventh_producer_with_no_scenario_fails_capture(monkeypatch):
-    """Runbook criterion 6's post-P2a half, exercised through the registry."""
+    """A seventh producer with no covering scenario fails capture."""
     import scripts.golden_snapshot as gs
 
     seventh = _capability(
@@ -1768,7 +1766,7 @@ def test_exactly_one_starved_signal_catch_exists():
 
 
 def test_the_single_catch_has_a_permanent_injection_seam():
-    """R-05: a second handler anywhere in ``src/`` turns the allowlist red."""
+    """A second handler anywhere in ``src/`` turns the allowlist red."""
     injected = _with(
         live_sources(),
         "src/calculator/economy.py",
@@ -2302,7 +2300,7 @@ class TestTheSupportTriggerLinkRaise:
         assert raised.value.source == "probe"
 
     def test_the_same_template_without_the_link_compiles(self):
-        """R-05's seam: the link is what fires the raise, not the shape.
+        """The seam: the link is what fires the raise, not the shape.
 
         Without it the identical template compiles to one action, so the
         test above cannot be passing for an unrelated reason.

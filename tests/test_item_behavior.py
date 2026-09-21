@@ -287,7 +287,7 @@ def test_the_exceptions_taken_across_the_catalog_are_the_exceptions_named() -> N
 
 
 def test_a_rule_with_an_open_string_policy_field_does_not_compile() -> None:
-    """R-05's red for criterion 6, through ``validate_rule``'s own ladder.
+    """The red for criterion 6, through ``validate_rule``'s own ladder.
 
     The criterion is a *mechanism* rather than a property of today's
     declarations: the compiler that builds a rule refuses it, so a family

@@ -148,7 +148,7 @@ def test_the_surviving_counter_two_population_is_the_reviewed_set_itself() -> No
 
 
 def test_a_container_exclusion_outside_class_b_is_refused() -> None:
-    """R-05: the arm's red, on the clause that keeps it off counter 1."""
+    """The arm's red, on the clause that keeps it off counter 1."""
     report = behavior_frontier.scan()
     committed = behavior_frontier.build_receipt(report)
     fresh = json.loads(json.dumps(committed))
@@ -165,7 +165,7 @@ def test_a_container_exclusion_outside_class_b_is_refused() -> None:
 
 
 def test_a_moved_container_exclusion_fails_the_gate() -> None:
-    """R-05: dropping one from the receipt is a diff, not a quiet improvement."""
+    """Dropping one from the receipt is a diff, not a quiet improvement."""
     receipt = _receipt()
     receipt["exclusions"]["class_c_claim_evidence_containers"]["containers"][
         "calculator/item_coverage.py"
@@ -241,7 +241,7 @@ def test_a_site_in_a_declared_home_does_not_count(tmp_path: Path) -> None:
 
 
 def test_the_gate_reproduces_its_own_red() -> None:
-    """R-05: a check nobody has seen fail is indistinguishable from no check."""
+    """A check nobody has seen fail is indistinguishable from no check."""
     receipt = _receipt()
     receipt["counters"]["counter_1"]["value"] += 1
     failures = behavior_frontier.check(behavior_frontier.scan(), receipt)
@@ -273,7 +273,7 @@ def test_the_reviewed_nothing_set_is_bounded_and_every_member_is_sourced() -> No
 
 
 def test_the_reviewed_nothing_ratchet_reproduces_its_red(monkeypatch) -> None:
-    """R-05: the ceiling and the set-equality clause each fail loud on demand.
+    """The ceiling and the set-equality clause each fail loud on demand.
 
     The ceiling is driven through the module constant and not through the
     receipt, deliberately: a ceiling a receipt could lower is a ratchet the
@@ -367,7 +367,7 @@ def test_a_planted_input_fallback_fails_the_gate_end_to_end(tmp_path) -> None:
 
 
 def test_a_new_produced_fallback_fails_the_gate() -> None:
-    """R-05: the ratcheted half has a red it can produce on demand.
+    """The ratcheted half has a red it can produce on demand.
 
     ``check``'s ``committed`` seam stands in for a receipt taken before the
     site was added, which is exactly the situation the ratchet exists for.
@@ -559,7 +559,7 @@ def test_a_threshold_nobody_can_read_raises_instead_of_falling_back(
 
 
 def test_the_committed_refusal_gate_fails_when_the_section_is_deleted() -> None:
-    """R-05: the check reproduces its own red on demand."""
+    """The check reproduces its own red on demand."""
     report = behavior_frontier.scan()
     committed = _receipt()
     committed.pop("compiled_walk_refusals")
@@ -570,7 +570,7 @@ def test_the_committed_refusal_gate_fails_when_the_section_is_deleted() -> None:
 
 
 def test_a_member_with_a_compiled_rule_fails_the_ratchet() -> None:
-    """R-05's red for the fourth clause, through the check's own seam.
+    """The red for the fourth clause, through the check's own seam.
 
     A reviewed absence beside a compiled rule is two contradictory claims about
     one item, and it is also how the ratchet's ceiling stops meaning anything:
@@ -657,7 +657,7 @@ def _some_dated_key(receipt) -> str:
 
 
 def test_a_moved_route_fails_the_gate() -> None:
-    """R-05's red for the route clause, at the artifact rather than at import."""
+    """The red for the route clause, at the artifact rather than at import."""
     receipt = _receipt()
     receipt["counters"]["counter_4"]["receipts"]["dated"][_some_dated_key(receipt)][
         "via"
@@ -738,7 +738,7 @@ def test_an_outstanding_target_names_what_the_ruled_records_say_retires_it() -> 
 
 
 def test_a_counter_drifting_away_from_its_target_fails_the_gate() -> None:
-    """R-05's red for the target ratchet: the gap may shrink and never grow."""
+    """The red for the target ratchet: the gap may shrink and never grow."""
     report = behavior_frontier.scan()
     committed = behavior_frontier.build_receipt(report)
     committed["targets"]["targets"]["counter_2"]["measured"] -= 1

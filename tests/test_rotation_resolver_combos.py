@@ -305,7 +305,7 @@ class TestCastOrderOverrides:
         assert seed_comment_faults(resolver_source(), registered_champion_names()) == ()
 
     def test_the_comment_gate_sees_a_retirement_that_left_its_paragraph(self) -> None:
-        """R-05: the exact drift the retirements caused, made to happen."""
+        """The exact drift the retirements caused, made to happen."""
         orphaned = resolver_source().replace(
             '    "Annie": ComboRule(',
             "    # Aatrox — R grants bonus AD as a percentage of total AD\n"
@@ -316,7 +316,7 @@ class TestCastOrderOverrides:
         assert any("describes Aatrox" in fault for fault in faults), faults
 
     def test_the_comment_gate_sees_a_block_that_introduces_nothing(self) -> None:
-        """R-05: the dangling half of the same drift."""
+        """The dangling half of the same drift."""
         closing = (
             '        aoe={"E": 5},  # Shadow Slash around Zed and the shadow\n    ),\n}'
         )
@@ -328,7 +328,7 @@ class TestCastOrderOverrides:
         assert any("introduces no entry" in fault for fault in faults), faults
 
     def test_the_comment_gate_sees_an_entry_nobody_introduced(self) -> None:
-        """R-05: the third shape — an entry whose block went away instead."""
+        """The third shape — an entry whose block went away instead."""
         unintroduced = resolver_source().replace(
             "    # Lux — E slows so the root lands; Q roots; R consumes the\n"
             "    # Illumination mark.\n",

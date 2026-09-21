@@ -257,7 +257,7 @@ def test_a_defender_declaring_no_aura_leaves_the_attacker_alone():
 def test_two_declared_attack_speed_auras_stop_rather_than_pick_one(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """R-05's red: nothing declares how two auras of one stat compose.
+    """The red: nothing declares how two auras of one stat compose.
 
     Only one item declares a ``StatAuraRule`` today, so the second holder is
     planted — the point is that the composition question is answered by a
