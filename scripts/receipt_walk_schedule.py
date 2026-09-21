@@ -1,116 +1,38 @@
-"""Counter 4's outstanding receipt-walk deferrals, sized as slices.
+"""The still-deferred receipt-walk lanes, sized as populations.
 
-Umbrella criterion 7 is partially discharged, and Amendment F says why in
-terms: the fourteen ``(family, RECEIPT_WALK)`` rows defer to a stage that
-shipped without retiring them, the act that actually retires one is a
-per-family receipt-walk interpreter, and *"retiring it is fourteen slices, one
-per family, each carrying its own ``Expected qualifying occurrences`` line"*.
-Fourteen slices nobody had sized is what "unbudgeted" means.  Sizing them is
-the one part of that work a lane may do before any of it starts, and R-20's
-second half is explicit that it is done **before** a slice's first ``src/``
-edit: where an occurrence count is not knowable in advance, the slice declares
-the *population* instead, enumerated from committed artifacts -- the baseline
-files, the scenario set, the registries.
-
-So this file is one declared population per still-deferred family, every field
-derived:
+One row per ``(family, receipt_walk)`` lane the behaviour frontier still
+defers, every field derived:
 
 * the family's declarations and their owners, read from the behaviour catalog;
 * which committed coupled scenarios put one of those owners on a participant,
-  read from the scenario set;
-* the size of each such scenario's committed roster snapshot, which is the
-  conservative bound a retiring slice's occurrences live inside -- pricing a
-  family in the walk instead of consuming another engine's rows can move any
-  aggregate downstream of it in that scenario, so the scenario subtree is the
-  honest population and a narrower one would be a guess;
-* and the retiring act, derived from the row's **own declared route** rather
-  than assumed uniform.
+  and the size of each such scenario's roster snapshot, which is the
+  conservative bound the work lives inside -- pricing a family in the walk
+  instead of consuming another engine's rows can move any aggregate
+  downstream of it in that scenario;
+* the act that retires the row, derived from the row's **own declared route**:
+  a per-family interpreter in the lane its ``via`` names, so the family's
+  numbers reach the walk through exactly one interpreter rather than arriving
+  already priced by the pair engine;
+* whether that act has been performed, which is the one thing about an act
+  that can be false;
+* the row's triage class, measured by ablation over the covering population
+  and a per-owner probe: ``a`` authors its own pair rows, ``b`` authors none
+  and folds pair-locally into the holder's rows, ``c`` authors none and
+  reaches participants through rows it does not author, which owes a named
+  walk-side delivery term and stops without one.
 
-That last one is where the measurement disagreed with the prose, and the
-disagreement is now ruled rather than merely recorded.  Amendment F describes
-all fourteen as *"the families whose numbers ``participant_timeline._pair_run_fight``
-produces today"*.  Eleven of them declare that route.  Three route through the
-defence resolver and their rows say in their own words that a walk-lane
-interpreter there *"would be a second producer of one number"* -- which is what
-D-60 forbids, so Amendment F's act, spelled with the receipt walk, named for
-those three the act criterion 8 rules out.  **Amendment K (2026-08-15)
-corrects the spelling rather than the act:** the retiring act is a per-family
-interpreter in the family's *own declared serving lane*, whichever lane the
-row's ``via`` names, discharging criterion 8's own property -- the family's
-numbers reach the walk through exactly one interpreter instead of arriving
-already priced by the pair engine.  So this file derives each row's act from
-its route, and every row has a settled one.  What each row still publishes for
-itself is whether that act has been **performed**: ``INTERPRETERS`` holds the
-ruled key for the three the resolver feeds and not for the rest, which is the
-one thing about an act that can be false and so the one worth a field.
+A named delivery is **resolved**, never recorded: every kernel mechanism a
+delivery term names is looked up in the tree on every run, so a mechanism that
+leaves the kernel, or a payload family no term covers, re-stops the row and
+says which.  A row served through its own declared lane publishes its ground
+in both directions on every run -- forwards, what the family's resolver
+interpreter writes is joined to every read of those fields outside the
+resolver; backwards, the interpreter is removed and every declaring owner must
+answer ``withheld`` naming the missing pair rather than a modelled status.
 
-``delta_amp`` was the fourteenth row and is the first to leave.  Its structured
-route declared the pair engine while its prose named a second one, which
-Amendment K answered without correcting -- the declaration is the route (D-40),
-so the correction was a behaviour claim owing its own slice.  That slice landed
-on 2026-08-15 under Amendment M, Ruling 1, which ordered this family first and
-ruled its act to be the walk-side delivery of the holder's static, pair-local
-amplifiers; the receipt walk now reads the family's declaration through
-``interpreters.delta_amp.WALK_INTERPRETER``, the frontier stopped deferring the
-row, and the row left this file with it.  The mismatch it carried is kept as
-an answered record rather than deleted, because a mismatch that is only
-deleted is one no reader can check was ever real.
-
-**Every open row also carries its triage class**, which umbrella Amendment O,
-Ruling 2 (2026-08-16) makes a one-time act in front of any further retirement
-round.  The fifth family attempted, ``crit_profile``, stopped on a property
-nobody had measured for the others: it authors no pair-engine row at all, so
-Amendment L, Ruling 1's shape -- both halves of which name a pair row the
-family authors -- had nothing to stamp.  Ruling 2 says that shape is measured
-once, for every remaining row, rather than rediscovered one halt at a time.
-So each row publishes which priced pair rows its declarations actually author,
-measured by ablation over the covering population and over a per-owner probe,
-and the class that follows: ``a`` authors its own rows and retires by the
-ruled act; ``b`` authors none and folds pair-locally into the holder's own
-rows, which Ruling 1 closes by authority reclassification; ``c`` authors none
-and reaches participants through rows it does not author, which owes a named
-walk-side delivery term and stops the next retirement round if it has none.
-
-**A named delivery is resolved here and never merely recorded.**  Three shapes
-count as named -- the row's own ruled act already performed, every owner
-carrying a cross-participant half the walk stages, or a dated umbrella
-amendment naming the delivery -- and the third is the one that could have been
-a sentence.  Amendment P (2026-08-16) names ``damage_routing``'s: the program
-rider system and the kernel state paths already in the tree, one per declared
-payload family.  Naming a standing mechanism is an amendment's act and never a
-lane's, so what this file does with the name is look it up: every mechanism the
-ruling names is resolved against the kernel's own declarations on every run,
-and a declaration the ruling does not cover -- or a named mechanism that leaves
-the kernel -- re-stops the row and says which.  That is the ruling's own
-conditional stop, *the kernel is never extended inside a retirement slice*,
-made checkable rather than readable.
-
-**A row served through the lane it declares carries its ground while it is
-still open.**  Umbrella Amendment Q (2026-08-16) rules that a family whose
-walk-side need is satisfied *through its declared serving lane* does not need
--- and must not declare -- a receipt-walk interpreter lane, because one
-producer is what the one-engine thesis demands.  The condition is derived here
-rather than named: a row whose declared route is not the pair engine and whose
-ruled act is already performed publishes the ruling's evidence, in both
-directions the ruling requires.  Forwards, what the family's own resolver
-interpreter writes is joined to every read of those fields off a resolved
-defences value, found by walking the source of every module outside the
-resolver, and a declaration nothing consumes fails.  Backwards, the family's
-interpreter is removed from the registry the coverage ladder reads and every
-declaring owner is asked the public question again: the answer has to be
-``withheld`` naming the missing pair rather than a modelled status, because a
-producer whose absence is not a named refusal is the silent zero this campaign
-is about.  Both run on every check, so the ground a closed row stands on is
-re-measured rather than remembered, and the lane re-enters if a mechanic of the
-family ever authors walk-priced rows the resolver does not feed.
-
-**What this file is not.**  It is not a retirement, and no row here retires
-anything -- every row still standing is ``overdue`` and gated, exactly as
-Amendment F leaves it.  It does not re-date a row, re-scope the debt, or read
-the debt as smaller: one row out is one slice landed, never one debt
-re-counted.  The triage adds no exception to that: measuring a row is not
-paying it, and a class is a fact about the shape of the work rather than a
-smaller amount of it.
+Nothing here retires anything.  ``--write`` regenerates
+``docs/receipts/receipt-walk-retirement-schedule.json``, whose family-to-owners
+map ``scripts/golden_snapshot.py`` reads, and ``--check`` gates it.
 """
 
 from __future__ import annotations
@@ -156,40 +78,35 @@ INTERPRETERS_DIR = REPO_ROOT / "src" / "calculator" / "interpreters"
 CALCULATOR_DIR = REPO_ROOT / "src" / "calculator"
 
 #: The lane whose deferrals this file sizes.  The compiled-score-walk gaps are
-#: a different lane with a different blocker (H5) and are deliberately not here.
+#: a different lane with a different blocker and are deliberately not here.
 LANE = "receipt_walk"
 
-#: The ruling that spells the retiring act per lane rather than per walk, and
-#: so gives a row whose declared route is not the pair engine a settled act.
-#: It was owed and is answered; the id stays here because every row's act
-#: cites it, and a citation nobody can resolve is the thing this file avoids.
+#: The recorded decision every row's act cites: the retiring act is spelled
+#: per lane rather than per walk, which is what gives a row whose declared
+#: route is not the pair engine a settled act.
 RULING = "what_retires_a_receipt_walk_deferral_whose_route_is_not_the_pair_engine"
 
-#: The lane whose interpreter Amendment F named, and the only lane that closes
-#: the eleven pair-engine-fed rows.
+#: The lane that closes a pair-engine-fed row.
 PAIR_ENGINE = "pair_engine"
 
-#: Umbrella Amendment O's two rulings, cited by every row the triage below
-#: classifies and by the closure that ruling performs.
+#: The two recorded decisions every row the triage below classifies cites,
+#: and the closure one of them performs.
 RECLASSIFICATION_RULING = "umbrella Amendment O, Ruling 1"
 TRIAGE_RULING = "umbrella Amendment O, Ruling 2"
 
-#: The ruling that names the walk-side delivery of the one row Ruling 2's stop
-#: clause fired on, and the family it names it for.  The family is scoped
-#: because the ruling is: it answers one row, and a mapping that silently
-#: reached a second family would be this file widening an amendment.
+#: The recorded decision naming the walk-side delivery of the one row the
+#: triage stopped, and the family it names it for.  The family is scoped
+#: because that decision is: it answers one row, and a mapping that silently
+#: reached a second family would widen it here.
 NAMED_DELIVERY_RULING = "umbrella Amendment P"
 NAMED_DELIVERY_FAMILY = "damage_routing"
 
-#: What umbrella Amendment P (2026-08-16) NAMES, per declared payload family:
-#: the standing kernel mechanism that carries that declaration's walk-side
-#: numbers.  The amendment names them; this file **resolves** each name against
-#: the tree on every run (:func:`_mechanism_stands`), so a named mechanism that
-#: leaves the kernel, or a fourth mechanic of the family whose payload family
-#: the amendment does not name, turns the delivery term unnamed again and
-#: re-stops the row.  That is the ruling's own conditional stop -- *the kernel
-#: is never extended inside a retirement slice* -- made checkable rather than
-#: readable.
+#: The named delivery per declared payload family: the standing kernel
+#: mechanism that carries that declaration's walk-side numbers.  Each name is
+#: **resolved** against the tree on every run (:func:`_mechanism_stands`), so a
+#: named mechanism that leaves the kernel, or a fourth mechanic whose payload
+#: family no term covers, turns the delivery unnamed again and re-stops the
+#: row.  The kernel is never extended to satisfy this table.
 AMENDMENT_P_DELIVERY: dict[str, tuple[str, ...]] = {
     "DamageDeferralRule": (
         "program.events.Defer",
@@ -204,46 +121,44 @@ AMENDMENT_P_DELIVERY: dict[str, tuple[str, ...]] = {
     "ShieldBypassRule": ("shield_ledger.ShieldPools.venom_factor",),
 }
 
-#: The families Amendment O, Ruling 1 closes off the receipt walk.  A ruling
-#: names a family; every FIELD of the closed row below is derived, and
+#: The families closed off the receipt walk by authority reclassification.
+#: The name is recorded; every FIELD of the closed row below is derived, and
 #: :func:`_reclassification_failures` refuses a name the tree does not agree
-#: with -- a family still declaring the lane, or one an interpreter serves,
-#: is not a family this ruling closed.  ``crit_profile`` is here because
-#: Ruling 1 names it and the tree agrees: ``_FAMILY_LANES`` declares no
-#: receipt-walk lane for it, no interpreter serves one, and the frontier does
-#: not defer the row.  Measuring is one act and closing is another, so a
-#: name arrives here in the commit that drops the lane and never before it.
+#: with -- a family still declaring the lane, or one an interpreter serves, is
+#: not closed.  ``crit_profile`` is here because the tree agrees:
+#: ``_FAMILY_LANES`` declares no receipt-walk lane for it, no interpreter
+#: serves one, and the frontier does not defer the row.  Measuring is one act
+#: and closing is another, so a name arrives here in the commit that drops the
+#: lane and never before it.
 RECLASSIFIED: tuple[str, ...] = ("crit_profile",)
 
-#: The ruling that corrects a lane DECLARATION rather than closing a debt:
-#: umbrella Amendment Q (2026-08-16).  A family whose walk-side need is
-#: satisfied through its declared serving lane does not need -- and must not
-#: declare -- a receipt-walk interpreter lane, because one producer is what the
-#: one-engine thesis demands.  It is a different act from Amendment O, Ruling
-#: 1's reclassification and carries a different ground: not "the family authors
-#: nothing for the walk to consume" but "what the walk consumes, it consumes
-#: from the lane the family declares".
+#: The recorded decision that corrects a lane DECLARATION rather than closing
+#: a debt.  A family whose walk-side need is satisfied through its declared
+#: serving lane does not need -- and must not declare -- a receipt-walk
+#: interpreter lane, because one number has one producer.  Different ground
+#: from reclassification: not "the family authors nothing for the walk to
+#: consume" but "what the walk consumes, it consumes from the lane the family
+#: declares".
 LANE_CORRECTION_RULING = "umbrella Amendment Q"
 
-#: The families Amendment Q closes off the receipt walk by lane-declaration
-#: correction.  A ruling names them; every FIELD of the closed row below is
-#: derived, and :func:`_lane_correction_failures` refuses a name the tree does
-#: not agree with -- a family still declaring the lane, one an interpreter
-#: serves there, one whose declared serving lane has no interpreter after all,
-#: or one the frontier still defers.  Measuring is one act and closing is
-#: another, so a name arrives here in the commit that drops the lane and never
-#: before it.
+#: The families closed off the receipt walk by lane-declaration correction.
+#: The names are recorded; every FIELD of the closed row below is derived, and
+#: :func:`_lane_correction_failures` refuses a name the tree does not agree
+#: with -- a family still declaring the lane, one an interpreter serves there,
+#: one whose declared serving lane has no interpreter after all, or one the
+#: frontier still defers.  Measuring is one act and closing is another, so a
+#: name arrives here in the commit that drops the lane and never before it.
 LANE_CORRECTED: tuple[str, ...] = (
     "combat_state",
     "opening_defense",
     "threshold_defense",
 )
 
-#: Amendment F's own figure for the size of the receipt-walk debt, quoted from
-#: the amendment rather than derived from the tree: every row it names has since
-#: left, so nothing here can re-count them.  The mismatch narration below quotes
-#: the amendment about its fourteen and derives every other count in the
-#: sentence FROM it, so the sentence cannot say "Three" over a list of four.
+#: The recorded figure for the original size of the receipt-walk debt, quoted
+#: rather than derived: every row it counted has since left, so nothing here
+#: can re-count them.  The narration below quotes this number and derives every
+#: other count in the sentence FROM it, so the sentence cannot say "Three" over
+#: a list of four.
 AMENDMENT_F_ROWS = 14
 
 #: The count words that narration spells.  Prose spells a small number as a
@@ -334,7 +249,7 @@ def spelled(count: int) -> str:
 
 
 def mismatch_narration(lane_corrected_ever: Sequence[str]) -> str:
-    """Amendment F's route mismatch, every count spelled off its own list.
+    """The route mismatch, every count spelled off its own list.
 
     Takes the families rather than reading them, so the one property the
     sentence has to have -- that its count words and its names describe the
@@ -437,10 +352,10 @@ def owners_by_family() -> dict[str, dict[str, list[str]]]:
 def population_size(node: object) -> int:
     """How many numbers a committed snapshot subtree holds.
 
-    The bound, not the prediction.  A slice that moves a family's pricing into
-    the walk may move any aggregate downstream of it, so the population is the
-    whole scenario and anything outside it is an unexpected occurrence that
-    stops the slice -- which is what R-20's second half asks a population to do.
+    The bound, not the prediction.  Moving a family's pricing into the walk
+    may move any aggregate downstream of it, so the population is the whole
+    scenario and anything outside it is an unexpected occurrence that stops
+    the work.
     """
     if isinstance(node, Mapping):
         return sum(population_size(value) for value in node.values())
@@ -550,8 +465,8 @@ def authored_rows(owners: Sequence[str], covering: Sequence[str]) -> tuple[str, 
 
     Ablation, over two domains, and the union of what both find.
 
-    The first is the **covering population** umbrella Amendment O, Ruling 1
-    names: every committed coupled scenario putting one of this family's
+    The first is the **covering population**: every committed coupled
+    scenario putting one of this family's
     owners on a participant, run pair fight by pair fight with the family's
     items on and off.  A row present with them and absent without them is a
     row this family authors.
@@ -609,11 +524,11 @@ def _subjects(family: str, owners: Sequence[str]) -> tuple[str, ...]:
 def _cross_participant_halves(owners: Sequence[str]) -> dict[str, list[str]]:
     """Each owner's declared halves that modify ANOTHER participant's damage.
 
-    Read through ``trigger_stream.cross_participant_packet_source``, which is
-    D-07's semantic with one home (Amendment C, extended by Amendment M,
-    Ruling 3), so "this family's roster numbers already have a named walk-side
-    delivery" is answered by the same function the producer set is filtered
-    with rather than by a second reading of it.
+    Read through ``trigger_stream.cross_participant_packet_source``, the one
+    home of "modifies another participant's damage", so "this family's roster
+    numbers already have a named walk-side delivery" is answered by the same
+    function the producer set is filtered with rather than by a second reading
+    of it.
     """
     halves: dict[str, list[str]] = {}
     for owner in owners:
@@ -632,8 +547,8 @@ def _cross_participant_halves(owners: Sequence[str]) -> dict[str, list[str]]:
 def _kernel_mechanisms() -> dict[str, frozenset[str]]:
     """Every mechanism a named delivery may land in, read from the kernel.
 
-    Two shapes, because Amendment P names two: a rider family the kernel's
-    own :data:`~..program.events.RIDER_KINDS` declares, and a field of a
+    Two shapes: a rider family the kernel's own
+    :data:`~..program.events.RIDER_KINDS` declares, and a field of a
     kernel state record.  Both are read off the declaring object rather than
     listed here, so a mechanism that leaves the kernel stops resolving on the
     commit that removes it instead of on the day somebody re-reads a receipt.
@@ -650,7 +565,7 @@ def _kernel_mechanisms() -> dict[str, frozenset[str]]:
 
 
 def _mechanism_stands(path: str) -> bool:
-    """Whether one mechanism umbrella Amendment P names is in the tree today."""
+    """Whether one mechanism a delivery term names is in the tree today."""
     holder, _, leaf = path.rpartition(".")
     return leaf in _kernel_mechanisms().get(holder, frozenset())
 
@@ -660,11 +575,10 @@ def _declared_payloads(
 ) -> tuple[tuple[str, str], ...]:
     """Each declaration of *family* as ``(mechanic_id, payload family)``.
 
-    The payload family is what Amendment P's mapping is keyed on: the ruling
-    names a kernel mechanism per SHAPE of declaration -- a deferral, an
-    execute, a shield bypass -- rather than per mechanic id, so a second owner
-    declaring an existing shape is delivered by the ruling and a new shape is
-    not.
+    The payload family is what the delivery mapping is keyed on: a kernel
+    mechanism per SHAPE of declaration -- a deferral, an execute, a shield
+    bypass -- rather than per mechanic id, so a second owner declaring an
+    existing shape is covered and a new shape is not.
     """
     return tuple(
         sorted(
@@ -679,14 +593,14 @@ def _declared_payloads(
 def _amendment_named_delivery(
     family: str, owners: Sequence[str]
 ) -> tuple[dict[str, tuple[str, ...]], tuple[str, ...]]:
-    """Amendment P's delivery for each declaration, and what it does not cover.
+    """The named delivery for each declaration, and what it does not cover.
 
     Returns the resolved mechanisms keyed by mechanic id, and the declarations
-    the ruling leaves unanswered -- a shape it does not name, or one whose
-    named mechanism is absent from the kernel.  A non-empty second half
-    is the ruling's own conditional stop firing: *if any owner's effect has no
-    existing rider or state path the kernel can express, the implementing lane
-    STOPS blocked naming exactly which*.  It is returned rather than raised
+    left unanswered -- a shape no term names, or one whose named mechanism is
+    absent from the kernel.  A non-empty second half is the conditional stop
+    firing: an owner effect with no existing rider or state path the kernel
+    can express stops the work, naming exactly which.  It is returned rather
+    than raised
     because naming which is the whole of what the stop buys.
     """
     if family != NAMED_DELIVERY_FAMILY:
@@ -714,17 +628,15 @@ def _amendment_named_delivery(
 def _named_delivery_resolution(
     declarations: Mapping[str, Mapping[str, Sequence[str]]],
 ) -> dict[str, Any]:
-    """Amendment P's mapping, resolved whether or not the row is still open.
+    """The delivery mapping, resolved whether or not the row is still open.
 
     The resolution outlives the row it was written for, deliberately.  A named
-    delivery checked only while its row stood would be a ruling that held
-    exactly as long as nobody depended on it: what the walk stages for this
-    family IS those mechanisms, so a fourth mechanic whose payload shape the
-    amendment does
-    not name, or a named mechanism that leaves the kernel, has to go red here
-    as well as in the interpreter's own branch table.  ``covers_every_declaration``
-    is the totality half and ``unanswered`` names which, because the ruling's
-    conditional stop is *STOPS blocked, naming exactly which*.
+    delivery checked only while its row stood would hold exactly as long as
+    nobody depended on it: what the walk stages for this family IS those
+    mechanisms, so a fourth mechanic whose payload shape no term names, or a
+    named mechanism that leaves the kernel, has to go red here as well as in
+    the interpreter's own branch table.  ``covers_every_declaration`` is the
+    totality half and ``unanswered`` names which.
     """
     owners = sorted(declarations.get(NAMED_DELIVERY_FAMILY, {}))
     resolved, unanswered = _amendment_named_delivery(NAMED_DELIVERY_FAMILY, owners)
@@ -754,22 +666,20 @@ def _delivery_term(
 ) -> dict[str, Any]:
     """Whether a class-(c) row's walk-side delivery term is named, and where.
 
-    Amendment O, Ruling 2 requires one before such a row may retire, and
-    forbids a LANE from inventing one.  Three shapes count as named and every
-    one of them is resolved against the tree.  The row's own ruled retiring
-    act may already be performed -- ``INTERPRETERS`` holding the key for the
-    lane the row declares is Amendment K's delivery, standing in the tree
-    today.  Or every declaring owner may carry a cross-participant half the
-    walk already stages, which is the SPLIT shape: the shred's roster number
-    reaches the walk as the ``damage_modifier`` packet its own coupled half
-    emits.  Or a dated umbrella amendment may NAME the delivery, which is what
-    Amendment P does for ``damage_routing`` -- the program rider system and
-    the kernel state paths already in the tree, one per declared payload
-    family.  The third shape is an amendment's act and never a lane's, and it
-    is machine-resolved rather than recorded: every mechanism the ruling names
-    is looked up in the kernel on every run, so a declaration the ruling does
-    not cover, or a mechanism that leaves the kernel, re-stops the row and
-    names which.  None of the three present is a row that STOPS the next
+    Such a row may not retire without one, and the work may not invent one.
+    Three shapes count as named and every one of them is resolved against the
+    tree.  The row's own retiring act may already be performed --
+    ``INTERPRETERS`` holding the key for the lane the row declares.  Or every
+    declaring owner may carry a cross-participant half the walk already
+    stages, which is the SPLIT shape: the shred's roster number reaches the
+    walk as the ``damage_modifier`` packet its own coupled half emits.  Or a
+    dated record may NAME the delivery, as :data:`AMENDMENT_P_DELIVERY` does
+    for ``damage_routing`` -- the program rider system and the kernel state
+    paths already in the tree, one per declared payload family.  The third
+    shape is machine-resolved rather than recorded: every mechanism it names
+    is looked up in the kernel on every run, so a declaration it does not
+    cover, or a mechanism that leaves the kernel, re-stops the row and names
+    which.  None of the three present is a row that STOPS the next
     retirement round, named here rather than papered over.
     """
     if act["already_performed"]:
@@ -843,13 +753,13 @@ def _delivery_term(
 
 
 def _triage(family: str, entry: Mapping[str, Any]) -> dict[str, Any]:
-    """One row's Amendment O, Ruling 2 class, measured rather than asserted.
+    """One row's triage class, measured rather than asserted.
 
     Three classes, and the measurement decides which.  A family that authors
-    priced pair rows is class ``a`` and retires by the ruled act.  A family
+    priced pair rows is class ``a`` and retires by its own act.  A family
     that authors none divides on where its numbers go instead: every
-    declaration naming the HOLDER as its subject is the pair-local fold
-    Ruling 1 reclassifies (class ``b``); anything else reaches a participant
+    declaration naming the HOLDER as its subject is a pair-local fold, which
+    is reclassified (class ``b``); anything else reaches a participant
     through rows it does not author (class ``c``) and owes a named walk-side
     delivery term before it may retire.
     """
@@ -909,7 +819,7 @@ def _triage(family: str, entry: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def reclassified_rows() -> dict[str, Any]:
-    """The rows Amendment O, Ruling 1 closed, with the check that reopens them.
+    """The reclassified rows, with the check that reopens them.
 
     A closed row leaves ``families`` above -- the frontier stops deferring it,
     so the schedule stops sizing it -- and everything a reader would want to
@@ -917,7 +827,7 @@ def reclassified_rows() -> dict[str, Any]:
     every field of it is re-derived on every run: the owners from the catalog,
     the covering scenarios from the scenario set, and the authored-row
     measurement from the pair engine itself.  **That measurement is the
-    machine check the ruling requires.**  The day a mechanic of a closed
+    machine check.**  The day a mechanic of a closed
     family authors a priced pair row, this block stops matching the committed
     one, the gate goes red, and the row is reopened by the tree rather than by
     somebody remembering to look.
@@ -974,7 +884,7 @@ def reclassified_rows() -> dict[str, Any]:
 def _reclassification_failures() -> list[str]:
     """The tree has to agree that a reclassified row is closed.
 
-    A ruling names a family and this file records the name; what it may not
+    A closure names a family and this file records the name; what it may not
     do is let the name outlive the closure.  Three ways it could: the family
     could go on declaring the receipt-walk lane, an interpreter could be
     registered for it after all -- which would make this a retirement wearing
@@ -1122,8 +1032,8 @@ def _reads_in(module: str, tree: ast.AST) -> list[tuple[str, str]]:
 def _resolved_state_reads() -> Mapping[str, tuple[str, ...]]:
     """Every consumer of the resolver's resolved state, by field, from source.
 
-    This is the source assertion umbrella Amendment Q's forward direction
-    requires, and it is a scan of the tree rather than a list in a receipt:
+    The forward direction's source assertion, a scan of the tree rather than
+    a list in a receipt:
     the day a walk-side site stops reading a field, the field's consumer set
     shrinks here on that commit.  The resolver's own modules are excluded --
     a producer reading its own output back is not the walk consuming it.
@@ -1150,7 +1060,7 @@ def _capability_impl(mechanic: str) -> str | None:
 
 
 def walk_side_consumption(family: str, owners: Sequence[str]) -> dict[str, Any]:
-    """Amendment Q's forward direction: what the walk consumes, and from where.
+    """The forward direction: what the walk consumes, and from where.
 
     Per DECLARATION and never per family, because a family passes this on one
     mechanic while another of its mechanics reaches the walk from somewhere
@@ -1208,13 +1118,13 @@ def walk_side_consumption(family: str, owners: Sequence[str]) -> dict[str, Any]:
 def withheld_without_the_serving_interpreter(
     family: str, lanes: Sequence[str], owners: Sequence[str]
 ) -> dict[str, Any]:
-    """Amendment Q's backward direction: the producer's absence fails closed.
+    """The backward direction: the producer's absence fails closed.
 
     Run, not reasoned about.  The family's interpreter is removed from the
     registry the coverage ladder reads and every declaring owner is asked the
     public question again: an owner that still answers a modelled status is an
     owner whose numbers survive the loss of the producer this correction says
-    is their only one, which is the silent zero the campaign is about.  The
+    is their only one, which is a silent zero.  The
     answer has to be ``withheld`` AND has to name the missing ``(family,
     lane)`` pair, because a refusal that does not say what is missing is a
     number withheld for a reason nobody can act on.
@@ -1276,11 +1186,11 @@ def _lane_correction_evidence(
     act: Mapping[str, Any],
     triage: Mapping[str, Any],
 ) -> dict[str, Any]:
-    """Both directions of umbrella Amendment Q's check, and its reopening clause.
+    """Both directions of the lane-correction check, and its reopening clause.
 
     Published for every row whose walk-side need is served through the lane it
     declares, whether or not the correction has been performed for it: the
-    evidence is what the ruling rests on, so it is measured while the row is
+    evidence is what the correction rests on, so it is measured while the row is
     still open and re-measured after it closes, and a row that stopped
     satisfying it would go red rather than quietly keep a dropped lane.
     """
@@ -1308,7 +1218,7 @@ def _lane_correction_evidence(
 
 
 def corrected_rows() -> dict[str, Any]:
-    """The rows Amendment Q closed, with the checks that reopen them.
+    """The lane-corrected rows, with the checks that reopen them.
 
     A closed row leaves ``families`` above -- the frontier stops deferring it,
     so the schedule stops sizing it -- and the evidence the closure rests on
@@ -1369,8 +1279,7 @@ def _lane_correction_failures() -> list[str]:
     lane, an interpreter could be registered for it there -- which would make
     this a retirement wearing a correction's name -- the serving lane the
     correction rests on could lose its interpreter, the frontier could still
-    defer the row, or either direction of the ruling's own check could stop
-    holding.
+    defer the row, or either direction of the check could stop holding.
     """
     failures: list[str] = []
     rows = deferral_rows()
@@ -1443,17 +1352,16 @@ def _lane_correction_failures() -> list[str]:
 def _retiring_act(family: str, route: Sequence[str]) -> dict[str, Any]:
     """What retires this row, read off its own declared route.
 
-    Amendment F names one act for all fourteen and spells it with one lane,
-    which is true of the eleven the pair engine feeds and names, for the rest,
-    the second producer D-60 forbids.  Amendment K rules the act per lane
-    instead: a per-family interpreter in the lane the row itself declares.
-    The act is derived from ``via`` rather than assumed, so a row that
+    One act spelled with one lane is true of the rows the pair engine feeds
+    and names, for the rest, a second producer of one number.  So the act is
+    per lane instead: a per-family interpreter in the lane the row itself
+    declares.  It is derived from ``via`` rather than assumed, so a row that
     re-declares its route re-derives its act on the same commit.
 
     ``already_performed`` is the half of the act a reader cannot see from the
-    prose: Amendment K observes that ``INTERPRETERS`` already holds the ruled
-    key for the three rows the defence resolver feeds, so their act is done
-    and what stands is the receipt-walk lane the table still declares.  It is
+    prose: ``INTERPRETERS`` already holds the key for the rows the defence
+    resolver feeds, so their act is done and what stands is the receipt-walk
+    lane the table still declares.  It is
     derived from the registry, which is what makes it a fact that can be false.
     A field saying ``settled`` on both branches of this function would
     discriminate nothing.  That the acts are settled is said once, in this
@@ -1552,12 +1460,12 @@ def schedule() -> dict[str, Any]:
             ),
         }
         slices[family]["triage"] = _triage(family, slices[family])
-        # Umbrella Amendment Q's condition, derived rather than named: the
+        # The lane-correction condition, derived rather than named: the
         # row's declared serving lane is not the receipt walk and an
         # interpreter already answers for it.  A row that satisfies it carries
-        # the ruling's evidence while it is still open, because the evidence
-        # is what the correction rests on and it may not first be measured by
-        # the commit that performs it.
+        # its evidence while it is still open, because the evidence is what
+        # the correction rests on and it may not first be measured by the
+        # commit that performs it.
         act = slices[family]["retiring_act"]
         served = tuple(route) != (PAIR_ENGINE,) and act["already_performed"]
         slices[family]["served_through_its_declared_lane"] = served
@@ -1576,13 +1484,13 @@ def schedule() -> dict[str, Any]:
     # sentence must not depend on: once those rows close the list empties and
     # the sentence renders "Three --  -- declare the defence resolver instead",
     # a justification whose subject a retirement round took away.  The closed
-    # rows are LANE_CORRECTED, the one declaration of which families Amendment Q
-    # closed -- the same names ``corrected_rows()`` iterates to build its
-    # evidence block, and gated in both directions by
+    # closed rows are LANE_CORRECTED, the one declaration of which families
+    # were closed by lane correction -- the same names ``corrected_rows()``
+    # iterates to build its evidence block, and gated in both directions by
     # ``_lane_correction_failures``, so reading the declaration is reading the
     # closed rows and not a second list.  The narration reads both and stays
     # true of a debt that has been paid.  Its COUNT WORDS come off this same
-    # list through :func:`spelled`, and its complement off Amendment F's own
+    # list through :func:`spelled`, and its complement off the recorded
     # figure, because a word typed beside a derived list is the same defect one
     # field along: a fourth family here would otherwise render "Three -- a, b,
     # c, d --".

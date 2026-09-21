@@ -1,4 +1,4 @@
-"""Golden snapshot harness for the July 2026 refactor campaign (Phase 0).
+"""Golden snapshot harness: the numeric regression gate.
 
 Captures the numeric behavior of the full calculation pipeline (stats ->
 ability parsing -> fight damage) across every champion and item, so later
@@ -28,7 +28,7 @@ roster walk.  ``capture-coupled``/``compare`` own the **roster path**: those
 scenarios enter through ``scenario.resolve_scenario`` and
 ``participant_timeline.build_participant_timeline``, which is where item
 support packets, cross-participant damage modifiers and the coupled ledger
-live.  A slice touching those cites the coupled baseline, never this one.
+live.  A change touching those cites the coupled baseline, never this one.
 
 Usage:
     python scripts/golden_snapshot.py capture <outfile.json>
@@ -108,8 +108,8 @@ SCHEDULE_RECEIPT_PATH = (
 # Metadata keys ``compare`` ignores.  ``git_head`` moves every commit, the
 # ``src`` tree sha moves on a comment-only edit, and the two fetch stamps move
 # on every data pull — without one named home for them, "zero diffs on a pure
-# refactor" is false for every commit and the strongest gate in the campaign
-# gets routinely waived (R-14).
+# refactor" is false for every commit and the strongest gate in the tree
+# gets routinely waived.
 COMPARE_EXCLUDED_PROVENANCE: frozenset[str] = frozenset(
     {"git_head", "src_tree_sha", "champions_fetched_at", "items_fetched_at"}
 )
@@ -134,8 +134,8 @@ SPELLBLADE_BUILD = ["Trinity Force", "Infinity Edge", "Berserker's Greaves"]
 # two-stacks-in-two-seconds pairing, the Muramana/Bastionbreaker proc walkers,
 # burn and periodic cadence, threshold-shield expiry, stack counters that ramp
 # — only differ across fight LENGTH and cast DENSITY, and the one-rotation arm
-# holds both fixed (one 5s rotation, two dense-cast champions). That is why
-# wave 1F re-priced 237 Eclipse fights and landed a byte-identical baseline.
+# holds both fixed (one 5s rotation, two dense-cast champions). That is how
+# a re-price of 237 Eclipse fights landed a byte-identical baseline.
 # Ziggs casts sparsely enough that a second stack is not always waiting when a
 # cooldown expires. Both lengths were chosen against that re-price, not by
 # taste: on the grid 5/8/10/12/15/20/25/30 at this sweep's own level, 1F moved
@@ -434,7 +434,7 @@ def snapshot_item_sweep(
     ``SWEEP_TIMED_DURATIONS``, because a single rotation length on two
     dense-cast champions cannot see any mechanic whose answer depends on
     how long the fight ran or how sparsely it was cast — the blind spot
-    that made wave 1F's Eclipse re-price invisible here. Both arms sweep
+    that made an Eclipse re-price invisible here. Both arms sweep
     EVERY item rather than a named windowed subset: a hand-kept list of
     "items with a cadence" drifts away from the catalog exactly like a
     hand-kept availability list would.
@@ -638,10 +638,10 @@ Transition = Literal[
 # baselines, so the rule is stated over the path rather than the section.
 DAMAGE_LEAF_TOKENS = ("damage", "dps", "breakdown_totals")
 
-# R-15's thresholds.
+# When a diff owes an investigator brief.
 INVESTIGATION_PERCENT = 10.0
 INVESTIGATION_DAMAGE_ABS_DELTA = 1.0
-# A slice owes an investigator on its largest-|abs_delta| leaf per scenario
+# A change owes an investigator on its largest-|abs_delta| leaf per scenario
 # once its differing-leaf count clears this fraction of the numeric leaves.
 INVESTIGATION_LEAF_RATIO = 0.01
 
@@ -666,9 +666,9 @@ IDENTITY_FIELD = "event_id"
 # The same identity spelled apart instead of pre-joined: an origin and that
 # origin's own ordinal.  ``cast_timeline`` is the live case — its rows carry
 # ``slot`` and a per-slot ``ordinal``, so ``Q#2`` names the same cast however
-# many rows precede it — and it is the list whose insertion at Phase 0B's C6
-# re-addressed seven later rows into three oracle briefs about casts nobody
-# had disputed.  One concept, two spellings; nothing here is a second notion
+# many rows precede it.  Pre-joining the two would re-address every later row
+# when one is inserted, and turn an insertion into briefs about casts nobody
+# disputed.  One concept, two spellings; nothing here is a second notion
 # of identity.
 ORIGIN_FIELD = "slot"
 ORDINAL_FIELD = "ordinal"
@@ -1090,7 +1090,7 @@ COUPLED_SCENARIOS = (
     # A control-carrying roster fight: Xayah E roots, so the score panels and
     # the receipt walk both compile CROWD_CONTROL actions.  No other scenario
     # emits a control event, which is how the panel path compiled them as
-    # plain damage for a whole campaign unnoticed.
+    # plain damage unnoticed.
     CoupledScenario(
         "control_event_roster",
         _roster_request(
@@ -1192,13 +1192,13 @@ COUPLED_SCENARIOS = (
         ),
         score_mode=True,
     ),
-    # The nine deferral families the baseline was blind to (umbrella
-    # Amendment L, Ruling 2).  Both rosters are ordinary builds rather than
+    # The nine deferral families the baseline was blind to.  Both rosters
+    # are ordinary builds rather than
     # item lists assembled to satisfy a check: every declaring item below is
     # one a real build of that champion holds, and each one produces a number
-    # in the captured snapshot — which is the whole point, since a family's
-    # retirement slice has to be *seen* moving its price out of the pair
-    # engine's rows and into the walk's own.
+    # in the captured snapshot — which is the whole point, since a family
+    # retiring has to be *seen* moving its price out of the pair engine's
+    # rows and into the walk's own.
     #
     # A crit carry, covering five: crit_profile (Infinity Edge),
     # secondary_target (Runaan's Hurricane), on_hit_strike (Blade of the
@@ -1241,15 +1241,15 @@ COUPLED_SCENARIOS = (
             auto_attack_uptime=1.0,
         ),
     ),
-    # The three static holder amps (umbrella Amendment M, Ruling 2).  A
+    # The three static holder amps.  A
     # holder's own amplifier is a term the pair engine applies and the walk's
     # from-declaration price does not yet carry, so a family re-priced while
     # no scenario arms one would delete a measured contribution from every
     # total that holds it — invisibly, because a baseline in which every amp
     # is 1.0 observes only the case that cannot fail.
     #
-    # A mana mage, arming two of them at once on the two cases Ruling 1 names
-    # as its seed fixtures: an Abyssal Mask holder's item active (Hextech
+    # A mana mage, arming two of them at once on the two seed cases: an
+    # Abyssal Mask holder's item active (Hextech
     # Rocketbelt, mitigated against the holder's own magic amp) and an Abyssal
     # Mask holder's ability-triggered item proc (Stormsurge, multiplied by the
     # holder's ability amp).  Actualizer declares that ability amp and it
@@ -1335,7 +1335,7 @@ COUPLED_SCENARIOS = (
         ),
     ),
     # The three target-side terms a basic-attack swing meets on its way into
-    # a defender (umbrella Amendment R, Ruling 4).  `_mitigate` carries a
+    # a defender.  `_mitigate` carries a
     # resistance and the holder's own amps and nothing else, so a family
     # whose packets are delivered as swings and re-priced from their
     # declarations would lose the plating multiplier, the crit-damage
@@ -1344,8 +1344,8 @@ COUPLED_SCENARIOS = (
     # reproduce it.
     #
     # *Armed means met*: the term has to be on a defender this roster
-    # actually swings at, which is the join Ruling 4 makes the derivation
-    # read.  Two of the three were already observable on a defender —
+    # actually swings at, and that join is what the derivation reads.  Two of
+    # the three were already observable on a defender —
     # `immolate_active_bruiser_roster`'s Darius holds Randuin's Omen and
     # Plated Steelcaps and is attacked as well as attacking — and Rock Solid
     # was armed by no committed scenario and no bench roster at all.
@@ -1360,8 +1360,8 @@ COUPLED_SCENARIOS = (
     # multiplier on one card.
     #
     # Malphite is second on purpose.  Runaan's Hurricane allocates its bolt
-    # to the second roster target, and the measurement that opened this
-    # amendment is a *bolt*: the copied packet a basic-attack router delivers
+    # to the second roster target, and the measurement that wants a defender
+    # is a *bolt*: the copied packet a basic-attack router delivers
     # at a second subject is priced by the same swing composition, and a
     # second subject that takes less from the bolt carries more health into
     # the current-health on-hit strikes that follow it — so the bolt row and
@@ -1534,7 +1534,7 @@ def covering_scenarios(
     One home for the predicate, because two readers ask it: this module's
     capture guard, and the schedule receipt's own per-family population.  A
     covering scenario and a scheduled population that disagreed about what
-    "covering" means is the silent divergence the campaign exists to remove.
+    "covering" means would be a silent divergence.
     """
     return {
         family: tuple(
@@ -1841,8 +1841,7 @@ def _refuse_unarmed_swing_terms(
     Its own function rather than a fifth block inside :func:`capture_coupled`,
     because the refusal has to name *both* sides of the join it failed — the
     item to equip and the delivery to make — and a guard that only told a
-    reader which item to add would send them to write the emptiness Ruling 4
-    describes.
+    reader which item to add would send them to write an empty join.
     """
     unarmed = _unarmed_swing_terms(scenarios, terms)
     if not unarmed:

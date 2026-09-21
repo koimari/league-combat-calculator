@@ -14,7 +14,7 @@ Usage::
     .venv/bin/python scripts/item_umbrella_audit.py --check
 
 ``--check`` compares the committed receipt against a fresh run and names every
-field that drifted; ``--output`` is how a slice that moved one refreshes it.
+field that drifted; ``--output`` refreshes the receipt after a change.
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-"""Audit the declared-vs-inferred cast-dependency surface (Phase 5).
+"""Audit the declared-vs-inferred cast-dependency surface.
 
 Two surfaces make ordering claims about a champion's kit: the module
 *declares* prerequisites (``CAST_DEPENDENCIES``) and the rotation resolver
@@ -27,7 +27,7 @@ five ledgers:
 ``conflict_ledger``
     Every opposition between the two surfaces.  A *covered* row cites the
     suppression that reviewed it; an *uncovered* one is a modelling
-    disagreement and fails (D-82).
+    disagreement and fails.
 ``authored_marker_reach``
     The interpreter→author half of reachability.
     ``engine._validate_cc_event_contract`` proves an authored marker
@@ -36,8 +36,8 @@ five ledgers:
     one carries a negative test that withholds or mutates it.  The marker
     surface is **derived** from the apply-atom keys
     ``detect_setup_consume_edges`` actually reads — never hand-listed,
-    because a hand list is exactly the prose-outruns-code shape this
-    campaign exists to kill.
+    because a hand list is the prose-outruns-code shape the derivation
+    exists to refuse.
 
 Two further resolutions ride the declaration ledger.  Every
 ``CastDependency.source`` is resolved against the committed full-entry wiki
@@ -120,8 +120,8 @@ RECEIPT_PATH = ROOT / "docs" / "cast-dependency-audit.json"
 NEGATIVE_TEST_MAPPING = "MARKER_NEGATIVE_TESTS"
 
 # The level × build reference matrix, mirroring the rotation suites.  The
-# option matrix below is the axis the phase names; these two are the axes
-# D-88's "no producer anywhere" verification was measured on, and a
+# option matrix below is the third axis; these two are the axes the "no
+# producer anywhere" verification is measured on, and a
 # coverage claim measured on a narrower matrix than the claim it carries
 # is the same prose-outruns-code failure in miniature.
 MATRIX_LEVELS: tuple[int, ...] = (11, 18)
@@ -151,7 +151,7 @@ GAP_LEDGERS = ("inferred_kind_coverage", "authored_marker_reach")
 # ``confirmed_by_inference``  the detector independently derived the same
 #                             edge and the merge receipt says so
 # ``custom_order_refusal``    deleting it makes a request order the engine
-#                             currently refuses legal again (D-86) — the
+#                             currently refuses legal again — the
 #                             route a head-only declaration takes when its
 #                             champion's hand seed still decides the order
 DECLARATION_ROUTES: tuple[str, ...] = (
@@ -811,8 +811,8 @@ def resolve_source(source: str, revisions: Mapping[str, int]) -> dict[str, Any]:
 def committed_acknowledged_gaps() -> tuple[dict[str, Any], ...]:
     """The acknowledged-gap list carried in the committed receipt.
 
-    The exclusion list lives in the receipt, never inside this tool
-    (D-40): a counter whose exclusions live in the measuring script can be
+    The exclusion list lives in the receipt, never inside this tool: a
+    counter whose exclusions live in the measuring script can be
     driven to zero by editing the script, and nobody reading the number
     would see it happen.  With no committed receipt there are no
     exclusions and the audit fails closed.
@@ -1249,17 +1249,16 @@ def _override_frontier() -> dict[str, Any]:
     The retirement frontier is a count this audit publishes rather than a
     claim a document makes: every surviving entry of
     ``CAST_ORDER_OVERRIDES`` carries a reason from the closed set, and the
-    histogram is what a later slice drives down.
+    histogram is what a later change drives down.
 
     ``head_only`` is the second half of that frontier and is derived, not
     listed: a seed whose champion also declares a ``CastDependency`` is
-    D-89's head-only disposition — the declaration decides the head of the
-    order and the hand seed still decides the tail — where a seed whose
-    champion declares nothing is hand-held end to end.  After the four
-    retirements all seven survivors carry the same ``dps_tiebreak``
-    reason, so without this the histogram cannot tell Zed and Brand apart
-    from a pure Tier 3 seed and the distinction D-89 ruled lives only in
-    ``declared_dependency_activation``.
+    head-only — the declaration decides the head of the order and the hand
+    seed still decides the tail — where a seed whose champion declares
+    nothing is hand-held end to end.  Every survivor carries the same
+    ``dps_tiebreak`` reason, so without this the histogram cannot tell Zed
+    and Brand apart from a pure Tier 3 seed and the distinction lives only
+    in ``declared_dependency_activation``.
     """
     histogram = dict.fromkeys(sorted(ORDER_OVERRIDE_REASONS), 0)
     unclassified: list[str] = []

@@ -21,9 +21,9 @@ The record count is ``metadata.item_count`` x ``len(metadata.lanes)``, read
 from **this** receipt.  ``scripts/golden_baseline.json`` carries a field of the
 same name with the same value today; reading it there would tie a coverage
 figure to the pair-engine snapshot's data pull, which is why the count has one
-home and this docstring names it.  It is a coverage-record count, not a golden
-leaf or entry count, so the campaign's sole-home rule for golden shape figures
-(umbrella criterion 4) does not reach it.
+home and this docstring names it.  It is a coverage-record count, not a
+golden leaf or entry count, so the rule that golden shape figures have one
+home does not reach it.
 
 Usage:
     python scripts/capture_coverage_classification.py capture <outfile.json>
@@ -57,8 +57,8 @@ RECEIPT_PATH = REPO_ROOT / "docs" / "receipts" / "item-coverage-classification.j
 SCHEMA_VERSION = 1
 SNAPSHOT_KIND = "item_coverage_classification"
 
-# One classifier per lane.  ``ClaimLane`` (Phase 1's coverage vocabulary) has
-# four members, but only these two answer "what is this item's coverage"; the
+# One classifier per lane.  ``ClaimLane`` has four members, but only these
+# two answer "what is this item's coverage"; the
 # support_packet and utility lanes are claim lanes with no classifier of their
 # own.
 CLASSIFIERS: Mapping[str, Callable[[dict[str, Any]], dict[str, Any]]] = {

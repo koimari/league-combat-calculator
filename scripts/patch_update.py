@@ -299,7 +299,7 @@ def ally_effect_lines(
     rewrites ``data/items.json`` and leaves this table exactly where it was:
     it is refresh-**inert**, which is worse than stale-cached, because a
     stale cache at least shows up as a diff while an inert table shows up as
-    nothing at all (D-47).  So patch day prints, for every item in that
+    nothing at all.  So patch day prints, for every item in that
     table, whether the cached entry it was read from moved.
 
     Blocking is reserved for an item that left the shop entirely, where the

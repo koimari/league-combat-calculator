@@ -150,8 +150,8 @@ _BLOCK_LISTS = (
 # A stack level the fight itself builds, from the attacks and ability hits
 # it already schedules, and reads at the moment of a cast. Deriving these
 # means walking a stack timeline into the cast pricing rather than counting
-# procs, which is the next campaign and NOT the in-fight proc frontier this
-# page's first row measures; they are reported apart so neither number
+# procs, which is a different measurement from the in-fight proc frontier
+# this page's first row makes; they are reported apart so neither number
 # flatters the other.
 _IN_FIGHT_STACK_LEVELS = {
     "q_focus_stacks",

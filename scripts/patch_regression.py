@@ -42,7 +42,7 @@ Comparison contract
   exact in both sources; the tighter carve-out only absorbs float noise).
 - Ability-leveling comparison is BEST-EFFORT: cooldown/cost rows map to the
   spell's ``cooldownTime``/``mana`` arrays; damage/scaling rows map to named
-  ``DataValues`` rows by value (any rank slice) and are only ever "stale"
+  ``DataValues`` rows by value (at any rank) and are only ever "stale"
   when the wiki attribute name matches a game row name but the numbers do
   not.  Rows that cannot be mapped are recorded as unchecked — never claimed
   checked, never claimed stale.

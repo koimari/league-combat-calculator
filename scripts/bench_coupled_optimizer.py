@@ -7,15 +7,14 @@ optimized against a selected enemy roster through the real ``/api/optimize``
 path — and reports wall time, evaluation count, and the certified result so a
 performance change can prove it kept the same answer.
 
-``--fixed-work`` is the campaign instrument (runbook R-01 row 8).  Wall time
-is a property of the machine; the *work* a search does is a property of the
-code, and the four counter families below plus the residual
-(``pair fights - evaluations x enemies``, R-25) move the instant a cache stops
-hitting or a candidate stops compiling, long before wall time leaves the
-noise.  The counters ride the search itself through
-``app.config["OPTIMIZER_INSTRUMENTATION"]`` and the optimizer's own
-``work_counters`` parameter — never a monkey-patched module attribute (R-24),
-because a patched harness measures something CI does not ship.
+``--fixed-work`` is the machine-independent reading.  Wall time is a property
+of the machine; the *work* a search does is a property of the code, and the
+four counter families below plus the residual (``pair fights - evaluations x
+enemies``) move the instant a cache stops hitting or a candidate stops
+compiling, long before wall time leaves the noise.  The counters ride the
+search itself through ``app.config["OPTIMIZER_INSTRUMENTATION"]`` and the
+optimizer's own ``work_counters`` parameter — never a monkey-patched module
+attribute, because a patched harness measures something CI does not ship.
 
 Usage:
     python scripts/bench_coupled_optimizer.py               # time every scenario
@@ -24,14 +23,13 @@ Usage:
     python scripts/bench_coupled_optimizer.py --fixed-work --isolate --no-compiled --json
     python scripts/bench_coupled_optimizer.py --alloc --json      # the probe alone
 
-``--no-compiled`` is R-01 row 11 and runs *both* routings: the row is defined
-against row 8's default run, so the command pairs them itself, reports
-``routing_divergences`` per scenario and exits non-zero on any.
+``--no-compiled`` runs *both* routings against the default run, pairs them
+itself, reports ``routing_divergences`` per scenario and exits non-zero on any.
 
 The fixed-work reading carries ``allocation_peak_bytes`` per scenario, from
-the same ``allocation_probe`` ``--alloc`` runs alone, so the one command
-Phase 0's criterion 4 names emits everything that criterion lists.  Emitting
-the peak is not gating it — R-28 gates allocation once, at Phase 4 S4.
+the same ``allocation_probe`` ``--alloc`` runs alone, so one command emits
+every figure.  Emitting the peak is not gating it; nothing here fails on
+allocation.
 """
 
 from __future__ import annotations
@@ -137,13 +135,12 @@ MUNDO_SCENARIO = {
     ],
 }
 
-# The campaign's fourth scenario (runbook R-27).  It was added when the three
-# above authored no ``cc_kind`` at all, which left the immobilize-triggered
-# half of the model — the Imperial Mandate Command amp this whole campaign
-# exists because of — invisible to the harness that is supposed to police it.
-# The crowd-control fan-out has since given the reviewed modules their kinds,
-# so Cassiopeia's R authors a stun too; this scenario is still the one that
-# *prices* the amp, because Imperial Mandate is locked into every candidate
+# The fourth scenario: the one that prices the immobilize-triggered half of
+# the model.  Without it the three above can author no ``cc_kind`` at all and
+# leave the Imperial Mandate Command amp invisible to the harness that is
+# supposed to police it.  Cassiopeia's R authors a stun too, so this scenario
+# is not the only one carrying a kind; it is the one that *prices* the amp,
+# because Imperial Mandate is locked into every candidate
 # here and Syndra's E is authored as a stun (``champions/syndra.py``).
 SYNDRA_MANDATE_SCENARIO = {
     "champion": "Syndra",
@@ -235,15 +232,14 @@ class WorkCounters:
     score_memo_misses: int = 0
     pair_run_fight_calls: int = 0
     #: Entries into the survival kernel.  Not a reported counter family and
-    #: not in ``as_dict``: it exists so Phase 4's one-walk property can be
-    #: read at runtime by a test (criterion 1), and a fifth family in the
-    #: published report would contradict the three counts the runbook's own
-    #: criterion 3 pins the report's shape at.
+    #: not in ``as_dict``: it exists so the one-walk property can be read at
+    #: runtime by a test, and a fifth family in the published report would
+    #: contradict the three counts the report's shape is pinned at.
     walk_invocations: int = 0
     rungs: Counter[str] = field(default_factory=Counter)
     #: Why each fallback happened, keyed by the declaration that refused.
     #: ``rungs`` is keyed by published label and a label is four closed
-    #: strings, so the *cause* D-69 asks a histogram to name has nowhere else
+    #: strings, so the *cause* the histogram has to name has nowhere else
     #: to go.  Its total is the fallback count, not the evaluation count:
     #: a compiled rung has no cause to name and contributes no key.
     rung_receipts: Counter[str] = field(default_factory=Counter)
@@ -524,8 +520,8 @@ def allocation_probe(scenario: str) -> int:
 
     The scenario's probe build is locked into every slot, so the optimizer's
     exact regime scores exactly one candidate and the peak is that single
-    coupled evaluation's — Phase 4 S4 trades per-fight dict churn for cached
-    frozen records and this is the number that has to hold (R-28).
+    coupled evaluation's: cached frozen records rather than per-fight dict
+    churn, and this is the number that shows it.
     """
     build = PROBE_BUILDS[scenario]
     payload = {
@@ -614,13 +610,12 @@ def _print_fixed_work(reports: Mapping[str, Mapping[str, Any]]) -> None:
 
 
 def _run_row_eleven(args: argparse.Namespace, selected: Mapping[str, Any]) -> None:
-    """R-01 row 11: both routings, the verdict, and a non-zero exit on any.
+    """Both routings, the verdict, and a non-zero exit on any divergence.
 
-    The row is defined against row 8's default run, so the command runs that
+    The comparison is against the default run, so the command runs that
     routing itself rather than trusting a reader to pair two invocations —
     and it reports its verdict as an exit code, because a gate whose failure
-    is a paragraph a human must notice is the shape this campaign exists to
-    remove.
+    is a paragraph a human must notice is no gate.
     """
     reports = routing_comparison(
         sorted(selected),

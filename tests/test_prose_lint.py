@@ -17,7 +17,7 @@ PENDING: tuple[str, ...] = ()
 #: a run prints; never raise it.  At zero the rule joins ``FAILING`` and its
 #: row goes away.
 CEILINGS = {
-    "pointer": (559, "state the fact instead of citing a campaign document"),
+    "test_pointer": (747, "state the fact instead of citing the work that made it"),
     "unsourced_constant": (69, "cite the cached field, the source or the composition"),
 }
 
@@ -73,6 +73,11 @@ def _history():
     return 3
 
 
+def _pointer():
+    """What Phase 4 ruled about this rank."""
+    return 5
+
+
 # ---------------------------------------------------------------------------
 # A section with nothing under it
 # ---------------------------------------------------------------------------
@@ -96,6 +101,15 @@ _IN_THE_SAME_BLOCK = 0.5
 
 _BARE = 1.0
 _TRAILING = 2.0  # 1.5 cast + 0.5 recovery
+'''
+
+
+#: One pointer beside a path that resolves and one beside nothing.
+POINTERS = '''"""Seed."""
+
+# Phase 4 ruled it, and docs/stages.json records the ruling.
+# Phase 4 ruled it.
+_KEPT = 1
 '''
 
 
@@ -217,3 +231,25 @@ def test_a_preamble_answers_to_the_definition_it_introduces(tmp_path):
     (tmp_path / "scripts").mkdir()
     (tmp_path / "src" / "seed.py").write_text(PREAMBLES, encoding="utf-8")
     assert scan(root=tmp_path)["long_comment"] == ["src/seed.py:4: 4 lines"]
+
+
+def test_a_pointer_beside_a_path_that_resolves_is_not_reported(tmp_path):
+    """The one exemption, and it is checked against the tree."""
+    (tmp_path / "src").mkdir()
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "src" / "seed.py").write_text(POINTERS, encoding="utf-8")
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "stages.json").write_text("{}", encoding="utf-8")
+    assert scan(root=tmp_path)["pointer"] == ["src/seed.py:4: # Phase 4 ruled it."]
+
+
+def test_a_test_files_pointers_report_under_their_own_key(tmp_path):
+    """``tests/`` answers to this rule alone, and never to the other six."""
+    (tmp_path / "src").mkdir()
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "test_seed.py").write_text(SEEDED, encoding="utf-8")
+    found = scan(root=tmp_path)
+    assert found["pointer"] == []
+    assert len(found["test_pointer"]) == 1
+    assert all(found[kind] == [] for kind in FAILING if kind != "pointer")

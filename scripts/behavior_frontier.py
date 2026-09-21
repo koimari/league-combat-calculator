@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 """The behaviour frontier — four counters, and the exclusions they stand on.
 
-Phase 3 replaces item behaviour scattered across engines, and coverage prose
-describing that code, with one closed union of declarations.  A migration
-that size needs a number rather than an impression, so this is the
-instrument: four counters over the tree, each with a definition stated here
-so the figure is reproducible by anyone who reads it, and each with its
-exclusions **committed beside it** in ``docs/behavior-frontier.json`` rather
-than living only in this file (D-40).  An exclusion list a tool keeps to
-itself is a counter that can be driven to zero by editing the tool.
+Item behaviour lives as one closed union of declarations rather than as code
+scattered across engines with coverage prose describing it.  These four
+counters say how far that holds, each with a definition stated here so the
+figure is reproducible by anyone who reads it, and each with its exclusions
+**committed beside it** in ``docs/behavior-frontier.json`` rather than living
+only in this file.  An exclusion list a tool keeps to itself is a counter that
+can be driven to zero by editing the tool.
 
 Counter definitions
 -------------------
@@ -29,12 +28,11 @@ module it appears in, into exactly one of four classes:
     Committed module set, excluded from both counters.  These are the places
     an item name is legitimately a key: the number registries themselves, the
     wiki parser's per-item configuration, the availability and legality
-    tables, and Phase 2's capability registry.  A declaration keyed by an
-    item name is the *destination* of this migration, not its subject.
+    tables, and the capability registry.  A declaration keyed by an item name
+    is where behaviour is supposed to live, not a site to retire.
 
-    Class C has a second, narrower arm the umbrella's **Amendment A**
-    (2026-08-12) added: a committed set of **containers** inside a Class B
-    module — Phase 1's authored claim-evidence corpus and
+    Class C has a second, narrower arm: a committed set of **containers**
+    inside a Class B module — the authored claim-evidence corpus and
     ``_REVIEW_ISSUE_REFS``.  They are typed declarations the resolution tier
     resolves against the codebase on every ``pytest`` run, which is the
     cannot-drift-silently property counter 2 exists to enforce, so they are
@@ -70,8 +68,8 @@ the reason where they meet the count and the gate diffs it by set equality;
 the import-time gate in ``interpreters`` is what makes an *unreceipted* gap
 impossible in the first place.
 
-Counters 5-7 are Phase 4's and live in ``docs/migration-frontier.json``;
-nothing here reports them.
+Counters 5-7 live in ``docs/migration-frontier.json``; nothing here reports
+them.
 
 Beside the counters the receipt carries the **targets** block: for each
 counter the bound its exit criterion resolves to, the measured value, and the
@@ -126,7 +124,7 @@ SCHEMA_VERSION = 2
 # Declared here and written into the receipt by --write; the receipt is what
 # is diff-gated, and tests/test_behavior_frontier.py asserts the two agree by
 # set equality, so a quiet edit here shows up as a diff in a committed
-# artifact (D-40).
+# artifact.
 
 CLASS_D_NON_BEHAVIOURAL: Mapping[str, str] = {
     "app.py": (
@@ -211,16 +209,14 @@ CLASS_B_CLAIM_PROSE: Mapping[str, str] = {
 # holding for leaves the set rather than staying as a zero-site entry, and a
 # name site added there counts against counter 1, the strictest class.
 
-# The second arm of Class C, added by the umbrella's dated **Amendment A**
-# (2026-08-12, criterion 7).  Class C above is a module set, and that
-# granularity could not express the measured contradiction: a Class B module
-# holds both the claim prose this counter is named for *and* Phase 1's
-# authored claim-evidence corpus, which is neither prose nor retirable.
-# Deriving the corpus from the registries it describes would make Phase 1's
-# resolution check agree with them by construction — the failure that module
-# exists to catch — and Phase 1 mandates the corpus, so it can only be
-# excluded.  ``_REVIEW_ISSUE_REFS`` joins it as the second blessed survivor of
-# Phase 3's criterion 14: an issue reference is not a coverage claim.
+# The second arm of Class C.  Class C above is a module set, and that
+# granularity cannot express the measured contradiction: a Class B module
+# holds both the claim prose this counter is named for *and* the authored
+# claim-evidence corpus, which is neither prose nor retirable.  Deriving the
+# corpus from the registries it describes would make the resolution check
+# agree with them by construction — the failure that module exists to catch —
+# so the corpus can only be excluded.  ``_REVIEW_ISSUE_REFS`` joins it: an
+# issue reference is not a coverage claim.
 #
 # Keyed by module and then by the **top-level binding** the site sits inside,
 # so the exclusion is as narrow as the argument for it.  Only Class B modules
@@ -471,7 +467,7 @@ def unserved_lane_block() -> dict[str, Any]:
     claims it.  ``per_rule_receipted`` are the compiled-lane gaps no row
     names because every declaration reaching them carries its own
     ``ReceiptOnly``, which is the stronger form: ``delta_amp`` is that whole
-    population today (D-101).
+    population today.
 
     A gap in neither cannot exist — ``validate_registrations`` refuses to
     import a tree holding one — so an empty ``unreceipted`` here is a
@@ -532,7 +528,7 @@ def compiled_walk_refusals() -> dict[str, Any]:
 
     Gated by set equality against the committed receipt rather than by a
     count, so a declaration that changes which builds fall back shows up as a
-    diff in a committed artifact (D-40).
+    diff in a committed artifact.
     """
     refusals: dict[str, list[str]] = {}
     for owner in sorted(item_names()):
@@ -580,10 +576,9 @@ def _undeclared_base_blocker() -> tuple[str, ...]:
 #
 # ``--check`` compared the receipt against the tree and never a counter
 # against its **target**, so a phase exit criterion could stand undischarged
-# behind a green gate — a gate blind to the thing it is named for, which is
-# this campaign's own failure shape wearing the campaign's badge.
+# behind a green gate — a gate blind to the thing it is named for.
 #
-# What follows is a **ratchet on the gap, never a ruling about the target**.
+# What follows is a **ratchet on the gap, never a claim about the target**.
 # It moves no target, relaxes none and dates none.  Per target it records the
 # bound the target resolves to (derived, never typed), the measured value,
 # whether the tree meets it, and who the *tree* says owes the remainder — an
@@ -597,9 +592,8 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 
 # ── who retires an unserved lane ──────────────────────────────────────────
 #
-# Which stage retires a gap is a ruling, and a ruling's home is the committed
-# stage record rather than a literal here or a field on the engine's lane
-# table.  ``interpreters.UnservedLane`` carries the two facts a reader can
+# Which stage retires a gap is recorded in the committed stage record rather
+# than as a literal here or a field on the engine's lane table.  ``interpreters.UnservedLane`` carries the two facts a reader can
 # check against the tree and nothing about when a gap retires.
 CAMPAIGN_STAGES = ROOT / "docs" / "receipts" / "campaign-stages.json"
 
@@ -678,10 +672,10 @@ def _lane_owed_to(lane: str) -> str:
 
 
 #: Where a counter that is *not* a counter-4 lane records who retires its gap.
-#: Counter 4's creditor is a campaign stage, so it resolves through
-#: ``campaign-stages.json``; counters 1-3 have no stage — they were met from
-#: the day this instrument was written and needed no creditor until a merge
-#: brought a kernel that had never been measured against them.  Same rule,
+#: Counter 4's creditor is a stage in
+#: ``docs/receipts/campaign-stages.json``; counters 1-3 have no stage — they
+#: are met and need a creditor only when a merge brings a kernel that has
+#: never been measured against them.  Same rule,
 #: separate home, because a stage record is derived from a closed commit range
 #: and a debt this file's counters carry is not.
 OPEN_DEBTS = ROOT / "docs" / "receipts" / "frontier-open-debts.json"
@@ -846,7 +840,7 @@ def no_runtime_behavior_block() -> dict[str, Any]:
     }
 
 
-# ── the zero-policy frontier (D-24) ──────────────────────────────────────
+# ── the zero-policy frontier ────────────────────────────────────────────
 #
 # ``damage_entry`` and ``simple_damage`` carry the champion tree's one
 # declared ``zero_policy`` default, so their champion call sites are not
@@ -857,8 +851,8 @@ def no_runtime_behavior_block() -> dict[str, Any]:
 # So the guard has a forbidden half and a ratcheted half, and the split is
 # the whole point.  Forbidden: a ``.get(key, <literal>)`` on one of the
 # three champion *input* blocks — the build's stats, the target's stats,
-# the user's options.  Those feed the damage formulas, and D-24 requires
-# the shape to be refused there, not counted.  ``champions/inputs.py``
+# the user's options.  Those feed the damage formulas, so the shape is
+# refused there rather than counted.  ``champions/inputs.py``
 # holds the vocabularies and declared defaults that replaced them.
 # Ratcheted: the same shape on a block a champion module *produced* — an
 # emitted entry, a reviewed packet spec, an authored event row — which is
@@ -897,7 +891,7 @@ class ZeroPolicyFrontier:
 
     ``forbidden_input_fallbacks`` are ``x.get(key, <number>)`` reads whose
     receiver is a champion input block.  The set must be **empty** — this is
-    D-24's source assertion, not a counter — and each member is reported as
+    a source assertion, not a counter — and each member is reported as
     ``module:line  expression`` so a failure names the site.
 
     ``produced_fallbacks`` are the same shape on a block the champion tree
@@ -1061,7 +1055,7 @@ def _zero_policy_failures(
     missing total, or a non-integer where a count belongs is a failure, not
     a skipped check — the earlier version read the committed numbers with
     chained ``.get``s and an ``isinstance`` guard, so deleting the section
-    disabled the gate silently, which is the shape this campaign removes.
+    would disable the gate silently.
     """
     failures: list[str] = []
     committed_zero = committed.get("zero_policy_frontier")
@@ -1123,10 +1117,10 @@ def _zero_policy_failures(
 def _unserved_lane_failures(
     committed: Mapping[str, Any], fresh: Mapping[str, Any]
 ) -> list[str]:
-    """Counter 4's content, gated by set equality like its exclusions (D-40).
+    """Counter 4's content, gated by set equality like its exclusions.
 
     Fails closed on a receipt with the section missing, because a gate that
-    skips what it cannot find is the shape this campaign removes.  The
+    skips what it cannot find is no gate.  The
     ``unreceipted`` population is asserted empty here as well as at import:
     the two checks read the same tree by two routes, and a green count with a
     non-empty list would mean the import gate had been bypassed.
@@ -1165,7 +1159,7 @@ def _route_failures(
     says produces its number — the one part of the row that is a claim about
     code rather than about a schedule.  ``interpreters`` checks the route
     against its registry at import; this checks it against the committed
-    artifact, so moving a route is a diff a reader meets (D-40).
+    artifact, so moving a route is a diff a reader meets.
     """
     failures: list[str] = []
     for key in sorted(set(recorded) & set(measured)):
@@ -1182,7 +1176,7 @@ def _route_failures(
 def _claim_evidence_failures(
     committed: Mapping[str, Any], fresh: Mapping[str, Any]
 ) -> list[str]:
-    """Amendment A's exclusion arm, gated the way Class C and D are (D-40).
+    """Class C's container arm, gated the way Class C and D are.
 
     Four clauses.  Set equality against the receipt makes an edit a diff in a
     committed artifact.  A container key in a module that is not Class B would
@@ -1240,7 +1234,7 @@ def _claim_evidence_failures(
 def _compiled_walk_refusal_failures(
     committed: Mapping[str, Any], fresh: Mapping[str, Any]
 ) -> list[str]:
-    """The compiled walk's refusal set, gated by set equality (D-40).
+    """The compiled walk's refusal set, gated by set equality.
 
     Fails closed: a receipt with the section deleted is a failure and not a
     skipped check, so the gate cannot be disarmed by removing what it reads.
@@ -1276,7 +1270,7 @@ def _no_runtime_behavior_failures(
     """The reviewed-nothing ratchet: set-equal, bounded, and every member sourced.
 
     Four checks and not one.  Set equality against the receipt makes an edit
-    a diff in a committed artifact (D-40); the ceiling makes the set
+    a diff in a committed artifact; the ceiling makes the set
     non-increasing from what the migration inherited; requiring a
     ``SourceReceipt`` per member is what stops "we reviewed it" from being the
     same unbacked sentence this phase deletes everywhere else; and no member

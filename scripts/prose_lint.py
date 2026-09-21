@@ -24,13 +24,16 @@ assumption keyword.  An element no literal answers for is reported rather than
 read past, and the cached text ``static/reviewed-packets.json`` carries into
 every packet module is out of an AST's reach.
 
-A seventh, ``pointer``, names prose citing a campaign document where the reason
-itself belongs.  It reports rather than failing, under a ceiling the test holds
-and that may only fall; moving it into ``FAILING`` is one edit once the ceiling
-reaches zero.  Prose citing a wiki URL or a game file for a number is evidence,
-and is never reported.
+A seventh, ``pointer``, is prose citing the project's own history -- a
+numbered work phase, a dated decision, a named unit of work -- where the
+reason itself belongs.  A hit is allowed when the same line names a
+repository path that resolves, which is what keeps
+``docs/receipts/campaign-stages.json`` citable; prose citing a wiki URL or
+a game file for a number is evidence and is never reported.  It fails over
+``TARGETS`` and reports over ``TESTS_SCOPE`` as ``test_pointer``, under a
+ceiling the test holds and that may only fall.
 
-An eighth, ``unsourced_constant``, reports a module-level numeric literal under
+A ninth, ``unsourced_constant``, reports a module-level numeric literal under
 ``CHAMPIONS_SCOPE`` whose provenance nothing states: a citation, a cached field
 name or a composition, either trailing the line or heading the unbroken run of
 assignments it sits in.  It reports under its own ceiling for the same reason.
@@ -56,6 +59,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TARGETS = ("src", "scripts")
+TESTS_SCOPE = "tests"
 CHAMPIONS_SCOPE = "src/calculator/champions/"
 MODULE_DOCSTRING_CAP = 20
 ASSUMPTION_CAP = 120
@@ -66,8 +70,9 @@ FAILING = (
     "dead_banner",
     "long_module_docstring",
     "long_assumption",
+    "pointer",
 )
-REPORTING = ("pointer", "unsourced_constant")
+REPORTING = ("test_pointer", "unsourced_constant")
 SCOPES = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
 FUNCS = (ast.FunctionDef, ast.AsyncFunctionDef)
 
@@ -86,6 +91,11 @@ POINTER = re.compile(
     re.IGNORECASE,
 )
 BANNER = re.compile(r"^# -{5,}$")
+# A repository path, which is what makes a pointer resolve.
+REPO_PATH = re.compile(r"[\w.-]+(?:/[\w.-]+)+")
+#: Which rules a file in each scope answers to.
+SOURCE_RULES = (("history", HISTORY), ("pointer", POINTER))
+TEST_RULES = (("test_pointer", POINTER),)
 # Where a number comes from: a citation, a cached field name or a quoted cached
 # phrase, or a composition of two numbers.
 PROVENANCE = re.compile(
@@ -308,42 +318,71 @@ def _dead_banners(
     ]
 
 
-def _cite(found: Mapping[str, list], where: str, line: int, text: str) -> None:
+def _resolves(raw: str, root: Path) -> bool:
+    """Whether this line names a repository path that exists."""
+    return any(
+        ".." not in match and (root / match).exists()
+        for match in REPO_PATH.findall(raw)
+    )
+
+
+def _cite(
+    found: Mapping[str, list],
+    where: str,
+    line: int,
+    text: str,
+    rules: tuple[tuple[str, re.Pattern[str]], ...],
+    root: Path,
+) -> None:
     for offset, raw in enumerate(text.splitlines()):
         if EVIDENCE.search(raw):
             continue
-        for kind, pattern in (("history", HISTORY), ("pointer", POINTER)):
-            if pattern.search(raw):
-                found[kind].append(f"{where}:{line + offset}: {raw.strip()[:100]}")
+        for kind, pattern in rules:
+            if not pattern.search(raw):
+                continue
+            if pattern is POINTER and _resolves(raw, root):
                 break
+            found[kind].append(f"{where}:{line + offset}: {raw.strip()[:100]}")
+            break
 
 
 def scan(root: Path = ROOT, exclude: tuple[str, ...] = ()) -> dict[str, list[str]]:
-    """Report every finding over every ``.py`` file under ``TARGETS``."""
+    """Report every finding over every ``.py`` file this lint reads.
+
+    ``TARGETS`` carries every rule.  ``TESTS_SCOPE`` carries the pointer rule
+    alone, under its own key, because a test's prose is swept and not yet
+    clear.
+    """
     found: dict[str, list[str]] = {key: [] for key in (*FAILING, *REPORTING)}
+    scopes = (*TARGETS, TESTS_SCOPE)
     paths = (
-        p for t in TARGETS for p in (root / t).rglob("*.py") if p.name not in exclude
+        p for t in scopes for p in (root / t).rglob("*.py") if p.name not in exclude
     )
     for path in sorted(paths, key=lambda p: p.as_posix()):
         where = path.relative_to(root).as_posix()
         source = path.read_text(encoding="utf-8")
         tree = ast.parse(source)
+        tested = where.startswith(f"{TESTS_SCOPE}/")
+        rules = TEST_RULES if tested else SOURCE_RULES
         for node in ast.walk(tree):
             doc = _docstring(node)
             if doc is None:
                 continue
-            _cite(found, where, doc.lineno, doc.value)
+            _cite(found, where, doc.lineno, doc.value, rules, root)
             body = _span(node.body[1:]) or 1  # a stub's docstring is its body
-            if isinstance(node, FUNCS) and doc.end_lineno - doc.lineno + 1 > body:
+            lines = doc.end_lineno - doc.lineno + 1
+            if not tested and isinstance(node, FUNCS) and lines > body:
                 found["long_docstring"].append(f"{where}:{doc.lineno}: {node.name}")
         funcs = [n for n in ast.walk(tree) if isinstance(n, FUNCS)]
         heads = _definition_spans(funcs)
         blocks = _comment_blocks(source)
         for line, block in blocks:
-            _cite(found, where, line, "\n".join(block))
+            _cite(found, where, line, "\n".join(block), rules, root)
             bound = _comment_bound(line, block, funcs, heads)
-            if bound is not None and len(block) > bound:
+            if not tested and bound is not None and len(block) > bound:
                 found["long_comment"].append(f"{where}:{line}: {len(block)} lines")
+        if tested:
+            continue
         for line in _dead_banners(blocks, tree):
             found["dead_banner"].append(f"{where}:{line}: banner over nothing")
         if where.startswith(CHAMPIONS_SCOPE):

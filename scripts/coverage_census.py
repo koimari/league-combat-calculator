@@ -1,4 +1,4 @@
-"""Full-coverage census gate for the full-coverage campaign.
+"""The full-coverage census gate.
 
 Sweeps every champion x fight mode, every champion x legally-slotted item,
 every champion x keystone, every certified-timeline item x enemy champion
@@ -7,8 +7,8 @@ enemy, every comparison curve, and a named BIS sample — all through the real
 pure payload boundaries (`calculate_payload`, `bis_payload`). Every refusal,
 withhold, coarse source, or crash the sweep can reach is a frontier entry.
 
-The campaign closes when the frontier is empty. Until then the receipt pins
-the shrinking frontier.
+Coverage is full when the frontier is empty. Until then the receipt pins the
+shrinking frontier.
 
 A frontier entry that cannot be closed without inventing data is acknowledged
 in ``docs/coverage-residue.json`` instead: one row per (champion, source),
