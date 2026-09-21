@@ -1,6 +1,6 @@
 ---
 name: atomizer
-description: The unified way to atomize anything numerical and quantifiable in this repo — items, abilities, runes, economics, stats, champions. Use when adding/updating items or champions, verifying data, building catalogues, or doing patch-day work; never write a new ad-hoc extractor.
+description: The unified way to atomize anything numerical and quantifiable in this repo, items, abilities, runes, economics, stats, champions. Use when adding/updating items or champions, verifying data, building catalogs, or doing patch-day work; never write a new ad-hoc extractor.
 ---
 
 # Atomizer
@@ -25,11 +25,11 @@ Every atom is a dict with: `atom_id`, `behavior`, `source`, `name`,
 `values` (numeric array), `units`, `evidence` (receipt strings), `hash`.
 
 Rules (enforced by `src/calculator/atomizer.py` + tests):
-1. **Per-effect independence** — each effect fragment (branches, then
+1. **Per-effect independence**, each effect fragment (branches, then
    sentences) is classified on its own. No cross-effect "seen" set; the
    old item atomizer's first-passive-absorbs-everything bug is forbidden.
 2. **Dedup at emission** by `(atom_id, behavior)`, merging evidence.
-3. **No atom without a receipt** — evidence names the exact effect + keyword
+3. **No atom without a receipt**, evidence names the exact effect + keyword
    (e.g. `active:Ravenous Crescent@kw:life steal`).
 4. Atomic file writes + a manifest.
 
@@ -37,9 +37,9 @@ Rules (enforced by `src/calculator/atomizer.py` + tests):
 
 | Domain | Source | Extractor |
 |---|---|---|
-| items | data/items.json | atomizer_domains.atomize_item_catalogue |
+| items | data/items.json | atomizer_domains.atomize_item_catalog |
 | abilities | data/champions.json | atomizer_domains.atomize_abilities |
-| runes | data/runes.json | atomizer_domains.atomize_rune_catalogue |
+| runes | data/runes.json | atomizer_domains.atomize_rune_catalog |
 | economics | data/economics-sourced.json | atomizer_domains.atomize_economics |
 | stats | data/champions.json | atomizer_domains.atomize_stats |
 | champions | data/champions.json | atomize.py delegates to specialist scripts/extract_atoms.py |

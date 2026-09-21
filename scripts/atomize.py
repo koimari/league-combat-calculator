@@ -29,8 +29,8 @@ from src.calculator.atomizer import Atom, write_atoms, write_manifest
 from src.calculator.atomizer_abilities import atomize_abilities
 from src.calculator.atomizer_domains import (
     atomize_economics,
-    atomize_item_catalogue,
-    atomize_rune_catalogue,
+    atomize_item_catalog,
+    atomize_rune_catalog,
     atomize_stats,
 )
 
@@ -224,7 +224,7 @@ def main(argv: list[str] | None = None) -> int:
     manifest = {}
 
     if "items" in wanted:
-        objects = atomize_item_catalogue(data["items.json"])
+        objects = atomize_item_catalog(data["items.json"])
         manifest["items"] = write_atoms(
             out_root / "items.json",
             domain="items",
@@ -247,7 +247,7 @@ def main(argv: list[str] | None = None) -> int:
             source_ref=_source_ref(data_paths["champions.json"]),
         )
     if "runes" in wanted:
-        objects = atomize_rune_catalogue(data["runes.json"])
+        objects = atomize_rune_catalog(data["runes.json"])
         manifest["runes"] = write_atoms(
             out_root / "runes.json",
             domain="runes",

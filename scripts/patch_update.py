@@ -14,7 +14,7 @@ golden diffs in the commit) starts from a focused report:
                champions and items in the parse config, plus net-new /
                removed items shop-wide and a roster add/remove roll-call.
                The economics file is audited for currency the same way.
-  3. Rebuild — the derived catalogues the browser fetches, static/bis-profiles.json
+  3. Rebuild — the derived catalogs the browser fetches, static/bis-profiles.json
                included.
   4. Gates   — reviewed-packet currency, full-entry audit, a game-file refresh,
                staleness (patch_regression), the coverage census, then pytest
@@ -639,7 +639,7 @@ def refresh_economics() -> int:
 
 
 def rebuild_static_artifacts() -> int:
-    """Rebuild the derived catalogues the web UI fetches at runtime.
+    """Rebuild the derived catalogs the web UI fetches at runtime.
 
     app.js loads data.json, ability-catalog, bis-profiles, and effect-catalog
     directly, so a patch that refreshes data/ without rebuilding these leaves
@@ -653,7 +653,7 @@ def rebuild_static_artifacts() -> int:
     Those invariants are why the rebuild belongs in the run — without them a
     build against a missing sibling drops the packets in silence.
     """
-    print("== Rebuilding static catalogues ==", flush=True)
+    print("== Rebuilding static catalogs ==", flush=True)
     for builder in (
         "build_static_data.py",
         "build_ability_catalog.py",
@@ -661,7 +661,7 @@ def rebuild_static_artifacts() -> int:
         # Writes only gitignored trees; it runs here because it fails closed
         # when the unified item-atom domain disagrees with the Atomizer manifest.
         "build_receipts.py",
-        # Not a UI catalogue: data/onhit-matrix.json is the wiki's own on-hit
+        # Not a UI catalog: data/onhit-matrix.json is the wiki's own on-hit
         # application reading, and tests/test_spellblade_on_hit_matrix.py holds
         # it against each module's declaration.  Re-read from the fresh cache
         # here so a patch that flips an ability's on-hit phrasing turns that
@@ -1250,10 +1250,10 @@ def run_full(
     staleness_out: Path | None = None,
     patch: str | None = None,
 ) -> int:
-    """Full patch-day run: pull, audit, rebuild catalogues, gates, capture.
+    """Full patch-day run: pull, audit, rebuild catalogs, gates, capture.
 
     Order (issue #134 — golden capture stays last and conditional): wiki pull,
-    economics refresh, source-completeness audit, catalogue rebuild
+    economics refresh, source-completeness audit, catalog rebuild
     (bis-profiles included), reviewed-packet currency, full parent-entry audit,
     game-file refresh, staleness vs game files, coverage census, then pytest +
     capture.  Any gate failure aborts before ``run_gates()`` so a stale packet

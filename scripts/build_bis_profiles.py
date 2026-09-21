@@ -20,7 +20,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from scripts.build_ability_catalog import catalogue_champions, rank_count
+from scripts.build_ability_catalog import catalog_champions, rank_count
 from scripts.source_receipt import cache_patch, source_receipt, source_sha256
 from src.calculator.cast_dependency import BASE_CAST_SLOTS
 
@@ -331,7 +331,7 @@ def build_profiles(
 ) -> dict[str, Any]:
     raw = json.loads(source.read_text(encoding="utf-8"))
     champions: dict[str, Any] = {}
-    for champion in catalogue_champions(raw):
+    for champion in catalog_champions(raw):
         abilities = champion.get("abilities", {})
         forms: dict[str, list[dict[str, Any]]] = {}
         for slot in BASE_CAST_SLOTS:

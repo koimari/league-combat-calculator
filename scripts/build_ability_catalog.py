@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Build the UI-safe, patch-pinned ability catalogue from the Wiki cache.
+"""Build the UI-safe, patch-pinned ability catalog from the Wiki cache.
 
-The catalogue is deliberately descriptive. It proves that a champion's five
+The catalog is deliberately descriptive. It proves that a champion's five
 ability slots were ingested, but it does not turn an unreviewed description
 into a damage formula. Exact combat output remains owned by the reviewed
 champion registry.
@@ -27,7 +27,7 @@ def _first_nonempty(values: Iterable[Any]) -> Any:
 
 
 def rank_count(ability: Mapping[str, Any], slot: str) -> int:
-    """The catalogue's rank cardinality for one ability, clamped to the UI's five.
+    """The catalog's rank cardinality for one ability, clamped to the UI's five.
 
     Distinct from ``rank_allocation.rank_rules``, which bounds a *manual* rank
     from the sourced skill-point unlock levels rather than from the cache's
@@ -105,8 +105,8 @@ def _ability_entry(slot: str, raw_entries: Any) -> dict[str, Any]:
     }
 
 
-def catalogue_champions(raw: Mapping[str, Any]) -> list[dict[str, Any]]:
-    """The cached champion rows a catalogue publishes, by display name.
+def catalog_champions(raw: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """The cached champion rows a catalog publishes, by display name.
 
     Every cached champion is here: an unregistered one is still a legal ally or
     target.  A registered module with no cache row fails the build.
@@ -124,7 +124,7 @@ def build_catalog(source: Path, patch: str) -> dict[str, Any]:
         raise ValueError(f"Expected champion mapping in {source}")
 
     champions = []
-    for champion in catalogue_champions(raw):
+    for champion in catalog_champions(raw):
         abilities = champion.get("abilities", {})
         entries = [
             _ability_entry(slot, abilities.get(slot, [])) for slot in BASE_CAST_SLOTS

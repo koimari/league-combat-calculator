@@ -96,7 +96,7 @@ def measure(repeats: int = REPEATS) -> dict[str, Any]:
     """Warm once, then engine and wall readings over ``repeats`` searches.
 
     The warmup is not optional: the first search of a process pays the item
-    catalogue parse and every module-level memo, which is several hundred ms of
+    catalog parse and every module-level memo, which is several hundred ms of
     work no later search repeats.
     """
     warmup = one_search()
@@ -142,7 +142,7 @@ def _profiled_search() -> pstats.Stats:
 
 
 def profile(rows: int = 30) -> None:
-    """cProfile one search, warmed first so the catalogue parse is not the top row."""
+    """cProfile one search, warmed first so the catalog parse is not the top row."""
     one_search()
     stats = _profiled_search()
     stats.sort_stats("tottime").print_stats(rows)

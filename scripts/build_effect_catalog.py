@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Compile Wiki item effects into a compact, ordered event catalogue.
+"""Compile Wiki item effects into a compact, ordered event catalog.
 
-This is intentionally a signal catalogue, not a claim that every effect is
+This is intentionally a signal catalog, not a claim that every effect is
 safe for the reviewed fight engine. It keeps the original Wiki text, detected
 mathematical phrases, and an explicit trigger -> resolution order for the
 roster BIS preview to reason about conditional value.

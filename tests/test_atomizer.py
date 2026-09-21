@@ -12,8 +12,8 @@ from src.calculator.atomizer import Atomizer, number_and_unit, split_effect_frag
 from src.calculator.atomizer_abilities import atomize_abilities
 from src.calculator.atomizer_domains import (
     atomize_item,
-    atomize_item_catalogue,
-    atomize_rune_catalogue,
+    atomize_item_catalog,
+    atomize_rune_catalog,
     atomize_stats,
 )
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
@@ -132,10 +132,10 @@ def test_guardians_horn_atom_keeps_both_damage_reduction_values():
     assert reduction["evidence"] == ["passive:Undaunted@kw:incoming"]
 
 
-def test_item_catalogue_covers_every_cache_item():
-    catalogue = atomize_item_catalogue(fetch_item_data())
-    assert len(catalogue) == 324
-    assert all(atoms for atoms in catalogue.values())
+def test_item_catalog_covers_every_cache_item():
+    catalog = atomize_item_catalog(fetch_item_data())
+    assert len(catalog) == 324
+    assert all(atoms for atoms in catalog.values())
 
 
 def test_ability_atomizer_reads_leveling_modifiers():
@@ -355,9 +355,7 @@ def test_rune_atomizer_preserves_nested_arrays_and_units():
             },
         }
     }
-    atoms = {
-        atom["atom_id"]: atom for atom in atomize_rune_catalogue(runes)["Test Rune"]
-    }
+    atoms = {atom["atom_id"]: atom for atom in atomize_rune_catalog(runes)["Test Rune"]}
     assert atoms["rune.cooldown"]["units"] == ["s"]
     assert atoms["rune.effects.leveling"]["values"] == [10.0, 20.0, 30.0, 40.0]
     assert atoms["rune.effects.damage_amp_ratio"]["units"] == ["ratio"]
@@ -380,8 +378,7 @@ def test_rune_atomizer_keeps_glacial_zone_receipts_and_units():
         }
     }
     atoms = {
-        atom["atom_id"]: atom
-        for atom in atomize_rune_catalogue(runes)["Glacial Augment"]
+        atom["atom_id"]: atom for atom in atomize_rune_catalog(runes)["Glacial Augment"]
     }
     assert atoms["rune.effects.glacial_ray_count"]["units"] == ["count"]
     assert atoms["rune.effects.glacial_zone_radius_units"]["units"] == ["units"]
@@ -407,7 +404,7 @@ def test_rune_atomizer_keeps_stormraider_window_and_percent_receipts():
     }
     atoms = {
         atom["atom_id"]: atom
-        for atom in atomize_rune_catalogue(runes)["Stormraider's Surge"]
+        for atom in atomize_rune_catalog(runes)["Stormraider's Surge"]
     }
     assert atoms["rune.cooldown"]["units"] == ["s", "s"]
     assert atoms["rune.effects.stormraider_damage_threshold_ratio"]["units"] == [
@@ -440,8 +437,7 @@ def test_rune_atomizer_keeps_fleet_charge_heal_and_speed_receipts():
         }
     }
     atoms = {
-        atom["atom_id"]: atom
-        for atom in atomize_rune_catalogue(runes)["Fleet Footwork"]
+        atom["atom_id"]: atom for atom in atomize_rune_catalog(runes)["Fleet Footwork"]
     }
     assert atoms["rune.effects.fleet_heal_melee_by_level"]["units"] == [
         "health",
@@ -480,9 +476,7 @@ def test_rune_atomizer_keeps_conqueror_force_state_and_heal_receipts():
             },
         }
     }
-    atoms = {
-        atom["atom_id"]: atom for atom in atomize_rune_catalogue(runes)["Conqueror"]
-    }
+    atoms = {atom["atom_id"]: atom for atom in atomize_rune_catalog(runes)["Conqueror"]}
     assert atoms["rune.effects.conqueror_adaptive_force_by_level"]["units"] == [
         "adaptive_force",
         "adaptive_force",
@@ -526,8 +520,7 @@ def test_rune_atomizer_keeps_deathfire_burn_state_receipts():
         }
     }
     atoms = {
-        atom["atom_id"]: atom
-        for atom in atomize_rune_catalogue(runes)["Deathfire Touch"]
+        atom["atom_id"]: atom for atom in atomize_rune_catalog(runes)["Deathfire Touch"]
     }
     assert atoms["rune.effects.deathfire_amp_delay_seconds"]["units"] == ["s"]
     assert atoms["rune.effects.deathfire_amp_ratio"]["units"] == ["ratio"]

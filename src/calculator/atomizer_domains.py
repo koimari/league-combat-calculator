@@ -188,13 +188,13 @@ def atomize_item(item: Mapping[str, Any]) -> list[dict[str, Any]]:
     return a.emit()
 
 
-def atomize_item_catalogue(
+def atomize_item_catalog(
     items: Mapping[str, dict[str, Any]],
 ) -> dict[str, list[dict[str, Any]]]:
     return {str(key): atomize_item(item) for key, item in sorted(items.items())}
 
 
-def atomize_rune_catalogue(
+def atomize_rune_catalog(
     runes: Mapping[str, Mapping[str, Any]] | Iterable[Mapping[str, Any]] | None,
 ) -> dict[str, list[dict[str, Any]]]:
     out: dict[str, list[dict[str, Any]]] = {}

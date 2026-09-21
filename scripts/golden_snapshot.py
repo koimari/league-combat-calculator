@@ -141,7 +141,7 @@ SPELLBLADE_BUILD = ["Trinity Force", "Infinity Edge", "Berserker's Greaves"]
 # taste: on the grid 5/8/10/12/15/20/25/30 at this sweep's own level, 1F moved
 # Eclipse at 12, 20, 25 and 30 and at no shorter length. 12s is the shortest
 # that sees it (and the shortest that authors Hullbreaker's on-hit at all);
-# 30s outlives every cooldown and window in the catalogue, is the only length
+# 30s outlives every cooldown and window in the catalog, is the only length
 # that authors Voltaic Cyclosword's once-per-fight row, and is where 1F's
 # Eclipse delta is largest.
 SWEEP_TIMED_CHAMPION = "Ziggs"
@@ -436,7 +436,7 @@ def snapshot_item_sweep(
     how long the fight ran or how sparsely it was cast — the blind spot
     that made wave 1F's Eclipse re-price invisible here. Both arms sweep
     EVERY item rather than a named windowed subset: a hand-kept list of
-    "items with a cadence" drifts away from the catalogue exactly like a
+    "items with a cadence" drifts away from the catalog exactly like a
     hand-kept availability list would.
     """
     by_display_name = {data.get("name"): data for data in champions.values()}
