@@ -163,10 +163,11 @@ parse_abilities = with_item_on_hit_specs(parse_abilities, _ON_HIT_SPECS)
 
 
 ASSUMPTIONS += [
-    "W (Soul Ignition) recast heal is authored by the grey-health "
-    "primitive: 100% of the post-mitigation champion damage taken during "
-    "the 6s active is stored (capped by the 'Damage taken grey health "
-    "cap' row) and healed at the automatic 6s recast.  The health-cost "
-    "add and the missing-health bonus are dynamic self-state boundaries, "
-    "per the E1-b6 scope note",
+    "W (Soul Ignition) recast heal is authored by the grey-health primitive.",
+    "100% of the post-mitigation champion damage taken during the 6s "
+    "active is stored.",
+    "The store is capped by the 'Damage taken grey health cap' row and "
+    "healed at the automatic 6s recast.",
+    "W's health-cost add and missing-health bonus are dynamic self-state "
+    "boundaries.",
 ]

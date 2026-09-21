@@ -263,18 +263,20 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 ASSUMPTIONS.extend(
     [
         "R (Noxious Trap) is a summoned trap: one detonation prices the "
-        "full 4-second poison DoT (E2-3 ticks); r_shrooms prices "
-        "sequential detonations, because multiple shrooms only refresh "
-        "the poison duration and never stack.",
-        "E (Toxic Shot) is an on-hit on every basic attack (Rageblade "
-        "phantom hits and spellblade re-application apply it again) plus "
-        "the poison: a one-stack DoT every attack refreshes rather than "
-        "stacks (wiki note), integrated over the fight's swing timeline "
-        "with the engine's committed accounting (the last attack's full "
-        "4 seconds of ticks count). Only basic attacks poison; Blinding "
-        "Dart does not.",
-        "The shroom slow (30/40/50% by R rank for 4 seconds) and reveal "
-        "are crowd-control/vision utility the fight model does not price.",
+        "full 4-second poison DoT (E2-3 ticks).",
+        "r_shrooms prices sequential R detonations: several shrooms "
+        "refresh the poison duration and never stack.",
+        "E (Toxic Shot) is an on-hit on every basic attack, plus the poison.",
+        "Rageblade phantom hits and spellblade re-application apply E's "
+        "on-hit again.",
+        "E's one-stack poison DoT refreshes on every attack rather than "
+        "stacking (wiki note).",
+        "It integrates over the fight's swing timeline, so the last "
+        "attack's full 4 seconds of ticks count.",
+        "Only basic attacks poison; Blinding Dart does not.",
+        "The shroom slow, 30/40/50% by R rank for 4 seconds, is "
+        "crowd-control utility the fight model does not price.",
+        "The shroom reveal is vision utility the fight model does not price.",
         "Trap placement, arm time, trigger radius and the shroom's 6-HP "
         "trap health bar are state outside the damage model.",
     ]
@@ -292,27 +294,31 @@ OPTIONS.append(
 )
 ASSUMPTIONS.extend(
     [
-        "W (Move Quick) deals no damage; its ACTIVE grant "
-        "(24/32/40/48/56% for 3s) is published as a move_speed_percent "
-        "stat buff, time-weighted by buff_window_share over that 3-second "
-        "window: a stat_buff is one scalar for the whole fight, so an "
-        "unweighted term would read the same in a 5s fight and a 30s one. "
-        "The window is cached PROSE, not an atom (the slot's one "
-        "timing.active_duration atom reads 5.0 and is the PASSIVE's "
-        "idle condition, not the cast's window), so it is a HARDCODED "
-        "module constant — the Udyr-E / Singed-R precedent. "
-        "The passive branch is withheld: its 5s-undamaged condition is a "
-        "state a fight never enters. Move-speed-reading item passives "
-        "(Swiftmarch's adaptive force) are resolved from the build's "
-        "stats before any cast, so they do not grow with the buff — the "
-        "same fight-start boundary every stat_buff has.",
-        "P (Guerrilla Warfare) stays out_of_scope, NOT no_damage (the "
-        "Olaf-R rule): Element of Surprise grants 20/40/60/80% (based on "
-        "level) bonus attack speed for 5s on breaking stealth, a real "
-        "sourced steroid that would change damage. It is withheld because "
-        "the stealth's 1.5s-idle entry condition is a state the fight "
-        "model never enters, and because the cache carries no leveling "
-        "row for the magnitude (wiki prose and the game binary only).",
+        "W (Move Quick) deals no damage; its ACTIVE grant is "
+        "24/32/40/48/56% move speed for 3s.",
+        "W's grant is published as a move_speed_percent stat buff, "
+        "time-weighted by buff_window_share over that window.",
+        "A stat_buff is one scalar for the whole fight, so an unweighted "
+        "term would read the same at 5s and at 30s.",
+        "The 3-second window is cached PROSE, not an atom: the slot's one "
+        "timing.active_duration atom reads 5.0.",
+        "That atom is the PASSIVE's idle condition, not the cast's window.",
+        "The window is a HARDCODED module constant, the Udyr-E / "
+        "Singed-R cached-prose boundary.",
+        "W's passive branch is withheld: its 5s-undamaged condition is a "
+        "state a fight never enters.",
+        "Move-speed-reading item passives (Swiftmarch's adaptive force) "
+        "resolve from the build's stats before any cast.",
+        "They do not grow with the buff, the same fight-start boundary "
+        "every stat_buff has.",
+        "P (Guerrilla Warfare) stays out_of_scope, NOT no_damage: the Olaf-R rule.",
+        "Element of Surprise grants 20/40/60/80% (based on level) bonus "
+        "attack speed for 5s on breaking stealth.",
+        "That is a real sourced steroid that would change damage.",
+        "It is withheld because the stealth's 1.5s-idle entry condition "
+        "is a state the fight model never enters.",
+        "The cache carries no leveling row for the magnitude: wiki prose "
+        "and the game binary only.",
     ]
 )
 MODULE_COVERAGE = coverage(no_damage="W", out_of_scope="P")

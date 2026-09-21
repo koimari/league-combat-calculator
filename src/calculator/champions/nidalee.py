@@ -109,28 +109,27 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 ASSUMPTIONS.extend(
     [
         "E places Primal Surge's bonus attack speed (human form, the "
-        "self-cast) as a 7-second window at the first E cast, the cast the "
-        "self-heal rule already pays; the E row's damage stays the cougar "
-        "Swipe the packet prices, the same human/cougar blend the heal "
-        "rule uses. The ally-cast grant and a second window are not placed.",
+        "self-cast) as a 7-second window.",
+        "The window opens at the first E cast, the cast the self-heal "
+        "rule already pays.",
+        "The E row's damage stays the cougar Swipe the packet prices, "
+        "the human/cougar blend the heal rule uses.",
+        "The ally-cast grant and a second window are not placed.",
         "W (Bushwhack) is a summoned trap: one sprung trap prices the "
-        "full 4-second DoT (E2-3 ticks); w_traps prices additional "
-        "pre-placed traps, each with its own full DoT (the source has no "
-        "refresh rule).",
-        "The E4 worklist 'armor shred' note is stale for the current "
-        "patch: the cached leveling rows and live game files carry only "
-        "the trap DoT, so no shred is modeled.",
+        "full 4-second DoT (E2-3 ticks).",
+        "w_traps prices additional pre-placed traps, each with its own "
+        "full DoT; the source has no refresh rule.",
+        "The E4 worklist 'armor shred' note is stale for the current patch.",
+        "The cached leveling rows and the live game files carry only the "
+        "trap DoT, so no shred is modeled.",
         "Trap placement, arm time, trigger radius and the trap's 6-HP "
         "health bar are state outside the damage model.",
         "P (Prowl) and R (Aspect of the Cougar) carry no enemy-damage "
-        "formula of any kind (the reviewed packet's own no_damage_slots "
-        "list already names both): Prowl is brush ghosting + up to 30% "
-        "movement speed and the Hunt mark; Aspect of the Cougar is the "
-        "human/cougar form-switch toggle whose cooldown-reset rule the "
-        "form selector already encodes. Reclassified from out_of_scope "
-        "to no_damage (a stale label, not a computation change): both "
-        "slots were previously mislabeled out_of_scope despite the "
-        "packet layer already carrying no enemy-damage formula for them.",
+        "formula of any kind.",
+        "The reviewed packet's own no_damage_slots list already names both.",
+        "Prowl is brush ghosting plus up to 30% movement speed and the Hunt mark.",
+        "Aspect of the Cougar is the human/cougar form-switch toggle, "
+        "whose cooldown-reset rule the form selector encodes.",
     ]
 )
 OPTIONS.append(

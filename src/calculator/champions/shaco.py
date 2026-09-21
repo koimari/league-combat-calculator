@@ -252,34 +252,37 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 ASSUMPTIONS.extend(
     [
         "W (Jack in the Box) is a summoned trap: the sprung box fires "
-        "every 0.5s for its 5-second lifetime (10 shots max); "
-        "w_box_attacks is the player-controlled uptime and defaults to "
-        "the full sourced volley.",
+        "every 0.5s for its 5-second lifetime.",
+        "That is 10 shots max; w_box_attacks is the player-controlled "
+        "uptime and defaults to the full sourced volley.",
         "The fight model is a single-target duel, so the box always uses "
-        "its Increased Damage row (attacks only one target), never the "
-        "plain Magic Damage row.",
-        "The sprung box applies its sourced fear at the first volley hit; "
-        "the same instant root and slow remain utility. Box HP, arm time, "
-        "trigger radius and leash range are state outside the model.",
-        "E (Two-Shiv Poison) prices the base Magic Damage row by default "
-        "(the deterministic target is above 30% of its maximum health); "
+        "its Increased Damage row.",
+        "It never uses the plain Magic Damage row, which the box reads "
+        "only when it attacks more than one target.",
+        "The sprung box applies its sourced fear at the first volley "
+        "hit; the instant root and slow remain utility.",
+        "Box HP, arm time, trigger radius and leash range are state "
+        "outside the damage model.",
+        "E (Two-Shiv Poison) prices the base Magic Damage row by "
+        "default: the deterministic target is above 30% maximum health.",
         "e_execute=True prices the sourced Increased Damage row for "
-        "targets below 30% max health (105/142.5/180/217.5/255 + 120% "
-        "bonus AD + 90% AP by rank).",
-        "R (Hallucinate) prices the clone death-explosion Magic Damage; "
-        "the controllable clone's basic attacks are r_clone_attacks "
-        "(default 0 = the player does not command the clone to attack), "
-        "each dealing 75% of Shaco's total AD physical damage (wiki Pets "
-        "prose, module constant).",
+        "targets below 30% max health.",
+        "That row is 105/142.5/180/217.5/255 + 120% bonus AD + 90% AP by rank.",
+        "R (Hallucinate) prices the clone death-explosion Magic Damage.",
+        "The controllable clone's basic attacks are r_clone_attacks, "
+        "default 0: the player does not command the clone to attack.",
+        "Each clone attack deals 75% of Shaco's total AD physical damage "
+        "(wiki Pets prose, module constant).",
         "P (Backstab) adds 20 : 31.18 (based on level) + 20% bonus AD "
-        "physical damage to a basic attack that lands from behind.  "
+        "physical damage to an attack that lands from behind.",
         "Position is not a request input, so p_procs is the number of "
-        "attacks that land there and defaults to 1 — the attack Deceive "
-        "blinks Shaco behind the target for.  The bonus modifies the "
-        "attack rather than applying on-hit (spelleffects = basic), so "
-        "item on-hit effects do not proc from it.  It IS affected by "
-        "critical strike modifiers (cached P effect 0), priced as the "
-        "probability-weighted crit at full effectiveness.",
+        "attacks that land there and defaults to 1.",
+        "That default is the attack Deceive blinks Shaco behind the target for.",
+        "The bonus modifies the attack rather than applying on-hit "
+        "(spelleffects = basic), so item on-hit effects do not proc.",
+        "It IS affected by critical strike modifiers (cached P effect "
+        "0), priced at full effectiveness.",
+        "The crit is priced probability-weighted, as the swing's crit share.",
     ]
 )
 OPTIONS.append(
