@@ -291,11 +291,11 @@ def champion_wound_tuple(
 
 
 def thorns_return_damage(
-    profile: ThornsEffect, wearer: CombatantFacts, striker: CombatantFacts
+    profile: ThornsEffect, holder: CombatantFacts, striker: CombatantFacts
 ) -> float:
     """Price one thorns strike-back against the striker's resistances.
 
-    Thorns damage benefits from the wearer's penetration and is mitigated
+    Thorns damage benefits from the holder's penetration and is mitigated
     by the striker like any other damage of its type.  Lives here (not in
     the kernel) because both the receipt scheduler and the compiler price
     strike-backs before the walk runs.
@@ -315,12 +315,12 @@ def thorns_return_damage(
         )
     # Bramble's fixed packet keeps a zero ratio; Thornmail authors one.
     bonus_armor_ratio = max(0.0, float(profile.bonus_armor_ratio))
-    bonus_armor = max(0.0, float(wearer.stats.get("bonus_armor", 0.0) or 0.0))
+    bonus_armor = max(0.0, float(holder.stats.get("bonus_armor", 0.0) or 0.0))
     raw_damage = float(profile.damage) + bonus_armor_ratio * bonus_armor
     resistance = apply_magic_penetration(
         float(striker.stats.get("magic_resistance", 0.0)),
-        float(wearer.stats.get("magic_penetration_flat", 0.0)),
-        float(wearer.stats.get("magic_penetration_percent", 0.0)) / 100.0,
+        float(holder.stats.get("magic_penetration_flat", 0.0)),
+        float(holder.stats.get("magic_penetration_percent", 0.0)) / 100.0,
     )
     return mitigate_declared(raw_damage, profile.damage_type, resistance)
 

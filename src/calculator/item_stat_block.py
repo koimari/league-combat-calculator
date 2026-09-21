@@ -14,7 +14,7 @@ from .stat_conversion import BonusHealthConversion
 # Where two of the engine's item-stat keys name ONE stat in game.  What
 # "a unique stat type gained from items" counts is the game's stat types
 # (Jack Of All Trades' whole stack rule), and the engine splits three of
-# them for its own arithmetic — so a build wearing boots earns one stack for
+# them for its own arithmetic — so a build holding boots earns one stack for
 # movement speed rather than two.  Every other key is its own type.
 _ONE_ITEM_STAT_TYPE: dict[str, str] = {
     "move_speed_flat": "move_speed",

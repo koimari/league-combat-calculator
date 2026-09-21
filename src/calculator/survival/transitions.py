@@ -4188,7 +4188,7 @@ def run_survival_walk(actions: list[SurvivalAction], ctx: TransitionContext) -> 
             # A dead actor cannot continue an already-scheduled rotation or
             # emit a support effect later in the shared window. Reactive
             # strike-back is exempt: its trigger linkage above already
-            # proves the wearer was alive when struck (a killing blow
+            # proves the holder was alive when struck (a killing blow
             # still takes the thorns with it).
             ledger.skip(action, "attacker_dead", damage_phase=True)
             continue

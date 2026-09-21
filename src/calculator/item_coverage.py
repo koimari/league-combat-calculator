@@ -151,7 +151,7 @@ _STATE_FAMILIES: frozenset[RuleFamily] = frozenset(
 #   defence resolver too, so eligibility is the stricter question and the
 #   refusals it produces are the ones that exclude a candidate.
 # * ``TARGET_LANES`` — "can the passive-target model price what this item does
-#   to the actor wearing it?"  That is the defence resolver's lane alone: a
+#   to the actor holding it?"  That is the defence resolver's lane alone: a
 #   target neither attacks nor casts in this model.
 #
 # The consequence is stated rather than left to be discovered: the day a
@@ -579,7 +579,7 @@ def item_model_coverage(name: str, needed: frozenset[EngineLane]) -> ItemCoverag
     # Lane-scoped, and the lane is the argument: a gate decides whether the
     # holder's own mechanic fires, so it refuses the lanes that PRICE that
     # firing (the pair engine, and BIS ranking through it).  The target
-    # lane's question is what the actor wearing it survives, and the defence
+    # lane's question is what the actor holding it survives, and the defence
     # ladder behind that answer is unchanged by the gate.
     unauthorized = authority_gap_reason(name) if needed & ATTACKER_LANES else None
     if unserved:

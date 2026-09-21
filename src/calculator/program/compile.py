@@ -1648,8 +1648,8 @@ class WalkCompiler:
 
     def add_thorns(
         self,
-        wearer: CombatantFacts,
-        wearer_i: int,
+        holder: CombatantFacts,
+        holder_i: int,
         strikes: Iterable[tuple[int, float, int, CombatantFacts, int]],
         profiles: tuple[ThornsEffect, ...],
         *,
@@ -1657,7 +1657,7 @@ class WalkCompiler:
         duration: float,
         id_namespace: str,
     ) -> None:
-        """Compile the wearer's strike-back events for a run of strikes.
+        """Compile the holder's strike-back events for a run of strikes.
 
         ``strikes`` carries ``(strike_aidx, time, sequence, striker,
         striker_i)`` in the receipt composition's incoming order.  The synthetic
@@ -1667,8 +1667,8 @@ class WalkCompiler:
         independently without affecting order.
         """
         actions = self.actions
-        order = self.thorns_order[wearer_i]
-        wearer_order = participant_order(wearer.participant_id)
+        order = self.thorns_order[holder_i]
+        holder_order = participant_order(holder.participant_id)
         return_damage: dict[tuple[str, int], float] = {}
         for index, (
             strike_aidx,
@@ -1681,7 +1681,7 @@ class WalkCompiler:
                 damage_key = (profile.item_name, striker_i)
                 damage = return_damage.get(damage_key)
                 if damage is None:
-                    damage = thorns_return_damage(profile, wearer, striker)
+                    damage = thorns_return_damage(profile, holder, striker)
                     return_damage[damage_key] = damage
                 aidx = self.next_aidx
                 self.next_aidx += 1
@@ -1689,10 +1689,10 @@ class WalkCompiler:
                     strike_time,
                     ordering_slot(TransitionRank.REACTIVE),
                     strike_sequence,
-                    *wearer_order,
+                    *holder_order,
                     striker.participant_id,
                     (
-                        f"{wearer.participant_id}:{striker.participant_id}"
+                        f"{holder.participant_id}:{striker.participant_id}"
                         f":thorns:{profile.item_name}:{id_namespace}{index}"
                     ),
                     f"{profile.item_name} (Thorns)",
@@ -1704,7 +1704,7 @@ class WalkCompiler:
                         phase=TransitionRank.REACTIVE,
                         kind=ActionKind.DAMAGE,
                         subject=striker_i,
-                        attacker=wearer_i,
+                        attacker=holder_i,
                         trigger=strike_aidx,
                         aidx=aidx,
                         amount=max(0.0, damage),

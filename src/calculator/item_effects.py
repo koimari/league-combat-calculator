@@ -3506,7 +3506,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Anguish saps every enemy champion within this radius.
         "range_units": 650.0,
         "bonus_hp_ratio": 0.03,
-        # Anguish heals the wearer for 250% of post-mitigation damage dealt.
+        # Anguish heals the holder for 250% of post-mitigation damage dealt.
         "self_heal_post_mitigation_multiplier": 2.50,
     },
     # ── Yun Tal Wildarrows (conditional AS on attack) ───────────────────────
@@ -5985,7 +5985,7 @@ def yun_tal_permanent_crit_chance(
 class ThornsEffect:
     """One reactive strike-back packet consumed by the coupled timeline.
 
-    The wearer deals ``damage`` (pre-mitigation) to each champion whose
+    The holder deals ``damage`` (pre-mitigation) to each champion whose
     basic attack strikes them and wounds that attacker for
     ``grievous_duration`` seconds. The Grievous Wounds strength itself is
     the patch-wide rule in :mod:`healing_reduction`.

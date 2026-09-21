@@ -2452,20 +2452,20 @@ def _schedule_thorns_events(
 ) -> None:
     """Emit reactive Thorns events from modeled incoming basic attacks.
 
-    Every basic-attack swing that strikes a thorns wearer schedules one
+    Every basic-attack swing that strikes a thorns holder schedules one
     return-damage event onto the striker at the swing's own timestamp,
     linked to the strike so a skipped strike (dead striker or dead
-    wearer) never retaliates. The event also carries the wound window the
+    holder) never retaliates. The event also carries the wound window the
     survival walk applies to the striker's healing.
     """
     combatant_by_id = {actor.participant_id: actor for actor in scene.all_actors}
-    for wearer in scene.all_actors:
-        profiles = thorns_effects(list(wearer.items))
+    for holder in scene.all_actors:
+        profiles = thorns_effects(list(holder.items))
         if not profiles:
             continue
         strikes = [
             event
-            for event in scene.incoming.get(wearer.participant_id, [])
+            for event in scene.incoming.get(holder.participant_id, [])
             if event.get("source_key") == "auto_attacks"
             or bool(event.get("basic_attack"))
             if not any(
@@ -2490,16 +2490,16 @@ def _schedule_thorns_events(
             for profile in profiles:
                 event = {
                     "time": float(strike.get("time", 0.0)),
-                    "damage": thorns_return_damage(profile, wearer, striker),
+                    "damage": thorns_return_damage(profile, holder, striker),
                     "damage_type": profile.damage_type,
                     "source_key": f"thorns_{profile.item_name}",
                     "source": f"{profile.item_name} (Thorns)",
-                    "attacker": wearer.participant_id,
+                    "attacker": holder.participant_id,
                     "target": striker.participant_id,
                     "sequence": int(strike.get("sequence", 0) or 0),
                     "event_precision": "exact",
                     "_event_id": (
-                        f"{wearer.participant_id}:{striker.participant_id}"
+                        f"{holder.participant_id}:{striker.participant_id}"
                         f":thorns:{profile.item_name}:{index}"
                     ),
                     "_trigger_event_id": strike.get("_event_id"),
@@ -2510,7 +2510,7 @@ def _schedule_thorns_events(
                     + float(profile.grievous_duration),
                 }
                 scene.incoming.setdefault(striker.participant_id, []).append(event)
-                scene.outgoing.setdefault(wearer.participant_id, []).append(event)
+                scene.outgoing.setdefault(holder.participant_id, []).append(event)
 
 
 def _schedule_authored_reactive_events(
@@ -4111,23 +4111,23 @@ def _context_setup(
             )
             support_attached.add(attacker.participant_id)
     for actor in context.roster_actors:
-        wearer_i = context.index_of[actor.participant_id]
-        profiles = context.thorns_profiles[wearer_i]
+        holder_i = context.index_of[actor.participant_id]
+        profiles = context.thorns_profiles[holder_i]
         if not profiles:
             continue
         strikes = [
             (aidx, time_value, sequence, all_actors_by_index[striker_i], striker_i)
             for aidx, time_value, sequence, striker_i in (
-                base.auto_strikes_into.get(wearer_i, ())
+                base.auto_strikes_into.get(holder_i, ())
             )
         ]
         if strikes:
             base.add_thorns(
                 actor,
-                wearer_i,
+                holder_i,
                 strikes,
                 profiles,
-                grievous_by_dtype=context.grievous_packs[wearer_i],
+                grievous_by_dtype=context.grievous_packs[holder_i],
                 duration=params.fight_duration_seconds,
                 id_namespace="base",
             )
@@ -4499,26 +4499,26 @@ def _score_with_search_context(
                 target_id=first_defender_id,
             )
         fresh.add_support_templates(support_templates, 0, context.index_of)
-    # Thorns from this candidate's fresh strikes (enemy wearers), then the
+    # Thorns from this candidate's fresh strikes (enemy holders), then the
     # candidate's own thorns items struck by the invariant roster autos.
     for defender in enemy_actors:
-        wearer_i = context.index_of[defender.participant_id]
-        profiles = context.thorns_profiles[wearer_i]
+        holder_i = context.index_of[defender.participant_id]
+        profiles = context.thorns_profiles[holder_i]
         if not profiles:
             continue
         strikes = [
             (aidx, time_value, sequence, main, 0)
             for aidx, time_value, sequence, _striker_i in (
-                fresh.auto_strikes_into.get(wearer_i, ())
+                fresh.auto_strikes_into.get(holder_i, ())
             )
         ]
         if strikes:
             fresh.add_thorns(
                 defender,
-                wearer_i,
+                holder_i,
                 strikes,
                 profiles,
-                grievous_by_dtype=context.grievous_packs[wearer_i],
+                grievous_by_dtype=context.grievous_packs[holder_i],
                 duration=duration,
                 id_namespace="fresh",
             )
