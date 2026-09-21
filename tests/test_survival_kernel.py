@@ -1,12 +1,11 @@
-"""Issue #137 Phase 2 — one survival kernel, two ledger adapters.
+"""One survival kernel, two ledger adapters.
 
 Contract tests: the optimizer score path (``search_context`` +
 :class:`ScoreLedger`) must deep-equal the authoritative receipt walk
 (:class:`ReceiptLedger`) for every scenario, across the mechanics the
-kernel implements.  Before Phase 2 the two walks were hand-synchronized
-mirror implementations that drifted silently (Aphelios Severum); now both
-adapters drive one :func:`run_survival_walk` kernel and these tests pin the
-adapters.
+kernel implements.  Two hand-synchronized mirror implementations drift
+silently (Aphelios Severum); both adapters drive one
+:func:`run_survival_walk` kernel and these tests pin the adapters.
 
 Every scenario asserts the *full* scoring receipt (participants +
 breakdown + duration) equality, plus which path served it:
@@ -24,8 +23,8 @@ tuple-incapable event-view holder at *item* granularity and every
 cross-participant ``damage_modifier`` producer at *source* granularity, each
 reached once from the candidate and once from a roster ally — so a seventh
 producer without a fixture fails here on the commit that adds it, including
-when that producer is a second packet on an item some fixture already equips
-(slice 0A.9).
+when that producer is a second packet on an item some fixture already
+equips.
 """
 
 import math
@@ -375,7 +374,8 @@ def test_champion_revive_compiled_walk_equals_receipt_walk():
 def test_aphelios_severum_score_path_matches_receipt():
     """Severum's overheal-to-shield is a champion-authored transition: the
     compiler raises per evaluation and the caller falls back — the score
-    receipt still deep-equals the receipt walk (the Phase 1 drift case)."""
+    receipt still deep-equals the receipt walk, which is the case two mirror
+    implementations got wrong."""
     params = FightParams.from_request(
         {
             "fight_mode": "time_based",
@@ -833,13 +833,13 @@ def test_compiled_support_arms_at_the_rank_the_walk_reads():
 
 
 # ---------------------------------------------------------------------------
-# Registry-derived coverage (slice 0A.9)
+# Registry-derived coverage
 #
 # What this suite owes a fixture is READ from the two registries that already
 # know — the tuple-incapable event-view set and the derived cross-participant
 # ``damage_modifier`` producer set — never typed out here.  A hand list would
-# be a second home for a fact the registries state, which is the failure shape
-# the campaign exists to kill.  Coverage is measured off the receipt's public
+# be a second home for a fact the registries state.  Coverage is measured off
+# the receipt's public
 # ``support_events`` rows rather than off the fixture's item lists: an equipped
 # item whose packet never fires is a fixture that proves nothing.
 #
@@ -1037,8 +1037,8 @@ def test_a_second_producer_on_a_covered_item_fails_the_coverage_check(monkeypatc
     """The red for the case item-granularity coverage could not see (R-05).
 
     A producer added as a *second* packet on an item some fixture already
-    equips and already fires — the shape ``Dream Maker`` ships today and the
-    shape Phase 0B's Abyssal Mask work adds — is reported missing on both
+    equips and already fires — the shape ``Dream Maker`` ships and the shape
+    Abyssal Mask adds — is reported missing on both
     sides, driven end to end through the real derivation rather than through
     hand-built sets.
     """
@@ -1182,8 +1182,7 @@ class TestTheWalkPricesADeclarationAgainstWhatItMeets:
     def test_a_damage_class_no_resistance_answers_for_is_refused(self):
         """R-05's second red: an unrecognized class is not paid in full.
 
-        Paying it raw would be a mitigation decision taken by silence, which
-        is the shape this campaign exists to remove.
+        Paying it raw would be a mitigation decision taken by silence.
         """
         price = price_declared_packet(
             DeclaredPacket(252.0, "adaptive", "fixture.unknown"),
@@ -1425,9 +1424,9 @@ class TestTheWalkPricesADeclaredPacketItself:
 def _repriced_families() -> tuple[RuleFamily, ...]:
     """Every family whose packets the walk re-prices from their declarations.
 
-    Read off the declarations rather than listed, so the family a retirement
-    slice opts in arrives here on the commit that declares it and the tests
-    below cannot silently stop covering one.
+    Read off the declarations rather than listed, so a family that opts in
+    arrives here on the commit that declares it and the tests below cannot
+    silently stop covering one.
     """
     repriced = walk_repriced_mechanics()
     return tuple(
@@ -1444,11 +1443,10 @@ def _repriced_families() -> tuple[RuleFamily, ...]:
 
 
 class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
-    """Amendment L, Ruling 3's inertness clause, once a family has opted in.
+    """The re-pricing path is inert until a family opts in, and one has.
 
-    The clause was never "this path stays unreached"; it was "this path is
-    inert **until a family's retirement slice opts in**", and one has.  What
-    the clause still buys, and what these cases assert, is that the opt-in is
+    What being inert still buys, and what these cases assert, is that the
+    opt-in is
     a *declaration* — the set is read off the registry, it is exactly the
     families whose receipt-walk interpreter is registered, and every family
     outside it still reaches the walk as the pair engine's timed rows.
@@ -1461,9 +1459,8 @@ class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
         the number and the registry says which interpreter hands it one.  A
         ``HolderPacket`` half declared for a family no receipt-walk
         interpreter serves would take the pair engine's number out of every
-        roster total with nothing replacing it — the half-performed
-        retirement umbrella Amendment L, Ruling 1 calls worse than neither
-        half.
+        roster total with nothing replacing it, a half-performed move that
+        is worse than neither half.
         """
         families = _repriced_families()
         assert families == (
@@ -1483,8 +1480,8 @@ class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
 
         A family whose damage arrives by two routes — some rules priced from
         their declarations and the rest consumed as the pair engine's rows —
-        is D-60's two engines pricing one mechanic, wearing a retirement's
-        name.  The rule set is read from the catalog, so a seventh item
+        is two engines pricing one mechanic under a retirement's name.
+        The rule set is read from the catalog, so a seventh item
         active declared tomorrow fails here rather than shipping half
         covered.
 
@@ -1564,10 +1561,8 @@ class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
 # From-declaration pricing — the equivalence fixture
 # ---------------------------------------------------------------------------
 #
-# Amendment L, Ruling 3 requires the stage to carry "the from-declaration price
-# against the pair-ratioed one, on a family that has not yet opted in, so the
-# stage is provably a re-spelling before it is ever a re-pricing".  This is
-# that fixture.
+# The from-declaration price against the pair-ratioed one, so the pricer is
+# provably a re-spelling of the pair engine before it is ever a re-pricing.
 #
 # The family is `spellblade`, priced through Bloodsong's proc: one declared
 # magnitude per proc, physical, over a proc count the pair engine publishes on
@@ -1576,23 +1571,12 @@ class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
 # committed scenario set by the owner it equips, and the pair engine publishes
 # both the number and the effective resistance it priced at.
 #
-# THE CLAUSE'S OWN SELECTION CLASS IS EMPTYING, and that is recorded here
-# rather than worked around.  The fixture stood on `periodic` until that
-# family retired on 2026-08-16 and then MOVED to `spellblade`, which was the
-# right discipline while there were families left to move to.  There are not:
-# `spellblade` retired on 2026-08-17 and `secondary_target` is the last row of
-# umbrella Amendment F's fourteen, so a migration would be a fixture rewritten
-# twice in two commits for a family the next one retires.
-#
-# What the comparison asserts does not change, and this is why the case
-# survives its clause: it prices a declaration through the walk's own pricer
-# and compares it to THE PAIR ENGINE'S OWN PUBLISHED ROW.  The pair engine is
-# an independent producer of that number whether or not the family has opted
-# in, so the equality is not the stage checking itself — the un-opted-in
-# requirement was about the stage being INERT, which is a property Ruling 3
-# retired itself the moment the first family opted in.  What replaces the
-# opt-in assertion is its successor: the family HAS opted in, and the walk
-# therefore prices the same declaration this case prices by hand.
+# `spellblade` has since opted in, and the comparison holds anyway: it
+# prices a declaration through the walk's own pricer and compares it to THE
+# PAIR ENGINE'S OWN PUBLISHED ROW.  The pair engine is an independent
+# producer of that number whether or not the family has opted in, so the
+# equality is not the pricer checking itself.  What the opt-in adds is that
+# the walk now prices the same declaration this case prices by hand.
 #
 # Nothing about the fixture is typed: the scenario, the owner and the rule id
 # are all read, so a scenario set that re-covers the family under a different
@@ -1732,15 +1716,12 @@ class TestTheFromDeclarationPriceReproducesThePairEngines:
     """The stage is a re-spelling before it is ever a re-pricing."""
 
     def test_the_fixture_family_has_opted_in_and_the_walk_prices_this_owner(self):
-        """The successor to the clause's own selection, and its two halves.
+        """The family has opted in, and its two halves say so.
 
-        Ruling 3's fixture selected a family that had **not** opted in, so
-        that the stage was provably a re-spelling before it was ever a
-        re-pricing.  The stage is landed and eight families have opted in
-        since; what is left to assert is not that this family is deferred —
-        it is not — but that the declaration this case prices by hand is the
-        one the walk prices too, which is what makes the equality below a
-        statement about the tree rather than about a fixture.
+        What this asserts is not that the family is deferred — it is not —
+        but that the declaration this case prices by hand is the one the walk
+        prices too, which is what makes the equality below a statement about
+        the tree rather than about a fixture.
 
         Two halves, because either alone can be true without the other: the
         receipt-walk interpreter is registered for the family, and the walk
@@ -1805,14 +1786,13 @@ class TestTheFromDeclarationPriceReproducesThePairEngines:
 # The declared amp term — the equivalence fixtures at amp != 1.0
 # ---------------------------------------------------------------------------
 #
-# Amendment L, Ruling 3's fixture above runs on a roster where every static
-# holder amp reads 1.0, which is the case that cannot fail: with no amp armed,
-# a pricer that dropped the term entirely would still reproduce the pair
-# engine exactly.  Amendment M, Ruling 1 therefore requires the fixtures to
-# cover `amp != 1.0`, and names the two cases: an Abyssal Mask holder's item
-# active, and an Abyssal Mask holder's ability-triggered item proc.  Both live
-# on `amp_armed_mage_roster`, the covering scenario the coverage act landed for
-# exactly this — Ahri holding Actualizer (the ability part amp, its Mana Made
+# The fixture above runs on a roster where every static holder amp reads
+# 1.0, which is the case that cannot fail: with no amp armed, a pricer that
+# dropped the term entirely would still reproduce the pair engine exactly.
+# So the fixtures here cover `amp != 1.0` in two cases: an Abyssal Mask
+# holder's item active, and an Abyssal Mask holder's ability-triggered item
+# proc.  Both live on `amp_armed_mage_roster`, the covering scenario that
+# exists for exactly this — Ahri holding Actualizer (the ability part amp, its Mana Made
 # Real window authored), Abyssal Mask (the magic amp), Hextech Rocketbelt (the
 # active) and Stormsurge (the ability-triggered proc).
 #
@@ -1824,7 +1804,7 @@ class TestTheFromDeclarationPriceReproducesThePairEngines:
 # THE ORDERING, AND WHAT IT COSTS, MEASURED.  The pair engine applies these
 # amps *after* mitigation: `fight.resists._mitigate` returns
 # `apply_resistance(raw, mr) * magic_amp`, and `_add_item_proc_damage`
-# multiplies that by the ability amp.  Ruling 1 rules the walk's term
+# multiplies that by the ability amp.  The walk's term is
 # **pre-mitigation** instead, so the composed value is mitigated once rather
 # than a mitigated number being re-multiplied.  Multiplication is commutative
 # but not associative in IEEE 754, so `(raw * amp) * m` and `(raw * m) * amp`
@@ -1832,7 +1812,7 @@ class TestTheFromDeclarationPriceReproducesThePairEngines:
 # they land one unit in the last place apart.  That is stated and pinned rather
 # than smoothed over: each fixture asserts both associations exactly, asserts
 # the gap is at most one ULP, and asserts the two agree at the precision every
-# committed baseline grades to — so the ruled ordering is implemented, the
+# committed baseline grades to — so the ordering is implemented, the
 # difference it costs is a measured number, and neither can drift in silence.
 
 #: Where the golden baselines round.  A difference this size is invisible to
@@ -2027,7 +2007,7 @@ AMP_ARMED_SEEDS = (
 
 @pytest.mark.parametrize("seed", AMP_ARMED_SEEDS, ids=lambda seed: seed.name)
 class TestTheDeclaredAmpTermReproducesThePairEngines:
-    """Amendment M, Ruling 1's fixture: the term, on a roster that arms it."""
+    """The holder-amp term, on a roster that arms it."""
 
     def test_the_seed_really_arms_an_amp(self, seed):
         """A fixture at amp 1.0 proves only the case that cannot fail."""
@@ -2037,11 +2017,11 @@ class TestTheDeclaredAmpTermReproducesThePairEngines:
         assert reading.pair > 0.0
 
     def test_the_two_associations_are_each_exact_and_one_ulp_apart(self, seed):
-        """The ordering Ruling 1 chose, and the price of choosing it.
+        """The ordering the walk uses, and the price of choosing it.
 
         Three exact claims and one bound, so the reading is complete: the
         pair engine's number *is* its post-mitigation association, the walk's
-        price *is* the pre-mitigation one Ruling 1 rules, and the two differ
+        price *is* the pre-mitigation one, and the two differ
         by at most one unit in the last place.  Asserting only "they are
         close" would hide an ordering nobody chose; asserting equality alone
         would be false.
@@ -2055,12 +2035,12 @@ class TestTheDeclaredAmpTermReproducesThePairEngines:
         assert amount == apply_resistance(reading.raw * factor, reading.effective_mr)
         assert abs(amount - reading.pair) <= math.ulp(reading.pair)
 
-    def test_the_term_survives_every_gate_the_campaign_grades_with(self, seed):
+    def test_the_term_survives_every_gate_the_baselines_grade_with(self, seed):
         """The difference the ordering costs is invisible to the baselines.
 
         Stated as an assertion rather than as a claim in a comment: the two
         associations agree at the precision the committed golden files round
-        to, so the ruled ordering cannot move a leaf any gate reads.
+        to, so the ordering cannot move a leaf any gate reads.
         """
         reading = _amp_armed_reading(seed)
         assert round(reading.priced(seed).amount, GOLDEN_DECIMALS) == round(
@@ -2070,7 +2050,7 @@ class TestTheDeclaredAmpTermReproducesThePairEngines:
     def test_dropping_the_term_would_be_visible(self, seed):
         """R-05's red for the term itself, on the seed that carries it.
 
-        The deletion Ruling 1 exists to forbid, made a measurable event: a
+        The deletion the term exists to forbid, made a measurable event: a
         packet priced with no amp falls short of the pair engine's number by
         the holder's own amplifier, and the shortfall clears golden's own
         precision by a wide margin.
@@ -2086,10 +2066,10 @@ class TestTheDeclaredAmpTermReproducesThePairEngines:
 # The per-packet resistance term — the equivalence fixtures inside a window
 # ---------------------------------------------------------------------------
 #
-# Umbrella Amendment N, Ruling 1: a declaration is priced at the resistance ITS
-# OWN PACKET met, and the fixtures "MUST cover a lethality-window physical case
-# and a Liandry-reprice magic case", on the reasoning that made Amendment M's
-# fixtures cover an amp other than 1.0.  A fixture set in which every packet met
+# A declaration is priced at the resistance ITS OWN PACKET met, so the
+# fixtures cover a lethality-window physical case and a Liandry-reprice magic
+# case, for the same reason the fixtures above cover an amp other than 1.0.
+# A fixture set in which every packet met
 # the figure the fight published proves only the case that cannot fail: a pricer
 # that dropped the term entirely would reproduce the pair engine exactly.
 #
@@ -2109,8 +2089,7 @@ class TestTheDeclaredAmpTermReproducesThePairEngines:
 # to disagree about: the walk mitigates one magnitude at one resistance, exactly
 # as the engine did.
 #
-# THE SEED.  The physical case is the seed Amendment N measured and adopted by
-# its predicate — Dr. Mundo at level 13, one rotation, on the pinned
+# THE SEED.  The physical case is Dr. Mundo at level 13, one rotation, on the pinned
 # `mundo_3champ` probe build, into that scenario's two enemies — read from
 # `bench_coupled_optimizer` rather than retyped, so a re-pinned probe build fails
 # here instead of quietly measuring a different fight.
@@ -2126,9 +2105,10 @@ class WindowSeed:
     rule_id: str
 
 
-#: The engine step each seed's family authors its packets in.  Named rather than
-#: guessed: the stamp has to land where the family's own retirement slice would
-#: put it, which is before every step that could re-price what it authored.
+#: The engine step each seed's family authors its packets in.  Named rather
+#: than guessed: the stamp has to land where the family's own authoring site
+#: would put it, which is before every step that could re-price what it
+#: authored.
 LETHALITY_SEED = WindowSeed(
     name="stridebreaker_active_inside_a_firmament_window",
     breakdown_key="active_Stridebreaker",
@@ -2277,7 +2257,7 @@ class WindowReading:
 
 
 class TestTheLethalityWindowPacketPricesAtTheArmourItMet:
-    """Ruling 1's physical fixture, on the seed the amendment measured."""
+    """The physical fixture, on the pinned `mundo_3champ` seed."""
 
     def test_the_window_really_fires_and_the_seed_reproduces(self):
         """The fixture is worth something only where the two figures differ.
@@ -2292,8 +2272,8 @@ class TestTheLethalityWindowPacketPricesAtTheArmourItMet:
             assert reading.packets
             for _, declaration in reading.packets:
                 assert 0.0 <= declaration.effective_resistance < reading.published
-        # The amendment's own reading of this seed, asserted rather than
-        # quoted: the first fight's window drives the packet's armour to the
+        # The reading of this seed, asserted rather than quoted: the first
+        # fight's window drives the packet's armour to the
         # floor, which is why its declared raw and its priced row are the same
         # number, and the second fight's does not, which is why the two fights
         # are not one case measured twice.
@@ -2303,7 +2283,7 @@ class TestTheLethalityWindowPacketPricesAtTheArmourItMet:
         assert second.packets[0][1].effective_resistance > 0.0
 
     def test_the_declaration_prices_to_the_pair_engines_own_number(self):
-        """Bit-exact, at the resistance the packet met — the whole ruling.
+        """Bit-exact, at the resistance the packet met, which is the rule.
 
         One magnitude at one resistance on both sides, so there is no float
         association for the two to disagree about and the assertion is equality
@@ -2317,7 +2297,7 @@ class TestTheLethalityWindowPacketPricesAtTheArmourItMet:
     def test_pricing_at_the_published_baseline_deletes_the_window(self):
         """R-05's red for the term, and the forbidden reading, measured.
 
-        The branch Ruling 1 forbids is not an error the tree can raise — it is
+        The forbidden branch is not an error the tree can raise — it is
         a smaller number.  So it is priced here and the shortfall asserted: the
         packet met an armour below the fight's, so paying the fight's figure
         pays strictly less, by a margin every committed gate can see.
@@ -2333,10 +2313,10 @@ class TestTheLethalityWindowPacketPricesAtTheArmourItMet:
 
 
 class TestTheLiandryRepriceKeepsTheDeclarationInStep:
-    """Ruling 1's magic fixture: the reprice moves a magnitude, not a mitigation.
+    """The magic fixture: the reprice moves a magnitude, not a mitigation.
 
-    The other half of the ruling's *kept in step*, and the reason it needs its
-    own fixture rather than a second physical one.  The lethality window leaves
+    The other half of *kept in step*, and the reason it needs its own fixture
+    rather than a second physical one.  The lethality window leaves
     the packet's magnitude alone and changes what it met; the max-health reprice
     leaves what it met alone and changes the magnitude — and it does so by
     *replacing* the burn's authored ticks, so a declaration that was not carried
@@ -2346,8 +2326,8 @@ class TestTheLiandryRepriceKeepsTheDeclarationInStep:
     def test_the_reprice_really_fires_on_the_committed_roster(self):
         """`liandry_reprice_mage_roster` arms it, which is why it exists.
 
-        Ruling 3's integration act added this roster for exactly this: a fight
-        against a Protoplasm Harness holder, short enough that the lifeline's
+        The roster is a fight against a Protoplasm Harness holder, short
+        enough that the lifeline's
         own expiry is not reached, so later burn ticks are priced against a
         raised maximum.  Armed means fired — the ticks after the lifeline are
         strictly larger than the ticks before it.
@@ -2384,12 +2364,12 @@ class TestTheLiandryRepriceKeepsTheDeclarationInStep:
 
         The reprice hands the row a freshly built tick list.  Run the same
         replacement without the carry and the ticks come back carrying no
-        declaration at all — which is the failure mode this half of the ruling
+        declaration at all — which is the failure mode this half of the rule
         exists to stop, and it is a different one from pricing at a stale
         number.
 
         The carried declaration comes back at the declaration's *full* width,
-        which is six positions since umbrella Amendment R: a burn no
+        which is six positions: a burn no
         basic-attack swing delivered and no routing family re-delivered
         carries `None` in the fifth and the sixth, and `declared_packet_of`
         reads those as no swing composition and no route and prices the tick
@@ -2431,12 +2411,12 @@ class TestTheLiandryRepriceKeepsTheDeclarationInStep:
 
 
 # ---------------------------------------------------------------------------
-# D-62's uniqueness, for the number this slice arms
+# The uniqueness rule, for the number the holder amp arms
 # ---------------------------------------------------------------------------
 
 
 def test_no_leaf_sums_a_pair_preview_and_the_walks_amped_number():
-    """D-62, stated for the term Amendment M, Ruling 1 lands.
+    """The uniqueness rule, stated for the holder-amp term.
 
     The double count a retirement act could create: one family's number
     delivered twice, once as the pair engine's row and once as the walk's own
@@ -2444,10 +2424,9 @@ def test_no_leaf_sums_a_pair_preview_and_the_walks_amped_number():
     previewed pair row is excluded from everything the roster composes, and
     the walk pays a declaration only where a packet carries one.
 
-    It holds vacuously today, and that is the reason to pin it now rather than
-    on the commit that first pays one: this is the invariant the next thirteen
-    retirement slices land against, and an invariant nobody wrote down before
-    the first slice is one the first slice gets to define.
+    It holds vacuously today, and that is the reason to pin it rather than
+    to leave it for the commit that first pays one: an invariant nobody wrote
+    down is one the first payer gets to define.
     """
     # No static holder amp is among the previewed mechanics, because none of
     # the three authors a summed pair row to preview: they are factors inside
@@ -2481,7 +2460,7 @@ def test_no_leaf_sums_a_pair_preview_and_the_walks_amped_number():
 
 
 # ---------------------------------------------------------------------------
-# D-62's uniqueness, per retired family, on the roster that can see it
+# Uniqueness, per retired family, on the roster that can see it
 # ---------------------------------------------------------------------------
 #
 # The case above is the structural half and holds over the registry.  This one
@@ -2490,7 +2469,7 @@ def test_no_leaf_sums_a_pair_preview_and_the_walks_amped_number():
 # number appearing twice in one total and a set relation cannot see a number.
 #
 # Nothing is typed: the family, its owners and the covering scenario are all
-# read, so the family a later retirement slice opts in is covered here on the
+# read, so the family a later change opts in is covered here on the
 # commit that declares it.
 
 
@@ -2523,7 +2502,7 @@ def _priced_declarations(scenario_name):
     declaration becomes a number — so what the case reads is the walk's own
     arithmetic and not a reconstruction of it.
 
-    The subject and the event id ride beside the source key because D-62's
+    The subject and the event id ride beside the source key because
     uniqueness is keyed on ``(mechanic, subject, event_id)`` and a row is not
     an event: a family that authors one packet per swing authors many events
     under one row, and a key that stopped at the row would call a fight's
@@ -2570,13 +2549,13 @@ def _priced_declarations(scenario_name):
     "family", _repriced_families(), ids=lambda family: family.value
 )
 def test_a_retired_family_is_declared_by_the_pair_engine_and_priced_by_the_walk(family):
-    """One family, both halves, on a roster that holds it (D-62, criterion 8).
+    """One family, both halves, on a roster that holds it.
 
     The pair engine authors the row and stamps it as a preview of the mechanic
     that declared it; every event under that row carries the declaration and
     no price the walk would have to trust.  The walk then prices exactly that
-    declaration.  Both halves at once is what umbrella Amendment L, Ruling 1
-    requires and what makes the number arrive once: the stamp is what takes
+    declaration.  Both halves at once is what makes the number arrive
+    once: the stamp is what takes
     the pair engine's figure out of the roster total, and the declaration is
     what puts the walk's own figure into it.
     """
@@ -2646,7 +2625,7 @@ def test_no_leaf_of_a_retired_family_sums_the_preview_and_the_walks_price(family
 
     Two things a set relation cannot say.  Every packet the walk priced from
     this family's declaration was priced **once** — one pricing per
-    ``(mechanic, subject, event_id)``, which is D-62's own key — so no packet
+    ``(mechanic, subject, event_id)``, the uniqueness key — so no packet
     is paid by both the declaration and the pair engine's row that carried it.
     And the amount the walk paid is the declaration's own price rather than
     the figure the pair engine put on the packet, which is what "the pair row
@@ -2658,10 +2637,10 @@ def test_no_leaf_of_a_retired_family_sums_the_preview_and_the_walks_price(family
     ``(source_key, rule)`` key was accidentally unique there and stopped being
     so the moment a family authored one packet per swing.  Keying on the row
     would then have read a fight's fourteen honest applications as a double
-    count, which is the opposite of what D-62 says.
+    count, which is the opposite of what uniqueness says.
 
     The **scenario** is part of the key for the same reason, one level up.
-    D-62's uniqueness is a property of one walk: two independent scenarios
+    Uniqueness is a property of one walk: two independent scenarios
     that equip the same item against the same enemy roster price the same
     ``(mechanic, subject, event_id)`` in each of their own fights, and that is
     two honest pricings rather than one double count.  A key that pooled the
@@ -2701,18 +2680,17 @@ def test_no_leaf_of_a_retired_family_sums_the_preview_and_the_walks_price(family
 # The two cases above run the committed coupled scenarios, and exactly one of
 # this family's eight owners is on one: `crit_onhit_carry_roster` holds Blade
 # of the Ruined King and nothing committed holds the other seven.  A green
-# zero over a population that cannot contain the defect is the shape umbrella
-# Amendment N was written about, and umbrella Amendment P's answer for a
-# family whose owners the covering set cannot reach is EQUIVALENCE FIXTURES
-# PER OWNER -- a fixture set arming one owner proves nothing about the ones
+# zero over a population that cannot contain the defect proves nothing, so a
+# family whose owners the covering set cannot reach gets EQUIVALENCE FIXTURES
+# PER OWNER: a fixture set arming one owner proves nothing about the ones
 # that can still fail.
 #
 # Two things vary across the eight and both are exercised here rather than
 # argued.  Four of them declare magic, so the holder's magic amp is a live
 # term for half this family, and the probe arms it: an Abyssal Mask on the
-# holder makes `StaticHolderAmps.magic` something other than 1.0, on
-# Amendment M, Ruling 1's own reasoning that a fixture set in which every amp
-# is 1.0 proves the stage re-spells the case that cannot fail.  And one of
+# holder makes `StaticHolderAmps.magic` something other than 1.0, because a
+# fixture set in which every amp is 1.0 proves the pricer re-spells the case
+# that cannot fail.  And one of
 # them re-reads the target's falling health per application, so its
 # applications do not share a magnitude, which the per-event comparison sees
 # because it compares every event and not a row total.
@@ -2790,8 +2768,7 @@ def test_every_on_hit_owner_prices_from_its_declaration_to_the_pair_engines_numb
     event the pair engine authored under this owner's row, the declaration
     riding it, composed with the holder's own amps and mitigated once, equals
     the number the pair engine put on that event — which is what makes the
-    retirement a re-spelling before it is a re-pricing (umbrella Amendment L,
-    Ruling 3).
+    retirement a re-spelling before it is a re-pricing.
     """
     result, amps = _on_hit_probe(owner)
     row = result["breakdown"][f"on_hit_{owner}"]
@@ -2839,8 +2816,8 @@ def test_every_on_hit_owner_prices_from_its_declaration_to_the_pair_engines_numb
 # `immolate_active_bruiser_roster` and Liandry's Torment on
 # `liandry_reprice_mage_roster` -- so five are outside every population, and
 # with them a whole declared cadence: FIXED_INTERVAL is declared by Unending
-# Despair alone.  Umbrella Amendment P's answer for that shape is equivalence
-# fixtures PER OWNER, and this is it.
+# Despair alone.  That shape gets equivalence fixtures PER OWNER, and this
+# is it.
 #
 # The probe holds an Abyssal Mask beside the owner under test for the reason
 # the on-hit probe does, and here it covers the whole family rather than half
@@ -2971,14 +2948,13 @@ def _periodic_mechanics() -> frozenset[str]:
 # those six declare MAGIC: `dusk_and_dawn.spellblade` and
 # `lich_bane.spellblade`.  A fixture set that armed only the covered owner
 # would price a third of this family at an amp of 1.0 and never once exercise
-# the term.  Umbrella Amendment P's answer for that shape is equivalence
-# fixtures PER OWNER, and this is it.
+# the term.  That shape gets equivalence fixtures PER OWNER, and this is it.
 #
 # The probe holds an Abyssal Mask beside the owner under test for the reason
 # the on-hit probe does: it is the tree's one declaration of the holder's
-# static magic amp, so without it the two magic spellblades would be priced at
-# an amp of 1.0 — Amendment M, Ruling 1's own reasoning that a fixture set in
-# which every amp is 1.0 proves the stage re-spells the case that cannot fail.
+# static magic amp, so without it the two magic spellblades would be priced
+# at an amp of 1.0, and a fixture set in which every amp is 1.0 proves the
+# pricer re-spells the case that cannot fail.
 
 #: A ranged caster, because a spellblade charge is armed by an ability cast
 #: and spent by a basic attack, so the probe needs a rotation with both.
@@ -3118,8 +3094,8 @@ def test_both_declared_spellblade_damage_classes_are_inside_the_fixture_set():
 # The basic-attack swing composition — the equivalence fixtures, inert and armed
 # ---------------------------------------------------------------------------
 #
-# Umbrella Amendment R, Ruling 1.  Every family retired before this one reaches
-# its target through `fight.resists._mitigate` and nothing else — a resistance and the
+# Every family retired before this one reaches its target through
+# `fight.resists._mitigate` and nothing else — a resistance and the
 # holder's own amps, which is exactly what `price_declared_packet` carried.  A
 # packet delivered as a BASIC-ATTACK SWING is priced by
 # `fight.mitigation._mitigate_basic_attack_swing` instead: it meets the target's plating
@@ -3127,15 +3103,15 @@ def test_both_declared_spellblade_damage_classes_are_inside_the_fixture_set():
 # Solid, and the deterministic reading blends a crit branch against a non-crit
 # one with each branch having met the flat subtraction on its own.
 #
-# THE FIXTURES MUST BE INERT AND ARMED, and the conjunction is load-bearing on
-# exactly the reasoning that made Amendment M's fixtures cover `amp != 1.0` and
-# Amendment N's cover both re-pricing windows: a fixture set in which every
-# target-side term is inert proves the stage re-spells the case that cannot
-# fail — a pricer that dropped the whole composition would reproduce the pair
-# engine exactly.  So the seed is run in five target-side states and the
-# no-composition reading is priced beside the ruled one in every armed state.
+# THE FIXTURES MUST BE INERT AND ARMED, and the conjunction is load-bearing
+# for the same reason the fixtures above cover `amp != 1.0` and both
+# re-pricing windows: a fixture set in which every target-side term is inert
+# proves the pricer re-spells the case that cannot fail, because a pricer that
+# dropped the whole composition would reproduce the pair engine exactly.  So
+# the seed is run in five target-side states and the no-composition reading is
+# priced beside the composed one in every armed state.
 #
-# THE SEED is the probe Amendment R measured: Caitlyn at level 18 holding
+# THE SEED is Caitlyn at level 18 holding
 # Runaan's Hurricane and Blade of the Ruined King, deterministic, one rotation
 # at full auto uptime, a roster target count of two with the bolt allocated to
 # the second, against the snapshot target.  The armed values are read from the
@@ -3143,15 +3119,15 @@ def test_both_declared_spellblade_damage_classes_are_inside_the_fixture_set():
 # producing one fails here instead of quietly measuring a different fight.
 #
 # HOW THE DECLARATION GETS ONTO THE PACKET.  `secondary_target` has not retired,
-# so no authoring site in `src/` stamps one; these fixtures stamp one the way its
-# retirement slice would — inside the engine step that AUTHORS the bolt row,
+# so no authoring site in `src/` stamps one; these fixtures stamp one the way
+# its own authoring site would — inside the engine step that AUTHORS the bolt row,
 # from the same `state` the engine prices with, taking the magnitude from the
 # family's own interpreter and the target-side terms from the fight state that
 # resolved them.  The rest of `run_fight` then runs untouched.
 
 #: The pair engine's own step for the bolt row, and the row it authors.  Named
 #: rather than searched for: the stamp has to land where the family's own
-#: retirement slice would put it.
+#: authoring site would put it.
 SWING_SEED_STEP = secondary_delivery._add_bolt_delivery
 SWING_SEED_ROW = "secondary_Runaan's Hurricane"
 SWING_SEED_RULE = "runaans_hurricane.secondary_target"
@@ -3208,12 +3184,12 @@ def _swing_seed_states():
 
 
 def _declare_swing_row(state):
-    """Stamp the bolt row with the declaration its retirement slice would hand over.
+    """Stamp the bolt row with the declaration its own authoring site would.
 
     Every number comes off the engine's own `state`.  The magnitude is the
     family's own interpreter's — the declared share of the attacker's damage at
     the on-hit effectiveness of the swing that fired it — and the two target-side
-    FACTORS are folded into it, which is what Ruling 1 rules they are: a pure
+    FACTORS are folded into it, because they are pure factors: a pure
     factor on a linear mitigation composes into the declared magnitude and
     prices to the same real number.  What is not folded is the blend (two
     magnitudes, not one) and the capped flat subtraction, and those ride on the
@@ -3323,10 +3299,10 @@ def _swing_seed_price(result, packet, *, composed=True):
     )
 
 
-#: Amendment R's own measured reading of this seed, per target-side state.  Not
-#: a restatement of the engine: these are the four figures the amendment
-#: published, pinned here so a seed that stopped being the seed the ruling was
-#: measured on fails rather than quietly measuring a different fight.
+#: The measured reading of this seed, per target-side state.  Not a
+#: restatement of the engine: these are four measured figures, pinned here so
+#: a seed that stopped being this seed fails rather than quietly measuring a
+#: different fight.
 #:
 #: Re-measured for 16.16.1: Runaan's Hurricane's Wind's Fury bolt share moved
 #: 55% AD -> 65% AD, so the seed's bolt raw moved 91.85 -> 108.55 at the pinned
@@ -3373,22 +3349,18 @@ class TestTheSeedIsTheOneTheRulingWasMeasuredOn:
 
 @pytest.mark.parametrize("case", sorted(_swing_seed_states()))
 class TestTheSwingCompositionReproducesThePairEngines:
-    """Ruling 1's fixture, in every target-side state the seed is run in."""
+    """The fixture, in every target-side state the seed is run in."""
 
     def test_the_declaration_carries_the_composition_and_the_family_is_deferred(
         self, case
     ):
         """The declaration the fixture stamps is the one the tree stamps.
 
-        This asserted that `secondary_target` was still deferred and that the
-        bolt row carried no stamp, which was the honest reading while the
-        fixture stood in for a retirement nobody had performed.  The
-        retirement landed on 2026-08-17, so the clause is now its successor
-        and is a stronger one: the row the fixture stamps is stamped by the
-        ENGINE, as a preview of the mechanic the walk re-prices, and the
-        declaration the fixture builds carries the same composition and the
-        same rule the engine's own does.  A fixture that went on asserting the
-        family was deferred would be a case testing its own scaffolding.
+        The row the fixture stamps is stamped by the ENGINE, as a preview of
+        the mechanic the walk re-prices, and the declaration the fixture
+        builds carries the same composition and the same rule the engine's own
+        does.  Asserting instead that the family is deferred would be a case
+        testing its own setup.
         """
         assert (RuleFamily.SECONDARY_TARGET, EngineLane.RECEIPT_WALK) in INTERPRETERS
         _, row, packets = _swing_seed_packets(case)
@@ -3399,12 +3371,12 @@ class TestTheSwingCompositionReproducesThePairEngines:
             assert packet.swing is not None
             assert packet.rule_id == SWING_SEED_RULE
             # The bolt is the ROUTER'S OWN packet: it re-delivers nobody's
-            # magnitude, so no routing rides it (umbrella Amendment R,
-            # Ruling 3).  Its sibling row is the opposite shape.
+            # magnitude, so no routing rides it.  Its sibling row is the
+            # opposite shape.
             assert packet.routing is None
 
     def test_the_declaration_prices_to_the_pair_engines_own_number(self, case):
-        """Bit-exact, on identical inputs — the whole of what Ruling 1 claims.
+        """Bit-exact, on identical inputs, which is the whole claim.
 
         The pair engine mitigates each branch once at the fight's armour, takes
         the capped flat subtraction off each, and blends them; the walk's own
@@ -3475,7 +3447,7 @@ class TestTheSwingCompositionReproducesThePairEngines:
 
 
 class TestRockSolidIsCarriedAsASubtractionAndNeverFolded:
-    """The term Ruling 1 says never folds, and why no magnitude reproduces it."""
+    """The term that never folds, and why no magnitude reproduces it."""
 
     def test_the_cap_bites_on_one_branch_and_not_the_other(self):
         """The measured fact that makes the term un-foldable.
@@ -3546,7 +3518,7 @@ class TestTheBlendIsTheDeterministicReadingAndNotAnAverage:
         assert swing.blended(100.0, 100.0) == 100.0
 
     def test_a_declaration_no_swing_delivered_carries_no_composition(self):
-        """The inertness this slice rests on, at the type rather than the tree.
+        """The inertness this rests on, at the type rather than the tree.
 
         A three- or four-wide declaration — every one the tree authors — resolves
         to no composition, and the packet built from it is priced by the
@@ -3565,21 +3537,21 @@ class TestTheBlendIsTheDeterministicReadingAndNotAnAverage:
 
 
 # ---------------------------------------------------------------------------
-# The routing family — umbrella Amendment R, Ruling 3
+# The routing family
 # ---------------------------------------------------------------------------
 #
 # `secondary_target` authors two priced pair rows and declares a magnitude for
 # neither.  Wind's Fury's bolt is a declared SHARE of the swing that fired it,
 # and the copied on-hit row is the attack's own on-hit packets re-delivered at
-# the bolt's target.  Ruling 3 rules that the family is a ROUTING family: it
-# re-delivers source families' declared magnitudes at a second subject and
-# declares no magnitude of its own, so the routed packet is priced from the
-# SOURCE family's declaration composed with the router's share, attributed
-# under D-62 at (source mechanic, secondary subject, event_id), with the
-# routing recorded in provenance.
+# the bolt's target.  So the family is a ROUTING family: it re-delivers
+# source families' declared magnitudes at a second subject and declares no
+# magnitude of its own, so the routed packet is priced from the SOURCE
+# family's declaration composed with the router's share, attributed at
+# (source mechanic, secondary subject, event_id), with the routing recorded
+# in provenance.
 #
-# The seed is the same Caitlyn probe Ruling 1's fixtures run on, which is what
-# makes the two rulings' fixtures one measurement of one fight rather than two.
+# The seed is the same Caitlyn probe the swing-composition fixtures run on,
+# which makes both halves one measurement of one fight rather than two.
 
 #: The engine's own row for the copied on-hit packets, and the mechanic that
 #: routes them.  The router is read off the family's own slot rather than
@@ -3652,7 +3624,7 @@ def _routing_provenance():
 
 
 class TestTheRouterDeclaresNoMagnitude:
-    """D-60's half of Ruling 3, asserted against the declaration itself."""
+    """One producer per number, asserted against the declaration itself."""
 
     def test_the_declaration_compiles_exactly_the_two_routing_facts(self):
         """`max_targets` and `damage_share`, and nothing that sizes a packet.
@@ -3682,10 +3654,10 @@ class TestTheRouterDeclaresNoMagnitude:
         assert cap == int(cap) >= 1
 
     def test_the_family_is_served_by_its_own_lane_and_still_declares_no_magnitude(self):
-        """Ruling 3 retired nothing; the retirement that followed it did.
+        """The clause outlives the row it was written for.
 
-        What survives the row's retirement is the clause this class is about,
-        and the reason it outlives the row: the family's interpreter answers
+        What survives the row's retirement is what this class is about, and
+        the reason it outlives the row: the family's interpreter answers
         for the lane it declares, AND its declaration is still exactly two
         routing facts.  A retirement that had given the router a magnitude
         would pass a registry check and fail this one.
@@ -3699,7 +3671,7 @@ class TestTheRouterDeclaresNoMagnitude:
 
 
 class TestARoutedPacketIsTheSourceFamilysNumber:
-    """The composition, on the seed the amendment measured."""
+    """The composition, on the seed the swing fixtures measured."""
 
     def test_the_bolt_is_the_swings_magnitude_at_the_declared_share(self):
         """Bit-exact against the raw the pair engine's own slot computed.
@@ -3724,7 +3696,7 @@ class TestARoutedPacketIsTheSourceFamilysNumber:
         assert routed.raw_amount == 108.55
 
     def test_the_routed_packet_keeps_the_source_mechanic_and_names_the_route(self):
-        """D-62's key and the provenance beside it, in one assertion each.
+        """The uniqueness key and the provenance beside it, one each.
 
         The magnitude belongs to the family that declared it, so `rule_id`
         does not move; what the router contributes is recorded as the routing
@@ -3781,7 +3753,7 @@ class TestARoutedPacketIsTheSourceFamilysNumber:
 
 
 class TestTheCopiedRowsMagnitudesBelongToTheOnHitFamily:
-    """Ruling 3's other half, measured on the row that opened the question."""
+    """The routing family's other half, on the copied row."""
 
     def test_the_first_copied_packet_is_an_on_hit_declaration_priced_at_the_subject(
         self,
@@ -3860,7 +3832,7 @@ class TestTheCopiedRowsMagnitudesBelongToTheOnHitFamily:
 class TestTheCopiedRowPricesFromItsRoutedDeclarations:
     """The retirement's own equivalence for the routed half.
 
-    The class above measures Ruling 3's arithmetic on one hand-built packet.
+    The class above measures the routing arithmetic on one hand-built packet.
     This measures the ENGINE's: every event the pair engine authored under the
     copied row carries a routed declaration, and pricing that declaration the
     way the walk prices it returns the number the pair engine put on that
@@ -3904,7 +3876,7 @@ class TestTheCopiedRowPricesFromItsRoutedDeclarations:
                 assert packet.routing.router_rule_id == SWING_SEED_RULE, case
 
     def test_the_two_rows_are_declared_by_two_different_producers(self):
-        """D-60's half of the retirement, read off the engine's own rows.
+        """One producer per number, read off the engine's own rows.
 
         The bolt names the router and the copied packets name the families
         that declared their magnitudes — one producer each, two subjects, no
@@ -3963,9 +3935,9 @@ class TestTheRoutingReachesTheReceipt:
     def test_d62_keys_the_two_deliveries_apart_by_their_subject(self):
         """The key that makes one producer at two subjects two contributions.
 
-        `(mechanic, subject, event_id)` is D-62's own, and the subject is what
-        keeps a routed packet clear of the same mechanic's primary delivery —
-        which is precisely why Ruling 3 could leave `rule_id` on the source.
+        `(mechanic, subject, event_id)` is the uniqueness key, and the
+        subject is what keeps a routed packet clear of the same mechanic's
+        primary delivery — which is why `rule_id` can stay on the source.
         """
         routing = _routing_provenance()
         source = DeclaredPacket(100.0, "physical", "blade_of_the_ruined_king.on_hit")
