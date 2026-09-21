@@ -1,4 +1,4 @@
-"""Reviewed crowd control for Hwei (MODULE_CC, wave 4B).
+"""Reviewed crowd control for Hwei (MODULE_CC).
 
 Every mood subject carries its own kind; only P is a whole-slot answer.
 """
@@ -6,7 +6,7 @@ Every mood subject carries its own kind; only P is a whole-slot answer.
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Hwei"

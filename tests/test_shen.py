@@ -199,7 +199,7 @@ def test_timed_auto_stream_certifies_q_with_an_authored_swing_ledger(shen_data):
 
 
 def test_timed_payload_probe_certifies_full_timeline():
-    """The campaign probe: bare-kit timed Shen has no coarse sources."""
+    """The probe: bare-kit timed Shen has no coarse sources."""
     from src.calculator.calculate import calculate_payload
 
     result = calculate_payload(

@@ -1,4 +1,4 @@
-"""Reviewed crowd control for Jinx (MODULE_CC, wave 4B).
+"""Reviewed crowd control for Jinx (MODULE_CC).
 
 Zap! slows, a Chomper roots, the rocket only explodes.
 """
@@ -6,7 +6,7 @@ Zap! slows, a Chomper roots, the rocket only explodes.
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Jinx"

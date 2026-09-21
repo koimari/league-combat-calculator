@@ -1,4 +1,4 @@
-"""Reviewed crowd control for Fiddlesticks (MODULE_CC, wave 4B).
+"""Reviewed crowd control for Fiddlesticks (MODULE_CC).
 
 Terrify fears, Reap slows; the doubled branch fears nothing, which is why Q's kind rides its part.
 """
@@ -6,7 +6,7 @@ Terrify fears, Reap slows; the doubled branch fears nothing, which is why Q's ki
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Fiddlesticks"

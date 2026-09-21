@@ -1,4 +1,4 @@
-"""Reviewed crowd control for Gragas (MODULE_CC, wave 4B).
+"""Reviewed crowd control for Gragas (MODULE_CC).
 
 Barrel Roll slows; Body Slam and Explosive Cask lead with a knock back.
 """
@@ -6,7 +6,7 @@ Barrel Roll slows; Body Slam and Explosive Cask lead with a knock back.
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Gragas"

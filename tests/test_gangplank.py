@@ -1,4 +1,4 @@
-"""Reviewed crowd control for Gangplank (MODULE_CC, wave 4B).
+"""Reviewed crowd control for Gangplank (MODULE_CC).
 
 Powder Keg and every cannon wave slow; the burn and Parrrley do not.
 """
@@ -6,7 +6,7 @@ Powder Keg and every cannon wave slow; the burn and Parrrley do not.
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Gangplank"

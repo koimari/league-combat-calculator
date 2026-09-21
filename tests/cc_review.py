@@ -109,7 +109,7 @@ def declared_parts(parsed, slot):
 
 
 def fimbulwinter_coverage(champion, **window) -> dict[str, Any]:
-    """The campaign's control-token probe, through the public entry.
+    """The control-token probe, through the public entry.
 
     ``window`` overrides the probe's timed, autos-on fight (``fight_mode``,
     ``include_auto_attacks``) for the windows without an auto stream.
@@ -206,5 +206,5 @@ class ChampionReview:
         return {key: kinds for key, kinds in carried.items() if kinds}
 
     def coverage(self, **window):
-        """The campaign's control-token probe, through the public entry."""
+        """The control-token probe, through the public entry."""
         return fimbulwinter_coverage(self.champion, **window)

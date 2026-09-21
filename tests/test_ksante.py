@@ -1,4 +1,4 @@
-"""Reviewed crowd control for K'Sante (MODULE_CC, wave 4B).
+"""Reviewed crowd control for K'Sante (MODULE_CC).
 
 Ntofo slows, Path Maker stuns outside All Out, All Out itself stuns.
 """
@@ -11,7 +11,7 @@ from tests import cc_review
 from tests import champion_closure as closure
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "K'Sante"

@@ -1,4 +1,4 @@
-"""Reviewed crowd control for Heimerdinger (MODULE_CC, wave 4B).
+"""Reviewed crowd control for Heimerdinger (MODULE_CC).
 
 Both grenades slow every enemy they damage; turrets and rockets do not.
 """
@@ -6,7 +6,7 @@ Both grenades slow every enemy they damage; turrets and rockets do not.
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Heimerdinger"

@@ -225,7 +225,7 @@ def test_target_max_health_change_is_repriced(galio_data):
 
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Galio"

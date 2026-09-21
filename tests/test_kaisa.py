@@ -577,7 +577,7 @@ def test_sources_and_options_are_public_receipts():
 
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Kai'Sa"

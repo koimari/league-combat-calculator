@@ -1,4 +1,4 @@
-"""Reviewed crowd control for Hecarim (MODULE_CC, wave 4B).
+"""Reviewed crowd control for Hecarim (MODULE_CC).
 
 Devastating Charge knocks back, Onslaught of Shadows fears.
 """
@@ -6,7 +6,7 @@ Devastating Charge knocks back, Onslaught of Shadows fears.
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Hecarim"

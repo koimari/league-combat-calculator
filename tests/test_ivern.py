@@ -1,4 +1,4 @@
-"""Reviewed crowd control for Ivern (MODULE_CC, wave 4B).
+"""Reviewed crowd control for Ivern (MODULE_CC).
 
 Rootcaller roots, Triggerseed slows, and only Daisy's smash knocks up.
 """
@@ -6,7 +6,7 @@ Rootcaller roots, Triggerseed slows, and only Daisy's smash knocks up.
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Ivern"

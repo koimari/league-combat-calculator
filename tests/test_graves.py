@@ -1,4 +1,4 @@
-"""Reviewed crowd control for Graves (MODULE_CC, wave 4B).
+"""Reviewed crowd control for Graves (MODULE_CC).
 
 Only Smoke Screen controls, and it slows.
 """
@@ -6,7 +6,7 @@ Only Smoke Screen controls, and it slows.
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Graves"

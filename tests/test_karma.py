@@ -1,4 +1,4 @@
-"""Reviewed crowd control for Karma (MODULE_CC, wave 4B).
+"""Reviewed crowd control for Karma (MODULE_CC).
 
 Inner Flame slows; Focused Resolve roots only on its second hit.
 """
@@ -6,7 +6,7 @@ Inner Flame slows; Focused Resolve roots only on its second hit.
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Karma"

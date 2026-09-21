@@ -1,4 +1,4 @@
-"""Reviewed crowd control for Illaoi (MODULE_CC, wave 4B).
+"""Reviewed crowd control for Illaoi (MODULE_CC).
 
 Illaoi's control is E's tether severance, which damages nothing.
 """
@@ -6,7 +6,7 @@ Illaoi's control is E's tether severance, which damages nothing.
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Illaoi"

@@ -1,4 +1,4 @@
-"""Reviewed crowd control for Janna (MODULE_CC, wave 4B).
+"""Reviewed crowd control for Janna (MODULE_CC).
 
 Howling Gale knocks up and Zephyr slows.
 """
@@ -6,7 +6,7 @@ Howling Gale knocks up and Zephyr slows.
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Janna"

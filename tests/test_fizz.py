@@ -35,7 +35,7 @@ def _timed_params(**overrides):
 
 
 def test_timed_payload_probe_certifies_full_timeline():
-    """The campaign probe: bare-kit timed Fizz has no coarse sources."""
+    """The probe: bare-kit timed Fizz has no coarse sources."""
     result = calculate_payload(
         {
             "champion": "Fizz",
@@ -147,7 +147,7 @@ def test_w_tick_count_and_cadence_are_sourced_from_the_cache():
 
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Fizz"

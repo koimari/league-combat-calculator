@@ -1,4 +1,4 @@
-"""Reviewed crowd control for Jhin (MODULE_CC, wave 4B).
+"""Reviewed crowd control for Jhin (MODULE_CC).
 
 Deadly Flourish roots a marked champion; the trap and R's bullets slow.
 """
@@ -6,7 +6,7 @@ Deadly Flourish roots a marked champion; the trap and R's bullets slow.
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Jhin"

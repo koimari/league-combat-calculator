@@ -344,7 +344,7 @@ class TestPassiveEventCertification:
         )
 
     def test_timed_payload_probe_certifies_full_timeline(self) -> None:
-        """The campaign probe: bare-kit timed Ambessa has no coarse sources."""
+        """The probe: bare-kit timed Ambessa has no coarse sources."""
         result = calculate_payload(
             {
                 "champion": "Ambessa",

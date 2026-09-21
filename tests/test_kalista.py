@@ -1,4 +1,4 @@
-"""Reviewed crowd control for Kalista (MODULE_CC, wave 4B).
+"""Reviewed crowd control for Kalista (MODULE_CC).
 
 Rend slows; Pierce and the Soul-Mark proc do not.
 """
@@ -6,7 +6,7 @@ Rend slows; Pierce and the Soul-Mark proc do not.
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Kalista"

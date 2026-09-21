@@ -1,4 +1,4 @@
-"""Reviewed crowd control for Garen (MODULE_CC, wave 4B).
+"""Reviewed crowd control for Garen (MODULE_CC).
 
 Garen's damaging casts apply no immobilize and no slow.
 """
@@ -6,7 +6,7 @@ Garen's damaging casts apply no immobilize and no slow.
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Garen"

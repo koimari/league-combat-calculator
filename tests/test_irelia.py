@@ -1,4 +1,4 @@
-"""Reviewed crowd control for Irelia (MODULE_CC, wave 4B).
+"""Reviewed crowd control for Irelia (MODULE_CC).
 
 Flawless Duet stuns; R's perimeter pass slows and its barrage does not.
 """
@@ -6,7 +6,7 @@ Flawless Duet stuns; R's perimeter pass slows and its barrage does not.
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
-# Reviewed crowd control (MODULE_CC, wave 4B)
+# Reviewed crowd control (MODULE_CC)
 # ---------------------------------------------------------------------------
 
 _CC_CHAMPION = "Irelia"
