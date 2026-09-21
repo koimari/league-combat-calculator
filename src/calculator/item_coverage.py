@@ -82,8 +82,8 @@ ItemCoverageStatus = Literal[
 ]
 
 # The two answers that are refusals rather than classifications.  ``withheld``
-# is the campaign's spelling for "coverage refused to model it — a named
-# receipt and no number" (D-23); ``review_pending`` is the same refusal for a
+# means "coverage refused to model it — a named receipt and no number";
+# ``review_pending`` is the same refusal for a
 # record that is not a shop item at all.  Neither is optimizer- or
 # calculation-eligible, and no third status is a refusal.
 _REFUSAL_STATUSES: frozenset[str] = frozenset({"withheld", "review_pending"})
@@ -94,8 +94,8 @@ _REFUSAL_STATUSES: frozenset[str] = frozenset({"withheld", "review_pending"})
 # rewrote eligibility as ``status not in _REFUSAL_STATUSES``, which is the same
 # answer for all five members and the *opposite* answer for a sixth: a status
 # added tomorrow would arrive optimizer- and calculation-eligible without
-# anyone ruling that it should be, which is a fail-open default inside the
-# campaign that exists to remove them.  Naming the eligible statuses instead
+# anyone deciding that it should be, which is a fail-open default.
+# Naming the eligible statuses instead
 # makes an unclassified answer ineligible until someone classifies it.  A test
 # asserts these two sets partition ``ItemCoverageStatus`` exactly, so "no third
 # status is a refusal" and "no sixth status is silently eligible" cannot drift
@@ -107,7 +107,7 @@ _ELIGIBLE_STATUSES: frozenset[str] = frozenset(
 # The target lane's own vocabulary, and its own positive whitelist.  Its three
 # classifications are ``modeled``, ``modeled_event_certified`` — a defence the
 # ladder proved the walk certifies event by event — and ``not_target_relevant``;
-# its refusals are the attacker lane's two, passed through.  Same ruling, same
+# its refusals are the attacker lane's two, passed through.  Same rule, same
 # reason: the durability question must not answer "eligible" for a status
 # nobody has classified.  No ``Literal`` closes this vocabulary, so a test
 # asserts the whitelist covers every status the ladder produces over the whole
@@ -889,12 +889,11 @@ def require_certified_target_timeline(
 def optimizer_candidate_coverage(items: Iterable[dict[str, Any]]) -> dict[str, Any]:
     """Summarise which legal item candidates can be scored without omission.
 
-    D-23's published half.  A withheld candidate is **excluded from candidate
+    The published half.  A withheld candidate is **excluded from candidate
     generation** by :func:`optimizer_supported_items` and **named here**, and
     the per-request exclusion count is published as ``withheld_count`` so a
     request that quietly lost a legal build says so in its own response rather
-    than only in a log.  It is never scored as zero, which is the outcome this
-    campaign exists to make unrepresentable.
+    than only in a log.  It is never scored as zero.
     """
     classified = [
         item_model_coverage(str(item.get("name", "")), SCORING_LANES) for item in items
@@ -922,7 +921,7 @@ def optimizer_candidate_coverage(items: Iterable[dict[str, Any]]) -> dict[str, A
 def optimizer_supported_items(items: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     """Return candidates whose outgoing TDD can be scored without omission.
 
-    The exclusion half of D-23: a withheld item never reaches candidate
+    The exclusion half: a withheld item never reaches candidate
     generation, so no build is ranked on a zero standing in for a mechanic
     nobody ran.
     """
@@ -1580,7 +1579,7 @@ _SUPPORT_PACKET_CLAIMS: Mapping[str, tuple[str, tuple[str, ...], str]] = {
 # check tautological, which is the failure this module exists to catch.
 #
 # Four are ``SPLIT`` and skip the holder, whose own pair engine prices him.
-# Bloodsong is not: Phase 4 S7 gave the walk the whole mechanic — the pool of
+# Bloodsong is not: the walk owns the whole mechanic — the pool of
 # amplified damage is every roster attacker's — so the packet carries no
 # ``owner`` and the holder is priced by the walk like everybody else.
 _DUAL_SIDED_MECHANICS: Mapping[str, tuple[str, OwnerPolicy]] = {
@@ -1932,8 +1931,8 @@ _validate_target_pricing_homes()
 # and a per-item key cannot answer it for an item that is already claimed.
 #
 # No attacker or target key may appear here at all.  The rule is that a
-# frontier which can absorb a damage or durability claim is the escape hatch
-# this campaign closes, and "no such lane, ever" is the version of that rule a
+# frontier which can absorb a damage or durability claim is an escape hatch,
+# and "no such lane, ever" is the version of that rule a
 # test can check without deciding what "prices damage" means.
 FRONTIER: Mapping[str, str] = {
     "item:Diadem of Songs@support_packet": (

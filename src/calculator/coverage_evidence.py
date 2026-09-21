@@ -8,8 +8,8 @@ evidence members that say what backs it.  A sentence cannot be checked, and
 one describing both halves of Imperial Mandate's Command outlived the half
 it described.
 
-Three tiers catch three different failures, and the boundary between them is
-ruled (D-20).  This module is the *load* tier and nothing more: it catches
+Three tiers catch three different failures, and the boundary between them
+matters.  This module is the *load* tier and nothing more: it catches
 structural impossibility — a claim whose shape cannot be backed by anything,
 whatever the codebase happens to contain.  So it imports nothing from
 ``src.calculator``, reads no file, touches no ``data/`` cache, and runs a
@@ -26,11 +26,11 @@ this module a standard-library leaf nothing can cycle against, and what makes
 every read injectable in the resolver's three seams — a member holding a live
 function object would resolve itself at authoring time and prove nothing.
 The union is closed at nine members; ``StreamMembership`` is deliberately
-absent, because it would resolve against name sets Phase 2 has deleted.
+absent, because it would resolve against name sets nothing declares.
 
-``ClaimLane`` lives here and Phase 3's ``EngineLane`` lives in
-``item_behavior`` (D-45): two lane vocabularies answering different questions
-must never both be spelled ``Lane``.
+``ClaimLane`` lives here and ``EngineLane`` lives in ``item_behavior``: two
+lane vocabularies answering different questions must never both be spelled
+``Lane``.
 """
 
 # One closed vocabulary, the requirement matrix that constrains it, and the
@@ -81,8 +81,8 @@ OwnerPolicy = Literal[
     "holder_priced_by_walk",
 ]
 
-# The registries an ``EffectKey`` may name.  Deliberately **not** Phase 3's
-# ``ValueRegistry``: that union is three members (D-46) and must not admit
+# The registries an ``EffectKey`` may name.  Deliberately **not**
+# ``ValueRegistry``: that union is three members and must not admit
 # ``ITEM_INPUT_OPTIONS``, which holds scenario controls rather than sourced
 # numbers.  An evidence member may name an option control's key, so the
 # evidence union is four.
@@ -106,8 +106,8 @@ EVIDENCE_REGISTRIES: frozenset[str] = frozenset(get_args(EvidenceRegistry))
 #
 # The projection is asserted, not imported, and the difference is ruled rather
 # than convenient.  This module is the load tier: it imports nothing from
-# ``src.calculator`` and every evidence member holds strings and never objects
-# (D-20), and a test over this file's own AST enforces both.  So the enum
+# ``src.calculator`` and every evidence member holds strings and never
+# objects, and a test over this file's own AST enforces both.  So the enum
 # cannot be read here, and "projection" is discharged the only way it can be —
 # ``tests/test_coverage_evidence.py`` asserts set equality against
 # ``UtilityDimension``'s values, which fails on the commit that adds a member
@@ -383,8 +383,8 @@ class TestRef:
     """
 
     # pytest tries to collect any imported class whose name starts with
-    # ``Test``.  The name is the campaign's, so the opt-out lives here once
-    # rather than as an import alias every consuming test has to remember.
+    # ``Test``.  The opt-out lives here once rather than as an import alias
+    # every consuming test has to remember.
     __test__ = False
 
     node_id: str
@@ -425,8 +425,8 @@ class SourceRef:
     """A wiki url + revision id present in the committed full-entry audit.
 
     The revision is what makes the citation reproducible: a bare url names a
-    page whose text has moved on, and this campaign exists because a
-    description outlived the thing it described.
+    page whose text has moved on, and a description that outlives the thing
+    it described is the failure the whole claim table refuses.
     """
 
     url: str
@@ -569,7 +569,7 @@ class EvidencePolicy:
 # A status is negative when it withholds rather than models.  Both of them
 # take exactly one ``Absence`` and no positive evidence at all.
 # The two refusals.  ``withheld`` is the one spelling for "coverage refused
-# to model it — a named receipt and no number" (D-23), and it is a value in
+# to model it — a named receipt and no number", and it is a value in
 # the serialized coverage payload, so respelling it moves
 # CAPABILITY_SCHEMA_VERSION with it.
 NEGATIVE_STATUSES: frozenset[str] = frozenset({"withheld", "review_pending"})
@@ -821,7 +821,7 @@ def validate_claim(claim: Claim) -> None:
 def validate_claim_table(
     claims: Mapping[tuple[SubjectKind, str, ClaimLane], Claim],
 ) -> None:
-    """The load gate (D-20): per-claim validity and key agreement.
+    """The load gate: per-claim validity and key agreement.
 
     One pass over the table, so the cost is linear in the number of claims
     and nothing here imports, reads a file, or touches ``data/``.  The

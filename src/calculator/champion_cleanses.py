@@ -13,7 +13,7 @@ REMOVE_SCURVY_WORDING = (
 )
 
 
-#: P2 Slice 5 — the champion-cast cleanse declaration (Gangplank W).
+#: The champion-cast cleanse declaration (Gangplank W).
 #:  Atom records from ``data/atoms/abilities.json`` + ``data/atoms/
 #:  champions.json`` (hashes independently recomputed; the heal values live
 #:  in the ability atoms — the binary heal atom carries cooldown+bitmask,
@@ -65,31 +65,30 @@ REMOVE_SCURVY_HEAL_ATOMS: list[dict[str, Any]] = [
 ]
 
 
-#: P2 Slice 5 — the champion-cast cleanse sources (Gangplank W Remove
+#: The champion-cast cleanse sources (Gangplank W Remove
 #:  Scurvy).  The packet's source_key is the declaration key; the resolver
 #:  also accepts the active name and the display source.  Kept SEPARATE
-#:  from the item tables so the Slice 4 item contract (three sourced
-#:  items) is untouched.
+#:  from the item tables, which hold the three sourced items.
 CHAMPION_CLEANSE_SOURCES: dict[str, str] = {
     "Gangplank W": "Gangplank W",
     "Gangplank W — Remove Scurvy": "Gangplank W",
     "Remove Scurvy": "Gangplank W",
-    # P2 Slice 6: the EMPOWERED W self-cast (Rengar Battle Roar).  The
+    # The EMPOWERED W self-cast (Rengar Battle Roar).  The
     #  packet's source_key is the declaration key; the resolver also
     #  accepts the active name and the display source.
     "Rengar W": "Rengar W",
     "Rengar W — Battle Roar": "Rengar W",
     "Battle Roar": "Rengar W",
-    # P2 Slice 7: the R self+all-teammates cast (Milio Breath of Life).
+    # The R self+all-teammates cast (Milio Breath of Life).
     "Milio R": "Milio R",
     "Milio R — Breath of Life": "Milio R",
     "Breath of Life": "Milio R",
-    # P2 Slice 8: the passive immunity declaration (Dr. Mundo Goes Where
+    # The passive immunity declaration (Dr. Mundo Goes Where
     #  He Pleases) — the resist kernel reads the declaration receipts.
     "Dr. Mundo P": "Dr. Mundo P",
     "Dr. Mundo P — Goes Where He Pleases": "Dr. Mundo P",
     "Goes Where He Pleases": "Dr. Mundo P",
-    # P2 Slice 9: the R cast (Olaf Ragnarok) — the cast-time cleanse +
+    # The R cast (Olaf Ragnarok) — the cast-time cleanse +
     #  the 3s immunity window + the stat receipts ride the R packet.
     "Olaf R": "Olaf R",
     "Olaf R — Ragnarok": "Olaf R",
@@ -97,7 +96,7 @@ CHAMPION_CLEANSE_SOURCES: dict[str, str] = {
 }
 
 
-#: P2 Slice 5 — the champion-cast cleanse declaration.  The heal is a
+#: The champion-cast cleanse declaration.  The heal is a
 #:  SEPARATE authored effect (the E1 self-heal rule in healing.py prices
 #:  flat + 90% AP + 13% missing health live); the declaration's heal is
 #:  None so the kernel never mints a second one.  Castability: game
@@ -105,7 +104,7 @@ CHAMPION_CLEANSE_SOURCES: dict[str, str] = {
 #:  flag pair).  Excluded: the displacement family — the wiki notes that
 #:  the stun under airborne is removable but the displacement needs a
 #:  blink/dash (never modeled as an interval split).
-#: P2 Slice 6 — the EMPOWERED-W cleanse declaration (Rengar Battle Roar).
+#: The EMPOWERED-W cleanse declaration (Rengar Battle Roar).
 #:  The cleanse condition is the Ferocity-Bonus branch ONLY (the wiki
 #:  effect-2 wording "Rengar cleanses himself from all crowd control"; the
 #:  game file RengarWEmp uniquely carries canCastWhileDisabled true /
@@ -175,7 +174,7 @@ CHAMPION_CLEANSE_DECLARATIONS: dict[str, dict[str, Any]] = {
         "source_atoms": [dict(atom) for atom in REMOVE_SCURVY_HEAL_ATOMS],
     },
     "Rengar W": dict(RENGAR_EMPOWERED_W_CLEANSE_DECLARATION),
-    # P2 Slice 7 — Milio R Breath of Life (the self+all-teammates cast).
+    # Milio R Breath of Life (the self+all-teammates cast).
     #  Scope: Milio AND every nearby allied champion (the E8d heal
     #  fan-out roster — "cleansing himself and nearby allied champions").
     #  Excluded: the displacement family — the wording is "non-airborne
@@ -188,7 +187,7 @@ CHAMPION_CLEANSE_DECLARATIONS: dict[str, dict[str, Any]] = {
     #  pattern, NOT the QSS/Mercurial/RengarWEmp carve-out).  Cooldown
     #  160/145/130 receipted, never enforced (the engine's single-cast
     #  rule is the operative limit).
-    # P2 Slice 8 — Dr. Mundo P Goes Where He Pleases (the passive
+    # Dr. Mundo P Goes Where He Pleases (the passive
     #  immunity declaration).  The resist kernel (survival/transitions
     #  _apply_mundo_p_resist) reads the sourced values from the same
     #  receipts; the declaration is the provenance home.  Scope self;
@@ -197,7 +196,7 @@ CHAMPION_CLEANSE_DECLARATIONS: dict[str, dict[str, Any]] = {
     #  function agrees at levels 1 and 18 — flagged) receipted, never
     #  enforced; heal None (the pickup heal is a named-unsupported
     #  timing — the canister drop heals nothing).
-    # P2 Slice 9 — Olaf R Ragnarok (the cast-time cleanse + the 3s
+    # Olaf R Ragnarok (the cast-time cleanse + the 3s
     #  immunity window).  Scope self; excluded the displacement family
     #  (the notes: the stun under airborne is removed but the forced
     #  displacement needs a blink/dash — the GP precedent); cooldown

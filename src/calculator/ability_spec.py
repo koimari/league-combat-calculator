@@ -8,7 +8,7 @@ champion module as a ``hp_scaled_damage`` closure on the part.
 
 This module is a dependency-free leaf between the champion layer and the
 fight engine: both import the contract, neither imports the other. That
-is also why the campaign's four closed vocabularies live here —
+is also why the four closed vocabularies live here —
 ``DamageClass``, ``AttackClass``, ``Disposition`` and ``Authority`` are
 declared once, in the one module every layer may import, so no consumer
 has to re-spell a member as a bare string.  ``ZeroPolicy`` sits with them
@@ -16,9 +16,9 @@ for the same reason: it is a ``Disposition`` and the receipt that goes
 with it, and both the champion entry builders and ``item_behavior``'s
 rule union declare one.
 
-``quantity.py`` holds the algebra over that tag (D-72): ``Quantity`` is
+``quantity.py`` holds the algebra over that tag: ``Quantity`` is
 ``Measured | StructuralZero | Withheld | Starved``, ``Disposition`` is its
-projection, and the campaign's propagation rule for aggregates is ``__add__``
+projection, and the propagation rule for aggregates is ``__add__``
 on the type rather than a discipline each consumer maintains.  It reads the
 tag from here, which is the one direction that keeps this module a leaf.
 """
@@ -87,7 +87,7 @@ class AttackClass(Enum):
 
 
 class Disposition(Enum):
-    """What a numeric leaf *is* — the campaign's one invariant, as a type.
+    """What a numeric leaf *is*, as a type.
 
     A number the model did not compute must never be indistinguishable
     from a number the model computed as zero, so every serialized leaf is
@@ -117,12 +117,11 @@ class Disposition(Enum):
 class ZeroPolicy:
     """What a zero out of one producer *means*, declared rather than inferred.
 
-    The campaign's invariant at producer granularity: a producer that can
+    The same invariant at producer granularity: a producer that can
     legitimately yield 0.0 says ``STRUCTURAL_ZERO`` and gives the reason that
     is then the receipt; one that computed zero from real inputs says
-    ``MEASURED``.  Required with no default wherever a declaration carries it
-    (D-24), because a defaulted disposition is the indistinguishable zero
-    this campaign exists to remove.
+    ``MEASURED``.  Required with no default wherever a declaration carries
+    it, because a defaulted disposition is an indistinguishable zero.
 
     It lives here rather than beside the rule union because two unrelated
     layers declare one — ``item_behavior``'s ``BehaviorRule`` and the
@@ -270,11 +269,11 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
     # is an explicit reviewed no-CC result.  The engine never infers control
     # from an ability name or description at runtime.
     cc_kind: str | None = None
-    # What a zero ``amount`` on this part *means* (D-24).  ``None`` is the
+    # What a zero ``amount`` on this part *means*.  ``None`` is the
     # unreviewed state a raw construction leaves; every part the champion
     # entry builders emit carries the policy those builders declared.
-    # Deliberately absent from ``__repr__``: this is a declaration Phase 4
-    # publishes through ``serialize_leaf``, not a value the pair snapshot
+    # Deliberately absent from ``__repr__``: this is a declaration
+    # ``serialize_leaf`` publishes, not a value the pair snapshot
     # serializes, and printing it would move every golden ability repr for
     # a field no engine reads.
     #

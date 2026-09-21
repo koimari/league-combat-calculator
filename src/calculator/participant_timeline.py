@@ -77,7 +77,7 @@ from .item_support_effects import derive_item_support_effects, schedule_knights_
 from .pipeline import run_fight
 from .program import route as program_route
 
-# The one ``SurvivalAction`` constructor (Phase 4 S4).  Composition is above
+# The one ``SurvivalAction`` constructor.  Composition is above
 # both layers, so this module is where the logical builder and the kernel it
 # builds for meet; nothing under ``survival/`` reaches this way.
 #
@@ -1230,7 +1230,7 @@ def _schedule_glacial_events(
                     duration=zone_duration,
                     multiplier=1.0 - effect.damage_reduction_ratio,
                     all_sources=True,
-                    # D-04: the zone reduces "damage dealt" with no carve-out
+                    # The zone reduces "damage dealt" with no carve-out
                     # in the sourced prose, so every damage and attack class
                     # is the full declaration - never an empty one.
                     damage_classes=frozenset(DamageClass),
@@ -1750,10 +1750,10 @@ def _support_effect_templates(
                 denial_receipts.append(dict(template))
             continue
         templates.append(_apply_item_support_selection(attacker, template, all_actors))
-    # P2 Slice 5: the champion-cast cleanse (Gangplank W Remove Scurvy).
+    # The champion-cast cleanse (Gangplank W Remove Scurvy).
     #  Every W cast is a cleanse activation at the cast time — the game's
     #  W is a heal+cleanse cast, NOT an optional toggle (no user option;
-    #  W rank 0 -> no cast -> no packet).  The packet rides the Slice 4
+    #  W rank 0 -> no cast -> no packet).  The packet rides the
     #  item-cleanse kernel (per-fight one-use latch, interval truncation,
     #  named denials); the heal is the separate E1 self-heal receipt.
     champion_name = str(attacker.champion_data.get("name", ""))
@@ -1779,7 +1779,7 @@ def _support_effect_templates(
                 }
             )
     elif champion_name == "Rengar":
-        # P2 Slice 6: the EMPOWERED-W cleanse (Rengar Battle Roar).  The
+        # The EMPOWERED-W cleanse (Rengar Battle Roar).  The
         # condition is the 3V Ferocity walk's LIVE per-cast flag —
         # breakdown["ferocity"]["stack_events"] (slot + ordinal matched to
         # the cast_timeline W row) — NEVER the seeded p_ferocity alone (a
@@ -1864,7 +1864,7 @@ def _support_effect_templates(
                 for recipient_index, recipient_id in enumerate(recipients)
             )
     elif champion_name in ("DrMundo", "Dr. Mundo"):
-        # P2 Slice 8: Goes Where He Pleases — the passive IMMUNITY arm.
+        # Goes Where He Pleases — the passive IMMUNITY arm.
         #  One arm packet per fight at t=0 (self scope, pre-damage
         #  priority -2.0, so it sorts before same-timestamp hostile
         #  controls); the kernel resists the next hostile immobilizing
@@ -1896,9 +1896,9 @@ def _support_effect_templates(
             r_rank = max(1, min(3, int(request_ranks.get("R", 1) or 1)))
         olaf_r_bonus_resists = (10.0, 15.0, 20.0)[r_rank - 1]
         olaf_r_first_second_ms = (20.0, 45.0, 70.0)[r_rank - 1]
-        # P2 Slice 9 (Ragnarok): the R cast IS the activation (no toggle,
+        # Ragnarok: the R cast IS the activation (no toggle,
         # no typed option) — one cast authors FOUR separate receipts: the
-        # cast-time CLEANSE (Slice 4 kernel; the displacement family
+        # cast-time CLEANSE (the displacement family
         # excluded — the notes' blink/dash carve-out), the 3s IMMUNITY
         # window (duration-armed crowd_control_resist — blocks new
         # hostile blocking controls, end-exclusive), the armor/MR stat
@@ -2727,7 +2727,7 @@ def _simulate_survival(
     actions: list[SurvivalAction] = []
     # One ledger per composed fight: whether a second holder of one mechanic
     # arms a second modifier on one subject is a per-mechanic declaration
-    # (D-66), and this is the single place ``src/`` asks it.  Abyssal Mask's
+    # and this is the single place ``src/`` asks it.  Abyssal Mask's
     # Unmake is the live aura — two holders in range curse an enemy once —
     # while every other dual-sided mechanic is a per-holder pool whose second
     # holder must keep its own contribution.
@@ -2748,9 +2748,8 @@ def _simulate_survival(
             if dropped is not None:
                 # The packet stays in the public receipt carrying its own
                 # reason and an applied amount of zero, because an arming
-                # that vanished is exactly the shape this campaign refuses:
-                # a reader must be able to tell "the aura was already up"
-                # from "nothing was ever armed here".
+                # that vanished leaves a reader unable to tell "the aura
+                # was already up" from "nothing was ever armed here".
                 event["dedupe"] = dropped.receipt()
                 event["applied_amount"] = 0.0
                 continue
@@ -2804,9 +2803,9 @@ def _simulate_survival(
     # them); the receipt adapter left every action at ``NO_SLOT`` because the
     # event dict it annotates is addressed by identity instead.  That made
     # the receipt walk unaddressable to any slot-keyed observer, and the
-    # write-once outcome ledger (D-62, D-64) is exactly such an observer — it
-    # silently recorded nothing, which is this campaign's own failure shape
-    # inside the record built to refuse it.  Allocating after the sort keeps
+    # write-once outcome ledger is exactly such an observer — it silently
+    # recorded nothing, inside the record built to refuse exactly that.
+    # Allocating after the sort keeps
     # the slot in walk order, so a reader can put a refusal back where the
     # walk made it.  Stamped in place rather than into a second list: an
     # action is 93 slots wide, and a comprehension holds the original and
@@ -3574,7 +3573,7 @@ def _score_with_search_context(
             # The same preview skip the compiler makes, on the same rows, so
             # the scan and the walk see one stream.  A pair-engine row the
             # registry declares THEORETICAL is a preview of a number the
-            # coupled walk owns (D-62), and a preview row IS a damage event:
+            # coupled walk owns, and a preview row IS a damage event:
             # Carve arms one stack per damage event, so scanning it armed an
             # eleventh stack the walk never armed.
             #
@@ -4076,9 +4075,9 @@ def _compose_pass(
     Returns the finished combat receipt, or a
     :class:`~.program.dependency.PassRequest` carrying the restore ledger
     this pass derived and the next pass must be priced with.  Asking is a
-    return value rather than a recursive call, which is the whole of D-70:
-    a walk that can call the thing that called it has no single invocation
-    to count and no single result for a view to project.
+    return value rather than a recursive call: a walk that can call the
+    thing that called it has no single invocation to count and no single
+    result for a view to project.
     """
     restores = patch.overrides[_RESOURCE_RESTORES] if patch is not None else None
     if restores is not None:
