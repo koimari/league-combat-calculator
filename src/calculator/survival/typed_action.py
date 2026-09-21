@@ -44,7 +44,7 @@ class ActionKind(Enum):
     UNTARGETABLE = "untargetable"
     SPELL_SHIELD = "spell_shield"
     CROWD_CONTROL = "crowd_control"
-    # P2 Slice 8: a passive IMMUNITY arm (Dr. Mundo Goes Where He
+    # A passive IMMUNITY arm (Dr. Mundo Goes Where He
     # Pleases) — the next hostile immobilizing control is RESISTED before
     # it ever applies (never a truncation): the arm packet sorts before
     # same-timestamp controls and the resist gate sits inside
@@ -135,8 +135,8 @@ class SurvivalAction(NamedTuple):
     aidx: int = -1
     trigger: int = -1
     # The four event references, as slots into EVENT_SLOTS (NO_SLOT for
-    # "names none").  They were ``str | None`` id fields until Phase 4 S1;
-    # every consumer compared them for identity, which is what a slot is.
+    # "names none").  Slots rather than id strings, because every consumer
+    # compares them for identity, which is what a slot is.
     trigger_slot: int = NO_SLOT
     # A rider whose trigger is "the holder's next ability hit", which only
     # the walk can resolve: ``trigger_slot`` names one carrier packet chosen
@@ -205,7 +205,7 @@ class SurvivalAction(NamedTuple):
     amplified_recovery: bool = True
     amount_formula: Any = None
     requires_existing_shield: bool = False
-    # P2 Slice 5: a self-cast that fires while the caster is crowd-
+    # A self-cast that fires while the caster is crowd-
     # controlled (Gangplank W Remove Scurvy — game canCastWhileDisabled;
     # the QSS/Mercurial item precedent dispatches utility-kind cleanses
     # before the attacker gate).  The gate exempts HEAL kinds carrying
@@ -214,7 +214,7 @@ class SurvivalAction(NamedTuple):
     # disabled, but not under suppression/stasis).
     cast_while_disabled: bool = False
     cast_blocked_by_attacker_control: bool = False
-    # P2 Slice 7: the per-cast cleanse group (Milio R fan-out — one cast
+    # The per-cast cleanse group (Milio R fan-out — one cast
     # authors one packet per recipient; the group is the shared one-use
     # latch key so all recipients of one cast consume ONE use).
     cleanse_group: str = ""
@@ -269,7 +269,7 @@ class SurvivalAction(NamedTuple):
     # participant id strings; ``-1`` is "this packet declares no holder", the
     # integer spelling of the empty owner string it replaces.
     holder: int = -1
-    # The class restriction a damage-modifier packet declares (D-04).  Both
+    # The class restriction a damage-modifier packet declares.  Both
     # are required of such a packet and empty is banned, which is why the
     # class default is the empty set: a modifier action that reached the
     # walk without a declaration raises in ``declared_modifier_classes``

@@ -1,6 +1,6 @@
 """What the compiled score kernel refuses, and what a strike-back costs.
 
-The compiler itself moved to ``program/compile.py`` at Phase 4 S4 -- one
+The compiler itself lives in ``program/compile.py`` -- one
 ``SurvivalAction`` constructor, on the logical side of the layering.  What
 stays here is what ``survival/`` genuinely owns: the kernel's own refusals
 and the two prices a strike-back needs before the walk runs.
@@ -8,10 +8,10 @@ and the two prices a strike-back needs before the walk runs.
 **The refusals.**  Compilation fails closed by transition type: a packet,
 heal or resolved support template carrying a state transition the score
 ledger cannot represent yields a named receipt, and the caller falls back to
-the authoritative receipt walk instead of silently dropping the transition
-(Phase 1's contract, kept verbatim).  These four functions are statements
-about the *kernel's* representation, which is why they did not follow the
-compiler out: a later stage that teaches the score ledger a new transition
+the authoritative receipt walk instead of silently dropping the transition.
+These four functions are statements
+about the *kernel's* representation, which is why they do not sit beside the
+compiler: a later stage that teaches the score ledger a new transition
 edits the ledger and its refusal together, in one package.
 
 **The prices.**  ``thorns_return_damage`` and ``champion_wound_tuple`` are
@@ -98,20 +98,15 @@ def unrepresentable_damage_receipt(event: Mapping[str, Any]) -> str | None:
 
 # The resolved support kinds the compiled score ledger can stage.
 #
-# ``cleanse`` is the same statement about the compiler that ``damage_modifier``
-# was below: the transition was never missing — ``_apply_cleanse`` is a kernel
-# function both adapters have always driven — what refused was *compilation*,
-# because the support builder stamped none of the packet's cleanse fields.  It
-# stamps them now, so a self-cast activation (Quicksilver, Gangplank W, Olaf R)
-# and a fan-out (Milio R) stage identically under either ledger.
+# Every member is a statement about the *compiler's* reach, never about the
+# kernel's: ``_apply_cleanse``, ``_apply_damage_modifier`` and
+# ``_apply_cross_participant_modifiers`` are kernel functions both adapters
+# drive.  What a missing member would refuse is *compilation*, because the
+# support builder would stamp none of the packet's fields for that kind.  So
+# a self-cast activation (Quicksilver, Gangplank W, Olaf R) and a fan-out
+# (Milio R) stage identically under either ledger.
 #
-# ``damage_modifier`` joined the set at the H5 stage, which is where the
-# kernel was taught timed, typed damage modifiers (D-101; the umbrella's
-# ``[H]`` table records the scoping and this module does not re-rule it).
-# The transition itself was never the missing half: ``_apply_damage_modifier``
-# and ``_apply_cross_participant_modifiers`` are kernel functions both
-# adapters have always driven, so what refused was *compilation*.  Widening
-# the set is therefore a statement about the compiler's reach and not about
+# Widening the set is therefore a statement about the compiler's reach and not about
 # the walk's, which is why the modifier's own refusals get a function of
 # their own below rather than clauses inside the shield/heal ladder: a heal's
 # duration is a reason to refuse and a modifier's duration is the mechanic.
@@ -134,7 +129,7 @@ def unrepresentable_modifier_receipt(template: Mapping[str, Any]) -> str | None:
     clauses here.  The one refusal this function deliberately does **not**
     make is the class declaration: an armed modifier with no
     ``damage_classes``/``attack_classes`` must raise in
-    ``declared_modifier_classes`` on both paths (D-04), and refusing it
+    ``declared_modifier_classes`` on both paths, and refusing it
     here would convert that fail-loud into a quiet fall back to the walk
     that raises anyway.
     """
@@ -206,7 +201,7 @@ def unrepresentable_template_receipt(template: Mapping[str, Any]) -> str | None:
         return "guardian_reactive_shield"
     kind = str(template.get("kind", ""))
     if kind == "crowd_control_resist":
-        # P2 Slice 8: the Dr. Mundo passive IMMUNITY arm is representable
+        # The Dr. Mundo passive IMMUNITY arm is representable
         # -- it only sets the armed state, and the RESIST gate lives in the
         # shared kernel (``_apply_crowd_control``), so both adapters apply
         # it identically (the score ledger ignores the receipts).

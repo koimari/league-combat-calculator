@@ -16,7 +16,7 @@ The module is a leaf on purpose: it imports exactly two intra-package
 modules, ``ability_spec`` and ``program.views``, and both are import-free
 vocabulary leaves — so the hot pipeline can ask a ledger-shape question
 without loading the 52 KB packet compiler.  Registry validation is
-structural only and reads no file (D-35) — item-name resolution lives in the
+structural only and reads no file — item-name resolution lives in the
 test that pins the projections.
 """
 
@@ -45,15 +45,14 @@ from typing import Any, NamedTuple
 from .ability_spec import Authority
 from .control_spec import CC_KIND_VOCABULARY, IMMOBILIZING_CC_KINDS
 
-# The module's second intra-package import, and Phase 4 S7's own amendment to
-# the "exactly one" clause Phase 2 shipped.  ``view_tags`` is a field of the
+# The module's second intra-package import.  ``view_tags`` is a field of the
 # declaration table below, so its vocabulary has to be nameable here, and the
-# two properties that clause protects are re-asserted rather than relaxed:
-# ``program.views`` imports nothing at all, so the package graph stays acyclic
-# and importing the bus still reads no file.  That is also why the enum is
-# admissible while ``EngineLane``'s home is not — importing ``item_behavior``
-# opens ``data/items.json`` and ``data/runes.json`` at module scope, and a bus
-# that reads ``data/`` is neither a leaf nor inside the caching layer (D-35).
+# two leaf properties hold either way: ``program.views`` imports nothing at
+# all, so the package graph stays acyclic and importing the bus still reads no
+# file.  That is also why the enum is admissible while ``EngineLane``'s home
+# is not — importing ``item_behavior`` opens ``data/items.json`` and
+# ``data/runes.json`` at module scope, and a bus that reads ``data/`` is
+# neither a leaf nor inside the caching layer.
 from .program.views.view_tag import ViewTag
 from .quantity import projection_starvation
 
@@ -109,7 +108,7 @@ class TriggerKind(Enum):
 
 
 class CcClass(Enum):
-    """The one classification consumers branch on (D-32, D-33).
+    """The one classification consumers branch on.
 
     ``cc_kind`` survives on :class:`Trigger` as an opaque receipt token; a
     consumer that compares it against a string is re-creating the divergence
@@ -124,7 +123,7 @@ class CcClass(Enum):
       must.
     * ``UNREVIEWED`` — nobody said anything.  Never a trigger, and never
       spelled ``NONE``: a silent absence and a reviewed "no control" are the
-      two things this campaign refuses to conflate.
+      two things this vocabulary keeps apart.
     """
 
     NONE = "none"
@@ -185,8 +184,8 @@ class Engine(Enum):
 class Pairing(Enum):
     """Whether a mechanic's two engine halves are declared and reconciled.
 
-    ``UNPAIRED_KNOWN_DEFECT`` is the escape hatch, and it is asserted empty
-    (D-92): the next divergence has to be a typed entry pointing at a
+    ``UNPAIRED_KNOWN_DEFECT`` is the escape hatch, and it is asserted empty:
+    the next divergence has to be a typed entry pointing at a
     :class:`DivergenceReceipt`, never a silent omission.
     """
 
@@ -196,7 +195,7 @@ class Pairing(Enum):
 
 
 class HolderStacking(Enum):
-    """Whether a second holder of one mechanic arms a second modifier (D-66).
+    """Whether a second holder of one mechanic arms a second modifier.
 
     The two answers are genuinely different mechanics, not two spellings of
     one.  Abyssal Mask's Unmake is an aura: two holders standing in range of
@@ -214,7 +213,7 @@ class HolderStacking(Enum):
     Declared here, beside :class:`Pairing` and :class:`Engine`, because it is
     a field of the same registry: giving it a module of its own would cost
     ``trigger_stream`` an intra-package import for no reader's benefit.
-    Phase 4 owns it; ``program.amp.arm_key`` is its one consumer.
+    ``program.amp.arm_key`` is its one consumer.
     """
 
     IDEMPOTENT_AURA = "idempotent_aura"
@@ -255,10 +254,9 @@ _ENRICHED_FIELDS = frozenset({Field.EVENT_ID, Field.TARGET_ID})
 # requires the half's delivery to reach *another* participant: a
 # rider-delivered half amplifies its own holder's event, and a
 # :class:`HolderPacket` half packets its own holder's damage, so neither
-# modifies anybody else's (D-07, Amendment C; Amendment M, Ruling 3).  A
-# producer is one the coupled golden baseline must
-# hold a scenario for (R-12), and the instrument reads CAPABILITIES through
-# that function rather than re-spelling either condition.
+# modifies anybody else's.  A producer is one ``scripts/golden_snapshot.py``'s
+# coupled baseline must hold a scenario for, and the instrument reads
+# CAPABILITIES through that function rather than re-spelling either condition.
 CROSS_PARTICIPANT_AUTHORITIES = frozenset(
     {
         Authority.SPLIT,
@@ -403,8 +401,7 @@ class DivergenceReceipt:
 
     Declared here because ``Pairing.UNPAIRED_KNOWN_DEFECT`` and
     ``divergence_ref`` are this module's, so the reference and its referent
-    keep one home.  Phase 3 creates the one live instance (Bloodsong) and
-    Phase 4 retires it; Phase 2 created none.
+    keep one home.  No instance is live today.
     Precedent: ``item_source.ACKNOWLEDGED_SOURCE_CONFLICTS``.
 
     A receipt is **not** the same statement as
@@ -421,20 +418,17 @@ class DivergenceReceipt:
     revision_id: int
 
 
-# **Empty, and that is the end state.**  The campaign's one live divergence
-# was Bloodsong's Expose Weakness: the pair engine amplified one coarse row
-# once for the whole fight while the walk armed a timed modifier per
-# spellblade proc, and the two were frozen behind a reviewed receipt until an
-# engine could be named authoritative.  Phase 4 S7 named one -- the walk,
-# because the pool of amplified damage is every roster attacker's damage
-# inside a live window -- and the pair reading became a declared
-# ``THEORETICAL`` preview instead of a rival answer.  A receipt records a
-# disagreement *nobody has adjudicated*; once one side is the answer, keeping
-# it would be filing a settled question as an open one.
+# **Empty, and that is the end state.**  A receipt records a disagreement
+# *nobody has adjudicated*; once one side is the answer, keeping it would be
+# filing a settled question as an open one.  Bloodsong's Expose Weakness was
+# the last one: the pair engine amplified one coarse row once for the whole
+# fight while the walk armed a timed modifier per spellblade proc, and the
+# walk is authoritative, because the pool of amplified damage is every roster
+# attacker's damage inside a live window.  The pair reading is a declared
+# ``THEORETICAL`` preview rather than a rival answer.
 #
-# The type stays and this mapping is asserted empty (D-92).  The next
-# divergence has to be a typed entry pointing at a receipt, never a silent
-# omission.
+# The type stays and this mapping is asserted empty.  The next divergence has
+# to be a typed entry pointing at a receipt, never a silent omission.
 DIVERGENCES: Mapping[str, DivergenceReceipt] = MappingProxyType({})
 
 
@@ -446,24 +440,21 @@ class RiderDelivery:
     whose damage they modify, and that packet's ``source`` literal is how
     every consumer finds it.  A few do not.  Shadowflame's Cinderbloom is an
     ``AmpBonus`` **rider stamped onto its own triggering damage event** and
-    read before absorption, which is the phase's ruling and the whole fix for
-    a spell-shielded or post-death trigger still emitting a bonus: a rider
-    dies with its host.  A rider is not a packet, so such a half authors
-    none.
+    read before absorption, which is what stops a spell-shielded or
+    post-death trigger still emitting a bonus: a rider dies with its host.
+    A rider is not a packet, so such a half authors none.
 
     It still has a *delivery reference* — the rider stamp
     (``pair_preview_of`` on the pair side, the ``AmpBonus`` source on the
     walk side) — and that is what this type carries.  Declaring it as its own
     type inside the same field is what keeps two rules true at once:
     ``PAIRED`` still implies "name the delivery your pair half is paired
-    against", and the cross-participant producer set stays keyed on D-07's
-    own semantic — *every packet modifying another participant's damage* —
+    against", and the cross-participant producer set stays keyed on its own
+    semantic — *every packet modifying another participant's damage* —
     rather than on "carries something in this field".  A rider amplifies the
     event it rides, and that event belongs to its own holder, so a
     rider-delivered half modifies no other participant's damage and is not a
     producer (:func:`cross_participant_packet_source`).
-
-    Amendment C to D-07, 2026-08-13, recorded in the campaign umbrella.
     """
 
     #: The literal a rider's rows carry, verbatim — the counterpart of a
@@ -483,16 +474,13 @@ class HolderPacket:
     a ``RetiredFamilyMechanic``'s walk half prices the damage of the
     participant holding the item, so no second participant's number moves.
 
-    Declaring it as its own type inside the same field is what keeps D-07's
-    semantic the thing the producer set is keyed on.  Amendment C settled
-    that "carries something in ``packet_source``" may not stand in for
-    "modifies another participant's damage", and keyed rider-delivery out of
-    the set on that reasoning; the umbrella's **Amendment M, Ruling 3**
-    (2026-08-15) rules the same semantic for packet-delivered halves, so that
-    a family retiring off the pair engine does not enrol in the ruled six
-    merely because its retirement slice had to declare a walk half.  A ruled
-    count moved to satisfy a validator is the move both amendments refuse,
-    from the two delivery shapes.
+    Declaring it as its own type inside the same field is what keeps
+    "modifies another participant's damage" the thing the producer set is
+    keyed on.  "Carries something in ``packet_source``" may not stand in for
+    it: that is why rider delivery is keyed out of the set, and why a family
+    that declares a walk half pricing only its own holder stays out too.  A
+    membership count moved to satisfy a validator is the move this type
+    refuses, from both delivery shapes.
 
     Everything else a packet-delivered half is asked for still answers the
     same way: :func:`packet_source_literal` and :func:`delivery_reference`
@@ -509,38 +497,36 @@ class HolderPacket:
 
 #: The two deliveries whose subject is the half's own holder.  Named once so
 #: the three readings below branch on one set rather than on two ``isinstance``
-#: pairs that could drift apart: a self-scoped delivery is the *semantic*
-#: D-07 keys on (Amendment C for the rider, Amendment M, Ruling 3 for the
-#: holder packet), and a third one would join here rather than at three sites.
+#: pairs that could drift apart: a self-scoped delivery is what keeps a half
+#: out of the cross-participant producer set, and a third one would join here
+#: rather than at three sites.
 SELF_SCOPED_DELIVERIES = (RiderDelivery, HolderPacket)
 
 
-# Thirteen fields: Phase 2's eleven plus the two Phase 4 writes here.  A
-# declaration record is exactly as wide as the facts it declares.
+# Thirteen fields, and a declaration record is exactly as wide as the facts it
+# declares.
 @dataclass(frozen=True, slots=True)
 class MechanicCapability:  # pylint: disable=too-many-instance-attributes
     """One mechanic's declared transport, authority and implementation site.
 
-    Phase 2 writes the first eleven fields.  Phase 4 adds ``view_tags`` and
-    ``holder_stacking``, both required with no default on the commit that
-    adds them, so a later phase's field forces every declaration to be
-    revisited instead of silently inheriting an empty value.  (Phase 3's
-    ``values`` and ``compilability`` are declared per *rule*, on
-    ``item_behavior.BehaviorRule``, which is where its rule union lives.)
+    Every field is required with no default, so a field added later forces
+    every declaration to be revisited instead of silently inheriting an
+    empty value.  (``values`` and ``compilability`` are declared per *rule*,
+    on ``item_behavior.BehaviorRule``, which is where its rule union lives.)
 
     Attributes:
         mechanic: the registry key, ``<owner_slug>.<effect_slug>``.
         owner: who grants it — an item, a rune, a champion slot, or the
-            engine itself (D-36).
+            engine itself.
         engine: which engine implements *this* half of it.
         reads: the bus streams this half consumes.  ``frozenset()`` is
             legal and meaningful: an option-only producer, a scenario-state
             receipt, or live state inside the walk reads no stream, and
             declaring that is what stops somebody unifying it onto the bus
-            by accident (D-31).
+            by accident.
         needs: raw-row fields it reads off those streams.
-        authority: which engine owns the mechanic, per the campaign's
-            authority rule.  ``COUPLED_AUTHORITATIVE`` is the ordinary
+        authority: which engine owns the mechanic.
+            ``COUPLED_AUTHORITATIVE`` is the ordinary
             statement that the walk owns its own packet; ``SPLIT``,
             ``COUPLED_ONLY`` and ``COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW``
             each additionally say a second engine can see the mechanic, and
@@ -563,18 +549,17 @@ class MechanicCapability:  # pylint: disable=too-many-instance-attributes
             each names one of the three different questions the field is
             asked, and answering them by an ``is not None`` test is what let
             "carries something here" stand in for "modifies another
-            participant's damage" (D-07, Amendment C; Amendment M, Ruling 3
-            for the packet-delivered self-scoped half).
+            participant's damage".
         view_tags: what this half's numbers *mean*, keyed by the engine that
             produces them — ``APPLIED`` for a number the coupled walk
-            delivered, ``THEORETICAL`` for a pair-engine preview of one
-            (D-62).  Keyed rather than bare because the tag is a fact about
+            delivered, ``THEORETICAL`` for a pair-engine preview of one.
+            Keyed rather than bare because the tag is a fact about
             ``(mechanic, engine)`` and a mechanic's two halves can carry
             different tags; ``program.capability.CapabilityView`` widens the key
             to ``EngineLane``, whose home reads ``data/`` and therefore
             cannot be named in this leaf.
         holder_stacking: whether a second holder of this mechanic arms a
-            second modifier on one subject (D-66).  Required exactly on a
+            second modifier on one subject.  Required exactly on a
             dual-sided walk half — a ``PAIRED`` row — and ``None`` on every
             other, structurally validated at import the way ``pair_of`` is,
             so a dual-sided declaration that omits it fails to construct
@@ -997,7 +982,7 @@ _PERIODIC_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 # Two rows the committed triage lists for this family are deliberately absent,
 # because no declaration of this family authors them.  ``expose_weakness_Bloodsong``
 # is ``bloodsong.expose_weakness``, family ``ally_packet``, already a declared
-# ``THEORETICAL`` preview under Phase 4 S7's authority move; the triage lists it
+# ``THEORETICAL`` preview; the triage lists it
 # because it measures a family's rows by removing the ITEM, which is
 # conservative by construction and lists every mechanic that item holds.  And
 # ``spellblade_<item>_true`` is the Camille Q2 conversion row, whose per-proc
@@ -1032,7 +1017,7 @@ _SPELLBLADE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 # the bolt is the router's own packet, so its declaration names the mechanic
 # below, while the copied on-hit row re-delivers the source families' packets
 # and each of its declarations names the mechanic that declared it, with the
-# routing recorded as provenance (umbrella Amendment R, Ruling 3).  The walk
+# routing recorded as provenance.  The walk
 # half's ``HolderPacket`` names this mechanic either way: it is the delivery
 # reference for the packets this family hands the walk, not a claim about who
 # declared their sizes.
@@ -1138,7 +1123,6 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         pair_of="bloodsong.expose_weakness_preview",
         impl="item_support_shred._expose_weakness_packets",
     ),
-    # Phase 4 S7's fourth authority move, and the last of the four that land.
     # Cinderbloom's predicate reads the target's health *at the instant of
     # the hit*, under a whole roster's fire — a roster input, so the walk is
     # the smallest engine that can see every input the rule reads and it owns
@@ -1151,7 +1135,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
     # rider on its own triggering damage event, read before absorption, and a
     # rider dies with its host: a spell-shielded, state-blocked or post-death
     # trigger emits none without anything having to cancel one.  So its
-    # delivery reference is a ``RiderDelivery`` stamp (Amendment C to D-07),
+    # delivery reference is a ``RiderDelivery`` stamp,
     # and because a rider amplifies the event it rides — its holder's own —
     # it modifies no other participant's damage and joins no cross-participant
     # producer set.
@@ -1172,10 +1156,9 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         pair_of="shadowflame.cinderbloom_preview",
         impl="survival.transitions._apply_live_amp",
     ),
-    # H1 — Carve's move to coupled-authoritative-with-preview is human-owned
-    # and unanswered, so this row states the blocking id instead of a guessed
-    # ruling: the stack ledger is a roster fact, but re-tuning the pair
-    # engine's Cesàro approximation is a documented balance change
+    # Carve stays ``SPLIT`` rather than coupled-authoritative-with-preview:
+    # the stack ledger is a roster fact, but re-tuning the pair engine's
+    # Cesàro approximation moves numbers a human owns
     # (docs/math-foundations.md §2.3).  ``PER_HOLDER`` is not a fall-through
     # here — two Black Cleaver holders each build their own stack ledger.
     _walk_item(
@@ -1198,8 +1181,8 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         pair_of="black_cleaver.armor_reduction",
         impl="item_support_shred._resistance_shred_packets",
     ),
-    # H1 — Vile Decay is Carve's shape, magic- and ability-gated, and is
-    # blocked by the same unanswered human decision.
+    # Vile Decay is Carve's shape, magic- and ability-gated, and stays
+    # ``SPLIT`` for the same reason.
     _walk_item(
         "bloodletters_curse.vile_decay",
         "Bloodletter's Curse",
@@ -1301,7 +1284,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         needs=frozenset({Field.TIME}),
         impl="item_support_triggered._fanfare_packets",
     ),
-    # Solstice Sleigh is tuple-incapable by declaration (D-02): its block runs
+    # Solstice Sleigh is tuple-incapable by declaration: its block runs
     # per control moment, and its only protection today is a cached
     # ``healthRegen.percent`` coincidence.
     _walk_item(
@@ -1313,10 +1296,9 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         needs=frozenset({Field.TIME}),
         impl="item_support_triggered._going_sledding_packets",
     ),
-    # H2 — Command's authority move waits on a sourced ``CcScope`` reading for
-    # Syndra E, and the umbrella records the disposition as *deferred, default
-    # shipped*.  So this row keeps ``SPLIT`` and states the blocking id, and
-    # its ``PER_HOLDER`` is the written fail-closed value D-66 requires rather
+    # Command keeps ``SPLIT`` because its authority move waits on a sourced
+    # ``CcScope`` reading for Syndra E.  Its ``PER_HOLDER`` is the written
+    # fail-closed value rather
     # than an absence: two Imperial Mandate holders each pay their own pool,
     # and a flat aura key would silently drop the second — the incident's own
     # shape mandated by a rule.
@@ -1371,7 +1353,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
     # window has no champion-facing target in the fighter model, so the walk
     # emits the sourced gate, window and duration for an authored ready state
     # and never guesses a ward hit.  It reads no stream — the ready state is
-    # an input option, not an event — which is the ``frozenset()`` D-31 wants
+    # an input option, not an event — which is why its ``frozenset()`` is
     # written rather than inferred.
     _walk_item(
         "umbral_glaive.nightstalker",
@@ -1495,13 +1477,10 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         authority=Authority.SPLIT,
     ),
     # -- pair-only mechanics the umbrella's authority table rules ------------
-    # Hypershot is Phase 4 S7's canary: the first of the seven authority moves
-    # and the one that is expected to move nothing.  Its exclusion set — which
-    # abilities in a rotation the amp refuses to reach — is a pair-local
-    # rotation fact, so ``PAIR_ONLY`` is the answer the authority rule gives
-    # and its number is what the one pair fight delivered, not a preview of a
-    # coupled one.  A canary that moved a number would mean the two new
-    # capability fields had a live consumer nobody declared.
+    # Hypershot's exclusion set — which abilities in a rotation the amp
+    # refuses to reach — is a pair-local rotation fact, so ``PAIR_ONLY`` is
+    # the answer the authority rule gives and its number is what the one pair
+    # fight delivered, not a preview of a coupled one.
     _pair_half(
         "horizon_focus.hypershot",
         ItemOwner("Horizon Focus"),
@@ -1519,7 +1498,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
     # Axiom Arc's takedown is a scenario state receipt and Defy is live state
     # inside the walk, so neither reads the takedown stream.  Both are
     # declared with ``reads=frozenset()`` precisely so nobody unifies them
-    # onto the bus by accident (D-31).
+    # onto the bus by accident.
     _pair_half(
         "axiom_arc.flux",
         ItemOwner("Axiom Arc"),
@@ -1560,7 +1539,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         view_tags=MappingProxyType({Engine.WALK: ViewTag.APPLIED}),
         holder_stacking=None,
     ),
-    # -- non-item owners (D-36) ---------------------------------------------
+    # -- non-item owners ----------------------------------------------------
     *(
         MechanicCapability(
             mechanic=f"{slug}.rune",
@@ -1579,7 +1558,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         )
         # Every rune ``rune_effects`` compiles — the keystone table here and
         # each path module's ``COMPILERS`` — spelled here rather than derived
-        # from them: this module is a data-free leaf (D-35) and
+        # from them: this module is a data-free leaf and
         # ``rune_effects`` reads ``data/runes.json`` at import. The two
         # tables are pinned equal by test_trigger_stream, which is where a
         # cache-reading join belongs.
@@ -1726,12 +1705,12 @@ CAPABILITIES: Mapping[str, MechanicCapability] = MappingProxyType(
 def _validate_registry() -> None:
     """Structural cross-check of :data:`CAPABILITIES`, at import.
 
-    Structural only, and no file is read (D-35): slug shape, unique ids,
+    Structural only, and no file is read: slug shape, unique ids,
     ``pair_of`` resolving to an ``Engine.PAIR`` capability, ``PAIRED``
     implying a delivery reference — a ``packet_source`` or a
     ``RiderDelivery`` — ``UNPAIRED_KNOWN_DEFECT`` implying a
     ``divergence_ref`` that resolves in :data:`DIVERGENCES`, a takedown
-    reader needing a target id, and Phase 4's two fields — one view tag for
+    reader needing a target id, one view tag for
     the engine this half runs on, and a ``HolderStacking`` exactly where the
     mechanic is dual-sided.  Item-name resolution belongs to the test that
     pins the projections, because a leaf that touches ``data/`` is neither a
@@ -1789,7 +1768,7 @@ def _row_fields(reads: frozenset[Stream]) -> frozenset[Field]:
 
 
 def _validate_view_semantics(mechanic: str, capability: MechanicCapability) -> None:
-    """Phase 4's two fields, as structural implications rather than review.
+    """``view_tags`` and ``holder_stacking``, as structural implications.
 
     Two rules, and each closes a way a declaration could be *shaped* like an
     answer without being one:
@@ -1957,7 +1936,7 @@ def event_triggers(
     exactly when the row carries real control: ``NONE`` and ``UNREVIEWED``
     never fire one.
 
-    ``kinds`` is what makes D-30's lazy construction real rather than
+    ``kinds`` is what makes the lazy construction real rather than
     documented: a caller asking only for control never *builds* the damage
     trigger it would discard, so a control-only holder is neither charged
     for it nor judged by its stricter field contract.  Classification runs
@@ -2042,8 +2021,8 @@ def authored_triggers(
 
     Lazy by construction: a caller that declares no stream pays nothing, and
     a caller that declares ``{Stream.CC}`` never walks the damage ledger for
-    a damage trigger it will discard.  That is what keeps the migration
-    performance-neutral (D-30).
+    a damage trigger it will discard.  That is what keeps the bus
+    performance-neutral against a hand-rolled classification.
 
     Raises:
         ProjectionStarvation: the result carries the optimizer's positional

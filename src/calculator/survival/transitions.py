@@ -341,8 +341,7 @@ class TransitionContext:
     declarations this roster brings, and ``survival`` cannot reach a
     declaration to build it.  A default of ``None`` would make a context
     that forgot to compile them indistinguishable from a roster declaring
-    none — a recovery that silently pays nothing, which is the failure this
-    campaign exists to remove.
+    none — a recovery that silently pays nothing.
     """
 
     duration: float
@@ -358,7 +357,7 @@ class TransitionContext:
     plating_windows: Sequence[PlatingWindow | None] = ()
     venom_profiles: list[tuple[float, float] | None] | None = None
     reduction_profiles: list[tuple[dict[str, Any], ...] | None] | None = None
-    # Keyed by event slot (Phase 4 S1): ``redirect_children`` maps a parent
+    # Keyed by event slot: ``redirect_children`` maps a parent
     # packet's slot to the redirected child action, and the two sets hold the
     # slots the holder-health gate has judged and cancelled.
     redirect_children: MutableMapping[int, Any] = field(default_factory=dict)
@@ -697,9 +696,9 @@ def apply_declared_price(
     family's number missing from a roster total, which is the failure this
     stage exists to make visible rather than to cause.
 
-    **A routed packet is receipted by its source and its route** (umbrella
-    Amendment R, Ruling 3).  ``rule`` is the mechanic that declared the
-    magnitude, which is what D-62 keys the applied contribution on, and the
+    **A routed packet is receipted by its source and its route.**  ``rule``
+    is the mechanic that declared the magnitude, which is what the applied
+    contribution is keyed on, and the
     ``routing`` block beside it names the family that re-delivered it and the
     share it declared.  Provenance rather than a second number: without it a
     reader would see a source mechanic's magnitude paid twice under one name
@@ -735,13 +734,13 @@ def apply_declared_price(
             # than only inside the amount: a receipt that showed only the
             # product could not tell a big declaration from an amplified
             # one, and the whole reason the term rides the packet is that
-            # somebody has to be able to see it (Amendment M, Ruling 1).
+            # somebody has to be able to see it.
             # Unrounded, and the only unrounded number in this row: the
             # others are walk-accumulated damage, where six decimals is the
             # noise floor, while this is a build-time fold of two or three
             # sourced fractions that a reader compares against the
-            # declaration itself.  Rounding it would also raise counter 6's
-            # kernel ratchet, which is declared non-increasing (D-71).
+            # declaration itself.  Rounding it would also raise the kernel's
+            # rounding-site count, which behavior_frontier holds down.
             "holder_amp": float(packet.holder_amp),
             # ``None`` for true damage, which met no resistance — a receipt
             # that spelled that as 0.0 would read as "mitigated at zero
@@ -1974,7 +1973,7 @@ def _apply_damage_modifier(
 ) -> None:
     """Arm a timed (or persistent) cross-participant damage modifier."""
     # The declaration is read before the availability gate: a packet that
-    # restricts nothing is a bug whether or not this one arms (D-04).
+    # restricts nothing is a bug whether or not this one arms.
     damage_classes, attack_classes = declared_modifier_classes(action)
     persistent = action.persistent
     if action.duration <= 0.0 and not persistent:
@@ -2064,7 +2063,7 @@ def _apply_utility(
         ctx.ledger.write(action, expires_at=round(action.time + action.duration, 3))
     if action.utility_kind == "cleanse":
         # A cleanse-kind packet (QSS/Mercurial self-cast) applies the typed
-        # cleanse contract: interval truncation + receipts (P2 Slice 4).
+        # cleanse contract: interval truncation plus receipts.
         _apply_cleanse(ctx, action, state)
 
 
@@ -2073,7 +2072,7 @@ def _apply_cleanse(
 ) -> None:
     """Apply one item-cleanse activation through the typed kernel.
 
-    The cleanse contract (P2 Slice 4, :mod:`cleanse_eligibility`) resolves
+    The cleanse contract (:mod:`cleanse_eligibility`) resolves
     the sourced item declaration from the packet's marker/source, decides
     eligibility against the recipient's ACTIVE control intervals at the
     activation time, truncates BOTH the crowd-control ledger and the
@@ -2117,7 +2116,7 @@ def _apply_cleanse(
     # directly.  The kernel keeps the ``not_armed`` denial for explicit
     # holder mappings that prove otherwise.
     #
-    # P2 Slice 7: a multi-recipient cast (Milio R fan-out) shares ONE use
+    # A multi-recipient cast (Milio R fan-out) shares ONE use
     # per GROUP — the first recipient of a group consumes it, every
     # same-group recipient sees the use still available for its own
     # interval decision without re-consuming; a SECOND cast (a new group)
@@ -2213,7 +2212,7 @@ def _write_gated_cleanse_use(
             "last_cleanse_group": None,
         },
     )
-    # P2 Slice 7: a blocked multi-recipient cast writes its gated use
+    # A blocked multi-recipient cast writes its gated use
     # receipt ONCE per group (every fan-out packet hits the gate; the
     # first writes, the same-group rest skip).
     group = str(action.cleanse_group or "")
@@ -2722,7 +2721,7 @@ def _sync_crowd_control_immunity(state: dict[str, Any], event_time: float) -> No
     state["crowd_control_immunity_source"] = ""
 
 
-# P2 Slice 8 — the sourced passive values (Dr. Mundo Goes Where He
+# The sourced passive values (Dr. Mundo Goes Where He
 # Pleases): 4% CURRENT health cost, 4% MAX health pickup heal, 15s
 # pickup cooldown refund, 525-unit canister range, 7s canister lifetime,
 # 115-unit pickup radius (game DrMundoP DataValues; the wiki prose
@@ -2897,7 +2896,7 @@ def _apply_crowd_control_resist(
     """
     duration = max(0.0, float(action.duration or 0.0))
     if duration > 0.0:
-        # P2 Slice 9 (Olaf Ragnarok): the duration-armed immunity window
+        # Olaf Ragnarok: the duration-armed immunity window
         # [cast, cast + duration) — blocks EVERY hostile blocking control
         # inside the window (no cost, no latch-off — the window is the
         # state); the cleanse + stat receipts are separate packets.
@@ -2963,8 +2962,8 @@ def _apply_crowd_control(
 ) -> None:
     """Arm the target's action lock from an authored control packet.
 
-    The immunity gate is the typed crowd-control eligibility contract
-    (P2 Slice 3): ONE decision for damage-attached AND control-only
+    The immunity gate is the typed crowd-control eligibility
+    contract: ONE decision for damage-attached AND control-only
     packets, tied to the exact Black Shield ledger entry.  A blocked
     control adds NO action downtime; the extended
     ``crowd_control_blocked`` receipt carries the decision and the
@@ -3055,16 +3054,16 @@ def _apply_crowd_control(
         )
         if decision.reason == "unknown_control":
             return
-    # P2 Slice 8 (Dr. Mundo Goes Where He Pleases): the passive IMMUNITY
+    # Dr. Mundo Goes Where He Pleases: the passive IMMUNITY
     # gate — an armed resist consumes the NEXT hostile immobilizing
     # control BEFORE it applies (no interval, no downtime, no until
     # change — never a truncation).  Spell shield / Black Shield take
     # priority (the grants block above ran first).  The 4%-current-
     # health cost + the canister drop are receipted; the pickup /
     # destruction timings are named unsupported (no movement model).
-    # P2 Slice 9 (Olaf Ragnarok): the 3s immunity window — blocks every
+    # Olaf Ragnarok: the 3s immunity window — blocks every
     # hostile BLOCKING control inside [start, until) (the end-exclusive
-    # Slice 3 convention), including the displacement family (Trait_
+    # interval convention), including the displacement family (Trait_
     # CCImmune); the cleanse's displacement carve-out applies only to
     # already-active controls, not new ones.
     ragnarok = state.get("ragnarok_immunity")
@@ -3132,7 +3131,7 @@ def _apply_live_amp(
 ) -> float:
     """Price a live-predicate amplifier on this packet, before absorption.
 
-    Last in the chain, which is the ruling: the predicate reads the
+    Last in the chain, and that placement is the rule: the predicate reads the
     subject's health as it stands *before* this packet is absorbed, and
     the bonus amplifies the packet as everything else in the chain has
     already left it.  A rider, not an event — so it never arrives at a
@@ -3158,9 +3157,9 @@ def _apply_live_amp(
         return amount
     bonus = amount * live.fraction
     # Unrounded, both of them: rounding is presentation and its one home is
-    # ``program/precision`` (D-71).  The receipt projection rounds what it
-    # publishes, and the kernel's own rounding-site count is frontier
-    # counter 6, which this stage may not push up.
+    # ``program/precision``.  The receipt projection rounds what it
+    # publishes, and the kernel's own rounding-site count is a
+    # behavior_frontier counter this stage may not push up.
     ctx.ledger.write(action, live_amp_bonus=bonus, live_amp_source=live.mechanic)
     if ctx.records_annotations:
         ctx.ledger.annotate(
@@ -3831,10 +3830,9 @@ def run_survival_walk(actions: list[SurvivalAction], ctx: TransitionContext) -> 
             #
             # ``DEBUFF_ARM`` is a *threshold*, not the debuff rank: every
             # rank below it resolves before any arming does, and the three
-            # arming ranks sit at or above it.  That was true when they
-            # shared one ordering slot and is still true now that Phase 4 S6
-            # has split them, which is why the split moved no comparison
-            # here (see ``actions.ordering_slot``).
+            # arming ranks sit at or above it, whether or not two of them
+            # share an ordering slot, which is why no comparison here reads
+            # one (see ``actions.ordering_slot``).
             # ``preserve_reason`` for the same reason the redirect-cancelled
             # arm below carries it, and it was missing here only because this
             # arm runs first.  A redirect child Knight's Vow already cancelled
@@ -4023,7 +4021,7 @@ def run_survival_walk(actions: list[SurvivalAction], ctx: TransitionContext) -> 
             phase >= TransitionRank.DAMAGE
             and state.get("spell_shield_eligibility") is not None
         ):
-            # The kernel-owned spell-shield lifecycle (P2 Slice 2): one
+            # The kernel-owned spell-shield lifecycle: one
             # eligibility decision per packet, one use per hostile cast,
             # cast grouping for same-cast multi-part packets.
             eligibility = state.get("spell_shield_eligibility")
@@ -4227,7 +4225,7 @@ def run_survival_walk(actions: list[SurvivalAction], ctx: TransitionContext) -> 
             if action.cleanse or action.cleanse_item:
                 # Mikael's Purify rides its heal packet with the cleanse
                 # marker: the typed cleanse contract applies alongside the
-                # sourced heal (P2 Slice 4).
+                # sourced heal.
                 _apply_cleanse(ctx, action, state)
             continue
         if phase < TransitionRank.DAMAGE:

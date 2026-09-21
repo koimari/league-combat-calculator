@@ -202,7 +202,7 @@ def _build_state_uncached(
         "crowd_control_immunity_blocked": [],
         "crowd_control_immunity_decisions": [],
         "crowd_control_immunity_eligibility": None,
-        # P2 Slice 4: the typed item-cleanse ledger.  ``cleanse_uses`` is
+        # The typed item-cleanse ledger.  ``cleanse_uses`` is
         # the per-item one-use-per-fight latch on the HOLDER row;
         # ``cleanse_use`` is its public receipt; ``cleanse`` is the
         # recipient's last processed activation receipt; ``cleanse_denied``
@@ -233,7 +233,7 @@ def _build_state_uncached(
         "spell_shield_heal_source": "",
         "spell_shield_heal_triggered": False,
         "spell_shield_heal_time": None,
-        # The kernel spell-shield contract (P2 Slice 2).  Annul shields
+        # The kernel spell-shield contract.  Annul shields
         # resolve from the starting defenses and the held item; Sivir's timed
         # shield is armed later by the walk's SPELL_SHIELD action.  These
         # five and the four projectile-defence slots below are

@@ -42,13 +42,13 @@ def attack_class_of(action: SurvivalAction) -> AttackClass:
 def declared_modifier_classes(
     action: SurvivalAction,
 ) -> tuple[frozenset[DamageClass], frozenset[AttackClass]]:
-    """The class restriction a damage-modifier action carries (D-04).
+    """The class restriction a damage-modifier action carries.
 
     Both sets are required and empty-means-all is banned, so an absent or
     empty declaration raises here — at the moment the modifier would arm —
-    naming the packet.  A silent default is what this campaign exists to
-    kill: an untyped modifier multiplies every damage class alike, which is
-    how the walk amplified a holder's true damage with a magic-only curse.
+    naming the packet.  A silent default is what an untyped modifier
+    multiplying every damage class alike looks like, which is how the walk
+    amplified a holder's true damage with a magic-only curse.
     """
     if not action.damage_classes or not action.attack_classes:
         raise ValueError(
@@ -215,15 +215,12 @@ _STANDALONE_KINDS = {
 
 
 # Which ranks the recovery branch below accepts — a *classification*
-# question, and a different one from which rank resolves first.
-#
-# Until Phase 4 S6 it was spelled ``ordering_slot(phase) is DEBUFF_ARM``:
-# the three ranks shared one ordering slot, so the slot happened to be this
-# set as well.  S6 split the slot, and this set is what the split must not
+# question, and a different one from which rank resolves first.  Spelling it
+# as ``ordering_slot(phase) is DEBUFF_ARM`` would answer the ordering
+# question instead, and this set is what an ordering-slot change must not
 # move — a packet arming at ``UTILITY_ARM`` with an unlisted kind is the
 # engine's own self-heal (``champion_ability`` and friends) and classifying
-# it as a utility no-op would drop a heal, which is a second behaviour
-# change with no fixture and no prediction.  Written down here so the two
+# it as a utility no-op would drop a heal.  Written down here so the two
 # questions have two answers instead of one accident.
 _RECOVERY_CLASSIFIED_RANKS = frozenset(
     {

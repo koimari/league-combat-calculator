@@ -9,34 +9,30 @@ class TransitionRank(IntEnum):
     """When a transition resolves, relative to everything at its timestamp.
 
     Dense ordinals in ordering order: a lower rank resolves first.  This is
-    the campaign's single phase vocabulary, and since Phase 4 S2 it is also
-    the only one: the float projection that stood between these names and
-    the walk is deleted, so a ``phase`` is a member of this enum everywhere
-    one is written, sorted, compared or dispatched on.
+    the one phase vocabulary: a ``phase`` is a member of this enum
+    everywhere one is written, sorted, compared or dispatched on, with no
+    float projection standing between these names and the walk.
 
     ``TERMINAL`` has no producer.  It exists so the published phase list
     keeps ``death_or_terminal_cutoff`` (a name the ledger publishes but no
     transition emits) and is declared last because it resolves after
     everything else at its timestamp.
 
-    ``AURA_ARM`` is the one rank no producer wrote before C4.  A persistent
-    aura is *already in force* when the fight opens — Abyssal Mask's Unmake
-    curses every enemy in range from the first frame — so it must resolve
-    before the damage at its own timestamp, not after it like a debuff some
-    trigger armed.  ``DEBUFF_ARM`` put it after, which made the opening
-    exchange the one exchange the aura did not price.
+    ``AURA_ARM`` resolves before the damage at its own timestamp.  A
+    persistent aura is *already in force* when the fight opens — Unmake
+    curses every enemy in range from the first frame — rather than after it
+    like a debuff some trigger armed.  Arming it at ``DEBUFF_ARM`` makes the
+    opening exchange the one exchange the aura does not price.
 
-    **One group still resolves as one.**  ``LATE_BARRIER``/``REACTIVE`` rode
-    one float before S2 and ride one :func:`ordering_slot` after it, so
-    their relative declaration order still changes nothing.
+    **One group resolves as one.**  ``LATE_BARRIER``/``REACTIVE`` share one
+    :func:`ordering_slot`, so their relative declaration order changes
+    nothing.
 
-    ``DEBUFF_ARM``/``RECOVERY``/``UTILITY_ARM`` rode the other float and no
-    longer share anything: Phase 4 S6 split them, so ``6 < 7 < 8`` is now
-    the live tie-break between two transitions authored at one timestamp —
-    a debuff arms before a heal lands, and both before a utility effect
-    resolves.  That is the ordering the collapsed float could not express
-    and could not be asked about; if it is wrong, it is wrong here and not
-    at the call sites.
+    ``DEBUFF_ARM``/``RECOVERY``/``UTILITY_ARM`` share nothing, so ``6 < 7 <
+    8`` is the live tie-break between two transitions authored at one
+    timestamp — a debuff arms before a heal lands, and both before a utility
+    effect resolves.  If that ordering is wrong, it is wrong here and not at
+    the call sites.
     """
 
     STATE_GRANT = 0
@@ -88,9 +84,8 @@ def ordering_slot(rank: TransitionRank) -> TransitionRank:
 # first appearance; ``state_transition`` already appears first, at
 # ``STATE_GRANT``.  Folding the aura slot into it would publish nothing for
 # the one phase that resolves between the barriers and the damage — a phase
-# the ledger has and the contract does not name, which is this campaign's
-# own failure shape in the public schema.  It is a seventh published name
-# and ``CAPABILITY_SCHEMA_VERSION`` moves with it (D-63).
+# the ledger has and the contract does not name.  It is a seventh published
+# name and ``CAPABILITY_SCHEMA_VERSION`` moves with it.
 _PUBLIC_PHASES: dict[TransitionRank, str] = {
     TransitionRank.STATE_GRANT: "state_transition",
     TransitionRank.BARRIER_GRANT: "shield_or_temporary_health",

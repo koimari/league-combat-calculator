@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from threading import Lock
 
-# "This action names no such reference."  The integer spelling of the ``None``
-# the four ``str | None`` reference fields carried before Phase 4 S1, and the
-# same sentinel ``subject``/``attacker``/``trigger``/``holder`` already use.
+# "This action names no such reference."  The integer spelling of ``None`` for
+# the four reference fields, and the same sentinel
+# ``subject``/``attacker``/``trigger``/``holder`` use.
 NO_SLOT = -1
 
 
