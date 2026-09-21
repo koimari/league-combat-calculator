@@ -128,9 +128,13 @@ class TestBounceDamageRow:
             assert crit == pytest.approx(2.0 * damage)
 
     def test_receipt_names_the_row_it_refused(self):
-        published = " ".join(ASSUMPTIONS)
-        assert "'Bounce Damage'" in published
-        assert "'Bonus Attack Speed'" in published
+        for note in (
+            "W (Ricochet) prices the cached 'Bounce Damage' row, 40 to 50% AD "
+            "by rank (atom ability.bounce_damage).",
+            "It is not the neighbouring 'Bonus Attack Speed' row, 20 to 40%, "
+            "which the reviewed ratio had matched.",
+        ):
+            assert note in ASSUMPTIONS, note
 
 
 class TestPerBounceStructure:
@@ -178,7 +182,10 @@ class TestPerBounceStructure:
         assert part.hit_interval is None
 
     def test_receipt_names_the_placed_attack_speed_window(self):
-        assert "4-second window at the first W cast" in " ".join(ASSUMPTIONS)
+        assert (
+            "W's own 20 to 40% bonus attack speed is placed as a 4-second "
+            "window at the first W cast." in ASSUMPTIONS
+        )
 
 
 class TestThroughTheRequestBoundary:

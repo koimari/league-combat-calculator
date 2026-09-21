@@ -194,8 +194,8 @@ ASSUMPTIONS = [
     "one rotation uses stock only.",
     "Meep damage is uncapped (+6 per 5 chimes); stock caps at 100 chimes (9 meeps) "
     "and recharge at 70 chimes (4s).",
-    "Meep slow and the 15-chime cone splash are not modeled: single target, and the "
-    "splash misses the primary.",
+    "Meep slow and the 15+ chime AoE/cone splash are not modeled: single target, and "
+    "the splash misses the primary.",
     "Q counted as a single hit on the primary target; the slow/stun is "
     "CC with no damage component",
     "W (heal), E (portal) and R (stasis) deal no enemy damage.",

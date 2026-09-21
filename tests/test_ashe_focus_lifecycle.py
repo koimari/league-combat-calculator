@@ -353,9 +353,13 @@ class TestSourceAndTypedValues:
         assert state["refresh"] == "refresh"
         assert state["expiry"] == "step_down"
         assert state["source"]["revision_id"] == 4015971
-        published = " ".join(meta["assumptions"])
-        assert "cap 4, 4s window, refreshing per attack" in published
-        assert "the rotation resolver feeds no per-swing events" in published
+        for note in (
+            "Q (Ranger's Focus) builds Focus on attack: cap 4, 4s window, "
+            "refreshing per attack, then expiring one per second.",
+            "q_focus_stacks seeds the fight: the rotation resolver feeds no "
+            "per-swing events into champion parses.",
+        ):
+            assert note in meta["assumptions"], note
         assert meta["sources"][0]["url"].endswith("/en-us/Ashe")
         assert meta["sources"][0]["revision_id"] == 4015971
 

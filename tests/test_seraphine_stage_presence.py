@@ -316,9 +316,10 @@ class TestAllyNotesAreWithheld:
         assert per_note * fired == pytest.approx(132.0)
 
     def test_withholding_is_documented(self):
-        published = " ".join(ASSUMPTIONS)
-        assert "Notes from allies" in published
-        assert "1v1" in published
+        assert (
+            "Notes from allies price 25% (binary AllyNoteDamagePercent 0.25), "
+            "need allies in range, outside the 1v1." in ASSUMPTIONS
+        )
 
 
 class TestEmpoweredAttackRidersAreWithheld:
@@ -332,7 +333,10 @@ class TestEmpoweredAttackRidersAreWithheld:
         assert "stat_buff" not in abilities["passive"]
 
     def test_withholding_is_documented(self):
-        assert "bonus attack range" in " ".join(ASSUMPTIONS)
+        assert (
+            "Echo's free recast is outside it too, and the 25 bonus attack "
+            "range per Note is state." in ASSUMPTIONS
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -521,12 +525,15 @@ class TestSurroundSoundMovementSpeedRidesTheSharedFold:
         assert self._fight_move_speed(30.0) == pytest.approx(335.5)
 
     def test_the_ally_half_stays_withheld(self):
-        published = " ".join(ASSUMPTIONS)
-        assert "Surround Sound" in published
-        assert "ally-support scanner" in published
-        assert "resolve_move_speed" in published
-        assert "soft caps" in published
-        assert "ALLY half" in published
+        for note in (
+            "W stays priced by the ally-support scanner at scope "
+            "self_and_all_teammates with target_self true.",
+            "It is a term in the shared resolve_move_speed fold, soft caps "
+            "included.",
+            "The ALLY half, 8% + 0.8% per 100 AP, needs allies in range and "
+            "is outside the 1v1 surface.",
+        ):
+            assert note in ASSUMPTIONS, note
 
 
 # ---------------------------------------------------------------------------

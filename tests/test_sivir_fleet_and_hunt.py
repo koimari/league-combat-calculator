@@ -229,10 +229,14 @@ class TestFleetOfFootHasNoDamageAnywhere:
         assert MODULE_COVERAGE["P"] == "no_damage"
 
     def test_classification_is_documented_with_the_binary_receipt(self):
-        published = " ".join(ASSUMPTIONS)
-        assert "Fleet of Foot) has no" in published
-        assert "no_damage, not out_of_scope" in published
-        assert "SivirPassive" in published
+        for note in (
+            "P (Fleet of Foot) has no enemy-damage clause anywhere in its "
+            "cached entry.",
+            "The slot emits a sourced zero-damage row: no_damage, not " "out_of_scope.",
+            "The binary's SivirPassive carries only FlatMS and HasteDuration "
+            "1.5, with no damage formula.",
+        ):
+            assert note in ASSUMPTIONS, note
 
 
 class TestMovementSpeedIsNotStatBuffed:
@@ -308,12 +312,18 @@ class TestMovementSpeedIsNotStatBuffed:
         assert apply_movement_speed_soft_caps(435.5) == pytest.approx(431.4)
 
     def test_withholding_names_the_two_cached_gaps(self):
-        published = " ".join(ASSUMPTIONS)
-        assert "ability.per-_level _scaling" in published
-        assert "ByCharLevelBreakpoints" in published
-        assert "decays to zero" in published
-        assert "adaptive_force_per_total_move_speed" in published
-        assert "NOT modeled as a stat_buff" in published
+        for note in (
+            "The flat movement grant is NOT modeled as a stat_buff; the "
+            "blocker is the cache, not the channel.",
+            "The magnitude is a level ladder the cache cannot index: atom "
+            "ability.per-_level _scaling, units empty.",
+            "P has no rank, so only the binary's ByCharLevelBreakpoints says "
+            "which level each value starts at.",
+            "The grant decays to zero over the sourced 1.5s and refreshes on " "hit.",
+            "Swiftmarch's adaptive_force_per_total_move_speed resolves inside "
+            "calculate_total_stats, pre-cast.",
+        ):
+            assert note in ASSUMPTIONS, note
 
 
 # ---------------------------------------------------------------------------
@@ -368,20 +378,29 @@ class TestOnTheHuntCloses:
         assert MODULE_COVERAGE["R"] == "no_damage"
 
     def test_the_receipt_says_what_closed_it_and_names_the_shape(self):
-        published = " ".join(ASSUMPTIONS)
-        assert "CLOSES as no_damage" in published
-        assert "swing_cooldown_refund" in published
-        assert "AttackCooldownRefund" in published
+        for note in (
+            "The slot CLOSES as no_damage: the binary's SivirR carries an "
+            "empty mSpellCalculations.",
+            "It publishes as a swing_cooldown_refund naming Q, W and E and "
+            "its own Buff Duration window.",
+            "The 0.5 is the binary's AttackCooldownRefund DataValue, 0.5 on "
+            "every rank, stated verbatim.",
+        ):
+            assert note in ASSUMPTIONS, note
 
     def test_the_ally_share_is_still_named_as_unmodeled(self):
         """One thing on this row genuinely stays out: the ally half prices
         another champion's cooldowns, which this fight does not schedule."""
-        assert "ally share of the buff stays unmodeled" in " ".join(ASSUMPTIONS)
+        assert "The ally share of the buff stays unmodeled." in ASSUMPTIONS
 
     def test_both_sourced_effects_are_named_in_the_receipt(self):
-        published = " ".join(ASSUMPTIONS)
-        assert "20/25/30%" in published
-        assert "0.5 seconds" in published
+        for note in (
+            "R (On the Hunt) publishes its sourced 20/25/30% movement speed "
+            "as a move_speed_percent stat_buff.",
+            "'Sivir's basic attacks on-attack reduce her basic abilities' "
+            "current cooldowns by 0.5 seconds each'.",
+        ):
+            assert note in ASSUMPTIONS, note
 
     @pytest.mark.needs_game_files
     def test_binary_movement_ladder_matches_the_wiki_ranks(self):
@@ -492,7 +511,10 @@ class TestTheRefundIsTheKitsOwnChannelNotTheItemOne:
         ] == ["R"]
 
     def test_receipt_still_names_the_movement_fold_it_rides(self):
-        assert "resolve_move_speed" in " ".join(ASSUMPTIONS)
+        assert (
+            "damage._apply_stat_buff_ultimates re-folds through "
+            "stats.resolve_move_speed, so soft caps re-apply." in ASSUMPTIONS
+        )
 
 
 class TestHuntAttackSpeedIsAnUnusedSourceConflict:
@@ -515,10 +537,13 @@ class TestHuntAttackSpeedIsAnUnusedSourceConflict:
             assert ("bonus_attack_speed" in buff) == (slot == "W")  # W's own row
 
     def test_conflict_is_recorded_rather_than_used(self):
-        published = " ".join(ASSUMPTIONS)
-        assert "SOURCE CONFLICT" in published
-        assert "HuntAttackSpeed" in published
-        assert "fail-closed" in published
+        for note in (
+            "SOURCE CONFLICT recorded, not used: SivirR carries "
+            "HuntAttackSpeed 5%/6%/7% by rank.",
+            "The cached wiki text does not mention it, so R's steroid is not "
+            "modeled, fail-closed.",
+        ):
+            assert note in ASSUMPTIONS, note
 
 
 # ---------------------------------------------------------------------------

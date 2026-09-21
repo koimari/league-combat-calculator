@@ -445,7 +445,10 @@ class TestSeededPlasmaIsNotMonotonic:
         disclosure = [text for text in published if "plasma_starting_stacks" in text]
         assert len(disclosure) == 1
         assert "NOT monotonic" in disclosure[0]
-        assert "169.1 / 347.7 / 268.7" in " ".join(published)
+        assert (
+            "Probe at level 18, one rotation, 85 effective MR: passive_plasma "
+            "is 169.1 / 347.7 / 268.7 at 0 / 2 / 4." in published
+        )
 
 
 def test_supercharge_window_raises_timed_attack_speed_and_auto_cadence():
