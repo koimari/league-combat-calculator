@@ -169,7 +169,7 @@ class LiveAmpRider:
     :attr:`amp` is what the kernel evaluates at the instant of the hit;
     :attr:`damage_types` is what the *composition* asks before stamping it,
     since a rule that crits magic and true damage has no business riding a
-    physical packet and the kernel should never be handed one to decline.
+    physical packet and the kernel should never be handed one to refuse.
     """
 
     amp: LiveAmp
@@ -209,7 +209,7 @@ def live_amp_riders(
     a simulation, so the threshold and fraction compile here from the pair
     engine's declaration and the reading is left to the walk; every chain slot
     is asked and a rule qualifies by its live predicate, never by slot name.
-    Three refusals rather than silent skips (an amp declined is indistinguishable
+    Three refusals rather than silent skips (an amp refused is indistinguishable
     from a bonus of zero): a probe the kernel has no tag for, a subject other
     than the holder, and a declaration with no threshold or fraction."""
     riders: list[LiveAmpRider] = []

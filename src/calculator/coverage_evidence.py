@@ -568,10 +568,10 @@ class EvidencePolicy:
 
 # A status is negative when it withholds rather than models.  Both of them
 # take exactly one ``Absence`` and no positive evidence at all.
-# The two refusals.  ``withheld`` is the campaign's spelling for "coverage
-# refused to model it — a named receipt and no number" (D-23); it replaced
-# ``blocked`` at the 3.8 flip, and the rename is why the serialized coverage
-# payload changed and CAPABILITY_SCHEMA_VERSION moved with it.
+# The two refusals.  ``withheld`` is the one spelling for "coverage refused
+# to model it — a named receipt and no number" (D-23), and it is a value in
+# the serialized coverage payload, so respelling it moves
+# CAPABILITY_SCHEMA_VERSION with it.
 NEGATIVE_STATUSES: frozenset[str] = frozenset({"withheld", "review_pending"})
 
 # The three shapes a ``modeled_state`` claim may name its state's home with.

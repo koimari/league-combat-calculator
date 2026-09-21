@@ -114,7 +114,7 @@ def unrepresentable_damage_receipt(event: Mapping[str, Any]) -> str | None:
 # the set is therefore a statement about the compiler's reach and not about
 # the walk's, which is why the modifier's own refusals get a function of
 # their own below rather than clauses inside the shield/heal ladder: a heal's
-# duration is a reason to decline and a modifier's duration is the mechanic.
+# duration is a reason to refuse and a modifier's duration is the mechanic.
 _STAGED_SUPPORT_KINDS = frozenset({"shield", "heal", "damage_modifier", "cleanse"})
 
 
@@ -127,14 +127,14 @@ def unrepresentable_modifier_receipt(template: Mapping[str, Any]) -> str | None:
     kernel applies, expires and refreshes identically under either ledger,
     so a duration, a persistence flag, a resistance reduction and a
     next-event consumption are all *representable* and none of them is a
-    reason to decline.
+    reason to refuse.
 
     What is not representable is an amount only the walk can price — a live
     formula, or a transition a deferral batch owns — and those are the two
     clauses here.  The one refusal this function deliberately does **not**
     make is the class declaration: an armed modifier with no
     ``damage_classes``/``attack_classes`` must raise in
-    ``declared_modifier_classes`` on both paths (D-04), and declining it
+    ``declared_modifier_classes`` on both paths (D-04), and refusing it
     here would convert that fail-loud into a quiet fall back to the walk
     that raises anyway.
     """

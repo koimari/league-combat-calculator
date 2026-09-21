@@ -126,7 +126,7 @@ def _add_item_proc_damage(
         # ability amp for that packet -- which is what the declaration's
         # attack class has to say, because the gate is per trigger and a
         # declaration claiming ABILITY for every one would hand the walk an
-        # amp the pair engine had already declined to pay.
+        # amp the pair engine had already refused to pay.
         declared_raw = raw_per_proc * target_share
         amped: list[bool] = []
         if proc_triggers:

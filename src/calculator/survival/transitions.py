@@ -3142,7 +3142,7 @@ def _apply_live_amp(
     transition of its own.
 
     The tag carries the meaning (:class:`~.actions.LiveProbe`).  An
-    unrecognised probe raises rather than declining to amplify, because a
+    unrecognised probe raises rather than refusing to amplify, because a
     kernel that quietly skipped an amplifier it did not recognise is a
     number the model never computed wearing a measured zero's clothes.
     """

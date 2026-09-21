@@ -1459,7 +1459,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
     # -- pair-only mechanics the umbrella's authority table rules ------------
     # Hypershot is Phase 4 S7's canary: the first of the seven authority moves
     # and the one that is expected to move nothing.  Its exclusion set — which
-    # abilities in a rotation the amp declines to reach — is a pair-local
+    # abilities in a rotation the amp refuses to reach — is a pair-local
     # rotation fact, so ``PAIR_ONLY`` is the answer the authority rule gives
     # and its number is what the one pair fight delivered, not a preview of a
     # coupled one.  A canary that moved a number would mean the two new

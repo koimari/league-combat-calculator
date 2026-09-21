@@ -226,7 +226,7 @@ class ReceiptOnly:
     """The compiled kernel cannot represent this rule, and here is why.
 
     ``reason`` is a citation, not policy: it is the sentence a fallback
-    receipt prints when a build holding this rule declines to compile.
+    receipt prints when a build holding this rule refuses to compile.
     ``scope`` is the policy half — the closed axis saying which of the
     kernel's refusals this is, so a caller can ask about its own gate
     instead of receiving the union of three.

@@ -1435,7 +1435,7 @@ class WalkCompiler:
                 # Everlasting branch in ``item_support_effects`` stamps
                 # ``_trigger_event_id`` on every Fimbulwinter shield the
                 # enriched view produced (``None`` when it did not, which
-                # is what ``is not None`` reads).  That packet is declined
+                # is what ``is not None`` reads).  That packet is refused
                 # one branch earlier for its 3 s duration, so this guard is
                 # the narrower second net: it catches a linked template
                 # ``unrepresentable_template_receipt`` admits — whatever
