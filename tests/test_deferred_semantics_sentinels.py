@@ -367,8 +367,9 @@ class TestCommandWindowsMergeByRefresh:
 
     Command's rule merges overlapping immobilizes by moving the mark's expiry
     to the last one plus its duration — ``merge=REFRESH``, which is what both
-    engines compute and what the declaration calls it.  The additive reading the League Wiki's "extend the duration"
-    wording admits is filed with its cost in
+    engines compute and what the declaration calls it.  The additive reading
+    the League Wiki's "extend the duration" wording admits is filed with its
+    cost in
     ``item_behavior_catalog.ACKNOWLEDGED_READING_DIVERGENCES``.
 
     An authored pair that merges needs "a fixture and an oracle receipt

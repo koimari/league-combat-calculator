@@ -616,8 +616,9 @@ def test_a_route_the_registry_does_not_serve_is_refused(
     ``unserved`` needs a route lane the family declares and no interpreter
     serves, and retirements run that shape out: a case driven through
     whichever family still defers its receipt walk turns green at each
-    retirement for a reason with nothing to do with the clause it tests.  So the case instead removes the
-    route's own interpreter along with the route — the registry is a
+    retirement for a reason with nothing to do with the clause it tests.  So
+    the case instead removes the route's own interpreter along with the route
+    — the registry is a
     monkeypatched mapping either way, and unregistering is a smaller
     fabrication than keeping a family deferred to be tested against.
     """

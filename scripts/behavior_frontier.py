@@ -593,8 +593,9 @@ COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 # ── who retires an unserved lane ──────────────────────────────────────────
 #
 # Which stage retires a gap is recorded in the committed stage record rather
-# than as a literal here or a field on the engine's lane table.  ``interpreters.UnservedLane`` carries the two facts a reader can
-# check against the tree and nothing about when a gap retires.
+# than as a literal here or a field on the engine's lane table.
+# ``interpreters.UnservedLane`` carries the two facts a reader can check
+# against the tree and nothing about when a gap retires.
 CAMPAIGN_STAGES = ROOT / "docs" / "receipts" / "campaign-stages.json"
 
 

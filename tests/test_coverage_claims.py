@@ -1693,8 +1693,9 @@ def test_an_unreviewed_cached_record_is_blocked_with_issue_refs(item: str) -> No
     The population is selected by the premise — a described passive or active
     that no rule and no registry entry declares — never by the ladder's answer,
     so the property runs forward: such a record gets a named refusal
-    carrying the issue that tracks it, never a number.  The two reviewed registries that may still admit one are
-    each asserted by their own membership: a bounded scenario control prices as
+    carrying the issue that tracks it, never a number.  The two reviewed
+    registries that may still admit one are each asserted by their own
+    membership: a bounded scenario control prices as
     ``modeled_state`` and a reviewed absence as ``stats_only``.
     """
     record = CACHE[item]

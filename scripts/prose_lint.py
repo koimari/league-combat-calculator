@@ -331,6 +331,7 @@ def _cite(
     where: str,
     line: int,
     text: str,
+    *,
     rules: tuple[tuple[str, re.Pattern[str]], ...],
     root: Path,
 ) -> None:
@@ -367,7 +368,7 @@ def scan(root: Path = ROOT, exclude: tuple[str, ...] = ()) -> dict[str, list[str
             doc = _docstring(node)
             if doc is None:
                 continue
-            _cite(found, where, doc.lineno, doc.value, rules, root)
+            _cite(found, where, doc.lineno, doc.value, rules=rules, root=root)
             body = _span(node.body[1:]) or 1  # a stub's docstring is its body
             lines = doc.end_lineno - doc.lineno + 1
             if not tested and isinstance(node, FUNCS) and lines > body:
@@ -376,7 +377,7 @@ def scan(root: Path = ROOT, exclude: tuple[str, ...] = ()) -> dict[str, list[str
         heads = _definition_spans(funcs)
         blocks = _comment_blocks(source)
         for line, block in blocks:
-            _cite(found, where, line, "\n".join(block), rules, root)
+            _cite(found, where, line, "\n".join(block), rules=rules, root=root)
             bound = _comment_bound(line, block, funcs, heads)
             if not tested and bound is not None and len(block) > bound:
                 found["long_comment"].append(f"{where}:{line}: {len(block)} lines")
