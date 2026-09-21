@@ -1,6 +1,7 @@
 """Typed cross-participant item packets and explicit trigger contracts."""
 
 import ast
+import inspect
 import re
 import sys
 from collections import Counter, defaultdict
@@ -16,6 +17,7 @@ import packet_declarations
 from src.app import app
 from src.calculator import (
     ally_packet_shape,
+    item_behavior,
     item_support_effects,
     ledger_adequacy,
     pipeline,
@@ -627,6 +629,35 @@ def test_knights_vow_attaches_typed_redirect_and_holder_heal_receipts():
     assert heal["amount"] == pytest.approx(24.0)
 
 
+class TestProducerTablesAreTotal:
+    """Every declared ally producer reaches exactly one block."""
+
+    def test_the_four_tables_name_every_declared_producer_once(self):
+        """Umbral Glaive shipped a branch no declaration reached; this is the gate."""
+        keyed = Counter(
+            key
+            for table in item_support_effects._PRODUCER_TABLES
+            for key in table
+            if isinstance(key, item_behavior.AllyProducer)
+        )
+        scheduled = item_support_effects._SCHEDULED_ELSEWHERE
+        assert frozenset(keyed) | scheduled == frozenset(item_behavior.AllyProducer)
+        assert not frozenset(keyed) & scheduled
+        assert max(keyed.values()) == 1
+
+    def test_a_producer_no_table_names_is_reported_by_its_value(self):
+        """The red the totality check ships with, through its own argument."""
+        dropped = {
+            key: build
+            for key, build in item_support_effects._FIGHT_PACKETS.items()
+            if key is not item_behavior.AllyProducer.REAP
+        }
+        with pytest.raises(ValueError, match="'reap': 0"):
+            item_support_effects._validate_producer_tables(
+                (dropped, *item_support_effects._PRODUCER_TABLES[1:])
+            )
+
+
 class TestCrossParticipantAuthorities:
     """One authority table, and the packets are bound to it."""
 
@@ -1105,16 +1136,12 @@ class TestEventViewTupleGate:
     def test_fimbulwinter_is_an_event_view_member_that_reads_event_id(self):
         """D-03: dropping it disarms a fail-closed raise downstream."""
         assert "Fimbulwinter" in trigger_stream.enriched_view_items()
-        body = Path(item_support_effects.__file__).read_text(encoding="utf-8")
-        # 3.6 replaced the item-name guard with the declared producer; the
-        # branch is found by the declaration it reads rather than by an item
-        # name.
-        everlasting = body.split("if everlasting is not None:")[1].split("\n    if ")[0]
-        # The claim is unchanged — the shield carries its trigger's event id,
-        # and an unenriched shield carries an absent link rather than an empty
-        # one.  The read is off the raw row again: the kernel trigger rule
-        # this branch now uses also receipts the rows the bus does not carry
-        # (untyped and unknown CC), and a denial must name the row it refused.
+        everlasting = inspect.getsource(item_support_effects._everlasting_packets)
+        # The shield carries its trigger's event id, and an unenriched shield
+        # carries an absent link rather than an empty one.  The read is off
+        # the raw row: the kernel trigger rule this block uses also receipts
+        # the rows the bus does not carry (untyped and unknown CC), and a
+        # denial must name the row it refused.
         assert '_trigger_event_id=event.get("_event_id")' in everlasting
 
     def test_every_event_view_holder_is_named_by_exactly_one_stream(self):
