@@ -10,13 +10,19 @@ longer than the body it documents, a comment run longer than the function it
 belongs to, prose about what the code was rather than what it is, a section
 banner with no statement under it, which is what an extraction leaves when it
 cuts the bodies out and not the headers, a module docstring under
-``CHAMPIONS_SCOPE`` over ``MODULE_DOCSTRING_CAP`` lines, and an ``ASSUMPTIONS``
+``CHAMPIONS_SCOPE`` over ``MODULE_DOCSTRING_CAP`` lines, and an assumption
 string there over ``ASSUMPTION_CAP`` characters.  A champion header holds what a
 reader of the module needs today, so a trap belongs in ``TRAPS.md``, a review
 stamp in that module's ``SOURCES``, and a project id nowhere.  ``/api/config``
 and ``/api/not-modeled`` publish the assumption strings, so one holds the
 number, the condition and the source and nothing else; a second fact is a
 second string.
+
+Assumption text reaches those endpoints through four module-level doors: a name
+ending in ``assumptions``, ``extend`` or ``append`` on one, ``+=``, and a call's
+assumption keyword.  An element no literal answers for is reported rather than
+read past, and the cached text ``static/reviewed-packets.json`` carries into
+every packet module is out of an AST's reach.
 
 A seventh, ``pointer``, names prose citing a campaign document where the reason
 itself belongs.  It reports rather than failing, under a ceiling the test holds
@@ -173,29 +179,79 @@ def _unsourced_constants(
     return found
 
 
-def assumption_strings(tree: ast.Module) -> Iterable[ast.Constant]:
-    """Every string literal an ``ASSUMPTIONS`` binding publishes."""
-    for node in ast.walk(tree):
-        if not isinstance(node, (ast.Assign, ast.AnnAssign)) or node.value is None:
-            continue
-        bound = node.targets if isinstance(node, ast.Assign) else [node.target]
-        names = (n for t in bound for n in ast.walk(t) if isinstance(n, ast.Name))
-        if not any(name.id == "ASSUMPTIONS" for name in names):
-            continue
-        yield from (
-            text
-            for text in ast.walk(node.value)
-            if isinstance(text, ast.Constant) and isinstance(text.value, str)
-        )
+def _publishes_assumptions(name: str) -> bool:
+    """Whether this name holds assumption text, whatever its prefix."""
+    return name.lower().endswith("assumptions")
+
+
+def _assumption_values(tree: ast.Module) -> Iterable[ast.expr]:
+    """Every module-level expression an assumptions name receives."""
+    for node in tree.body:
+        if isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
+            bound = node.targets if isinstance(node, ast.Assign) else [node.target]
+            names = (n for t in bound for n in ast.walk(t) if isinstance(n, ast.Name))
+            if node.value is not None and any(
+                map(_publishes_assumptions, (n.id for n in names))
+            ):
+                yield node.value
+        elif isinstance(node, ast.Expr) and isinstance(node.value, ast.Call):
+            func = node.value.func
+            if (
+                isinstance(func, ast.Attribute)
+                and func.attr in ("append", "extend")
+                and isinstance(func.value, ast.Name)
+                and _publishes_assumptions(func.value.id)
+            ):
+                yield from node.value.args
+
+
+def _assumption_elements(value: ast.expr) -> Iterable[ast.expr]:
+    """Every element one such expression contributes, as authored.
+
+    A name that publishes assumptions is read at its own binding, and the
+    cached packet text a call resolves at import is out of an AST's reach,
+    so a call contributes its assumption keywords alone.  Anything else is
+    yielded unresolved, because the cap cannot be read off it.
+    """
+    if isinstance(value, ast.Starred):
+        yield from _assumption_elements(value.value)
+    elif isinstance(value, (ast.List, ast.Tuple, ast.Set)):
+        for element in value.elts:
+            if isinstance(element, ast.Starred):
+                yield from _assumption_elements(element)
+            else:
+                yield element
+    elif isinstance(value, ast.BinOp) and isinstance(value.op, ast.Add):
+        yield from _assumption_elements(value.left)
+        yield from _assumption_elements(value.right)
+    elif isinstance(value, ast.Call):
+        if isinstance(value.func, ast.Name) and value.func.id in ("list", "tuple"):
+            yield from (e for arg in value.args for e in _assumption_elements(arg))
+        else:
+            yield from (
+                e
+                for word in value.keywords
+                if word.arg and "assumption" in word.arg
+                for e in _assumption_elements(word.value)
+            )
+    elif not (isinstance(value, ast.Name) and _publishes_assumptions(value.id)):
+        yield value
 
 
 def _long_assumptions(tree: ast.Module, where: str) -> list[str]:
-    """Every published assumption string past the cap, with its length."""
-    return [
-        f"{where}:{text.lineno}: {len(text.value)} characters over {ASSUMPTION_CAP}"
-        for text in assumption_strings(tree)
-        if len(text.value) > ASSUMPTION_CAP
-    ]
+    """Every published assumption element the cap does not hold, with why."""
+    found = []
+    for value in _assumption_values(tree):
+        for element in _assumption_elements(value):
+            text = element.value if isinstance(element, ast.Constant) else None
+            if not isinstance(text, str):
+                found.append(f"{where}:{element.lineno}: {ast.unparse(element)[:60]}")
+            elif len(text) > ASSUMPTION_CAP:
+                found.append(
+                    f"{where}:{element.lineno}: "
+                    f"{len(text)} characters over {ASSUMPTION_CAP}"
+                )
+    return found
 
 
 def _overlong_module_docstring(tree: ast.Module, where: str) -> list[str]:

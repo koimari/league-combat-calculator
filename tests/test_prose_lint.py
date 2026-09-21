@@ -23,10 +23,28 @@ CEILINGS = {
 
 #: One assumption at the cap and one a character past it, so the champion-tree
 #: counter fires once on the same seed as the other four.
-ASSUMPTIONS_BLOCK = (
-    f'\nASSUMPTIONS = [\n    "{"a" * ASSUMPTION_CAP}",\n'
-    f'    "{"b" * (ASSUMPTION_CAP + 1)}",\n]\n'
+AT_CAP = "a" * ASSUMPTION_CAP
+PAST_CAP = "b" * (ASSUMPTION_CAP + 1)
+ASSUMPTIONS_BLOCK = f'\nASSUMPTIONS = [\n    "{AT_CAP}",\n    "{PAST_CAP}",\n]\n'
+
+#: Every door a module publishes assumption text through, each holding one
+#: string past the cap: a binding, ``extend``, ``+=``, a rebinding that carries
+#: an element no literal answers for, and a call's assumption keyword beside an
+#: argument that is not assumption text.
+ASSUMPTION_SHAPES = f'''"""Seed."""
+
+_TAIL = "{PAST_CAP}"
+
+ASSUMPTIONS = ["{AT_CAP}", "{PAST_CAP}"]
+ASSUMPTIONS.extend(["{PAST_CAP}"])
+ASSUMPTIONS += ["{PAST_CAP}"]
+ASSUMPTIONS = [*list(ASSUMPTIONS), "one fact, " + _TAIL]
+parse_abilities, SLOTS, ASSUMPTIONS, SOURCES = build_packet_module(
+    "Seed",
+    assumption_overrides=("{PAST_CAP}",),
+    cc_kinds={{"{PAST_CAP}": "slow"}},
 )
+'''
 
 #: One module header a line past the cap, so the champion-tree counter fires on
 #: the same seed as the other four.
@@ -162,6 +180,23 @@ def test_only_the_assumption_past_the_cap_is_reported(tmp_path):
     assert len(hits) == 1, hits
     assert hits[0].startswith("src/calculator/champions/seed.py:")
     assert hits[0].endswith(f"{ASSUMPTION_CAP + 1} characters over {ASSUMPTION_CAP}")
+
+
+def test_every_door_assumption_text_arrives_through_is_read(tmp_path):
+    """A binding, ``extend``, ``+=``, a concatenation and a call keyword."""
+    champions = tmp_path / "src" / "calculator" / "champions"
+    champions.mkdir(parents=True)
+    (tmp_path / "scripts").mkdir()
+    (champions / "seed.py").write_text(ASSUMPTION_SHAPES, encoding="utf-8")
+    hits = scan(root=tmp_path)["long_assumption"]
+    past = f"{ASSUMPTION_CAP + 1} characters over {ASSUMPTION_CAP}"
+    assert [hit.rsplit(": ", 1)[1] for hit in hits] == [
+        past,
+        past,
+        past,
+        "'one fact, ' + _TAIL",
+        past,
+    ], hits
 
 
 def test_a_number_answers_to_the_note_beside_it_or_over_its_block(tmp_path):
