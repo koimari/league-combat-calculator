@@ -108,7 +108,7 @@ def character_record_root(champion_name: str) -> dict[str, Any]:
 def record_value(root: Mapping[str, Any], field: str) -> float:
     """One ModifiableFloat-style record field's ``baseValue``, snapped like
     :func:`data_value`; absent and unusable are distinct refusals."""
-    entry = root.get(field) if isinstance(root, Mapping) else None
+    entry = root.get(field)
     if not isinstance(entry, Mapping) or "baseValue" not in entry:
         raise RuntimeError(f"record field {field!r} not found")
     return _snapped(entry["baseValue"], f"record field {field!r} baseValue")
