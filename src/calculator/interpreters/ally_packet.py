@@ -27,7 +27,6 @@ from __future__ import annotations
 
 from collections.abc import Collection, Mapping
 from dataclasses import dataclass, field, replace
-from functools import partial
 
 from ..item_behavior import (
     AllyPacketRule,
@@ -42,7 +41,6 @@ from ..item_behavior import (
     PacketTrigger,
     Recipients,
     RuleFamily,
-    typed_payload,
 )
 from ..item_behavior_catalog import behavior_rules
 from ..item_effects import ITEM_INPUT_OPTIONS
@@ -53,13 +51,6 @@ from ..value_ref import DeclaredNumbers, LevelValueRef, ValueRef
 class AllyPacketInterpretationError(ValueError):
     """A producer was asked something its declaration does not answer."""
 
-
-_payload = partial(
-    typed_payload,
-    payload_type=AllyPacketRule,
-    stop=AllyPacketInterpretationError,
-    noun="an ally-packet rule",
-)
 
 # Which authored control arms each control-triggered producer, as the
 # kernel states it (state_lifecycle.CcTriggerRule).  Everlasting is an
@@ -87,7 +78,7 @@ def packet_fields(
     ramp is a fact the source states per item and not a property of the
     packet's direction.
     """
-    payload = _payload(rule)
+    payload: AllyPacketRule = rule.payload
     fields: list[KernelField] = []
     for reference in payload.values:
         if isinstance(reference, ValueRef):
@@ -125,7 +116,7 @@ class AllyPacketSlot:
             self,
             "_numbers",
             DeclaredNumbers(
-                _payload(self.rule).values,
+                self.rule.payload.values,
                 self.rule.mechanic_id,
                 AllyPacketInterpretationError,
                 "a producer",
@@ -140,12 +131,12 @@ class AllyPacketSlot:
     @property
     def producer(self) -> AllyProducer:
         """Which mechanic this slot is."""
-        return _payload(self.rule).producer
+        return self.rule.payload.producer
 
     @property
     def trigger(self) -> PacketTrigger:
         """What arms this producer."""
-        return _payload(self.rule).trigger
+        return self.rule.payload.trigger
 
     def emits(self, kind: PacketKind, recipients: Recipients) -> bool:
         """Whether this producer declares a packet of *kind* to *recipients*.
@@ -154,7 +145,7 @@ class AllyPacketSlot:
         is the pair engine's, the packet to an ally is the roster walk's."""
         return any(
             spec.kind is kind and spec.recipients is recipients
-            for spec in _payload(self.rule).packets
+            for spec in self.rule.payload.packets
         )
 
     def value(self, key: str) -> float:
@@ -167,7 +158,7 @@ class AllyPacketSlot:
 
     def level_subject(self, key: str) -> LevelSubject:
         """Whose level the *key* ramp is read at, as the declaration states it."""
-        for ramp in _payload(self.rule).ramps:
+        for ramp in self.rule.payload.ramps:
             if ramp.min_key == key:
                 return ramp.subject
         raise AllyPacketInterpretationError(
@@ -205,7 +196,7 @@ class AllyPacketSlot:
         :class:`~..item_behavior.PacketSpec` from a declaration turns the
         fight red rather than quietly dropping a receipt.
         """
-        for spec in _payload(self.rule).packets:
+        for spec in self.rule.payload.packets:
             if spec.kind is kind:
                 return spec
         raise AllyPacketInterpretationError(
@@ -230,7 +221,7 @@ def resolve_slots(
         for rule in behavior_rules(owner):
             if rule.family is not RuleFamily.ALLY_PACKET:
                 continue
-            producer = _payload(rule).producer
+            producer = rule.payload.producer
             slots[producer] = (*slots.get(producer, ()), AllyPacketSlot(rule))
     return slots
 

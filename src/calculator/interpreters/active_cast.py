@@ -21,7 +21,6 @@ Nothing here is memoized, for the same reason the catalog is not:
 from __future__ import annotations
 
 from collections.abc import Sequence
-from functools import partial
 
 from ..item_behavior import (
     ActiveCastRule,
@@ -29,7 +28,6 @@ from ..item_behavior import (
     BuildContext,
     FightFacts,
     RuleFamily,
-    typed_payload,
 )
 from ..item_behavior_catalog import built_per_rule
 from ..item_effects import DamageSource, damage_source
@@ -54,26 +52,12 @@ ACTIVE_BREAKDOWN_PREFIX = "active_"
 NO_INHERITED_LIFESTEAL = 0.0
 
 
-class ActiveCastInterpretationError(ValueError):
-    """A rule reached this interpreter that is not an item active."""
-
-
-_payload = partial(
-    typed_payload,
-    payload_type=ActiveCastRule,
-    stop=ActiveCastInterpretationError,
-    noun="an active rule",
-)
-
-
-active_fields = damage_formula.field_reading(
-    _payload, "cooldown", ACTIVE_COOLDOWN_FIELD
-)
+active_fields = damage_formula.field_reading("cooldown", ACTIVE_COOLDOWN_FIELD)
 
 
 def active_source(rule: BehaviorRule, ctx: BuildContext) -> DamageSource:
     """One declared active as the row the fight engine consumes."""
-    payload = _payload(rule)
+    payload: ActiveCastRule = rule.payload
     inherited = payload.lifesteal_effectiveness
     return damage_source(
         rule.owner,
@@ -106,7 +90,6 @@ __all__ = [
     "ACTIVE_COOLDOWN_FIELD",
     "ACTIVE_SUFFIX",
     "NO_INHERITED_LIFESTEAL",
-    "ActiveCastInterpretationError",
     "active_fields",
     "active_source",
     "active_sources",

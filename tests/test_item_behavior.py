@@ -21,6 +21,7 @@ import pytest
 from src.calculator.ability_spec import AttackClass, Authority, DamageClass, Disposition
 from src.calculator.item_behavior import (
     PAYLOAD_FAMILY,
+    PAYLOAD_VALIDATORS,
     POLICY_IDENTIFIER_FIELDS,
     RESTRICTED_CHANNEL_PACKETS,
     RULE_FAMILY_COUNT,
@@ -183,6 +184,24 @@ def test_the_payload_union_names_every_payload_a_family_claims() -> None:
     reader and a checker disagree about what a rule may hold.
     """
     assert set(PAYLOAD_FAMILY) - {BehaviorRule} == set(get_args(RulePayload))
+
+
+def test_every_payload_a_family_claims_has_a_structural_reading() -> None:
+    """``PAYLOAD_VALIDATORS`` is keyed by exactly ``PAYLOAD_FAMILY``'s types.
+
+    A payload in the family table and not this one used to fall off the end
+    of an ``isinstance`` ladder, structurally unchecked and silently valid.
+    """
+    assert set(PAYLOAD_VALIDATORS) == set(PAYLOAD_FAMILY)
+
+
+def test_a_payload_with_no_structural_reading_is_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The omission fails closed, naming the payload and where to declare it."""
+    monkeypatch.delitem(PAYLOAD_VALIDATORS, type(_rule().payload))
+    with pytest.raises(BehaviorRuleError, match="no structural reading"):
+        validate_rule(_rule())
 
 
 def test_every_restricted_channel_names_its_packet_or_none() -> None:

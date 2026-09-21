@@ -29,7 +29,6 @@ from ..item_behavior import (
     KernelField,
     RuleFamily,
     SecondaryTargetRule,
-    typed_payload,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..value_ref import resolve
@@ -108,12 +107,7 @@ class SecondaryTargetSlot(CompiledSlot):
     @property
     def declaration(self) -> SecondaryTargetRule:
         """This rule's payload, in its own type."""
-        return typed_payload(
-            self.rule,
-            SecondaryTargetRule,
-            SecondaryTargetInterpretationError,
-            "a secondary-target rule",
-        )
+        return self.rule.payload
 
     @property
     def row_key(self) -> str:

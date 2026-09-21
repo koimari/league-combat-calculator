@@ -2811,139 +2811,79 @@ def validate_rule(rule: BehaviorRule) -> None:
 
 
 def _validate_payload(rule: BehaviorRule) -> None:
-    """Per-payload structure, kept out of :func:`validate_rule`'s ladder."""
+    """Per-payload structure, dispatched on the payload's own type.
+
+    :data:`PAYLOAD_VALIDATORS` is keyed by exactly :data:`PAYLOAD_FAMILY`'s
+    types, so a payload admitted to a family with no structural reading of
+    its own stops here naming itself, rather than falling off the end of a
+    ladder unchecked.
+    """
     payload = rule.payload
-    if isinstance(payload, DEFENSE_PAYLOAD_TYPES):
-        _validate_defense(rule, payload)
-        return
-    if isinstance(payload, AllyPacketRule):
-        _validate_ally_packet(rule, payload)
-        return
-    if isinstance(payload, OnHitStrikeRule):
-        _validate_formula(rule, payload.formula)
-        return
-    if isinstance(payload, EmpoweredHitRule):
-        _validate_formula(rule, payload.formula)
-        _validate_refs(rule, {"max_procs": payload.max_procs})
-        return
-    if isinstance(payload, RepeatingStrikeRule):
-        _validate_formula(rule, payload.formula)
-        _validate_refs(rule, {"hits_required": payload.hits_required})
-        return
-    if isinstance(payload, ShapedChargeRule):
-        _validate_formula(rule, payload.formula)
-        _validate_refs(rule, {"cooldown": payload.cooldown})
-        return
-    if isinstance(payload, EmpoweredAutoBuffRule):
-        _validate_refs(
-            rule,
-            {
-                "bonus_attack_speed_percent": payload.bonus_attack_speed_percent,
-                "empowered_auto_count": payload.empowered_auto_count,
-                "duration": payload.duration,
-                "reduced_crit_ratio": payload.reduced_crit_ratio,
-                "natural_crit_true_damage_ratio": (
-                    payload.natural_crit_true_damage_ratio
-                ),
-            },
-        )
-        return
-    if isinstance(payload, SwingScheduleRule):
-        _validate_swing_schedule(rule, payload)
-        return
-    if isinstance(payload, CooldownProcRule):
-        _validate_cooldown_proc(rule, payload)
-        return
-    if isinstance(payload, UltimateProcRule):
-        _validate_formula(rule, payload.formula)
-        _validate_refs(rule, {"duration": payload.duration})
-        _validate_refs(rule, {"mr_reduction": payload.mr_reduction}, optional=True)
-        return
-    if isinstance(payload, SpellbladeRule):
-        _validate_spellblade(rule, payload)
-        return
-    if isinstance(payload, PeriodicRule):
-        _validate_periodic(rule, payload)
-        return
-    if isinstance(payload, ActiveCastRule):
-        _validate_formula(rule, payload.formula)
-        _validate_refs(rule, {"cooldown": payload.cooldown})
-        _validate_refs(
-            rule,
-            {"lifesteal_effectiveness": payload.lifesteal_effectiveness},
-            optional=True,
-        )
-        return
-    if isinstance(payload, SecondaryTargetRule):
-        _validate_secondary_target(rule, payload)
-        return
-    if isinstance(payload, ResistanceShredRule):
-        _validate_shred_payload(rule, payload)
-        return
-    if isinstance(payload, (CritDamageBonusRule, ForcedCritRule)):
-        _validate_crit_profile(rule, payload)
-        return
-    if isinstance(payload, SUSTAIN_VALUE_PAYLOADS):
-        _validate_sustain(rule, payload)
-        return
-    if isinstance(payload, STAT_DERIVATION_PAYLOADS):
-        _validate_stat_derivation(rule, payload)
-        return
-    if isinstance(payload, ExecuteRule):
-        _validate_damage_routing(rule, payload)
-        _validate_refs(rule, {"threshold": payload.threshold})
-        return
-    if isinstance(payload, ShieldBypassRule):
-        _validate_damage_routing(rule, payload)
-        if not isinstance(payload.fraction, MeleeRangedSplit):
-            raise BehaviorRuleError(
-                f"{rule.mechanic_id}: a shield bypass pays melee and ranged "
-                "holders differently and declares both"
-            )
-        _validate_refs(
-            rule,
-            {
-                "fraction.melee": payload.fraction.melee,
-                "fraction.ranged": payload.fraction.ranged,
-                "duration": payload.duration,
-            },
-        )
-        if not isinstance(payload.trigger, TriggerEvent):
-            raise BehaviorRuleError(
-                f"{rule.mechanic_id}: a shield bypass says what opens its window"
-            )
-        return
-    if isinstance(payload, AttackCooldownRefundRule):
-        _validate_refs(rule, {"refund_fraction": payload.refund_fraction})
-        if not isinstance(payload.trigger, TriggerEvent):
-            raise BehaviorRuleError(
-                f"{rule.mechanic_id}: a cooldown refund names the event that "
-                "refunds it"
-            )
-        return
-    if not isinstance(payload, DeltaAmpRule):
-        return
-    if not isinstance(payload.activation, ACTIVATION_TYPES):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: activation is not in the union")
-    if not isinstance(payload.consumption, CONSUMPTION_TYPES):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: consumption is not in the union")
-    if not isinstance(payload.magnitude, MAGNITUDE_TYPES):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: magnitude is not in the union")
-    if not isinstance(payload.typing, Typing):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: typing is not declared (D-04)")
-    if not isinstance(payload.bonus_typing, BonusTyping):
+    validate = PAYLOAD_VALIDATORS.get(type(payload))
+    if validate is None:
         raise BehaviorRuleError(
-            f"{rule.mechanic_id}: bonus_typing must say what the bonus lands as"
+            f"{rule.mechanic_id}: {type(payload).__name__} has no structural "
+            "reading; add it to PAYLOAD_VALIDATORS beside its PAYLOAD_FAMILY row"
         )
-    if isinstance(payload.lane_chain_rank, bool) or not isinstance(
-        payload.lane_chain_rank, int
-    ):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: lane_chain_rank must be an int")
-    if not 0 <= payload.lane_chain_rank < len(AMP_CHAIN_ORDER):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: lane_chain_rank {payload.lane_chain_rank} names no "
-            "slot in AMP_CHAIN_ORDER"
+    validate(rule, payload)
+
+
+@dataclass(frozen=True, slots=True)
+class PayloadStructure:
+    """A strike-shaped payload's own structure: a formula and its numbers.
+
+    ``required`` names the sourced references the payload always carries and
+    ``optional`` the ones a mechanic may honestly declare absent, in the order
+    a refusal should name them.
+    """
+
+    formula: bool = False
+    required: tuple[str, ...] = ()
+    optional: tuple[str, ...] = ()
+
+
+# Which formula and which sourced references each strike-shaped payload
+# carries.  A table rather than seven validator branches, for the reason the
+# sustain and stat-derivation tables below give: every one of them answers
+# "is my formula built of terms and are all my numbers references", and only
+# the field names differ.
+STRIKE_PAYLOAD_STRUCTURE: dict[type, PayloadStructure] = {
+    OnHitStrikeRule: PayloadStructure(formula=True),
+    EmpoweredHitRule: PayloadStructure(formula=True, required=("max_procs",)),
+    RepeatingStrikeRule: PayloadStructure(formula=True, required=("hits_required",)),
+    ShapedChargeRule: PayloadStructure(formula=True, required=("cooldown",)),
+    UltimateProcRule: PayloadStructure(
+        formula=True, required=("duration",), optional=("mr_reduction",)
+    ),
+    ActiveCastRule: PayloadStructure(
+        formula=True,
+        required=("cooldown",),
+        optional=("lifesteal_effectiveness",),
+    ),
+    EmpoweredAutoBuffRule: PayloadStructure(
+        required=(
+            "bonus_attack_speed_percent",
+            "empowered_auto_count",
+            "duration",
+            "reduced_crit_ratio",
+            "natural_crit_true_damage_ratio",
         )
+    ),
+}
+
+
+def _validate_structure(rule: BehaviorRule, payload: RulePayload) -> None:
+    """A strike-shaped payload's formula and the references beside it."""
+    structure = STRIKE_PAYLOAD_STRUCTURE[type(payload)]
+    if structure.formula:
+        _validate_formula(rule, payload.formula)
+    for names, optional in ((structure.required, False), (structure.optional, True)):
+        if names:
+            _validate_refs(
+                rule,
+                {name: getattr(payload, name) for name in names},
+                optional=optional,
+            )
 
 
 # Which optional field each periodic cadence is allowed — and required — to
@@ -3578,6 +3518,104 @@ def _validate_crit_profile(
     )
 
 
+def _validate_execute(rule: BehaviorRule, payload: ExecuteRule) -> None:
+    """An execute routes damage and names the health share that arms it."""
+    _validate_damage_routing(rule, payload)
+    _validate_refs(rule, {"threshold": payload.threshold})
+
+
+def _validate_shield_bypass(rule: BehaviorRule, payload: ShieldBypassRule) -> None:
+    """A shield bypass pays melee and ranged holders differently, on a trigger."""
+    _validate_damage_routing(rule, payload)
+    if not isinstance(payload.fraction, MeleeRangedSplit):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a shield bypass pays melee and ranged "
+            "holders differently and declares both"
+        )
+    _validate_refs(
+        rule,
+        {
+            "fraction.melee": payload.fraction.melee,
+            "fraction.ranged": payload.fraction.ranged,
+            "duration": payload.duration,
+        },
+    )
+    if not isinstance(payload.trigger, TriggerEvent):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a shield bypass says what opens its window"
+        )
+
+
+def _validate_cooldown_refund(
+    rule: BehaviorRule, payload: AttackCooldownRefundRule
+) -> None:
+    """A cooldown refund names its share and the event that pays it."""
+    _validate_refs(rule, {"refund_fraction": payload.refund_fraction})
+    if not isinstance(payload.trigger, TriggerEvent):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: a cooldown refund names the event that refunds it"
+        )
+
+
+def _validate_amp_axes(rule: BehaviorRule, payload: RulePayload) -> None:
+    """Each of an amplifier's policy axes is a member of its own union."""
+    if not isinstance(payload.activation, ACTIVATION_TYPES):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: activation is not in the union")
+    if not isinstance(payload.consumption, CONSUMPTION_TYPES):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: consumption is not in the union")
+    if not isinstance(payload.magnitude, MAGNITUDE_TYPES):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: magnitude is not in the union")
+    if not isinstance(payload.typing, Typing):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: typing is not declared (D-04)")
+    if not isinstance(payload.bonus_typing, BonusTyping):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: bonus_typing must say what the bonus lands as"
+        )
+
+
+def _validate_delta_amp(rule: BehaviorRule, payload: DeltaAmpRule) -> None:
+    """A chained amplifier's axes, plus the chain position it acts at."""
+    _validate_amp_axes(rule, payload)
+    if isinstance(payload.lane_chain_rank, bool) or not isinstance(
+        payload.lane_chain_rank, int
+    ):
+        raise BehaviorRuleError(f"{rule.mechanic_id}: lane_chain_rank must be an int")
+    if not 0 <= payload.lane_chain_rank < len(AMP_CHAIN_ORDER):
+        raise BehaviorRuleError(
+            f"{rule.mechanic_id}: lane_chain_rank {payload.lane_chain_rank} names no "
+            "slot in AMP_CHAIN_ORDER"
+        )
+
+
+#: One payload's structural reading.  The rule is passed beside its payload
+#: so a refusal can name the mechanic that declared it.
+PayloadValidator = Callable[[BehaviorRule, RulePayload], None]
+
+# Which structural reading each payload type gets, keyed by exactly the types
+# :data:`PAYLOAD_FAMILY` admits — the same proof, read twice: the family key
+# says which engine reads a rule and this says what its own shape must hold.
+# Spread from the family tuples rather than re-listed, so a payload joining a
+# family joins its reading with it, and a payload joining neither is a stop.
+PAYLOAD_VALIDATORS: dict[type, PayloadValidator] = {
+    **dict.fromkeys(DEFENSE_PAYLOAD_TYPES, _validate_defense),
+    **dict.fromkeys(STRIKE_PAYLOAD_STRUCTURE, _validate_structure),
+    **dict.fromkeys(SUSTAIN_VALUE_PAYLOADS, _validate_sustain),
+    **dict.fromkeys(STAT_DERIVATION_PAYLOADS, _validate_stat_derivation),
+    **dict.fromkeys((CritDamageBonusRule, ForcedCritRule), _validate_crit_profile),
+    AllyPacketRule: _validate_ally_packet,
+    SwingScheduleRule: _validate_swing_schedule,
+    CooldownProcRule: _validate_cooldown_proc,
+    SpellbladeRule: _validate_spellblade,
+    PeriodicRule: _validate_periodic,
+    SecondaryTargetRule: _validate_secondary_target,
+    ResistanceShredRule: _validate_shred_payload,
+    ExecuteRule: _validate_execute,
+    ShieldBypassRule: _validate_shield_bypass,
+    AttackCooldownRefundRule: _validate_cooldown_refund,
+    DeltaAmpRule: _validate_delta_amp,
+    PartAmpRule: _validate_amp_axes,
+}
+
 # The ``str``-typed fields that are identifiers and citations rather than
 # policy.  Criterion 6 requires them **named**, not waived on contact, so
 # they are a constant the assertion reads and not a judgement it makes.
@@ -3793,16 +3831,6 @@ class DefenseOutcome:
     notes: tuple[str, ...]
 
 
-def typed_payload[T](
-    rule: BehaviorRule, payload_type: type[T], stop: type[Exception], noun: str
-) -> T:
-    """*rule*'s payload as *payload_type*, or *stop* saying it is not *noun*."""
-    payload = rule.payload
-    if not isinstance(payload, payload_type):
-        raise stop(f"{rule.mechanic_id} is not {noun}")
-    return payload
-
-
 def compiled_value(
     fields: Iterable[KernelField], name: str, stop: type[Exception], missing: str
 ) -> float:
@@ -3912,6 +3940,7 @@ __all__ = [
     "FLOOR_TYPES",
     "MAGNITUDE_TYPES",
     "PAYLOAD_FAMILY",
+    "PAYLOAD_VALIDATORS",
     "PERIODIC_CADENCE_FIELDS",
     "POLICY_IDENTIFIER_FIELDS",
     "RESTRICTED_CHANNEL_PACKETS",
@@ -4078,6 +4107,5 @@ __all__ = [
     "policy_walk",
     "sole_declaration",
     "sole_declared",
-    "typed_payload",
     "validate_rule",
 ]

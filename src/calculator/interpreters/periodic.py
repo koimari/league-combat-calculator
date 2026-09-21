@@ -20,7 +20,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from functools import partial
 
 from ..item_behavior import (
     BehaviorRule,
@@ -29,7 +28,6 @@ from ..item_behavior import (
     PeriodicCadence,
     PeriodicRule,
     RuleFamily,
-    typed_payload,
 )
 from ..item_behavior_catalog import build_context
 from ..item_effects import BurnEffect, DamageSource, PeriodicEffect, damage_source
@@ -60,17 +58,7 @@ class PeriodicInterpretationError(ValueError):
     """A rule reached this interpreter that is not a periodic strike."""
 
 
-_payload = partial(
-    typed_payload,
-    payload_type=PeriodicRule,
-    stop=PeriodicInterpretationError,
-    noun="a periodic strike rule",
-)
-
-
-cadence_fields = damage_formula.field_reading(
-    _payload, "interval", PERIODIC_INTERVAL_FIELD
-)
+cadence_fields = damage_formula.field_reading("interval", PERIODIC_INTERVAL_FIELD)
 
 
 def _row(
@@ -86,7 +74,7 @@ def _row(
     row's contract has always been that ``None`` means "this aggregate stays
     untimed".
     """
-    payload = _payload(rule)
+    payload: PeriodicRule = rule.payload
     prefix, suffix = CADENCE_PRESENTATION[payload.cadence]
     return damage_source(
         rule.owner,
@@ -126,7 +114,7 @@ def declares_self_heal(owners: Sequence[str]) -> bool:
     declarations alone rather than from a resolved fight.
     """
     return any(
-        _payload(rule).self_heal_share is not None
+        rule.payload.self_heal_share is not None
         for rule in rules_of(owners, RuleFamily.PERIODIC)
     )
 
@@ -147,7 +135,7 @@ def resolve_slots(
     intervals: list[PeriodicEffect] = []
     range_units: dict[str, float] = {}
     for rule in rules_of(owners, RuleFamily.PERIODIC):
-        payload = _payload(rule)
+        payload: PeriodicRule = rule.payload
         ctx = build_context(rule.owner, facts)
         interval = resolve(payload.interval, ctx.level)
         if payload.cadence is PeriodicCadence.REFRESHED_BURN:

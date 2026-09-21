@@ -184,51 +184,40 @@ class TestFieldReading:
     """A family's whole compiled form when it is one clock."""
 
     @staticmethod
-    def _payload(**attributes):
+    def _rule(**attributes):
         return SimpleNamespace(
-            formula=_formula(Term(coefficient=Const(3.0, "count"), basis=Basis.FLAT)),
-            **attributes,
+            mechanic_id="test_item.active",
+            payload=SimpleNamespace(
+                formula=_formula(
+                    Term(coefficient=Const(3.0, "count"), basis=Basis.FLAT)
+                ),
+                **attributes,
+            ),
         )
-
-    _RULE = SimpleNamespace(mechanic_id="test_item.active")
 
     def test_the_bound_reading_names_the_field_and_stamps_the_lane(self) -> None:
-        read = damage_formula.field_reading(
-            lambda rule: self._payload(cooldown=Const(9.0, "count")),
-            "cooldown",
-            "active_cooldown",
-        )
-        (field,) = read(self._RULE, CTX, EngineLane.PAIR_ENGINE)
+        read = damage_formula.field_reading("cooldown", "active_cooldown")
+        rule = self._rule(cooldown=Const(9.0, "count"))
+        (field,) = read(rule, CTX, EngineLane.PAIR_ENGINE)
         assert (field.name, field.value) == ("active_cooldown", 9.0)
         assert field.lane is EngineLane.PAIR_ENGINE
         assert field.rule_id == "test_item.active"
 
     def test_both_lanes_read_the_same_declaration(self) -> None:
         """The pair engine and the walk cannot drift over which field they read."""
-        read = damage_formula.field_reading(
-            lambda rule: self._payload(interval=Const(2.0, "count")),
-            "interval",
-            "periodic_interval",
-        )
-        pair = read(self._RULE, CTX, EngineLane.PAIR_ENGINE)
-        walk = read(self._RULE, CTX, EngineLane.RECEIPT_WALK)
+        read = damage_formula.field_reading("interval", "periodic_interval")
+        rule = self._rule(interval=Const(2.0, "count"))
+        pair = read(rule, CTX, EngineLane.PAIR_ENGINE)
+        walk = read(rule, CTX, EngineLane.RECEIPT_WALK)
         assert pair[0].value == walk[0].value
         assert walk[0].lane is EngineLane.RECEIPT_WALK
 
-    def test_a_payload_the_reader_refuses_is_not_swallowed(self) -> None:
-        def payload_of(rule):
-            raise ValueError(f"{rule.mechanic_id} is not an active rule")
-
-        read = damage_formula.field_reading(payload_of, "cooldown", "active_cooldown")
-        with pytest.raises(ValueError, match="not an active rule"):
-            read(self._RULE, CTX, EngineLane.PAIR_ENGINE)
-
     def test_an_attribute_the_payload_does_not_carry_is_a_stop(self) -> None:
         """A misspelled field name fails at build time, not mid-fight."""
-        read = damage_formula.field_reading(
-            lambda rule: self._payload(cooldown=Const(9.0, "count")),
-            "clock",
-            "active_cooldown",
-        )
+        read = damage_formula.field_reading("clock", "active_cooldown")
         with pytest.raises(AttributeError):
-            read(self._RULE, CTX, EngineLane.PAIR_ENGINE)
+            read(
+                self._rule(cooldown=Const(9.0, "count")),
+                CTX,
+                EngineLane.PAIR_ENGINE,
+            )

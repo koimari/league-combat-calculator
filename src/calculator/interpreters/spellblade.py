@@ -21,7 +21,6 @@ exclusive in game, and a build holding Sheen and Trinity Force arms one.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from functools import partial
 
 from ..item_behavior import (
     BehaviorRule,
@@ -29,7 +28,6 @@ from ..item_behavior import (
     FightFacts,
     RuleFamily,
     SpellbladeRule,
-    typed_payload,
 )
 from ..item_behavior_catalog import build_context
 from ..item_effects import SpellbladeEffect, damage_source
@@ -51,26 +49,12 @@ SPELLBLADE_BREAKDOWN_PREFIX = "spellblade_"
 NO_SIBLING = 0.0
 
 
-class SpellbladeInterpretationError(ValueError):
-    """A rule reached this interpreter that is not a spellblade."""
-
-
-_payload = partial(
-    typed_payload,
-    payload_type=SpellbladeRule,
-    stop=SpellbladeInterpretationError,
-    noun="a spellblade rule",
-)
-
-
 def _sibling(reference: AnyValueRef | None, level: int) -> float:
     """A declared sibling's number, or the engine's "no sibling" spelling."""
     return NO_SIBLING if reference is None else resolve(reference, level)
 
 
-spellblade_fields = damage_formula.field_reading(
-    _payload, "cooldown", SPELLBLADE_COOLDOWN_FIELD
-)
+spellblade_fields = damage_formula.field_reading("cooldown", SPELLBLADE_COOLDOWN_FIELD)
 
 
 def declares_self_heal(owners: Sequence[str]) -> bool:
@@ -82,15 +66,15 @@ def declares_self_heal(owners: Sequence[str]) -> bool:
     """
     armed = rules_of(owners, RuleFamily.SPELLBLADE)[:1]
     return any(
-        _payload(rule).self_heal_ap_ratio is not None
-        or _payload(rule).self_heal_bonus_health_ratio is not None
+        rule.payload.self_heal_ap_ratio is not None
+        or rule.payload.self_heal_bonus_health_ratio is not None
         for rule in armed
     )
 
 
 def spellblade_effect(rule: BehaviorRule, ctx: BuildContext) -> SpellbladeEffect:
     """One declared spellblade as the record the fight engine consumes."""
-    payload = _payload(rule)
+    payload: SpellbladeRule = rule.payload
     return SpellbladeEffect(
         source=damage_source(
             rule.owner,
@@ -141,7 +125,6 @@ __all__ = [
     "SPELLBLADE_BREAKDOWN_PREFIX",
     "SPELLBLADE_COOLDOWN_FIELD",
     "SPELLBLADE_SUFFIX",
-    "SpellbladeInterpretationError",
     "declares_self_heal",
     "resolve_slot",
     "spellblade_effect",
