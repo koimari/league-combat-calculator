@@ -14,7 +14,7 @@ from __future__ import annotations
 import math
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from operator import itemgetter
 from typing import Any, NamedTuple
 
@@ -94,7 +94,7 @@ from .program.amp import (
     LiveAmpRider,
     live_amp_riders,
 )
-from .program.build import ParamPatch, roster_program
+from .program.build import ParamPatch, Program, roster_program
 from .program.capability import arming_stacking, dropped_pair_previews
 from .program.compile import (
     PairView,
@@ -276,15 +276,7 @@ def _cross_pass_dependencies(
     return tuple(dict.fromkeys(_cross_pass_dependency(slot) for slot in slots))
 
 
-def _compiled_lane_is_open(
-    patch: ParamPatch | None,
-    search_context: CoupledSearchContext | None,
-    *,
-    include_receipt: bool,
-    pair_result_cache: Mapping[PairCacheKey, PairView] | None,
-    enemies: Sequence[ResolvedLoadout],
-    params: FightParams,
-) -> bool:
+def _compiled_lane_is_open(request: Composition, patch: ParamPatch | None) -> bool:
     """Whether this pass may be priced by the compiled panel walk.
 
     Seven clauses for five reasons: a cross-pass patch needs a resource
@@ -296,12 +288,12 @@ def _compiled_lane_is_open(
     """
     return bool(
         patch is None
-        and search_context is not None
-        and search_context.compiled_walk_enabled
-        and not include_receipt
-        and pair_result_cache is not None
-        and enemies
-        and params.enemies_attack
+        and request.search_context is not None
+        and request.search_context.compiled_walk_enabled
+        and not request.include_receipt
+        and request.pair_result_cache is not None
+        and request.enemies
+        and request.params.enemies_attack
     )
 
 
@@ -4960,6 +4952,102 @@ def _self_shield_carrier_denials(
     return denials
 
 
+@dataclass(frozen=True)
+class Composition:
+    """Everything one roster composition is priced from.
+
+    Fixed for the pass that reads it.  The combat-event driver in
+    ``build_participant_timeline`` rebinds the whole record rather than any
+    one field, so no step can read half of one pass and half of the next.
+    """
+
+    champion_data: dict[str, Any]
+    level: int
+    items: list[dict[str, Any]]
+    params: FightParams
+    main_stats: dict[str, float]
+    main_defenses: StartingDefenses
+    enemies: list[ResolvedLoadout]
+    allies: list[ResolvedLoadout]
+    focus_participant_id: str
+    pair_result_cache: dict[PairCacheKey, PairView] | None
+    include_receipt: bool
+    reuse_main_stats: bool
+    search_context: CoupledSearchContext | None
+    published: bool
+
+    @property
+    def work_counters(self) -> WorkCounterSink | None:
+        """The search's counter sink, or none outside a search."""
+        return self.search_context.work_counters if self.search_context else None
+
+
+class Roster(NamedTuple):
+    """The composed actors, in the order every ledger fold replays them."""
+
+    main: Combatant
+    ally_actors: list[Combatant]
+    enemy_actors: list[Combatant]
+    enemy_attackers: list[Combatant]
+    all_actors: list[Combatant]
+
+
+class Ledgers(NamedTuple):
+    """The books one pass writes, held by reference by every step.
+
+    ``main_cast_timeline`` is the main champion's own cast schedule, taken
+    from its first outgoing pair fight, and drives grey-health consume
+    timing (Rengar W, Mordekaiser W).
+    """
+
+    outgoing: defaultdict[str, list[dict[str, Any]]]
+    incoming: defaultdict[str, list[dict[str, Any]]]
+    healing: defaultdict[str, list[dict[str, Any]]]
+    support_effects: defaultdict[str, list[dict[str, Any]]]
+    item_denial_receipts: list[dict[str, Any]]
+    breakdown: defaultdict[str, dict[str, Any]]
+    coverage_reports: list[dict[str, Any]]
+    main_cast_timeline: list[dict[str, Any]]
+
+    @classmethod
+    def empty(cls) -> Ledgers:
+        """One pass's books, before any pair fight is folded in."""
+        return cls(
+            defaultdict(list),
+            defaultdict(list),
+            defaultdict(list),
+            defaultdict(list),
+            [],
+            defaultdict(
+                lambda: {
+                    "participant_id": "",
+                    "team": "",
+                    "champion": "",
+                    "total_damage": 0.0,
+                    "sources": {},
+                }
+            ),
+            [],
+            [],
+        )
+
+    def scene(self, all_actors: list[Combatant]) -> TimelineScene:
+        """The three books a scheduler authors into, with their roster."""
+        return TimelineScene(
+            all_actors, self.incoming, self.outgoing, self.support_effects
+        )
+
+
+class Walked(NamedTuple):
+    """What the survival walk hands the published receipt."""
+
+    program: Program
+    result: WalkResult
+    survival: dict[str, Any]
+    public_breakdown: list[dict[str, Any]]
+    support_by_attacker: Mapping[str, float]
+
+
 def build_participant_timeline(
     champion_data: dict[str, Any],
     level: int,
@@ -4999,44 +5087,41 @@ def build_participant_timeline(
     ``search_context`` replays one search's presorted invariant actions in
     the compiled panel walk.  Ignored outside score mode.
     """
+    request = Composition(
+        champion_data=champion_data,
+        level=level,
+        items=items,
+        params=params,
+        main_stats=main_stats,
+        main_defenses=main_defenses,
+        enemies=enemies,
+        allies=allies,
+        focus_participant_id=focus_participant_id,
+        pair_result_cache=pair_result_cache,
+        include_receipt=include_receipt,
+        reuse_main_stats=reuse_main_stats,
+        search_context=search_context,
+        published=published,
+    )
 
     def compose(pass_index: int, patch: ParamPatch | None) -> Any:
-        """One pass of this composition, patched by its predecessor.
-
-        A closure and not a `partial` over `_compose_pass`, even though it
-        forwards fourteen arguments unchanged: `params`, `pair_result_cache`,
-        `search_context` and `include_receipt` are rebound by the combat-event
-        loop below, so a bind taken before the loop would freeze the values
-        the first pass saw.
-        """
-        return _compose_pass(
-            champion_data,
-            level,
-            items,
-            params,
-            main_stats=main_stats,
-            main_defenses=main_defenses,
-            enemies=enemies,
-            allies=allies,
-            focus_participant_id=focus_participant_id,
-            pair_result_cache=pair_result_cache,
-            include_receipt=include_receipt,
-            reuse_main_stats=reuse_main_stats,
-            search_context=search_context,
-            published=published,
-            patch=patch,
-            pass_index=pass_index,
-        )
+        """One pass of this composition, patched by its predecessor."""
+        return _compose_pass(request, patch=patch, pass_index=pass_index)
 
     if params.combat_events is None:
         return run_passes(compose, _cross_pass_dependencies(items, enemies, allies))
     # Buff receipts determine which source casts survived the walk. A later
     # pass prices only those windows. Since buffs change future attacks, at
     # most one pass per authored cast propagates their causal consequences.
-    pair_result_cache = None
-    search_context = None
-    include_receipt = True
-    params = replace(params, event_attack_speed_windows=())
+    # `compose` closes over `request` rather than binding it, because the loop
+    # rebinds it: a bind taken here would freeze what the first pass saw.
+    request = replace(
+        request,
+        params=replace(params, event_attack_speed_windows=()),
+        pair_result_cache=None,
+        include_receipt=True,
+        search_context=None,
+    )
     for _ in range(len(params.combat_events) + 2):
         receipt = run_passes(compose, _cross_pass_dependencies(items, enemies, allies))
         windows = tuple(
@@ -5052,30 +5137,17 @@ def build_participant_timeline(
             and float(event.get("bonus_attack_speed_percent", 0)) > 0
             and not event.get("skipped_reason")
         )
-        if windows == params.event_attack_speed_windows:
+        if windows == request.params.event_attack_speed_windows:
             return receipt
-        params = replace(params, event_attack_speed_windows=windows)
+        request = replace(
+            request,
+            params=replace(request.params, event_attack_speed_windows=windows),
+        )
     raise ValueError("Authored support casts did not reach a stable causal timeline")
 
 
-def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-    champion_data: dict[str, Any],
-    level: int,
-    items: list[dict[str, Any]],
-    params: FightParams,
-    *,
-    main_stats: dict[str, float],
-    main_defenses: StartingDefenses,
-    enemies: list[ResolvedLoadout],
-    allies: list[ResolvedLoadout],
-    focus_participant_id: str,
-    pair_result_cache: dict[PairCacheKey, PairView] | None,
-    include_receipt: bool,
-    reuse_main_stats: bool,
-    search_context: CoupledSearchContext | None,
-    published: bool,
-    patch: ParamPatch | None,
-    pass_index: int,
+def _compose_pass(
+    request: Composition, *, patch: ParamPatch | None, pass_index: int
 ) -> Any:
     """Compose the roster once, or ask for one more pass.
 
@@ -5086,38 +5158,67 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     a walk that can call the thing that called it has no single invocation
     to count and no single result for a view to project.
     """
-    _resource_restores = (
-        patch.overrides[_RESOURCE_RESTORES] if patch is not None else None
-    )
-    if _resource_restores is not None:
-        params = replace(
-            params,
-            resource_restore_events=tuple(_resource_restores.get("main", ())),
+    restores = patch.overrides[_RESOURCE_RESTORES] if patch is not None else None
+    if restores is not None:
+        request = replace(
+            request,
+            params=replace(
+                request.params,
+                resource_restore_events=tuple(restores.get("main", ())),
+            ),
         )
+    scored = _compiled_lane_pass(request, patch)
+    if scored is not None:
+        return scored
+    roster = _compose_roster(request)
+    _refuse_uncertified_casts(request.params, roster)
+    ledgers = Ledgers.empty()
+    _compose_pair_fights(request, roster, ledgers, restores)
+    if patch is None:
+        pending = _resource_restore_request(request, roster, ledgers, pass_index)
+        if pending is not None:
+            return pending
+    _schedule_composed_events(request, roster, ledgers)
+    grey_summary = _apply_grey_health(request, roster, ledgers)
+    walked = _walk_composition(request, roster, ledgers, grey_summary)
+    if not request.include_receipt:
+        # Optimizer scoring reads only the survival rows, the per-actor
+        # damage breakdown, and the ordering receipt.  Skip the public
+        # event/healing/support serialization for the thousands of candidate
+        # evaluations that never show a timeline to anyone.  It is the *same*
+        # projection the compiled score path returns, which is what makes
+        # "score mode and receipt mode agree" a property of the layering
+        # rather than of two assemblies kept in step by hand.
+        return _score_view.score_leaves(
+            walked.program,
+            walked.result,
+            LeafWriter() if request.published else DISCARD,
+        )
+    return _compose_receipt(request, roster, ledgers, walked)
 
-    work_counters = search_context.work_counters if search_context else None
-    if _compiled_lane_is_open(
-        patch,
-        search_context,
-        include_receipt=include_receipt,
-        pair_result_cache=pair_result_cache,
-        enemies=enemies,
-        params=params,
-    ):
+
+def _compiled_lane_pass(request: Composition, patch: ParamPatch | None) -> Any | None:
+    """This pass's compiled panel score, or ``None`` to price the walk.
+
+    Every fall-through records its own rung and the compiled lane records
+    its own, so the four-state histogram accounts for 100% of evaluations.
+    """
+    work_counters = request.work_counters
+    if _compiled_lane_is_open(request, patch):
         try:
             scored = _score_with_search_context(
-                champion_data,
-                level,
-                items,
-                params,
-                main_stats=main_stats,
-                main_defenses=main_defenses,
-                enemies=enemies,
-                allies=allies,
-                pair_result_cache=pair_result_cache,
-                context=search_context,
-                reuse_main_stats=reuse_main_stats,
-                published=published,
+                request.champion_data,
+                request.level,
+                request.items,
+                request.params,
+                main_stats=request.main_stats,
+                main_defenses=request.main_defenses,
+                enemies=request.enemies,
+                allies=request.allies,
+                pair_result_cache=request.pair_result_cache,
+                context=request.search_context,
+                reuse_main_stats=request.reuse_main_stats,
+                published=request.published,
             )
         except UncompilableActionError as exc:
             # A transition the score kernel cannot represent must never be
@@ -5125,7 +5226,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             # evaluations skip the compiled path; candidate-local failures
             # fall back per evaluation.
             if exc.invariant:
-                search_context.uncompilable = True
+                request.search_context.uncompilable = True
             # The rung is a *decision* with a reason, and the published
             # histogram key is only its label.  ``counter_entry`` hands the
             # sink both, so the reason the exception carried reaches a reader
@@ -5156,554 +5257,612 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         # it out here would be the second spelling of one decision that the
         # bridge in ``program/rung`` exists to prevent.
         record_rung(work_counters, *counter_entry(gate_rung(_GATE_REFUSAL_RECEIPT)))
-    main = main_combatant(
-        champion_data,
-        level,
-        items,
-        stats=main_stats,
-        defenses=main_defenses,
-        params=params,
-    )
-    enemy_actors = _roster_actors(enemies, "enemy")
-    enemy_attackers = [actor for actor in enemy_actors if not actor.is_practice_dummy]
-    ally_actors = _roster_actors(allies, "ally")
-    all_actors = [main, *ally_actors, *enemy_actors]
-    if params.combat_events is not None:
-        actors_by_id = {actor.participant_id: actor for actor in all_actors}
-        for event in params.combat_events:
-            if (
-                event.caster_id not in actors_by_id
-                or event.recipient_id not in actors_by_id
-            ):
-                raise ValueError(
-                    f"Cast {event.id}: caster and recipient must exist in the roster"
-                )
-            caster, recipient = (
-                actors_by_id[event.caster_id],
-                actors_by_id[event.recipient_id],
-            )
-            if caster.is_practice_dummy or (
-                caster.team == "enemy" and not params.enemies_attack
-            ):
-                raise ValueError(f"Cast {event.id}: this caster cannot act")
-            friendly = (caster.team == "enemy") == (recipient.team == "enemy")
-            recipient_kind = (
-                "self"
-                if recipient.participant_id == caster.participant_id
-                else "ally" if friendly else "enemy"
-            )
-            allowed = certified_recipients(caster.champion_data["name"], event.slot)
-            if allowed is None or recipient_kind not in allowed:
-                raise ValueError(
-                    f"Cast {event.id}: {caster.champion_data['name']} {event.slot} "
-                    f"cannot name {recipient_kind!r} as its recipient; certified "
-                    f"recipients: {list(allowed or ())}"
-                )
-            if (
-                caster.team == "ally"
-                and friendly
-                and not caster.request.ally_effects_enabled
-            ):
-                raise ValueError(
-                    f"Cast {event.id}: enable ally effects for this caster"
-                )
-    outgoing: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    incoming: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    healing: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    support_effects: dict[str, list[dict[str, Any]]] = defaultdict(list)
-    item_denial_receipts: list[dict[str, Any]] = []
-    ordered_item_support_ids: set[str] = set()
-    # One activation, one shield: an ``actor_wide`` self-shield payload is
-    # authored once per rotation but replayed by every enemy pair, so the
-    # first pair to carry it keeps it and the rest are dropped here.  Keyed
-    # the way actor-wide heals are keyed below -- holder, source, timestamp.
-    actor_wide_shield_keys: set[tuple[str, str, float]] = set()
-    support_attached: set[str] = set()
-    # The main champion's own cast timeline (from its first outgoing pair
-    # fight) drives grey-health consume timing (Rengar W, Mordekaiser W).
-    main_cast_timeline: list[dict[str, Any]] = []
-    breakdown: dict[str, dict[str, Any]] = defaultdict(
-        lambda: {
-            "participant_id": "",
-            "team": "",
-            "champion": "",
-            "total_damage": 0.0,
-            "sources": {},
-        }
-    )
-    coverage_reports: list[dict[str, Any]] = []
+    return None
 
-    teams = {"main": [main], "ally": ally_actors, "enemy": enemy_attackers}
+
+def _compose_roster(request: Composition) -> Roster:
+    """The main champion and both teams, composed once for this pass."""
+    main = main_combatant(
+        request.champion_data,
+        request.level,
+        request.items,
+        stats=request.main_stats,
+        defenses=request.main_defenses,
+        params=request.params,
+    )
+    enemy_actors = _roster_actors(request.enemies, "enemy")
+    enemy_attackers = [actor for actor in enemy_actors if not actor.is_practice_dummy]
+    ally_actors = _roster_actors(request.allies, "ally")
+    return Roster(
+        main,
+        ally_actors,
+        enemy_actors,
+        enemy_attackers,
+        [main, *ally_actors, *enemy_actors],
+    )
+
+
+def _refuse_uncertified_casts(params: FightParams, roster: Roster) -> None:
+    """Refuse an authored cast this roster cannot certify."""
+    if params.combat_events is None:
+        return
+    actors_by_id = {actor.participant_id: actor for actor in roster.all_actors}
+    for event in params.combat_events:
+        if (
+            event.caster_id not in actors_by_id
+            or event.recipient_id not in actors_by_id
+        ):
+            raise ValueError(
+                f"Cast {event.id}: caster and recipient must exist in the roster"
+            )
+        caster, recipient = (
+            actors_by_id[event.caster_id],
+            actors_by_id[event.recipient_id],
+        )
+        if caster.is_practice_dummy or (
+            caster.team == "enemy" and not params.enemies_attack
+        ):
+            raise ValueError(f"Cast {event.id}: this caster cannot act")
+        friendly = (caster.team == "enemy") == (recipient.team == "enemy")
+        recipient_kind = (
+            "self"
+            if recipient.participant_id == caster.participant_id
+            else "ally" if friendly else "enemy"
+        )
+        allowed = certified_recipients(caster.champion_data["name"], event.slot)
+        if allowed is None or recipient_kind not in allowed:
+            raise ValueError(
+                f"Cast {event.id}: {caster.champion_data['name']} {event.slot} "
+                f"cannot name {recipient_kind!r} as its recipient; certified "
+                f"recipients: {list(allowed or ())}"
+            )
+        if (
+            caster.team == "ally"
+            and friendly
+            and not caster.request.ally_effects_enabled
+        ):
+            raise ValueError(f"Cast {event.id}: enable ally effects for this caster")
+
+
+class _Pair(NamedTuple):
+    """One attacker against one defender, at its index in that roster.
+
+    ``cacheable`` is the roster-to-roster half: those fights do not depend on
+    the candidate main build at all, while fights the candidate attacks with
+    are always recomputed.
+    """
+
+    attacker: Combatant
+    defender: Combatant
+    defender_index: int
+    defender_count: int
+    actor_params: FightParams
+
+    @property
+    def cacheable(self) -> bool:
+        """Whether this pair's view can serve a later candidate evaluation."""
+        return self.attacker.participant_id != "main"
+
+
+class _PairCtx(NamedTuple):
+    """What one pair fold reads and writes.
+
+    The three sets are the one-activation bookkeeping carried across pairs:
+    an ``actor_wide`` self-shield payload is authored once per rotation but
+    replayed by every enemy pair, and one attacker's support templates are
+    attached by whichever pair reaches them first.
+    """
+
+    request: Composition
+    roster: Roster
+    ledgers: Ledgers
+    ordered_item_support_ids: set[str]
+    actor_wide_shield_keys: set[tuple[str, str, float]]
+    support_attached: set[str]
+
+    @classmethod
+    def over(cls, request: Composition, roster: Roster, ledgers: Ledgers) -> _PairCtx:
+        """One pass's pair context, with empty bookkeeping."""
+        return cls(request, roster, ledgers, set(), set(), set())
+
+
+def _compose_pair_fights(
+    request: Composition,
+    roster: Roster,
+    ledgers: Ledgers,
+    restores: Mapping[str, tuple[tuple[float, float], ...]] | None,
+) -> None:
+    """Run every pair fight this roster composes and fold it into the books.
+
+    A support source still has a cast schedule when no opposing target was
+    selected (a main champion with allies but an empty enemy roster, say).
+    The tail resolves that schedule once, so ally and enemy support packets
+    are not dropped merely because the pairwise damage loop had no row.
+    """
+    params = request.params
+    ctx = _PairCtx.over(request, roster, ledgers)
+    teams = {
+        "main": [roster.main],
+        "ally": roster.ally_actors,
+        "enemy": roster.enemy_attackers,
+    }
     attack_groups = (
-        ("main", [*enemy_actors]),
-        ("ally", [*enemy_actors]),
+        ("main", [*roster.enemy_actors]),
+        ("ally", [*roster.enemy_actors]),
         # The Enemy Hits constraint: with enemies_attack off, the enemy team
         # gets no defenders, so none of its pair fights are ever composed.
-        ("enemy", [main, *ally_actors] if params.enemies_attack else []),
+        ("enemy", [roster.main, *roster.ally_actors] if params.enemies_attack else []),
     )
     for attacker_team, defenders in attack_groups:
-        attackers = teams[attacker_team]
-        for attacker in attackers:
+        for attacker in teams[attacker_team]:
             if not defenders:
                 continue
             actor_params = actor_params_with_resource_restores(
-                params, attacker, _resource_restores
+                params, attacker, restores
             )
             for defender_index, defender in enumerate(defenders):
-                # Secondary-target item branches are allocated against the
-                # current attacker group, not the outer request's default
-                # single-target fields.  The ordered roster index is explicit
-                # and deterministic: index 0 is the primary defender and
-                # later indices are eligible secondary recipients.
-                pair_params = replace(
-                    actor_params,
-                    roster_target_index=defender_index,
-                    roster_target_count=len(defenders),
+                pair = _Pair(
+                    attacker, defender, defender_index, len(defenders), actor_params
                 )
-                # The coupled optimizer evaluates thousands of main candidates
-                # against one fixed roster, so pair fights that cannot differ
-                # between evaluations are cached.  Roster-to-roster pairs do
-                # not depend on the candidate main build at all.  A fight INTO
-                # the main candidate depends on it only through the target
-                # fields ``target_overrides`` feeds the engine, so its cache
-                # key carries that defensive signature: a candidate swap that
-                # changes no defensive stat replays the identical incoming
-                # fights instead of re-simulating them.  Fights the candidate
-                # attacks with are always recomputed.
-                cacheable = attacker.participant_id != "main"
-                cache_key = _pair_cache_key(
-                    attacker.participant_id,
-                    defender.participant_id,
-                    (
-                        defensive_signature(defender)
-                        if defender.participant_id == "main"
-                        else ()
-                    ),
-                    # Read off the params this fight is actually priced with,
-                    # never off the pass number: a key derived from the same
-                    # object the pricer reads cannot disagree with it.
-                    actor_params.resource_restore_events,
-                )
-                view = (
-                    pair_result_cache.get(cache_key)
-                    if cacheable and pair_result_cache is not None
-                    else None
-                )
-                if view is None:
-                    reusable_stats = (
-                        attacker.stats
-                        if reuse_main_stats and attacker.participant_id == "main"
-                        else None
-                    )
-                    view = pair_view(
-                        _pair_run_fight(
-                            work_counters,
-                            attacker.champion_data,
-                            attacker.level,
-                            list(attacker.items),
-                            params=target_params(pair_params, defender),
-                            precomputed_stats=reusable_stats,
-                        ),
-                        attacker.participant_id,
-                        defender.participant_id,
-                        defender_index,
-                        champion_wounds=_champion_wounds_of(attacker.champion_data),
-                        amps=AmpRiders(
-                            _live_amps_of(attacker, defender, params),
-                            _holder_amps_of(attacker, defender, params),
-                        ),
-                    )
-                    if cacheable and pair_result_cache is not None:
-                        pair_result_cache[cache_key] = view
-                    if attacker.participant_id == "main" and not main_cast_timeline:
-                        main_cast_timeline = view.result.get("cast_timeline", [])
-                result = view.result
-                coverage_reports.append(result.get("timeline_coverage", {}))
-                # A view that lives in the cache serves later evaluations, so
-                # this one only takes copies (the walk mutates its rows).  A
-                # single-use fight's rows are appended directly.
-                copy_templates = cacheable and pair_result_cache is not None
-                attacker_outgoing = outgoing[attacker.participant_id]
-                defender_incoming = incoming[defender.participant_id]
-                for template in view.events:
-                    enriched = dict(template) if copy_templates else template
-                    attacker_outgoing.append(enriched)
-                    defender_incoming.append(enriched)
-                    shield_payload = enriched.get("self_shield")
-                    shield_event_id = str(enriched.get("_event_id", ""))
-                    shield_key = (
-                        (
-                            attacker.participant_id,
-                            str(shield_payload.get("source", "")),
-                            float(enriched.get("time", 0.0) or 0.0),
-                        )
-                        if isinstance(shield_payload, Mapping)
-                        and shield_payload.get("actor_wide")
-                        else None
-                    )
-                    if (
-                        isinstance(shield_payload, Mapping)
-                        and shield_event_id
-                        and shield_event_id not in ordered_item_support_ids
-                        and shield_key not in actor_wide_shield_keys
-                    ):
-                        try:
-                            shield_amount = max(0.0, float(shield_payload["amount"]))
-                            shield_duration = max(
-                                0.0, float(shield_payload["duration"])
-                            )
-                        except (KeyError, TypeError, ValueError):
-                            # An incomplete parser receipt cannot be turned
-                            # into a guessed defensive event.
-                            shield_amount = 0.0
-                            shield_duration = 0.0
-                            item_denial_receipts.append(
-                                {
-                                    "time": round(
-                                        float(enriched.get("time", 0.0) or 0.0), 3
-                                    ),
-                                    "kind": PacketKind.ITEM_DENIAL.value,
-                                    "source": str(
-                                        shield_payload.get(
-                                            "source", "Eclipse (Ever Rising Moon)"
-                                        )
-                                    ),
-                                    "reason": "self_shield_payload_unreadable",
-                                    "attacker": attacker.participant_id,
-                                    "target": attacker.participant_id,
-                                    "event_id": shield_event_id,
-                                }
-                            )
-                        if shield_amount > 0.0 and shield_duration > 0.0:
-                            support_effects[attacker.participant_id].append(
-                                {
-                                    "time": float(enriched.get("time", 0.0)),
-                                    "kind": "shield",
-                                    "amount": shield_amount,
-                                    "duration": shield_duration,
-                                    "source": str(
-                                        shield_payload.get(
-                                            "source", "Eclipse (Ever Rising Moon)"
-                                        )
-                                    ),
-                                    "source_key": "shield_Eclipse",
-                                    "attacker": attacker.participant_id,
-                                    "target": attacker.participant_id,
-                                    "target_scope": "self",
-                                    "target_policy": "self",
-                                    "_event_id": f"{shield_event_id}:shield",
-                                    "_trigger_event_id": shield_event_id,
-                                    # This row is a *rider*: it was bound to
-                                    # one already-chosen carrier packet (the
-                                    # ordinal-aligned event
-                                    # ``fight.ledger.event_rows._damage_event_row`` copied the
-                                    # payload onto), before the walk knew
-                                    # which packets land.  The marker is what
-                                    # ``_self_shield_carrier_denials`` reads
-                                    # to audit that binding; see D-VI-1.
-                                    "_self_shield_rider": True,
-                                    # Whether the payload's own trigger lets
-                                    # the walk move that binding to the first
-                                    # ability packet the holder lands.
-                                    "_rebind_on_ability_hit": bool(
-                                        shield_payload.get("rebind_on_ability_hit")
-                                    ),
-                                    # A barrier the triggering damage placed:
-                                    # it arms after that damage, not before.
-                                    SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,
-                                }
-                            )
-                            ordered_item_support_ids.add(shield_event_id)
-                            if shield_key is not None:
-                                actor_wide_shield_keys.add(shield_key)
-                attacker_healing = healing[attacker.participant_id]
-                for template in view.heals:
-                    if template.get("actor_wide"):
-                        duplicate = any(
-                            existing.get("actor_wide")
-                            and existing.get("source") == template.get("source")
-                            and float(existing.get("time", 0.0))
-                            == float(template.get("time", 0.0))
-                            for existing in attacker_healing
-                        )
-                        if duplicate:
-                            continue
-                    attacker_healing.append(
-                        dict(template) if copy_templates else template
-                    )
-                if attacker.participant_id not in support_attached:
-                    support_templates = _attached_support_templates(
-                        view,
-                        attacker,
-                        all_actors,
-                        pair_defender_id=defender.participant_id,
-                        damage_events=view.events,
-                        target_id=defender.participant_id,
-                        denial_receipts=item_denial_receipts,
-                    )
-                    for template in support_templates:
-                        packet_template = dict(template) if copy_templates else template
-                        support_effects[template["target"]].append(packet_template)
-                        if template.get("kind") == "damage":
-                            outgoing[template["attacker"]].append(packet_template)
-                            incoming[template["target"]].append(packet_template)
-                    support_attached.add(attacker.participant_id)
-                row = breakdown[attacker.participant_id]
-                row.update(
-                    {
-                        "participant_id": attacker.participant_id,
-                        "team": attacker.team,
-                        "champion": attacker.champion_data.get("name", ""),
-                    }
-                )
-                row["total_damage"] += float(result.get("total_damage", 0.0))
-                if include_receipt:
-                    row_sources = row["sources"]
-                    for source, template in view.source_names.items():
-                        row_sources.setdefault(source, template)
-
-    # A support source still has a cast schedule when no opposing target was
-    # selected (for example, a main champion with allies but an empty enemy
-    # roster).  Resolve that schedule once so ally/enemy support packets are
-    # not silently dropped merely because the pairwise damage loop had no row.
-    for attacker in all_actors:
+                _fold_pair_view(ctx, pair, _pair_fight_view(ctx, pair))
+    for attacker in roster.all_actors:
         if attacker.is_practice_dummy:
-            support_attached.add(attacker.participant_id)
+            ctx.support_attached.add(attacker.participant_id)
             continue
-        if attacker.participant_id in support_attached:
+        if attacker.participant_id in ctx.support_attached:
             continue
-        actor_params = actor_params_with_resource_restores(
-            params, attacker, _resource_restores
-        )
         fallback = _pair_run_fight(
-            work_counters,
+            request.work_counters,
             attacker.champion_data,
             attacker.level,
             list(attacker.items),
-            params=actor_params,
+            params=actor_params_with_resource_restores(params, attacker, restores),
         )
         _attach_support_effects(
             attacker,
             fallback,
-            all_actors,
-            support_effects,
-            outgoing=outgoing,
-            incoming=incoming,
-            denial_receipts=item_denial_receipts,
+            roster.all_actors,
+            ledgers.support_effects,
+            outgoing=ledgers.outgoing,
+            incoming=ledgers.incoming,
+            denial_receipts=ledgers.item_denial_receipts,
         )
-        support_attached.add(attacker.participant_id)
+        ctx.support_attached.add(attacker.participant_id)
 
-    # A mana-spent heal's restore is the one sustain branch whose state
-    # changes future ability admission.  This pass supplies the complete
-    # incoming champion ledger; the next one prices the same fights with
-    # those exact (time, pre-mitigation-damage × declared ratio) restores
-    # attached to each holder that declares the shape.  Asking is a return
-    # value: the driver rebuilds the composition with the patch, so the two
-    # passes are siblings rather than a call inside a call (D-70).
-    if patch is None:
-        resource_restores: dict[str, tuple[tuple[float, float], ...]] = {}
-        for actor in all_actors:
-            restores, complete = _declared_resource_restores(
-                actor, incoming, params.fight_duration_seconds
-            )
-            if not complete:
-                slot = mana_spent_heal_slot(actor.items)
-                raise incomplete_dependency(
-                    _cross_pass_dependency(slot),
-                    pass_index,
-                    detail=(
-                        f"the restore ledger is unavailable for "
-                        f"{actor.participant_id}: an incoming champion packet "
-                        "does not expose finite pre-mitigation damage"
-                    ),
-                )
-            if restores:
-                resource_restores[actor.participant_id] = restores
-        if resource_restores:
-            requester = next(
-                actor
-                for actor in all_actors
-                if actor.participant_id in resource_restores
-            )
-            return PassRequest(
-                _cross_pass_dependency(mana_spent_heal_slot(requester.items)),
-                resource_restores,
-            )
 
-    # Knight's Vow is the one ally packet whose trigger lives on the
-    # recipient's incoming/outgoing ledgers rather than on a heal/shield cast.
-    # Resolve its single explicit Worthy tether after all pair events exist so
-    # the redirect and holder-heal receipts share the same event order.
-    schedule_knights_vow(all_actors, incoming, outgoing, support_effects)
+def _pair_fight_view(ctx: _PairCtx, pair: _Pair) -> PairView:
+    """One pair fight's view, served from the cache when it cannot differ.
 
-    scene = TimelineScene(all_actors, incoming, outgoing, support_effects)
-    _coalesce_darius_q_heals(healing)
+    The coupled optimizer evaluates thousands of main candidates against one
+    fixed roster, so pair fights that cannot differ between evaluations are
+    cached.  A fight INTO the main candidate depends on it only through the
+    target fields ``target_overrides`` feeds the engine, so its cache key
+    carries that defensive signature: a candidate swap that changes no
+    defensive stat replays the identical incoming fights.
+    """
+    request = ctx.request
+    # Secondary-target item branches are allocated against the current
+    # attacker group, not the outer request's default single-target fields.
+    # The ordered roster index is explicit and deterministic: index 0 is the
+    # primary defender and later indices are eligible secondary recipients.
+    pair_params = replace(
+        pair.actor_params,
+        roster_target_index=pair.defender_index,
+        roster_target_count=pair.defender_count,
+    )
+    cache = request.pair_result_cache if pair.cacheable else None
+    cache_key = _pair_cache_key(
+        pair.attacker.participant_id,
+        pair.defender.participant_id,
+        (
+            defensive_signature(pair.defender)
+            if pair.defender.participant_id == "main"
+            else ()
+        ),
+        # Read off the params this fight is actually priced with, never off
+        # the pass number: a key derived from the same object the pricer
+        # reads cannot disagree with it.
+        pair.actor_params.resource_restore_events,
+    )
+    cached = cache.get(cache_key) if cache is not None else None
+    if cached is not None:
+        return cached
+    view = pair_view(
+        _pair_run_fight(
+            request.work_counters,
+            pair.attacker.champion_data,
+            pair.attacker.level,
+            list(pair.attacker.items),
+            params=target_params(pair_params, pair.defender),
+            precomputed_stats=(
+                pair.attacker.stats
+                if request.reuse_main_stats and pair.attacker.participant_id == "main"
+                else None
+            ),
+        ),
+        pair.attacker.participant_id,
+        pair.defender.participant_id,
+        pair.defender_index,
+        champion_wounds=_champion_wounds_of(pair.attacker.champion_data),
+        amps=AmpRiders(
+            _live_amps_of(pair.attacker, pair.defender, request.params),
+            _holder_amps_of(pair.attacker, pair.defender, request.params),
+        ),
+    )
+    if cache is not None:
+        cache[cache_key] = view
+    if pair.attacker.participant_id == "main" and not ctx.ledgers.main_cast_timeline:
+        ctx.ledgers.main_cast_timeline.extend(view.result.get("cast_timeline", []))
+    return view
+
+
+def _fold_pair_view(ctx: _PairCtx, pair: _Pair, view: PairView) -> None:
+    """Fold one pair view's events, heals and support packets into the books."""
+    ledgers, result = ctx.ledgers, view.result
+    ledgers.coverage_reports.append(result.get("timeline_coverage", {}))
+    # A view that lives in the cache serves later evaluations, so this one
+    # only takes copies (the walk mutates its rows).  A single-use fight's
+    # rows are appended directly.
+    copy_templates = pair.cacheable and ctx.request.pair_result_cache is not None
+    attacker_outgoing = ledgers.outgoing[pair.attacker.participant_id]
+    defender_incoming = ledgers.incoming[pair.defender.participant_id]
+    for template in view.events:
+        enriched = dict(template) if copy_templates else template
+        attacker_outgoing.append(enriched)
+        defender_incoming.append(enriched)
+        _fold_self_shield(ctx, pair.attacker, enriched)
+    attacker_healing = ledgers.healing[pair.attacker.participant_id]
+    for template in view.heals:
+        if template.get("actor_wide"):
+            duplicate = any(
+                existing.get("actor_wide")
+                and existing.get("source") == template.get("source")
+                and float(existing.get("time", 0.0)) == float(template.get("time", 0.0))
+                for existing in attacker_healing
+            )
+            if duplicate:
+                continue
+        attacker_healing.append(dict(template) if copy_templates else template)
+    if pair.attacker.participant_id not in ctx.support_attached:
+        support_templates = _attached_support_templates(
+            view,
+            pair.attacker,
+            ctx.roster.all_actors,
+            pair_defender_id=pair.defender.participant_id,
+            damage_events=view.events,
+            target_id=pair.defender.participant_id,
+            denial_receipts=ledgers.item_denial_receipts,
+        )
+        for template in support_templates:
+            packet_template = dict(template) if copy_templates else template
+            ledgers.support_effects[template["target"]].append(packet_template)
+            if template.get("kind") == "damage":
+                ledgers.outgoing[template["attacker"]].append(packet_template)
+                ledgers.incoming[template["target"]].append(packet_template)
+        ctx.support_attached.add(pair.attacker.participant_id)
+    row = ledgers.breakdown[pair.attacker.participant_id]
+    row.update(
+        {
+            "participant_id": pair.attacker.participant_id,
+            "team": pair.attacker.team,
+            "champion": pair.attacker.champion_data.get("name", ""),
+        }
+    )
+    row["total_damage"] += float(result.get("total_damage", 0.0))
+    if ctx.request.include_receipt:
+        row_sources = row["sources"]
+        for source, template in view.source_names.items():
+            row_sources.setdefault(source, template)
+
+
+def _fold_self_shield(
+    ctx: _PairCtx, attacker: Combatant, enriched: MutableMapping[str, Any]
+) -> None:
+    """Author the self-shield one damage packet carries, once per activation.
+
+    An ``actor_wide`` payload is authored once per rotation but replayed by
+    every enemy pair, so the first pair to carry it keeps it and the rest
+    are dropped.  Keyed the way actor-wide heals are keyed: holder, source,
+    timestamp.
+    """
+    shield_payload = enriched.get("self_shield")
+    shield_event_id = str(enriched.get("_event_id", ""))
+    if not isinstance(shield_payload, Mapping) or not shield_event_id:
+        return
+    shield_key = (
+        (
+            attacker.participant_id,
+            str(shield_payload.get("source", "")),
+            float(enriched.get("time", 0.0) or 0.0),
+        )
+        if shield_payload.get("actor_wide")
+        else None
+    )
+    if (
+        shield_event_id in ctx.ordered_item_support_ids
+        or shield_key in ctx.actor_wide_shield_keys
+    ):
+        return
+    try:
+        shield_amount = max(0.0, float(shield_payload["amount"]))
+        shield_duration = max(0.0, float(shield_payload["duration"]))
+    except (KeyError, TypeError, ValueError):
+        # An incomplete parser receipt cannot be turned into a guessed
+        # defensive event.
+        ctx.ledgers.item_denial_receipts.append(
+            {
+                "time": round(float(enriched.get("time", 0.0) or 0.0), 3),
+                "kind": PacketKind.ITEM_DENIAL.value,
+                "source": str(
+                    shield_payload.get("source", "Eclipse (Ever Rising Moon)")
+                ),
+                "reason": "self_shield_payload_unreadable",
+                "attacker": attacker.participant_id,
+                "target": attacker.participant_id,
+                "event_id": shield_event_id,
+            }
+        )
+        return
+    if shield_amount <= 0.0 or shield_duration <= 0.0:
+        return
+    ctx.ledgers.support_effects[attacker.participant_id].append(
+        {
+            "time": float(enriched.get("time", 0.0)),
+            "kind": "shield",
+            "amount": shield_amount,
+            "duration": shield_duration,
+            "source": str(shield_payload.get("source", "Eclipse (Ever Rising Moon)")),
+            "source_key": "shield_Eclipse",
+            "attacker": attacker.participant_id,
+            "target": attacker.participant_id,
+            "target_scope": "self",
+            "target_policy": "self",
+            "_event_id": f"{shield_event_id}:shield",
+            "_trigger_event_id": shield_event_id,
+            # This row is a *rider*: it was bound to one already-chosen
+            # carrier packet (the ordinal-aligned event
+            # ``fight.ledger.event_rows._damage_event_row`` copied the
+            # payload onto), before the walk knew which packets land.  The
+            # marker is what ``_self_shield_carrier_denials`` reads to audit
+            # that binding; see D-VI-1.
+            "_self_shield_rider": True,
+            # Whether the payload's own trigger lets the walk move that
+            # binding to the first ability packet the holder lands.
+            "_rebind_on_ability_hit": bool(shield_payload.get("rebind_on_ability_hit")),
+            # A barrier the triggering damage placed: it arms after that
+            # damage, not before.
+            SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,
+        }
+    )
+    ctx.ordered_item_support_ids.add(shield_event_id)
+    if shield_key is not None:
+        ctx.actor_wide_shield_keys.add(shield_key)
+
+
+def _resource_restore_request(
+    request: Composition, roster: Roster, ledgers: Ledgers, pass_index: int
+) -> PassRequest | None:
+    """The restore ledger a second pass must price, when one is declared.
+
+    A mana-spent heal's restore is the one sustain branch whose state
+    changes future ability admission.  This pass supplies the complete
+    incoming champion ledger; the next one prices the same fights with those
+    exact (time, pre-mitigation-damage x declared ratio) restores attached
+    to each holder that declares the shape.  Asking is a return value: the
+    driver rebuilds the composition with the patch, so the two passes are
+    siblings rather than a call inside a call (D-70).
+    """
+    resource_restores: dict[str, tuple[tuple[float, float], ...]] = {}
+    for actor in roster.all_actors:
+        restores, complete = _declared_resource_restores(
+            actor, ledgers.incoming, request.params.fight_duration_seconds
+        )
+        if not complete:
+            raise incomplete_dependency(
+                _cross_pass_dependency(mana_spent_heal_slot(actor.items)),
+                pass_index,
+                detail=(
+                    f"the restore ledger is unavailable for "
+                    f"{actor.participant_id}: an incoming champion packet "
+                    "does not expose finite pre-mitigation damage"
+                ),
+            )
+        if restores:
+            resource_restores[actor.participant_id] = restores
+    if not resource_restores:
+        return None
+    requester = next(
+        actor
+        for actor in roster.all_actors
+        if actor.participant_id in resource_restores
+    )
+    return PassRequest(
+        _cross_pass_dependency(mana_spent_heal_slot(requester.items)),
+        resource_restores,
+    )
+
+
+def _schedule_composed_events(
+    request: Composition, roster: Roster, ledgers: Ledgers
+) -> None:
+    """Author every cross-pair event the composed books now support.
+
+    Knight's Vow is the one ally packet whose trigger lives on the
+    recipient's incoming/outgoing ledgers rather than on a heal/shield cast.
+    Its single explicit Worthy tether resolves after all pair events exist,
+    so the redirect and holder-heal receipts share one event order.
+    """
+    schedule_knights_vow(
+        roster.all_actors, ledgers.incoming, ledgers.outgoing, ledgers.support_effects
+    )
+    scene = ledgers.scene(roster.all_actors)
+    _coalesce_darius_q_heals(ledgers.healing)
     _schedule_thorns_events(scene)
-    _schedule_authored_reactive_events(incoming, outgoing)
-    keystone_name = str(getattr(params, "keystone", "") or "")
+    _schedule_authored_reactive_events(ledgers.incoming, ledgers.outgoing)
+    keystone_name = str(getattr(request.params, "keystone", "") or "")
     _schedule_guardian_events(scene, keystone_name=keystone_name)
     _schedule_aftershock_events(scene, keystone_name=keystone_name)
     _schedule_glacial_events(scene, keystone_name=keystone_name)
     _schedule_stormraider_events(scene, keystone_name=keystone_name)
     _schedule_grasp_events(scene, keystone_name=keystone_name)
+    if request.params.enemies_attack:
+        return
+    # The Enemy Hits constraint promises exactly zero enemy damage. Enemy
+    # pair fights were never composed above; this sweep also drops every
+    # event an enemy authors reactively off our own strikes: thorns
+    # strike-backs, authored reactive packets, redirect retaliation.
+    enemy_ids = {actor.participant_id for actor in roster.enemy_actors}
+    for ledger in (ledgers.incoming, ledgers.outgoing):
+        for participant_id, events in list(ledger.items()):
+            ledger[participant_id] = [
+                event
+                for event in events
+                if str(event.get("attacker", "")) not in enemy_ids
+            ]
 
-    if not params.enemies_attack:
-        # The Enemy Hits constraint promises exactly zero enemy damage. Enemy
-        # pair fights were never composed above; this sweep also drops every
-        # event an enemy authors reactively off our own strikes — thorns
-        # strike-backs, authored reactive packets, redirect retaliation.
-        enemy_ids = {actor.participant_id for actor in enemy_actors}
-        for ledger in (incoming, outgoing):
-            for participant_id, events in list(ledger.items()):
-                ledger[participant_id] = [
-                    event
-                    for event in events
-                    if str(event.get("attacker", "")) not in enemy_ids
-                ]
 
-    # Grey-health receipts (E8a): when the main is the defender and is a
-    # grey-health champion, the incoming ledger accumulates the sourced %
-    # of post-mitigation damage taken and the champion's active pays the
-    # stored pool back as a heal.  Authored after every incoming source
-    # (pair fights, thorns, reactive) exists so the receipts see the same
-    # event set the walk applies; the consume heals carry fixed sourced
-    # amounts and ride the ordinary heal application (Grievous, overheal
-    # caps), matching the E1 ``_heal_from_damage`` plumbing.
-    grey_summary: dict[str, float | str] = {}
-    grey_heals: list[dict[str, Any]] = []
-    main_name = str(champion_data.get("name", ""))
-    if main_name in GREY_HEALTH_RULE_CHAMPIONS and enemy_actors:
-        duration = params.fight_duration_seconds
-        main_incoming = [
-            event
-            for event in incoming["main"]
-            if float(event.get("time", 0.0)) <= duration
-        ]
-        main_outgoing = [
-            event
-            for event in outgoing["main"]
-            if float(event.get("time", 0.0)) <= duration
-        ]
-        in_records = [
-            (
-                float(event.get("time", 0.0)),
-                float(event.get("damage", 0.0) or 0.0),
-                float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0),
-            )
-            for event in main_incoming
-        ]
-        out_records = [
-            (
-                float(event.get("time", 0.0)),
-                float(event.get("damage", 0.0) or 0.0),
-                float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0),
-            )
-            for event in main_outgoing
-        ]
-        grey_heals, grey_shields, grey_summary = _grey_health_receipts(
-            main_name,
-            champion_data,
-            level,
-            main_stats,
-            incoming=in_records,
-            outgoing=out_records,
-            cast_timeline=main_cast_timeline,
-            duration=duration,
-            enemy_count=len(enemy_actors),
-            ability_ranks=params.ability_ranks,
-            champion_options=params.champion_options,
+def _grey_damage_record(event: Mapping[str, Any]) -> tuple[float, float, float]:
+    """One ``(time, post_mitigation, pre_mitigation)`` grey-health record."""
+    return (
+        float(event.get("time", 0.0)),
+        float(event.get("damage", 0.0) or 0.0),
+        float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0),
+    )
+
+
+def _apply_grey_health(
+    request: Composition, roster: Roster, ledgers: Ledgers
+) -> dict[str, float | str]:
+    """Bank and repay the main champion's grey health, and stamp its receipts.
+
+    When the main is the defender and is a grey-health champion, the
+    incoming ledger accumulates the sourced % of post-mitigation damage
+    taken and the champion's active pays the stored pool back as a heal.
+    Authored after every incoming source (pair fights, thorns, reactive)
+    exists so the receipts see the same event set the walk applies; the
+    consume heals carry fixed sourced amounts and ride the ordinary heal
+    application (Grievous, overheal caps).
+    """
+    main_name = str(request.champion_data.get("name", ""))
+    if main_name not in GREY_HEALTH_RULE_CHAMPIONS or not roster.enemy_actors:
+        return {}
+    params = request.params
+    duration = params.fight_duration_seconds
+    main_incoming = [
+        event
+        for event in ledgers.incoming["main"]
+        if float(event.get("time", 0.0)) <= duration
+    ]
+    main_outgoing = [
+        event
+        for event in ledgers.outgoing["main"]
+        if float(event.get("time", 0.0)) <= duration
+    ]
+    grey_heals, grey_shields, grey_summary = _grey_health_receipts(
+        main_name,
+        request.champion_data,
+        request.level,
+        request.main_stats,
+        incoming=[_grey_damage_record(event) for event in main_incoming],
+        outgoing=[_grey_damage_record(event) for event in main_outgoing],
+        cast_timeline=ledgers.main_cast_timeline,
+        duration=duration,
+        enemy_count=len(roster.enemy_actors),
+        ability_ranks=params.ability_ranks,
+        champion_options=params.champion_options,
+    )
+    for index, (heal_time, source, amount) in enumerate(grey_heals):
+        heal_event: dict[str, Any] = {
+            "time": float(heal_time),
+            "amount": float(amount),
+            "source": source,
+            "kind": "champion_ability",
+            "attacker": "main",
+            "_event_id": f"main:grey:{source}:{index}",
+            "_grey_health": True,
+        }
+        heal_event["_sk"] = action_key(
+            float(heal_time),
+            TransitionRank.RECOVERY,
+            "main",
+            heal_event,
         )
-        for index, (heal_time, source, amount) in enumerate(grey_heals):
-            heal_event: dict[str, Any] = {
-                "time": float(heal_time),
+        ledgers.healing["main"].append(heal_event)
+    for index, (grant_time, source, amount, window) in enumerate(grey_shields):
+        ledgers.support_effects["main"].append(
+            {
+                "time": float(grant_time),
+                "kind": "shield",
                 "amount": float(amount),
+                "duration": float(window),
                 "source": source,
-                "kind": "champion_ability",
+                "source_key": source,
                 "attacker": "main",
-                "_event_id": f"main:grey:{source}:{index}",
-                "_grey_health": True,
+                "target": "main",
+                "target_scope": "self",
+                "target_policy": "self",
+                "_event_id": f"main:grey:{source}:shield:{index}",
+                # Grey health is banked by damage already taken, so the
+                # barrier this press raises arms after it.
+                SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,
             }
-            heal_event["_sk"] = action_key(
-                float(heal_time),
-                TransitionRank.RECOVERY,
-                "main",
-                heal_event,
-            )
-            healing["main"].append(heal_event)
-        for index, (grant_time, source, amount, window) in enumerate(grey_shields):
-            support_effects["main"].append(
-                {
-                    "time": float(grant_time),
-                    "kind": "shield",
-                    "amount": float(amount),
-                    "duration": float(window),
-                    "source": source,
-                    "source_key": source,
-                    "attacker": "main",
-                    "target": "main",
-                    "target_scope": "self",
-                    "target_policy": "self",
-                    "_event_id": f"main:grey:{source}:shield:{index}",
-                    # Grey health is banked by damage already taken, so the
-                    # barrier this press raises arms after it.
-                    SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,
-                }
-            )
-        for event in main_incoming:
+        )
+    for taken, events in ((True, main_incoming), (False, main_outgoing)):
+        for event in events:
             receipt = _grey_health_event_receipt(
                 main_name,
-                level,
-                main_stats,
-                len(enemy_actors),
+                request.level,
+                request.main_stats,
+                len(roster.enemy_actors),
                 event,
-                incoming=True,
+                incoming=taken,
                 ability_ranks=params.ability_ranks,
             )
             if receipt is not None and receipt > 0.0:
                 event["grey_health_stored"] = round(receipt, 6)
-        for event in main_outgoing:
-            receipt = _grey_health_event_receipt(
-                main_name,
-                level,
-                main_stats,
-                len(enemy_actors),
-                event,
-                incoming=False,
-                ability_ranks=params.ability_ranks,
-            )
-            if receipt is not None and receipt > 0.0:
-                event["grey_health_stored"] = round(receipt, 6)
+    return grey_summary
 
-    program = roster_program(all_actors, focus=focus_participant_id)
+
+def _walk_composition(
+    request: Composition,
+    roster: Roster,
+    ledgers: Ledgers,
+    grey_summary: Mapping[str, float | str],
+) -> Walked:
+    """Walk the composed books and fold every attacker's published totals."""
+    program = roster_program(roster.all_actors, focus=request.focus_participant_id)
+    include_receipt = request.include_receipt
     walk_result = _simulate_survival(
-        all_actors,
-        incoming,
-        healing,
-        support_effects,
-        params.fight_duration_seconds,
+        roster.all_actors,
+        ledgers.incoming,
+        ledgers.healing,
+        ledgers.support_effects,
+        request.params.fight_duration_seconds,
         annotate=include_receipt,
-        receipt_events=outgoing if include_receipt else None,
-        work_counters=work_counters,
+        receipt_events=ledgers.outgoing if include_receipt else None,
+        work_counters=request.work_counters,
     ).projected(
         grey_health=grey_summary or None,
         timeline_coverage=combine_timeline_coverages(
-            coverage_reports,
-            target_count=len(coverage_reports),
+            ledgers.coverage_reports,
+            target_count=len(ledgers.coverage_reports),
         ),
     )
     survival = _survival_view.survival_leaves(
         program, walk_result, DISCARD, _survival_view.participant_paths(program)
     )
     # An actor's damage after their death is not part of team-fight value.
-    for actor in all_actors:
+    for actor in roster.all_actors:
         death_time = survival[actor.participant_id]["death_time"]
-        cutoff = params.fight_duration_seconds if death_time is None else death_time
+        cutoff = (
+            request.params.fight_duration_seconds if death_time is None else death_time
+        )
         events = [
             event
-            for event in outgoing[actor.participant_id]
+            for event in ledgers.outgoing[actor.participant_id]
             if float(event.get("time", 0.0)) <= cutoff
         ]
-        row = breakdown[actor.participant_id]
+        row = ledgers.breakdown[actor.participant_id]
         row["total_damage"] = round(
             sum(float(event.get("damage", 0.0)) for event in events), 1
         )
@@ -5728,14 +5887,14 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     utility_by_actor = {
         actor.participant_id: _utility_outcome_receipt(
             actor,
-            support_effects.get(actor.participant_id, []),
-            outgoing.get(actor.participant_id, []),
+            ledgers.support_effects.get(actor.participant_id, []),
+            ledgers.outgoing.get(actor.participant_id, []),
         )
-        for actor in all_actors
+        for actor in roster.all_actors
     }
     support_by_attacker: dict[str, float] = defaultdict(float)
     healing_by_attacker: dict[str, float] = defaultdict(float)
-    for events in support_effects.values():
+    for events in ledgers.support_effects.values():
         for event in events:
             attacker_id = str(event.get("attacker", ""))
             applied = float(event.get("applied_amount", 0.0))
@@ -5747,20 +5906,22 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     walk_result = walk_result.projected(
         outcomes=[
             _attacker_outcome(
-                breakdown.get(actor.participant_id)
+                ledgers.breakdown.get(actor.participant_id)
                 or {
                     "participant_id": actor.participant_id,
                     "team": actor.team,
                     "champion": actor.champion_data.get("name", ""),
                 },
                 float(
-                    (breakdown.get(actor.participant_id) or {}).get("total_damage", 0.0)
+                    (ledgers.breakdown.get(actor.participant_id) or {}).get(
+                        "total_damage", 0.0
+                    )
                 ),
                 survival[actor.participant_id],
                 support_by_attacker[actor.participant_id],
                 healing_by_attacker[actor.participant_id],
                 sources=list(
-                    (breakdown.get(actor.participant_id) or {})
+                    (ledgers.breakdown.get(actor.participant_id) or {})
                     .get("sources", {})
                     .values()
                 ),
@@ -5768,43 +5929,39 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                     utility_by_actor[actor.participant_id] if include_receipt else None
                 ),
             )
-            for actor in all_actors
+            for actor in roster.all_actors
         ]
     )
-    public_breakdown = _breakdown_view.breakdown(program, walk_result)
-    if not include_receipt:
-        # Optimizer scoring reads only the survival rows, the per-actor
-        # damage breakdown, and the ordering receipt.  Skip the public
-        # event/healing/support serialization for the thousands of candidate
-        # evaluations that never show a timeline to anyone.  It is the *same*
-        # projection the compiled score path returns, which is what makes
-        # "score mode and receipt mode agree" a property of the layering
-        # rather than of two assemblies kept in step by hand.
-        return _score_view.score_leaves(
-            program, walk_result, LeafWriter() if published else DISCARD
-        )
+    return Walked(
+        program,
+        walk_result,
+        survival,
+        _breakdown_view.breakdown(program, walk_result),
+        support_by_attacker,
+    )
 
+
+def _compose_receipt(
+    request: Composition, roster: Roster, ledgers: Ledgers, walked: Walked
+) -> dict[str, Any]:
+    """Sort, audit and publish the composed timeline as one combat receipt."""
+    focus_id = request.focus_participant_id
     focus_row = next(
-        (
-            row
-            for row in public_breakdown
-            if row["participant_id"] == focus_participant_id
-        ),
+        (row for row in walked.public_breakdown if row["participant_id"] == focus_id),
         None,
     )
-    survival.get(focus_participant_id)
     focus_support = sum(
         float(event.get("applied_amount", 0.0))
-        for events in support_effects.values()
+        for events in ledgers.support_effects.values()
         for event in events
-        if event.get("attacker") == focus_participant_id
+        if event.get("attacker") == focus_id
     )
     focus_healing = sum(
         float(event.get("applied_amount", 0.0))
-        for event in healing.get(focus_participant_id, [])
+        for event in ledgers.healing.get(focus_id, [])
     )
     public_events = sorted(
-        (event for events in outgoing.values() for event in events),
+        (event for events in ledgers.outgoing.values() for event in events),
         key=lambda event: event.get("_sk")
         or action_key(
             float(event.get("time", 0.0)),
@@ -5818,7 +5975,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         ),
     )
     public_healing_events = sorted(
-        (event for events in healing.values() for event in events),
+        (event for events in ledgers.healing.values() for event in events),
         key=lambda event: event.get("_sk")
         or action_key(
             float(event.get("time", 0.0)),
@@ -5829,7 +5986,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     )
     _annotate_overheal(public_healing_events)
     public_support_events = sorted(
-        (event for events in support_effects.values() for event in events),
+        (event for events in ledgers.support_effects.values() for event in events),
         key=lambda event: (
             float(event.get("time", 0.0)),
             _published_support_phase(event),
@@ -5842,7 +5999,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     # resolved ledgers exist: the walk has stamped every skip, and nothing
     # downstream can still change which packets landed.  Read-only -- it
     # adds receipts and moves no number.
-    item_denial_receipts.extend(
+    ledgers.item_denial_receipts.extend(
         _self_shield_carrier_denials(public_support_events, public_events)
     )
     support_by_actor = {
@@ -5851,7 +6008,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             for event in public_support_events
             if event.get("attacker") == actor.participant_id
         ]
-        for actor in all_actors
+        for actor in roster.all_actors
     }
     outgoing_by_actor = {
         actor.participant_id: [
@@ -5859,7 +6016,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             for event in public_events
             if event.get("attacker") == actor.participant_id
         ]
-        for actor in all_actors
+        for actor in roster.all_actors
     }
     utility_by_actor = {
         actor.participant_id: _utility_outcome_receipt(
@@ -5867,7 +6024,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             support_by_actor[actor.participant_id],
             outgoing_by_actor[actor.participant_id],
         )
-        for actor in all_actors
+        for actor in roster.all_actors
     }
     # Every aggregate the objective block publishes, summed once here.  The
     # TDD view republishes them at their declared precisions and adds
@@ -5876,17 +6033,19 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     objective = ObjectiveFold(
         main_team_damage_before_death=sum(
             row["total_damage"]
-            for row in public_breakdown
+            for row in walked.public_breakdown
             if row["team"] in {"main", "ally"}
         ),
         enemy_team_damage_before_death=sum(
-            row["total_damage"] for row in public_breakdown if row["team"] == "enemy"
+            row["total_damage"]
+            for row in walked.public_breakdown
+            if row["team"] == "enemy"
         ),
         surviving_main_team=sum(
             1
-            for actor in all_actors
+            for actor in roster.all_actors
             if actor.team in {"main", "ally"}
-            and survival[actor.participant_id]["survived_window"]
+            and walked.survival[actor.participant_id]["survived_window"]
         ),
         focus_damage_before_death=(
             float(focus_row.get("total_damage", 0.0)) if focus_row else 0.0
@@ -5894,31 +6053,31 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         focus_support_value=focus_support,
         focus_healing=focus_healing,
         main_team_effective_health=sum(
-            float(survival[actor.participant_id]["effective_health"])
-            for actor in all_actors
+            float(walked.survival[actor.participant_id]["effective_health"])
+            for actor in roster.all_actors
             if actor.team in {"main", "ally"}
         ),
         enemy_team_effective_health=sum(
-            float(survival[actor.participant_id]["effective_health"])
-            for actor in all_actors
+            float(walked.survival[actor.participant_id]["effective_health"])
+            for actor in roster.all_actors
             if actor.team == "enemy"
         ),
-        total_support_value=sum(support_by_attacker.values()),
+        total_support_value=sum(walked.support_by_attacker.values()),
         total_healing_reduced=sum(
-            float(state["healing_reduced"]) for state in survival.values()
+            float(state["healing_reduced"]) for state in walked.survival.values()
         ),
     )
     return _receipt_view.receipt(
-        program,
-        walk_result.projected(
+        walked.program,
+        walked.result.projected(
             damage_events=public_events,
             healing_events=public_healing_events,
             support_events=public_support_events,
             utility_by_actor=utility_by_actor,
             target_allocation=_target_allocation_receipt(
-                public_events, len(enemy_actors), public_breakdown
+                public_events, len(roster.enemy_actors), walked.public_breakdown
             ),
-            item_denial_receipts=item_denial_receipts,
+            item_denial_receipts=ledgers.item_denial_receipts,
             objective=objective,
         ),
     )
