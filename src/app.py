@@ -1914,12 +1914,10 @@ def api_metrics() -> Response | tuple[Response, int]:
     The scorecard is computed by src/metrics.compute_scorecard so the
     dashboard endpoint and the ``scripts/beta_metrics.py`` CLI share one
     definition of the gate (see docs/beta-metrics.md).  The module ships
-    inside the runtime package.
-
-    TODO(cross-group): point docs/beta-metrics.md at src/metrics.py and add
-    an authenticated /api/metrics smoke to .github/workflows/tests.yml and
-    docs/deploy.md.  tests/test_deployment_package.py already covers the
-    identical deployed file set locally.
+    inside the runtime package, which is why the container smoke in
+    .github/workflows/tests.yml separates the two 503s: "Database
+    unavailable" is a missing DB and "Metrics module unavailable" is a
+    deploy break.
     """
     try:
         # pylint: disable-next=import-outside-toplevel  # deliberate lazy import

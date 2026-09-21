@@ -238,7 +238,12 @@ def test_champion_optimizer_matrix_emits_boolean_envelope():
 
 
 def test_ci_validates_every_receipt_it_emits():
-    """A new matrix cannot ship an unchecked artifact (the issue #139 TODO)."""
+    """A new matrix cannot ship an unchecked artifact.
+
+    Every ``artifacts/backend/*.json`` the workflow writes is an argument to
+    the ``validate_receipt.py`` line, so a gate that emits a receipt and
+    forgets to validate it fails here rather than in CI's output.
+    """
     workflow = (ROOT / ".github" / "workflows" / "tests.yml").read_text(
         encoding="utf-8"
     )

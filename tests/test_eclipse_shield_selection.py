@@ -5,15 +5,15 @@ self-shield arms on the completed proc pair (``stack_required`` hits inside
 ``stack_window`` seconds) and carries ``shield_melee_base`` /
 ``shield_ranged_base`` plus the melee and ranged bonus-AD ratios for
 ``shield_duration`` seconds, under a per-target ``cooldown``.
-``survival_ledger_certifications()`` documents the survival rule: overlapping
-shields stack additively, and strongest-shield selection is unmodeled.
+``survival_ledger_certifications()`` states what the survival ledger does
+with the proc; overlapping shields stack additively, and strongest-shield
+selection is unmodeled.
 
 Every test here pins that contract.  Strongest-shield selection stays
 unmodeled on two independent grounds, both required:
 
 1. Unsourced in every authority layer: the rule appears in no wiki effect
-   text and no ``item_effects`` accessor, and
-   ``interpreters.survival_ledger_certifications`` records its absence.
+   text and no ``item_effects`` accessor.
 2. Physically unreachable: Eclipse's cooldown (``item_effects.py``
    ``"cooldown": 6.0``) exceeds its shield duration (``"shield_duration": 2.0``),
    both sourced values, so two Eclipse shields from the same holder can never
@@ -170,13 +170,12 @@ def test_bis_receipt_names_unavailable_strongest_shield_rule():
     The note is derived from the declaration now
     (``interpreters._LEDGER_CONTRIBUTION_NOTES``, keyed by
     ``SurvivalLedgerContribution.SELF_SHIELD``) rather than hand-written per
-    item, so it names the modelled behaviour rather than the unmodelled
-    strongest-shield rule main's prose called out.  The additive stacking
-    itself is still pinned, by the same-time rows below.
+    item, so it names the modelled behaviour and nothing else.  The additive
+    stacking itself is pinned by the same-time rows below.
 
-    MERGE-TODO(interpreters): main's note also disclosed "the strongest-shield
-    rule is not modeled".  A derived note has no home for that caveat yet; it
-    is a disclosure, not prose, and should come back as one.
+    The derived note carries no disclosure that the strongest-shield rule is
+    unmodelled, because a contribution has no field for one; row ER1 of
+    docs/surface-area-backlog.md owns that.
     """
     receipt = survival_ledger_certifications()["Eclipse"]
 
