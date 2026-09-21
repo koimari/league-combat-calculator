@@ -418,46 +418,45 @@ def derive_item_support_effects(
     # champion-facing target in the fighter model, so this layer emits one
     # vision-dimension receipt when the authored ready gate is set; it never
     # guesses ward hits or converts the denial into damage.
-    if "Umbral Glaive" in names:
-        ready = _option(attacker, "Umbral Glaive", "nightstalker_ready") > 0.0
-        if ready:
-            source_meta = ITEM_INPUT_OPTIONS["Umbral Glaive"]
-            lethality = max(
-                0.0,
-                float(attacker.stats.get("lethality", 0.0) or 0.0),
+    nightstalker = _producer(slots, AllyProducer.NIGHTSTALKER)
+    if (
+        nightstalker is not None
+        and _option(attacker, nightstalker.owner, "nightstalker_ready") > 0.0
+    ):
+        nightstalker.declared(PacketKind.VISION)
+        source_meta = ITEM_INPUT_OPTIONS[nightstalker.owner]
+        lethality = max(0.0, float(attacker.stats.get("lethality", 0.0) or 0.0))
+        packets.append(
+            _packet(
+                attacker=attacker,
+                target=attacker,
+                time=0.0,
+                kind=PacketKind.VISION.value,
+                source="Umbral Glaive — Blackout",
+                amount=1.0,
+                target_scope="self",
+                ward_uses=0.0,
+                nightstalker_ready=True,
+                blackout_trigger_windows=1,
+                unseen_gate_seconds=nightstalker.value("nightstalker_unseen_seconds"),
+                trigger_window_seconds=nightstalker.value(
+                    "nightstalker_trigger_window"
+                ),
+                blackout_duration=nightstalker.value("blackout_duration"),
+                ward_only=True,
+                ward_hits_modeled=0,
+                # The true damage the gate arms is the first-auto packet's
+                # number, which no ally-packet declaration carries, so it is
+                # read through the typed accessor that ledger reads.
+                true_damage_on_ward_hit=(
+                    required_effect_value(nightstalker.owner, "base")
+                    + required_effect_value(nightstalker.owner, "lethality_ratio")
+                    * lethality
+                ),
+                source_url=source_meta["source_url"],
+                source_revision_id=source_meta["source_revision_id"],
             )
-            packets.append(
-                _packet(
-                    attacker=attacker,
-                    target=attacker,
-                    time=0.0,
-                    kind=PacketKind.VISION.value,
-                    source="Umbral Glaive — Blackout",
-                    amount=1.0,
-                    target_scope="self",
-                    ward_uses=0.0,
-                    nightstalker_ready=True,
-                    blackout_trigger_windows=1,
-                    unseen_gate_seconds=required_effect_value(
-                        "Umbral Glaive", "nightstalker_unseen_seconds"
-                    ),
-                    trigger_window_seconds=required_effect_value(
-                        "Umbral Glaive", "nightstalker_trigger_window"
-                    ),
-                    blackout_duration=required_effect_value(
-                        "Umbral Glaive", "blackout_duration"
-                    ),
-                    ward_only=True,
-                    ward_hits_modeled=0,
-                    true_damage_on_ward_hit=(
-                        required_effect_value("Umbral Glaive", "base")
-                        + required_effect_value("Umbral Glaive", "lethality_ratio")
-                        * lethality
-                    ),
-                    source_url=source_meta["source_url"],
-                    source_revision_id=source_meta["source_revision_id"],
-                )
-            )
+        )
 
     # Fimbulwinter's Everlasting is a self shield that fires only from an
     # explicitly marked immobilize, or a slow for a melee holder.  Its
