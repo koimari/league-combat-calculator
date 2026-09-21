@@ -42,7 +42,7 @@ class TestReviewedCrowdControl:
 
 
 class TestPowerChordRider:
-    """Sona P prices the chord three basic abilities empower (slice 6)."""
+    """Sona P prices the chord three basic abilities empower."""
 
     def test_one_chord_reaches_the_total(self):
         """Level 18, no items: 240.0 raw magic on one empowered attack.

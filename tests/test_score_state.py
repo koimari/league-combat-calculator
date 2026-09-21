@@ -1,7 +1,7 @@
 """Test front door for ``survival/score_state`` — the parallel-array ledger.
 
-This module was the last ``survival/`` member of Phase 1's front-door
-frontier, entered there under Phase 4's name because Phase 4 is the
+This module was the last ``survival/`` member of the front-door
+frontier, entered there under the kernel's name because the kernel is the
 phase that rebuilds the score path as a projection.  Everything reachable
 through it was reached through ``survival/__init__``'s re-export or through
 a coupled request, which is a real gap and not a bookkeeping one: the score

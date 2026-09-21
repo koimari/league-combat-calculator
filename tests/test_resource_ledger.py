@@ -1,16 +1,16 @@
-"""P3 slice 1 — Shared Mana Resource Ledger: full contract test matrix.
+"""The shared mana resource ledger: full contract test matrix.
 
 Kernel under test: ``src.calculator.resource_ledger`` (owned by RLM-1).
 
 This file tests ONLY the ledger kernel. It imports nothing from the
 damage/pipeline internals, so the kernel must be testable standalone.
 
-Matrix sections (mirrors the roadmap slice-1 matrix):
+Matrix sections:
     KERNEL          1-16  ResourceEvent / ResourceAccount / ResourceLedger
     MANAFLOW       17-29  ManaflowDeclaration / ManaflowLedger
     LOST CHAPTER   30-39  EnlightenDeclaration / enlighten_schedule
     REGRESSION     40-43  contract-level composition (no engine imports)
-    row 44 is a comment-only note (Catalyst is out of slice; its matrix
+    row 44 is a comment-only note (Catalyst is out of scope; its matrix
     lives in tests/test_catalyst_resource_ledger.py)
 
 Contract clarifications received from RLM-1 (binding):
@@ -1047,7 +1047,7 @@ class TestRegression:
 # ---------------------------------------------------------------------------
 # Matrix row 44 — comment-only note (no test function by design):
 #
-# Catalyst is OUT of slice for P3S1 (its behavior is unchanged and already
+# Catalyst is OUT of scope here (its behavior is unchanged and already
 # covered elsewhere). Catalyst regression coverage lives in
 # tests/test_catalyst_resource_ledger.py (P3 package 3A matrix owner) and
 # tests/test_item_sustain.py — not here.

@@ -2,7 +2,7 @@
 
 A declaration that stored the number it read would be right on the day it
 was written and stale on every day after.  Proving it does not is harder
-than it looks, and the trap is named in the ruling: ``refresh_item_effects()``
+than it looks: ``refresh_item_effects()``
 rebuilds ``ITEM_EFFECTS`` from ``data/``, so a monkeypatched *registry* value
 is overwritten by the parse.  That test proves liveness and cannot tell
 "holds a reference" from "was reconstructed by the same import".
@@ -174,7 +174,7 @@ REFRESH_PROOFS: dict[RuleFamily, tuple[str, str, str, str, float]] = {
 # The migrated families with no rule that *can* pass the proof, and the reason
 # for each, measured rather than asserted: every number an ally packet reads is
 # either hand-authored in ``ALLY_ITEM_EFFECTS`` (refresh-inert by
-# construction, D-47) or a code-owned key in ``_STATIC_ITEM_EFFECTS``, which a
+# construction) or a code-owned key in ``_STATIC_ITEM_EFFECTS``, which a
 # wiki edit cannot move either.  The test below proves that is still true, so
 # the exemption fails the day one ally-packet number becomes parser-owned.
 REFRESH_INERT_FAMILIES: dict[RuleFamily, str] = {

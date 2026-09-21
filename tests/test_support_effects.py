@@ -76,7 +76,7 @@ def test_support_shield_duration_uses_the_typed_shield_sentence(
 def test_taric_bastion_uses_the_protected_units_max_health_atom():
     """A recipient-scaled row is narrowed to the caster and PRICED.
 
-    Ruling: a sourced non-zero number beats a zero-plus-formula row.  Bastion
+    A sourced non-zero number beats a zero-plus-formula row.  Bastion
     is "11% of target's maximum health" at rank 5, and the one recipient a
     scan holds stats for is the caster — so the row is published at the
     caster's own 2000 maximum health rather than as a 0.0 placeholder for the
@@ -128,7 +128,7 @@ def test_taric_cosmic_radiance_emits_a_delayed_typed_state_packet():
 
 
 def test_seraphine_surround_sound_publishes_only_the_priced_caster_shield():
-    """The same ruling, applied to a row the caster's stats cannot price.
+    """The same rule, applied to a row the caster's stats cannot price.
 
     Surround Sound's pulse heals off the RECIPIENT's *missing* health, and
     missing health is not a scan-time fact for anybody — not even the caster.

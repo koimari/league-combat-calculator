@@ -239,7 +239,7 @@ def test_zilean_chronoshift_revives_with_sourced_flat_ap_heal():
         ("Kayle", "Celestial Blessing", "heal", 155.0),
         ("Seraphine", "Surround Sound", "shield", 140.0),
         ("Janna", "Eye of the Storm", "shield", 240.0),
-        # Issue #143 (phase 2): Monsoon's heal is rule-owned and fans out
+        # Monsoon's heal is rule-owned and fans out
         # as the sourced per-tick events (12 x 50 at rank 3, 0 AP), so the
         # first matching packet is one 50 tick — the full channel still
         # totals the sourced 600 (asserted in test_heal_ledger_authored_slots.py).
@@ -351,7 +351,7 @@ def test_taric_cosmic_radiance_targets_the_caster_and_selected_ally():
 
 
 def test_seraphine_w_publishes_the_priced_shield_and_no_zero_pulse_row():
-    """The roster path's half of the recipient-scaled-row ruling.
+    """The roster path's half of the recipient-scaled row.
 
     Surround Sound's pulse heals off each recipient's *missing* health, which
     no scan-time stat holds, so the merged scanner refuses the row rather
@@ -702,7 +702,7 @@ def test_revive_module_sourcing_matches_cached_rows():
 
 
 # ---------------------------------------------------------------------------
-# Census slice 2 — every support slot the map calls ``modeled`` publishes a
+# Every support slot the map calls ``modeled`` publishes a
 # row in the COUPLED walk.
 # Reaching ``derive_ally_effects`` is not the claim; reaching the ledger is.
 # ---------------------------------------------------------------------------
@@ -759,7 +759,7 @@ def test_revive_module_sourcing_matches_cached_rows():
         ("Thresh", "W", "Dark Passage", "shield", 130.0, "one_teammate", "ally:Jinx"),
         # Zoomies "Shield" 65/90/115/140/165 (+40% AP), rank 5, to the anchor.
         ("Yuumi", "E", "Zoomies", "shield", 165.0, "one_teammate", "ally:Jinx"),
-        # --- census slice 3: the row was cached; the hook was missing ------
+        # --- the row was cached; the hook was missing -----------------------
         # Caretaker's Shrine "Maximum Heal" 50/87.5/125/162.5/200 (+70% AP).
         (
             "Bard",

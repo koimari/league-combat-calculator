@@ -41,7 +41,7 @@ class TestCoverageMap:
     """Stone Skin is a stat grant the survival side reads; the clone needs an axis.
 
     P emits a ``stat_buff`` of bonus armor with a zero damage part — a
-    priced row under the campaign's vocabulary (a state row the engine
+    priced row under the coverage vocabulary (a state row the engine
     consumes), so the derivation from ``SLOTS`` is the map and no map is
     declared.  W is the real gap, and the missing axis is the clone's
     SWING COUNT rather than its output: the cached "Clone Outgoing

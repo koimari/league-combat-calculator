@@ -241,7 +241,7 @@ def test_a_view_that_adds_is_caught_by_this_fixture() -> None:
     """R-05: the check ships with the red it exists to reproduce.
 
     The doctored view emits every survival number one part in a billion off
-    the walk's own -- the smallest lie the campaign's rounding rules could
+    the walk's own -- the smallest lie the rounding rules could
     hide, far under golden's two decimals and under every declared precision.
     A check that could not see this one would be a check that only catches
     arithmetic somebody spelled loudly.

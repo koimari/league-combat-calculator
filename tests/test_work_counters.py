@@ -1,6 +1,6 @@
 """The optimizer's work-counter seam: it counts, and it changes no number.
 
-Three of the four counter families the campaign gates on had no producing
+Three of the four counter families the harness reads had no producing
 tool at all, so the numbers in the performance contract could not be
 reproduced by anyone.  These tests pin the seam that produces them: that a
 sink threaded onto the search sees every proposal, every memo miss, every
@@ -42,7 +42,7 @@ class _Sink:
     """The five mutable fields ``WorkCounterSink`` asks for.
 
     ``walk_invocations`` is the odd one out and is here for the same reason
-    the others are: Phase 4 S10 made "one walk per pass" a number a test can
+    the others are: "one walk per pass" is a number a test can
     read rather than a call-site count, so the protocol asks for a field the
     kernel seam increments.  It is not a reported counter family.
     """

@@ -841,7 +841,7 @@ class TestRTiming:
 
 class TestCleanseOfActiveControls:
     def test_kernel_truncation_contract(self):
-        # PASS (the brief's contract #4 + #6): the Slice 4
+        # PASS (contract #4 and #6): the cleanse
         # truncate_intervals contract — an interval ACTIVE at the
         # activation ends there, a same-timestamp control is removed
         # entirely, a later control is untouched, historical downtime
@@ -1019,7 +1019,7 @@ class TestCleanseOfActiveControls:
 
 class TestImmunityWindow:
     def test_slice3_kernel_blocks_inside_applies_after(self):
-        # PASS kernel evidence (the brief's contract #7): the Slice 3
+        # PASS kernel evidence (contract #7): the immunity
         # immunity arm — a shield packet with
         # crowd_control_immunity_while_shield grants the typed window
         # [1.0, 4.0); a control landing INSIDE is blocked (no interval,
@@ -1225,7 +1225,7 @@ class TestCastability:
         assert "canCastWhileDisabled" not in _r_ability().get("notes", "")
 
     def test_kernel_suppression_denial_for_self_scope(self):
-        # PASS kernel evidence (the brief's contract #5 + #6): the Slice
+        # PASS kernel evidence (contract #5 and #6): the
         # 4 self-scope castability rule — CAST_BLOCKING_CONTROL_KINDS is
         # exactly {"stasis", "suppression"} (F-9: the cleanse atom's own
         # wording is "castable while disabled, but not under suppression/
@@ -1581,7 +1581,7 @@ class TestBonusStateReceipts:
 
 class TestOneUseAndCooldown:
     def test_kernel_one_use_latch(self):
-        # PASS kernel evidence (the brief's contract #8): the Slice 4
+        # PASS kernel evidence (contract #8): the cleanse
         # per-fight one-use latch — a second activation of the same
         # source fails closed with the named use_spent denial (the use
         # NOT consumed) while the first activation consumes the single
@@ -1631,12 +1631,12 @@ class TestOneUseAndCooldown:
         # row 100/90/80 (affectedByCdr) + the game cooldownTime agree,
         # and the module parse now PUBLISHES that row per rank.
         #
-        # It published 0.0 until the utility-axis slice rebuilt this
+        # It published 0.0 until the utility axis rebuilt this
         # module around ``slotlib.extract_cooldown`` (Olaf P/W/R were
         # priced as stat grants); the golden baseline carries the same
         # value (Olaf/abilities_level_11/R cooldown 90.0 = the rank-2
         # row), so the published figure is the sourced one and the 0.0
-        # here was a stale pin from before that slice, not a regression.
+        # here was a stale pin from before that, not a regression.
         #
         # "Never enforced" is the half that still has to hold, and it is
         # asserted below rather than assumed: R books exactly ONE cast no

@@ -1,6 +1,6 @@
 """Front-door tests for the rotation resolver.
 
-The F2 and F3 suites keep the historical campaign cases and the broad
+The F2 and F3 suites keep the older cases and the broad
 champion matrix.  These tests make the resolver easy to find by module name.
 """
 
@@ -121,7 +121,7 @@ class TestAModuleAuthoredKitFactDoesNotOrderTheRotation:
 
     A module recording its reviewed crowd control is stating a kit fact of
     the same class as "this ability deals magic damage".  Reading it as an
-    ordering constraint made the coverage campaign expensive in exactly the
+    ordering constraint made the coverage sweep expensive in exactly the
     wrong currency: recording a true slow reordered the rotation and moved
     published damage, so a pass withheld facts it had verified rather than
     move numbers nobody had reviewed.  Ordering belongs to the declared
@@ -240,7 +240,7 @@ class TestAModuleAuthoredKitFactDoesNotOrderTheRotation:
     def test_recording_control_changes_no_order_and_no_rationale(
         self, champions, monkeypatch, champion_name, authoring, cold_memo
     ) -> None:
-        """The ruling itself, on the strongest form of each authoring site:
+        """The rule itself, on the strongest form of each authoring site:
         every slot of the kit carries a stun, and nothing moves."""
         data = champions[champion_name]
         silent = self._silent(data)

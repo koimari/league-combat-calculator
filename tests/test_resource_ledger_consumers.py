@@ -1,9 +1,9 @@
-"""P3 slice 1 — mana resource ledger consumer integration tests.
+"""Mana resource ledger consumer integration tests.
 
 Driver-level coverage for the typed mana ledger (RLM-1 owned): the cast
 admission walk in ``fight.rotation.mana_walk._apply_mana_resource_limits``, Tear of the
 Goddess (Manaflow) packets projected from ledger receipts, Lost Chapter
-(Enlighten) level-up restores, and the regression guarantees the slice
+(Enlighten) level-up restores, and the regression guarantees the ledger
 must not break (ordinary cast receipts, manaless champions, Catalyst's
 Eternity restore path, no duplicate events, unchanged energy admission).
 

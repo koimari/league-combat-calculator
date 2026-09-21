@@ -130,7 +130,7 @@ _ATTACK_SPEED_ROWS = [
 # he walked in already stealthed — the same shape as ``poison_stacks``
 # asserting stacks already on the target — and it defaults off so the
 # unasserted fight does not bill a phantom proc.  Arming it here keeps
-# both claims of this slice intact for the slot without pretending the
+# both claims intact for the slot without pretending the
 # default grants it; ``test_twitch_ambush_grants_its_row_only_once_the_``
 # ``stealth_breaks`` below is what pins the default itself.
 _ARMED_BY = {("Twitch", "Q"): {"q_ambush_break": True}}
@@ -208,7 +208,7 @@ def test_the_attack_speed_grant_reaches_the_fights_auto_count(
 
 
 def test_tristana_rapid_fire_doubles_the_auto_count_it_was_missing():
-    """The assumption this slice deleted, priced: 4 autos become 8."""
+    """The deleted assumption, priced: 4 autos become 8."""
     build = _build_stats("Tristana")
     result = _fight("Tristana")
     assert math.floor(build["attack_speed"] * _WINDOW) == 4

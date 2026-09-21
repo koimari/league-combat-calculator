@@ -2,7 +2,7 @@
 
 This file is the RLM-2 acceptance-matrix suite for the spell-shield
 eligibility/use lifecycle added to ``src/calculator/delivery_eligibility.py``
-(P2 Slice 2; consumers: Sivir E timed 1.5s window + one on-block heal,
+(consumers: Sivir E timed 1.5s window plus one on-block heal,
 Banshee's Veil / Edge of Night / Verdant Barrier Annul — ready at fight
 start, block one hostile ability, and rearm once their sourced 40/40/60s
 cooldown has fully elapsed from the later of the consumption instant and

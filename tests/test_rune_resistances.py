@@ -181,7 +181,7 @@ class TestWhatTheResistancesBuyAndWhatTheyDoNot:
 
 
 class TestRevitalizeReachesEveryRecovery:
-    """The third stat channel this campaign opened, and the cheapest.
+    """The third stat channel, and the cheapest.
 
     Revitalize's own receipt named the gap exactly: the power "every heal and
     shield the holder applies now reads", with no ``RuneStat`` member to land

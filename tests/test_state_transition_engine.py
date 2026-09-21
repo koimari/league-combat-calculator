@@ -1,6 +1,6 @@
 """Issue #137 — one state transition engine for receipts and optimizer walks.
 
-Phase 1: the compiled optimizer walk fails closed.  ``_WalkCompiler`` (and
+The compiled optimizer walk fails closed.  ``_WalkCompiler`` (and
 the compile-stage capability checks) raise a named
 ``UncompilableActionError`` for any packet/loadout transition the score
 kernel cannot represent — overheal-to-shield (Aphelios Severum), vamp

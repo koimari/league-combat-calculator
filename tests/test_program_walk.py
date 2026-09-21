@@ -1,4 +1,4 @@
-"""Phase 4 S4 — one kernel call site, and a result nothing can rewrite.
+"""One kernel call site, and a result nothing can rewrite.
 
 ``program/walk`` is the front door for the seam that makes "one engine prices
 one mechanic" structural.  Two properties are under test here, and neither is
@@ -6,7 +6,7 @@ about arithmetic: the walk adds none of its own, and what it returns is
 frozen, so a view is a projection of the result rather than a sixth producer
 of numbers.
 
-Repointing the timeline's two legacy call sites at :func:`walk` is Phase 4
+Repointing the timeline's two legacy call sites at :func:`walk` is the
 S9's; what S4 owes is that the seam exists, runs the kernel exactly once, and
 returns exactly what the kernel produced.
 """

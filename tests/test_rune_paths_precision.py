@@ -385,7 +385,7 @@ class TestTheGrantsReachTheRealPipeline:
             for result in (bare, unstacked, stacked)
         ]
         assert autos == [30, 31, 33]
-        # Re-captured with the landing-instant ruling (hp-scaled parts).
+        # Re-captured at the landing instant (hp-scaled parts).
         assert bare["total_damage"] == pytest.approx(2187.0, abs=0.05)
         assert unstacked["total_damage"] == pytest.approx(2237.5, abs=0.05)
         assert stacked["total_damage"] == pytest.approx(2338.5, abs=0.05)
@@ -423,7 +423,7 @@ class TestTheGrantsReachTheRealPipeline:
         assert bare["champion_stats"]["lifesteal_percent"] == 0.0
         assert stacked["champion_stats"]["lifesteal_percent"] == pytest.approx(6.75)
         assert unstacked["self_healing"] == pytest.approx(bare["self_healing"])
-        # Re-captured with the landing-instant ruling (hp-scaled parts).
+        # Re-captured at the landing instant (hp-scaled parts).
         assert bare["self_healing"] == pytest.approx(43.5, abs=0.05)
         assert stacked["self_healing"] == pytest.approx(145.7, abs=0.05)
         assert len(bare["self_healing_events"]) == 35

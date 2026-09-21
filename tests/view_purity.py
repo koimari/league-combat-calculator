@@ -1,4 +1,4 @@
-"""The AST reading of Phase 4 criterion 3: a view re-runs no arithmetic.
+"""The AST reading of one rule: a view re-runs no arithmetic.
 
 The criterion is deliberately not path-scoped.  "No module under
 ``program/views/`` performs arithmetic" is satisfied by moving the sum into
@@ -35,12 +35,12 @@ constructing a record is walked like any other call.
 not resolve is reported, and the suite asserts that set is exactly a
 committed list of builtins and protocol methods.  A frontier that is
 enumerated is a frontier a reader can audit; one that is merely absent is
-the shape this campaign exists to remove.
+the shape the rule exists to remove.
 
 *Arithmetic.*  A binary ``+ - * / // % ** @``, an augmented assignment with
 one of those, a unary minus or plus on anything but a literal, or a call to
 one of the folding builtins ``sum``/``min``/``max``/``abs``.  Rounding is
-**not** arithmetic: D-71 rules it presentation, it is already gated to the
+**not** arithmetic: it is presentation, already gated to the
 one registry by its own test, and every published digit count comes from
 there.  String and path building is not arithmetic either, and needs no
 exemption -- the views spell paths with f-strings, which are not ``BinOp``.
@@ -167,7 +167,7 @@ def _sources(overrides: Mapping[str, str] | None = None) -> dict[str, str]:
 
     ``overrides`` is the seam R-05 asks a new gate to ship with: a fixture
     hands doctored text for one module and the check fails on command,
-    rather than the campaign asserting that it once failed during
+    rather than a claim that it once failed during
     development.
     """
     texts: dict[str, str] = {}

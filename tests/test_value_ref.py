@@ -28,7 +28,7 @@ from src.calculator.value_source_receipt import SourceReceipt
 
 
 def test_the_registry_union_is_three_members() -> None:
-    """D-46: three registries own runtime numbers and a fourth is Phase 1's."""
+    """Three registries own runtime numbers; the evidence union has a fourth."""
     assert (
         frozenset({"ITEM_EFFECTS", "ALLY_ITEM_EFFECTS", "RUNE_EFFECTS"})
         == VALUE_REGISTRIES
@@ -73,7 +73,7 @@ def test_a_reference_into_an_unknown_registry_is_refused() -> None:
 
 
 def test_a_reference_moves_when_the_registry_moves() -> None:
-    """Liveness: the declaration holds a reference, not a copy (D-48's shape)."""
+    """Liveness: the declaration holds a reference, not a copy."""
     reference = ValueRef("ITEM_EFFECTS", "Black Cleaver", "reduction_per_stack")
     before = reference.get()
     entry = item_effects.ITEM_EFFECTS["Black Cleaver"]

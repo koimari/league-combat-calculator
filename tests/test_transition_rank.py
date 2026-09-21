@@ -1,20 +1,20 @@
 """The one ordered transition vocabulary, and the collapse it still carries.
 
-``TransitionRank`` names what the walk's float ``phase`` always meant.  0A
-introduced the names beside a byte-identical float projection; Phase 4 S2
-deleted the projection, so a phase is a member of this enum everywhere the
-tree writes, sorts, compares or dispatches on one.
+``TransitionRank`` names what the walk's float ``phase`` always meant.  No
+float projection stands between the names and the walk, so a phase is a
+member of this enum everywhere the tree writes, sorts, compares or
+dispatches on one.
 
 What the float said that the ordinals do not is a *collapse*: two groups of
 ranks shared one number and therefore resolved together.  ``ordering_slot``
 is that collapse, named, and these tests pin its shape — which group, and
 that every other read of a rank is invariant under it.
 
-Phase 4 S6 split one of the two groups.  ``DEBUFF_ARM``/``RECOVERY``/
-``UTILITY_ARM`` now resolve ``6 < 7 < 8`` at a shared timestamp instead of
-tying, and the reorderings that follows from are pinned below by name.
+One of the two groups is split.  ``DEBUFF_ARM``/``RECOVERY``/
+``UTILITY_ARM`` resolve ``6 < 7 < 8`` at a shared timestamp instead of
+tying, and the reorderings that follow are pinned below by name.
 ``LATE_BARRIER``/``REACTIVE`` still share a slot, deliberately: that one is
-a preserved defect S6 declined to touch, not an oversight.
+a preserved defect, not an oversight.
 """
 
 import ast
@@ -64,10 +64,9 @@ def _population() -> tuple[Path, ...]:
 
     Three trees, not one: the kernel that consumes a rank, the timeline that
     composes a walk, and ``program/`` — which is where the one
-    ``SurvivalAction`` constructor moved at Phase 4 S4, so a float written
-    into a phase slot would land there and nowhere else.  Scanning only the
-    kernel after that move would leave the guard pointed at a file the
-    construction had left.
+    ``SurvivalAction`` constructor lives, so a float written into a phase
+    slot would land there and nowhere else.  Scanning only the kernel would
+    leave the guard pointed at a file the construction has left.
     """
     return (*sorted(SURVIVAL.glob("*.py")), *sorted(PROGRAM.rglob("*.py")), *TIMELINE)
 
@@ -87,12 +86,12 @@ def test_the_ordering_fold_is_total_and_closed() -> None:
 
 
 def test_one_collapsed_pair_survives_and_the_other_group_is_split() -> None:
-    """Nine producing ranks resolve in eight ordering slots (D-06, S6).
+    """Nine producing ranks resolve in eight ordering slots.
 
-    The float ladder S2 deleted gave ``LATE_BARRIER``/``REACTIVE`` one
-    number and ``DEBUFF_ARM``/``RECOVERY``/``UTILITY_ARM`` another.  S6
-    split the second group; the first still shares a slot, and this
-    asserts *both* halves so the stage cannot be read as having split
+    A float ladder gave ``LATE_BARRIER``/``REACTIVE`` one number and
+    ``DEBUFF_ARM``/``RECOVERY``/``UTILITY_ARM`` another.  The second group
+    is split; the first still shares a slot, and this
+    asserts *both* halves so the split cannot be read as having reached
     everything or nothing.
     """
     producing = [rank for rank in TransitionRank if rank is not TransitionRank.TERMINAL]
@@ -183,7 +182,7 @@ def test_the_sort_key_carries_the_slot_and_not_the_rank() -> None:
 # among them, so the two hot-path sort keys ``compile.py`` hands it
 # positionally were counted as absent by the very rule that existed to find
 # them.  A guard whose population is enumerated by its own blind spot is
-# green over nothing — the campaign's own failure shape, one level down.
+# green over nothing, which is the failure it exists to catch.
 # ``_slot_rules`` therefore derives the index of a ``phase`` parameter and of
 # a ``sort_key`` parameter from every ``def`` and every NamedTuple field
 # list in the population, so a positional call is a slot whether or not
@@ -674,12 +673,11 @@ def test_every_packet_author_declares_a_named_rank() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Phase 4 S6 — the split, named reordering by named reordering
+# The split, named reordering by named reordering
 #
-# S6's diff is bounded by prediction (criterion 8): same-timestamp arming
-# reorderings only, each with a fixture that names it.  The four below are
-# that enumeration.  Two of them were *measured* on the pre-edit tree before
-# the baselines were read — the population S6c1's commit body declares — and
+# The split moves same-timestamp arming reorderings only, each with a
+# fixture that names it.  The four below are that enumeration.  Two of them
+# were *measured* on the pre-split tree before the baselines were read, and
 # they carry the scenario and the source that produced them, so a reader can
 # find the same pair again rather than trust the sentence.
 # ---------------------------------------------------------------------------
@@ -771,14 +769,13 @@ def test_s6_leaves_the_aura_and_the_late_barrier_exactly_where_c4_put_them() -> 
 
 
 def test_s6_publishes_no_new_phase_name_and_bumps_no_schema() -> None:
-    """Payload neutrality, asserted (stage table, criterion 5).
+    """Payload neutrality, asserted.
 
     All three split ranks keep the published name they had, so the derived
-    phase list is byte-identical across the split and D-63's chain does not
-    advance: S6 takes no version.  (S9 took 4, the rune page took 5 and the
-    survival row's certification fields took 6; none of them is S6's, which
-    is the point — the pin moves when *another* change publishes something,
-    never when this one does.)
+    phase list is byte-identical across the split and
+    ``CAPABILITY_SCHEMA_VERSION`` does not move: a rank split publishes
+    nothing.  The pin moves when another change publishes something, never
+    when this one does.
     """
     from src.calculator.capabilities import PARTICIPANT_LEDGER_CONTRACT
     from src.calculator.survival.phases import public_phase

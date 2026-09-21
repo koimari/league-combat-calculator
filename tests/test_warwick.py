@@ -4,7 +4,7 @@ Infinite Duress suppresses for the whole channel it damages through;
 Jaws of the Beast only bites.
 
 Eternal Hunger and Blood Hunt priced nothing before the coverage-frontier
-campaign: five autos were 270.0 physical and 0.0 magic.  The rider tests
+review: five autos were 270.0 physical and 0.0 magic.  The rider tests
 below hold both to the cached rows they read.
 """
 

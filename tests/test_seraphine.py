@@ -31,7 +31,7 @@ class TestReviewedCrowdControl:
 
 
 class TestStagePresenceRider:
-    """Seraphine P fires her Notes on the empowered attack (census slice 6)."""
+    """Seraphine P fires her Notes on the empowered attack."""
 
     def test_four_notes_reach_the_total(self):
         """Level 18, no items, the 4-Note cap: 4 x 25.0 raw magic.

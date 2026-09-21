@@ -269,7 +269,7 @@ def test_the_row_key_order_is_the_published_order() -> None:
 
 
 def test_no_view_module_rounds_outside_the_registry() -> None:
-    """D-71's scope clause, on the package the projection now lives in."""
+    """The rounding scope clause, on the package the projection lives in."""
     offenders = []
     for path in sorted(VIEWS_ROOT.rglob("*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -299,7 +299,7 @@ def test_the_view_tag_vocabulary_is_closed_at_two_members() -> None:
 
     The ladder is requested -> priced -> applied, and a request carries no
     number.  Tagging a non-number would re-open exactly the zero-versus-absent
-    confusion the campaign exists to close, so the enum stops at the two
+    confusion the tag exists to close, so the enum stops at the two
     states a *number* can be in.
     """
     assert [tag.name for tag in ViewTag] == ["THEORETICAL", "APPLIED"]
@@ -311,7 +311,7 @@ def test_the_tag_vocabulary_module_reaches_only_the_vocabulary_leaf() -> None:
     The bus may name ``ViewTag`` only because ``view_tag`` reaches no further;
     an import added there would silently give the bus a transitive dependency
     the acyclicity clause forbids, so its intra-package reach is pinned empty.
-    Its siblings do reach one module, ``ability_spec`` -- the campaign's
+    Its siblings do reach one module, ``ability_spec`` -- the tree's
     dependency-free vocabulary leaf, which ``trigger_stream`` already imports
     for ``Authority`` and which ``serialize_leaf`` is defined over -- so the
     second clause is that the one thing they reach imports nothing back.
@@ -368,7 +368,7 @@ def test_a_withheld_leaf_has_no_number_and_its_entry_carries_the_receipts() -> N
     """The asymmetry the whole map exists for.
 
     Absent-with-a-receipt is a different published answer from zero, and it is
-    the one this campaign was opened over.
+    the one the disposition exists for.
     """
     out = serialize_leaf(
         "breakdown.main.total_damage",
@@ -382,7 +382,7 @@ def test_a_withheld_leaf_has_no_number_and_its_entry_carries_the_receipts() -> N
 
 
 def test_a_starved_leaf_raises_rather_than_serializing_anything() -> None:
-    """D-25: the failure surfaces where the projection was asked the question."""
+    """The failure surfaces where the projection was asked the question."""
     with pytest.raises(ProjectionStarvation):
         serialize_leaf(
             "survival.main.ending_health",
@@ -560,7 +560,7 @@ def test_a_utility_receipt_is_absent_rather_than_empty_when_there_is_none() -> N
 
 
 def test_the_breakdown_publishes_the_identity_the_composition_folded() -> None:
-    """A preserved defect, pinned so a later slice has to mean to change it.
+    """A preserved defect, pinned so a later change has to mean to change it.
 
     The receipt path fills a row's identity inside its attacker loop, so a
     participant who dealt no damage is published with an empty champion.  A
@@ -768,7 +768,7 @@ def test_a_ranking_payload_refuses_a_previewed_block() -> None:
 def test_the_optimizers_discarded_rows_are_a_ranking_payload_too() -> None:
     """``DISCARD`` writes what the optimizer scores, so it refuses one too.
 
-    A candidate payload carries no map by ruling -- a few hundred entries per
+    A candidate payload carries no map -- a few hundred entries per
     evaluation is what the allocation gate refuses -- so the block is the
     only moment a preview can be caught on that path.
     """

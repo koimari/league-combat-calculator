@@ -89,7 +89,7 @@ class TestOneWalkCallSite:
 
     The property here is one *definition*, in the module that owns the
     kernel.  One definition with two callers is exactly the arrangement
-    this campaign exists to end.
+    the gates here exist to end.
     """
 
     WALK_HOME = "calculator/program/walk.py"
@@ -164,7 +164,7 @@ class TestTheAllocationBudget:
         """Criterion 17, read from the receipt and never from prose.
 
         S4 trades per-fight dict churn for cached frozen records, which is
-        why the campaign gates allocation here and nowhere else.  If this
+        why allocation is gated here and nowhere else.  If this
         cannot hold, the declared fallback is to keep ``compiled_damage_action``
         as the compiler's inner loop and treat the program as a build-time
         artifact -- never to widen the margin.

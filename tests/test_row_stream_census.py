@@ -62,7 +62,7 @@ and would license ``public_response``'s serializer reads, but a sample of
 eight champions in one scenario shape is not a corpus, and converting on it
 would be the pooling mistake again in a new costume. Censusing the internal
 shapes means capturing and gating a corpus for them first, which is its own
-slice.
+work.
 
 A site clears all five or it keeps its default, and the default is then
 correct rather than debt. Mechanising clauses 1 and 2 over the largest tail
@@ -286,7 +286,7 @@ def _survival_dicts() -> list[dict]:
     ]
 
 
-#: The survival sub-dict's own universal keys, the four this campaign reads.
+#: The survival sub-dict's own universal keys, the four that are read.
 #: Its full set is 67 wide; only the fields a caller indexes are pinned, so
 #: an unrelated field appearing or leaving does not turn this red.
 SURVIVAL_READ_FIELDS = (
@@ -376,7 +376,7 @@ def test_the_receipt_view_s_other_reads_really_are_optional(field, ceiling):
 def test_three_agreeing_corpora_still_do_not_speak_for_a_fourth_input():
     """The clearest case for measuring the input rather than inferring it.
 
-    ``damage`` is universal on every damage-row corpus this campaign built:
+    ``damage`` is universal on every damage-row corpus measured here:
     3,960 internal rows over 173 champions, the 1,706 the receipt view is
     handed, and the 752 published fight rows. Converting
     ``action.event.get("damage", 0.0)`` in ``survival/receipt_ledger`` on

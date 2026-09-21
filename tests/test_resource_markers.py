@@ -3,8 +3,8 @@
 `scripts/resource_markers.py` finds every test whose body, or a helper or
 fixture it reaches, guards on a locally built game file or on `node`.
 `tests/conftest.py` deselects those nodes when the machine does not have the
-resource and names the count in the terminal summary, which is the D-22
-ruling: a skip reports success for work that did not happen.
+resource and names the count in the terminal summary, because a skip
+reports success for work that did not happen.
 """
 
 import sys

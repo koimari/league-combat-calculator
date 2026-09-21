@@ -29,7 +29,7 @@ class TestReviewedCrowdControl:
 
 
 class TestBravadoRider:
-    """Taric P prices the attacks an ability cast empowers (slice 6).
+    """Taric P prices the attacks an ability cast empowers.
 
     MERGE: the count is not a player-declared ``p_empowered_attacks``
     option.  The entry declares an ``empower_window`` (armed by a cast, two

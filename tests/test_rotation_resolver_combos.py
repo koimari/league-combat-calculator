@@ -258,7 +258,7 @@ class TestCastOrderOverrides:
             reason: measured.get(reason, 0) for reason in ORDER_OVERRIDE_REASONS
         }
         assert frontier["unclassified"] == []
-        # D-89's head-only seeds: a declaration decides the head, the seed
+        # The head-only seeds: a declaration decides the head, the seed
         # still decides the tail.  Nothing else in the frontier can tell
         # them from a seed held by hand end to end.
         assert frontier["head_only"] == sorted(
@@ -299,8 +299,8 @@ class TestCastOrderOverrides:
         two retired champions read as documentation of hers, and
         Aphelios' dangled against the closing brace describing nothing.
         No commit body mentioned them and nothing could see them — the
-        campaign's own prose-outruns-code shape, inside the table the
-        campaign counts.  This is what sees them.
+        prose-outruns-code shape, inside the table the audit counts.
+        This is what sees them.
         """
         assert seed_comment_faults(resolver_source(), registered_champion_names()) == ()
 
@@ -822,7 +822,7 @@ class TestTimedCadence:
         The control was the engine's fixed default order until Zed's module
         declared that Q and E each require the Shadow placement: an order
         opening on Q now inverts that declaration and is refused outright
-        (D-86, asserted in the next test).  So the control moved to the
+        (asserted in the next test).  So the control moved to the
         nearest legal order — W still first, E one slot later — which is
         what isolates E's cadence rather than the opener.
         """
@@ -847,7 +847,7 @@ class TestTimedCadence:
     ) -> None:
         """The fixed default order is not a legal request for Zed.
 
-        D-86 at a champion the phase's criteria never name: a declared
+        The refusal at a champion no criterion names: a declared
         prerequisite states impossibility, so ``Q, W, E, R`` — the fixed
         default — comes back as a refusal quoting the
         Shadow-placement mechanic rather than as a fight priced against a

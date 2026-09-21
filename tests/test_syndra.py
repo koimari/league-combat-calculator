@@ -396,7 +396,7 @@ class TestRotationOrder:
 
 
 # ---------------------------------------------------------------------------
-# The two cast-order pins — Phase 5 criteria 6 and 11
+# The two cast-order pins
 #
 # There is no bespoke Syndra pin fixture.  The parameter set lives once, in
 # the ``syndra_derived_order`` / ``syndra_custom_order`` coupled scenarios,

@@ -681,7 +681,7 @@ class TestFailClosed:
             _P_ABILITY, "Bonus Damage", 18, stats, {}
         ) == pytest.approx(160.0)
         # The zap-damage row is equally resolvable (pinned as evidence;
-        # its pricing is out of this slice's pins - AMBIGUITY 5).
+        # its pricing is not pinned here - AMBIGUITY 5).
         assert extract_named(
             _P_ABILITY, "Per-Level Scaling", 18, stats, {}
         ) == pytest.approx(25.0)

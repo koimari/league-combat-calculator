@@ -1,6 +1,6 @@
 """The priced-row predicate reproduces the fight's own total.
 
-Amendment O, Ruling 1 distinguishes a row a family authors from a row that
+The triage distinguishes a row a family authors from a row that
 publishes a difference and is summed into no total.  The whole receipt-walk
 triage turns on that predicate, so it is checked exactly rather than trusted.
 """
@@ -51,7 +51,7 @@ def test_the_priced_row_predicate_reproduces_the_fights_own_total() -> None:
 def test_every_rider_amendment_p_names_is_in_the_rider_vocabulary() -> None:
     """The named delivery resolves against ``RIDER_KINDS``, not a second list.
 
-    Amendment P names its kernel mechanisms as dotted paths.  The schedule
+    A named delivery names its kernel mechanisms as dotted paths.  The schedule
     resolves each one against the declaring object, so a rider that leaves
     ``program.events`` re-stops the row it delivers instead of resolving
     against a name list that outlived it.
