@@ -368,6 +368,7 @@ ASSUMPTIONS = [
     "R rides that channel, so the fold composes; two cached rows are missing.",
     "The magnitude is a level ladder the cache cannot index: atom ability.per-_level "
     "_scaling, units empty.",
+    "That atom carries [55, 60, 65, 70, 75] with no level attached to any value.",
     "P has no rank, so only the binary's ByCharLevelBreakpoints says which level each "
     "value starts at.",
     "The grant decays to zero over the sourced 1.5s and refreshes on hit.",

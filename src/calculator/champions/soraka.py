@@ -114,6 +114,8 @@ ASSUMPTIONS = [
     "ddragon costType.",
     "The wiki cache never captured the mana leg (bin SorakaW 'mana' [40, 45, 50, 55, "
     "60]).",
+    "No key in data/champions.json's W entry carries it, verified 16.15/16.16.1 "
+    "against cdtb soraka.bin.json.",
     "ddragon costBurn reads '40/45/50/55/60'; this is a known-degraded parse, not a "
     "patch change.",
     "patch_regression diffs the %-health row against the game's mana field, a "

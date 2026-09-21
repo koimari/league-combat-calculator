@@ -246,7 +246,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Build, rank or roster changes renumber them.",
         "An id that never matches is reported on the survival receipt as "
         "blocked_event_ids_unmatched.",
-        "R (Last Breath) keeps the reviewed packet pricing.",
+        "R (Last Breath) keeps the reviewed CP10.10 packet pricing.",
     ),
     single_hit_slots=frozenset({"R"}),
     slot_parsers={

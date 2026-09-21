@@ -135,7 +135,7 @@ ASSUMPTIONS = [
     *list(ASSUMPTIONS),
     "W (Spell Thief) prices all three orbiting bolts: the wiki Total Magic Damage "
     "row.",
-    "That is 45 to 165 + 30% AP == 3 x Magic Damage Per Bolt.",
+    "That is 45 to 165 + 30% AP == 3 x Magic Damage Per Bolt (data/champions.json W).",
     "The stolen Spell Shard actives are option-gated no-damage rows.",
     "Heal heals Zoe, Barrier shields her, and Smite deals true damage to monsters and "
     "minions.",

@@ -376,6 +376,11 @@ ASSUMPTIONS = [
     "W's flat-damage modifier applies to the secondary beam as non-burst flat damage.",
     "Q's cached cost 8.75/10/11.25/12.5/13.75 mana is the wiki per-0.25s tick, 1/4 of "
     "the game's per-second 35 to 55.",
+    "bin AurelionSolQ 'mana' is [35, 40, 45, 50, 55] and ddragon costBurn "
+    "'35/40/45/50/55', costType 'Mana per second'.",
+    "The ratio is exactly 4.0x at every rank, the tick convention this module also "
+    "sources for Q's 8 beam ticks/s.",
+    "Verified 16.15/16.16.1: cdtb aurelionsol.bin.json plus ddragon AurelionSol.json.",
     "patch_regression.py diffs the raw rows, so it reports 'cost drifted' where only "
     "the unit differs.",
     "resource_cost is not stamped for Q's channel, so no runtime behavior depends on "

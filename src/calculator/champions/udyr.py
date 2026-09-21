@@ -370,6 +370,7 @@ ASSUMPTIONS = [
     "effect.",
     "The Decayed Bonus Movement Speed row is withheld: one scalar has no shape for a "
     "decay curve.",
+    "That row is 7.5/9.3/11.1/12.9/14.7/16.5% + 1.5% per 100 bonus AD.",
     "The Awaken recast's 30% to 41.18% + 10% per 100 bonus AD bonus is an R-side "
     "boundary: no option.",
     "Nothing damage-relevant is left unmodeled once the stun is authored.",

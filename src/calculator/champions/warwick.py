@@ -290,7 +290,7 @@ ASSUMPTIONS = [
     "W's bonus movement speed and its 8-second mark are not modeled: stat_buff has no "
     "movement key.",
     "E (Primal Howl) is a zero-damage self-state window: the ranked Damage Reduction "
-    "row 35 to 55%.",
+    "row 35/40/45/50/55%.",
     "The required_ranked_attribute_atom prices the multiplier.",
     "The prose 'for up to 2.75 seconds' (timing.active_duration atom) prices the "
     "window.",

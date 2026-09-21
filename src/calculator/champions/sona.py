@@ -194,6 +194,7 @@ ASSUMPTIONS = [
     "1.5s.",
     "The in-game 'most wounded allied champion nearby' is the explicit roster "
     "teammate choice.",
+    "The fan-out keys are heal:W:<cast> and shield:W:<cast>.",
     "E (Song of Celerity) deals no damage; its self grant, 20% + 2% per 100 AP, is a "
     "move_speed_percent buff.",
     "It is a term in the shared resolve_move_speed fold, soft caps included.",

@@ -121,8 +121,8 @@ ASSUMPTIONS = [
     *list(ASSUMPTIONS),
     "P (Runic Blade) prices the cached per-level AD ratio: 30% to 46.76% by level AD "
     "on an empowered auto.",
-    "One stack is banked per auto, from the cached P Per-Level Scaling row.",
-    "Runic Blade's bonus is affected by critical strike modifiers (cached P effect).",
+    "One stack is banked per auto, from data/champions.json P 'Per-Level Scaling' [0].",
+    "Runic Blade's bonus is affected by critical strike modifiers (cached P effect 1).",
     "The on-hit row declares crit_effectiveness 1.0, priced at the fight's crit "
     "chance and multiplier.",
     "The same sentence's 100% life-steal effectiveness is a healing axis the row does "

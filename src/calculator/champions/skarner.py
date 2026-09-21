@@ -204,8 +204,8 @@ ASSUMPTIONS = [
     "(cached W prose).",
     "It rides the shared self_shield_events interface; the shockwave damage is "
     "unchanged.",
-    "E (Ixtal's Impact) prices the sourced Physical Damage row: 30 to 150 + 120% "
-    "bonus AD by rank.",
+    "E (Ixtal's Impact) prices data/champions.json E 'Physical Damage': 30 to 150 + "
+    "120% bonus AD by rank.",
     "E adds 6% of his maximum health, assuming the charged target collides with "
     "terrain.",
     "The charge, grab and stun are state.",

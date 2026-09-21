@@ -50,7 +50,7 @@ ASSUMPTIONS = [
     "The refresh cadence and the 'until broken' persistence past the fight window are "
     "state.",
     "E (Battle Dance)'s ally shield is sourced: Shield Strength 50 to 150 + 70% AP "
-    "(cached Rakan E).",
+    "(data/champions.json Rakan E).",
     "Its attribute name is recognized by the generic ally-support scanner.",
     "E has no SLOTS entry, so no E cast is scheduled and the scanner never fires for "
     "it.",

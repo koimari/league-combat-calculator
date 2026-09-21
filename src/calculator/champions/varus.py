@@ -401,8 +401,8 @@ ASSUMPTIONS = [
     "row.",
     "W's active empowers the next Piercing Arrow for the sourced Active Maximum Magic "
     "Damage row.",
-    "That is 9 to 21% of the target's missing health by W rank, priced at Maximum "
-    "like the arrow.",
+    "That is 9 to 21% of the target's missing health by W rank "
+    "(data/champions.json W), priced at Maximum.",
     "It reads target_missing_hp_pct (default 50%); w_active_empower off prices an "
     "unempowered arrow.",
     "Q detonation requires the Q cast; with blight_stacks=0 the option "

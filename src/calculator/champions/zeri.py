@@ -228,8 +228,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
     "E (Spark Surge) prices the dash plus Lightning Rounds: 7 Burst Fire rounds.",
-    "Each is the cached Burst Fire Bonus Magic Damage row, 22 to 30 + 20% AP, the "
-    "round count from Q.",
+    "Each is data/champions.json E's Burst Fire Bonus Magic Damage row, 22 to 30 + "
+    "20% AP, the round count from Q.",
     "Lightning Rounds bonus damage is 'increased by 0% : 100% (+ 0% : 30%) based on "
     "crit chance'.",
     "The module scales linearly with crit chance, exact at the sourced 0% and 100% "

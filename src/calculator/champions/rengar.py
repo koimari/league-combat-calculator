@@ -322,7 +322,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "That exclusion covers damage-over-time and proc damage.",
         "At 4 stacks the next Q, W or E cast is empowered and prices the wiki "
         "Ferocity Bonus, spending all.",
-        "The 1-second value is prose in the reviewed P template.",
+        "The 1-second value is prose in the reviewed P template, rev 2864152.",
         "Live in-fight gains are not wired: the resolver feeds no per-cast stack "
         "events into champion parses.",
         "The fight starts from the seeded state and the kernel receipt documents the "

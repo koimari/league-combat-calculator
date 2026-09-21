@@ -464,10 +464,10 @@ OPTIONS = [
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
     "P (Searing Brilliance) arms one empowered basic attack for 5s per ability cast.",
-    "The swing fires 8 to 30 by level + 4% AP magic per consumed stack (cached P "
-    "third effect).",
-    "The game file's MelPassive interpolates the same 8.0 to 30.0 with a 0.04 AP "
-    "coefficient.",
+    "The swing fires 8 to 30 by level + 4% AP per stack (data/champions.json P, "
+    "'Per-Level Scaling' 0).",
+    "mel.bin.json MelPassive interpolates 8.0 to 30.0 at 0.04 AP, with "
+    "BonusAttackDuration 5.0.",
     "p_searing_brilliance_missiles (default 3, one cast's stacks) has ceiling 9, the "
     "sourced cap.",
     "A swing consuming several casts' stacks is therefore understated, never "
@@ -484,8 +484,8 @@ ASSUMPTIONS = [
     "structurally absent.",
     "Its modifiers are percentages of the enemy projectile's damage, 40-60% + 5% per "
     "100 AP magic.",
-    "The physical twin is 28-42% + 3.5% per 100 AP; the binary's MelW owns "
-    "DamagePercent and ShieldAmount.",
+    "The physical twin is 28-42% + 3.5% per 100 AP.",
+    "data/bin/characters/mel.bin.json MelW owns DamagePercent and ShieldAmount.",
     "The atom corpus emits no damage atom for MelW, only cc-immunity, shield and "
     "projectile-destruction.",
     "Q (Radiant Volley) prices Initial Explosion + (Bolts - 1) x Subsequent "
@@ -500,7 +500,7 @@ ASSUMPTIONS = [
     "The stack count is r_overwhelm_stacks (default 3).",
     "KNOWN CACHE LAG: W's cached cooldown row is [38, 35, 32, 29, 26] and the game "
     "files say 33 at rank 3.",
-    "Bin MelW cooldownTime and ddragon cooldownBurn both read 33, verified on "
+    "Bin MelWAbility/MelW cooldownTime and ddragon cooldownBurn read 33, verified on "
     "16.16.1.",
     "The module reads the cooldown through extract_cooldown, so the flag traces to "
     "data/champions.json.",

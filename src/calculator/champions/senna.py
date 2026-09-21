@@ -314,6 +314,7 @@ ASSUMPTIONS = [
     "Its breakdown row is on_hit_ability_P2, at the Mist-buffed parse-time AD.",
     "The engine has no structure or invulnerability concept, so the wiki's exclusions "
     "are named limits.",
+    "Those are: never against structures, and only when the attack deals >0 damage.",
     "P's 10/15/20% movement steal for 0.5s is utility and not modeled.",
     "R (Dawning Shadow) also shields Senna for flat + 50% AP + 150% of the selected "
     "Mist stacks for 3s.",

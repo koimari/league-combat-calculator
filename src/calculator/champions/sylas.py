@@ -201,8 +201,8 @@ ASSUMPTIONS = [
     "on-hit damage.",
     "Each Unshackled stack spent REPLACES one physical swing with 130% total AD + 30% "
     "AP magic.",
-    "The game file's SylasPassive PassiveDamage carries exactly those two formula "
-    "parts.",
+    "The game file's SylasPassive PassiveDamage is mStat 2 at 1.3 total AD plus a 0.3 "
+    "AP coefficient, and nothing else.",
     "The module supplies only the non-AD remainder, 0.30 total AD + 0.30 AP, via "
     "auto_attack_conversion.",
     "The engine's own swing path keeps the AD term, so nothing is double counted.",

@@ -194,8 +194,8 @@ ASSUMPTIONS = [
     *list(ASSUMPTIONS),
     "Q (Stretching Strikes) prices both arm strikes: 2 x the sourced per-hit Magic "
     "Damage row.",
-    "That equals the wiki Total Magic Damage row, 120 to 360 + 60% AP + 6% of bonus "
-    "health at rank 5.",
+    "That equals data/champions.json Q's Total Magic Damage row, 120 to 360 + 60% AP "
+    "+ 6% bonus health at rank 5.",
     "The second strike replaces Zac's next basic attack while the tether persists, a "
     "0.25s cast.",
     "P (Cell Division) is the sourced revive state: 50% maximum health after the "

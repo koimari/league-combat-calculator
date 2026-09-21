@@ -238,8 +238,9 @@ ASSUMPTIONS = [
     "The cache describes a fatal-damage restore to full health, then 10% "
     "maximum-health burn ticks.",
     "Those ticks kill the target anyway unless a takedown lands within 6s.",
-    "The burn cadence is adjudicated to the binary: TicksPerSecond 4 and "
+    "The burn cadence is adjudicated to the binary: TicksPerSecond 4 (0.25s) and "
     "TicksBeforeDeath 10, a 2.5s window.",
+    "It is taken over the wiki's 0.264s, on the repo's game-file precedent.",
     "Its damage class is not adjudicated: the description says true, the notes say "
     "raw, the binary neither.",
     "That field decides whether a shield absorbs a tick, and E shields the covered "
