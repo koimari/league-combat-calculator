@@ -34,11 +34,12 @@ _FULL_ENTRY_ASSUMPTIONS = (
     "The complete parent Wiki entry was read before certifying this module.",
     "Passive plus Q/W/E/R entries are represented by explicit packet or "
     "no-damage slot declarations.",
-    "Rank arrays, typed target-health terms, and packet variants remain "
-    "sourced from the local reviewed-packet asset; the cooldown of each "
-    "cast is read from the champion cache at the rank being cast.",
-    "Non-damaging shields, buffs, movement, and utility branches remain "
-    "explicit state/out-of-scope rows rather than invented damage.",
+    "Rank arrays, typed target-health terms and packet variants remain "
+    "sourced from the local reviewed-packet asset.",
+    "Each cast's cooldown is read from the champion cache at the rank being cast.",
+    "Non-damaging shields, buffs, movement and utility branches remain "
+    "explicit state/out-of-scope rows.",
+    "No branch of them is priced as invented damage.",
 )
 
 

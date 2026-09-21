@@ -474,8 +474,12 @@ ASSUMPTIONS = [
     "overstated.",
     "Both cached Per-Level Scaling rows are asserted against the game-file ladder, so "
     "drift raises.",
-    "P's Overwhelm stored-damage execute is documented, not priced: "
-    + _OVERWHELM_EXECUTE_BOUNDARY,
+    "Overwhelm (P mechanic 2) is a kill boundary: documented, not priced.",
+    "It stores 50/60/70/80 + 10% AP, then 2/3/4/5 + 0.75% AP per stack.",
+    "It detonates when the stored post-mitigation damage exceeds health and shields.",
+    "The engine's execute seam takes a share of the target's MAXIMUM health.",
+    "Mel's threshold is a DAMAGE quantity, sized by the target's MR and Mel's pen.",
+    "An unmitigated ratio would be strictly larger than the real one: invented kills.",
     "W (Rebuttal) prices no damage: the target never casts, so the multiplicand is "
     "structurally absent.",
     "Its modifiers are percentages of the enemy projectile's damage, 40-60% + 5% per "
@@ -494,10 +498,6 @@ ASSUMPTIONS = [
     "R (Golden Eclipse) prices the cached 125/200/275 + 30% AP plus 4/7/10 + 4% AP "
     "per Overwhelm stack.",
     "The stack count is r_overwhelm_stacks (default 3).",
-    "The Overwhelm stored-damage execute is a kill boundary: documented, not priced "
-    "as damage.",
-    "P stores 50/60/70/80 + 10% AP on the first stack, +2/3/4/5 + 0.75% AP after, "
-    "spent above current health.",
     "KNOWN CACHE LAG: W's cached cooldown row is [38, 35, 32, 29, 26] and the game "
     "files say 33 at rank 3.",
     "Bin MelW cooldownTime and ddragon cooldownBurn both read 33, verified on "

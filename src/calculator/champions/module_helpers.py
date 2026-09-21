@@ -27,11 +27,10 @@ from .slot_extract import (
 from .slotlib import ProcDamageResolver, simple_damage
 
 REVIEWED_MODULE_ASSUMPTIONS = (
-    "Every passive/Q/W/E/R slot was reviewed against the complete parent Wiki "
-    "entry and its five namespace-10 template receipts.",
-    "Only the explicit one-rotation target/variant options are priced; utility, "
-    "control, movement, healing and defensive state remain named rather than "
-    "guessed.",
+    "Every passive/Q/W/E/R slot was reviewed against the complete parent Wiki entry.",
+    "The review covers its five namespace-10 template receipts.",
+    "Only the explicit one-rotation target/variant options are priced.",
+    "Utility, control, movement, healing and defensive state stay named, not guessed.",
     "All numeric rank/level values are read from the cached source JSON through typed extractors.",
 )
 
