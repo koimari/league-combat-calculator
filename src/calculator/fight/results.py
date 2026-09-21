@@ -28,7 +28,7 @@ class OnHitShare(NamedTuple):
 
     An on-hit application is a *sum* over its producers, which is exactly the
     shape a declaration cannot carry: a declaration is one producer's
-    magnitude (D-60).  So the producers are kept apart, each beside the
+    magnitude.  So the producers are kept apart, each beside the
     mechanic that declared it, and every pooled reading is derived from this
     list rather than accumulated a second time.
 

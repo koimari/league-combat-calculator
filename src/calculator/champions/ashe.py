@@ -39,7 +39,7 @@ from .source_receipts import load_champion_sources
 # every second when the duration ends."), so the module pins them beside
 # the same source receipt the rest of the module publishes (gnar.py
 # precedent for reviewed prose constants).
-# P2 Slice 11: the Ranger's Focus ACTIVE window — 6 seconds (the game
+# The Ranger's Focus ACTIVE window — 6 seconds (the game
 # file AsheQ DataValues.BuffDuration 6.0 flat at every rank + the cached
 # effect-1 prose "Active: For 6 seconds...").  The window is published
 # on the Q entry's auto_attack_override; the engine prices the per-swing
@@ -71,7 +71,7 @@ ASHE_FOCUS_STACK_RULE = StackRule(
 
 
 def _require_q_rows(ability: Mapping[str, Any]) -> None:
-    """Fail loud when the Q leveling rows are missing (P1 Slice 10).
+    """Fail loud when the Q leveling rows are missing.
 
     The flurry/AS pricing must never fall back to a silent zero when the
     cached rows are stripped or degraded (the repo's fail-closed

@@ -217,7 +217,7 @@ SLOTS = {
 # SOURCES publishes below.
 _WIKI_SOURCE = "https://wiki.leagueoflegends.com/en-us/Brand@4023911"
 
-# Head only (D-89). Q opening is the mechanic below; the rest of the seed
+# Head only. Q opening is the mechanic below; the rest of the seed
 # order — R and E between Q and W — is a stack-count and DPS preference,
 # so the resolver's hand seed keeps it. One edge, not three: R and E apply
 # Ablaze too, so this is the minimal declaration that keeps W's priced

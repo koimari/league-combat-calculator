@@ -337,7 +337,7 @@ def build_packet_module(
     # The digest above proves the evidence is the reviewed one; this
     # proves the declarations are about slots that evidence compiled.  A
     # dependency naming a slot this packet never built is a rule with no
-    # referent, and only a declaring module can reach the raise (D-85).
+    # referent, and only a declaring module can reach the raise.
     if cast_dependencies:
         validate_cast_dependencies(
             cast_dependencies, slot_surface=set(slots), module=champion_name

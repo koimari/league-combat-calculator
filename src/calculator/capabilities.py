@@ -37,41 +37,19 @@ from .cast_dependency import BASE_CAST_SLOTS
 # Acyclic: nothing under ``survival/`` imports ``capabilities``.
 from .survival.phases import TransitionRank, public_phase
 
-# D-63's chain, in commit order: 1 at 0A's derivation (a starting value, not a
-# bump), 2 at 0B's C4 — which published ``persistent_aura_arming`` as the
-# ledger's seventh phase — and 3 here, at Phase 3's 3.8 coverage flip.  The
-# flip changed the serialized coverage payload: ``blocked`` became
-# ``withheld`` (D-23's spelling for a refusal that carries a receipt and no
-# number), and every status and reason is now computed from declarations
-# rather than read out of a hand registry.  4 is Phase 4's S9: every payload
-# that publishes a number now publishes a parallel ``dispositions`` map beside
-# it, keyed by leaf path, whose entries carry the leaf's ``Disposition`` and
-# its ``ViewTag``.  Measured and structurally-zero leaves are unchanged bare
-# numbers; a withheld leaf is *absent* from the payload while its entry
-# remains, carrying the receipts.  S6's rank split was asserted payload-
-# neutral, so it took no value and S9 takes 4 rather than 5 (D-63).
-#
-# 5 is the rune page: the request gained ``minor_runes``, ``stat_shards``
-# and ``rune_options``, and ``/api/config`` gained the whole rune catalog
-# (with each rune's path, row and model coverage) and the stat-shard table
-# beside the keystone list it already published.
-#
-#
-# 6 is the survival row's certification fields: the participant ledger row
-# gained the crowd-control interval and immunity block, the cleanse receipt,
-# the revive-stasis lifecycle, the projectile-defense and spell-shield
-# receipts, the Guardian and Aftershock blocks, the action-downtime union and
-# the permanent-bonus-health ledger.
-#
-# 7 is the unsupported fields' locators: ``state_path`` and ``frontend_token``
-# are now ``null`` on every field the backend refuses, which is a value change
-# on ten published descriptors and so takes a version.
-#
-# The version moves for a change to the *published payload* and for nothing
-# else, so a derivation edit that comes out byte-identical leaves it alone.
-# 8 is ``stat_surfaces``: the response publishes two stat blocks that answer
-# two different questions, and each now names which one it is.
-# 9 adds the ``scoreboard`` control family: the screenshot reader's dialog.
+# The version a consumer pins against.  It moves for a change to the
+# *published payload* and for nothing else, so a derivation edit that comes
+# out byte-identical leaves it alone, and a change that only splits an
+# internal rank takes no value.  What 9 publishes: coverage statuses and
+# reasons computed from declarations, with ``withheld`` for a refusal that
+# carries a receipt and no number; a ``dispositions`` map beside every
+# payload that publishes a number, keyed by leaf path, whose entries carry
+# the leaf's ``Disposition`` and ``ViewTag`` (a withheld leaf is *absent*
+# from the payload while its entry stays); the rune page (``minor_runes``,
+# ``stat_shards``, ``rune_options`` on the request, the rune catalog and the
+# stat-shard table on ``/api/config``); the survival row's certification
+# fields; ``null`` locators on every field the backend refuses; two labelled
+# stat surfaces; and the ``scoreboard`` control family.
 CAPABILITY_SCHEMA_VERSION = 9
 
 # The two states a published stat block can report. Both are correct and

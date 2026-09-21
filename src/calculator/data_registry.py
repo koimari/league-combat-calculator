@@ -158,13 +158,13 @@ _keyed_on_an_address_too = _governed(
 # whatever it is called.  tests/test_data_version_memos.py scans for both and
 # asserts the five tables below partition the union exactly, so a new one
 # cannot join the codebase without landing in one of them, which is the whole
-# point of a counter over a convention (D-49).
+# point of a counter over a convention.
 #
-# The second detector is S10's repair: until it existed the population was
-# the name rule alone, and ``item_effects._RESOLVED_DAMAGE_EFFECTS`` — a memo
-# this file already governed, in REFRESH_CLEARED_MEMOS — sat outside it
-# because of how it is spelled.  "The population is closed" that is closed
-# over a naming convention is a claim about the convention.
+# The second detector is what makes the population real: under the name rule
+# alone, ``item_effects._RESOLVED_DAMAGE_EFFECTS`` — a memo this file governs,
+# in REFRESH_CLEARED_MEMOS — sits outside it because of how it is spelled.
+# "The population is closed" that is closed over a naming convention is a
+# claim about the convention.
 #
 # Splitting the population five ways rather than two is deliberate: "keys on
 # it", "another lane keys it", "cannot be governed by it", "the refresh
@@ -225,8 +225,8 @@ DATA_VERSION_KEYED_MEMOS: dict[str, MemoGovernance] = {
     ),
 }
 
-# Keyed by their own lane rather than here: Phase 5 owns the two rotation
-# memos and keyed them with the cast-dependency work (D-49's split).
+# Keyed by their own lane rather than here: the two rotation memos are keyed
+# beside the cast-dependency machinery that fills them.
 ROTATION_MEMOS: dict[str, MemoGovernance] = {
     "calculator.champion_rotation_rule._DERIVED_RULE_CACHE": _version_keyed(
         "a champion's derived rotation rule, keyed with the cast-dependency work"
@@ -262,11 +262,11 @@ UNGOVERNED_MEMOS: dict[str, MemoGovernance] = {
 
 # The same shape as the seven above, over champions.json instead of
 # items.json, and keyed by the same argument — but the champion tree is
-# ruled out of this phase's sweep (D-24: no champion sweep is implied), so
-# these five are named here with their issue rather than silently left out
-# of the population.  This is a gap on the record, not an exemption.
+# not swept, so these five are named here with the reason rather than
+# silently left out of the population.  A gap on the record, not an
+# exemption.
 _CHAMPION_MEMO_DEFERRAL = (
-    "champions/ is outside this phase's edit scope (D-24); identity-keyed "
+    "champions/ is not swept for data-version keying; identity-keyed "
     "with a strong reference and re-verified on every hit, so the residual "
     "hazard is an in-place mutation of a cached ability dict — issue #212"
 )
@@ -274,8 +274,8 @@ _CHAMPION_MEMO_DEFERRAL = (
 # Emptied wholesale when the registry they derive from is rebuilt, so the
 # counter has nothing to add.  Named here anyway, with the test that asserts
 # the clear still happens: a memo whose safety is one line in somebody
-# else's function is exactly the claim this campaign stopped taking on
-# trust.  Their names do not match the ``_MEMO``/``_CACHE`` shape, which is
+# else's function is a claim nobody can check.  Their names do not match
+# the ``_MEMO``/``_CACHE`` shape, which is
 # why the scan grew its second detector rather than this table staying
 # outside the partition.
 REFRESH_CLEARED_MEMOS: dict[str, MemoGovernance] = {

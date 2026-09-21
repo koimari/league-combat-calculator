@@ -82,7 +82,7 @@ def simple_damage(
         zero_policy: Keyword-only. What a zero total from this slot means.
             Defaults to
             :data:`MODULE_FORMULA_ZERO`, the champion tree's one declared
-            disposition (D-24); pass a different policy where a zero is a
+            disposition; pass a different policy where a zero is a
             declaration rather than a computed result.
         event_order_certified: Keyword-only. ``"single_hit"`` states that
             this cast's one hit lands at the cast boundary, so the engine

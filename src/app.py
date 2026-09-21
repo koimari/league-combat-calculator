@@ -169,8 +169,8 @@ app.json.sort_keys = False
 app.config.update(
     MAX_CONTENT_LENGTH=32 * 1024,
     RATE_LIMIT_ENABLED=True,
-    # The benchmark harness's seam into the optimizer (campaign runbook
-    # R-24): ``{"work_counters": <sink>, "use_compiled_walk": <bool>}``.
+    # The benchmark harness's seam into the optimizer:
+    # ``{"work_counters": <sink>, "use_compiled_walk": <bool>}``.
     # ``scripts/bench_coupled_optimizer.py`` installs it before posting, so
     # the counters CI reads come out of the shipped request path instead of
     # a patched copy of it.  Empty in production, where it costs one dict
@@ -579,7 +579,7 @@ def _internal_error(error):
 
 
 def _within_starvation_boundary(view):
-    """Wrap one view in the campaign's single ``StarvedSignal`` catch.
+    """Wrap one view in the single ``StarvedSignal`` catch.
 
     A ``StarvedSignal`` means a leaf has no value a rule computed and the
     only honest answer is to say so — either because a projection cannot
@@ -587,12 +587,11 @@ def _within_starvation_boundary(view):
     holds two answers to one question and so can answer neither.  Both are
     programming errors rather than data conditions, both are raised where
     they are discovered, and both are handled in exactly one place: here,
-    where they become a 500 carrying the ``STARVED`` receipt (D-25, as the
-    umbrella's Amendment G reads its "exactly one catch" — one *place*, not
-    one exception type).  Everywhere else they propagate: a named refusal
-    that is quietly absorbed is the zero this campaign exists to kill, and
-    an absorbed rewrite signal in particular is the last-write-wins the
-    write-once ledger refuses.
+      where they become a 500 carrying the ``STARVED`` receipt.  "Exactly one
+      catch" means one *place*, not one exception type.  Everywhere else they
+      propagate: a named refusal quietly absorbed becomes an unexplained zero,
+      and an absorbed rewrite signal in particular is the last-write-wins the
+      write-once ledger refuses.
 
     One wrapper over every registered view rather than one ``except`` per
     route, because "exactly one catch" is the rule and repeating it would be

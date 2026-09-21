@@ -33,12 +33,11 @@ def _resolve_starting_shield_outcome(
     outcome so the UI does not hide how much of that damage reached health.
 
     A max-health- or missing-health-scaled packet is re-priced here against
-    the target's live pools, which makes this the third site that changes what
-    an already-authored packet is worth — the one umbrella Amendment N's prose
-    did not name and its Ruling 2 census found.  Each such packet's
-    declaration is restated by the ratio the packet moved by, and rides back
-    onto the authored event with the number
-    (:func:`restate_declaration`, Ruling 1's *kept in step*).
+    the target's live pools, which makes this the third site that changes
+    what an already-authored packet is worth.  Each such packet's declaration
+    is restated by the ratio the packet moved by, and rides back onto the
+    authored event with the number (:func:`restate_declaration`), so the
+    declaration and the number stay in step.
     """
     repriced = False
     pools = shield_pools.build_pools(
@@ -97,9 +96,8 @@ def _resolve_starting_shield_outcome(
                 live_damage = remaining * live_raw / raw_damage
                 if abs(live_damage - remaining) > 1e-9:
                     repriced = True
-                    # The declaration moves by exactly what the packet moved
-                    # by (Amendment N, Ruling 1, through the site Ruling 2's
-                    # census added to the kept-in-step list).
+                    # The declaration moves by exactly what the packet
+                    # moved by, so the two stay in step.
                     restate_declaration(event, scale=live_damage / remaining)
                     remaining = live_damage
                     event["damage"] = live_damage

@@ -322,7 +322,7 @@ def _chilling_scream(
                 # charging (physical, magic, and true — the sourced prose
                 # names no carve-out), so the modifier gates no source kind.
                 "all_sources": True,
-                # D-04: a modifier names its classes; "every damage type"
+                # A modifier names its classes; "every damage type"
                 # is the full declaration, never an empty one.
                 "damage_classes": frozenset(DamageClass),
                 "attack_classes": frozenset(AttackClass),

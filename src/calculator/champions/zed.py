@@ -142,7 +142,7 @@ _SHADOW_MIMICS_Q_AND_E = (
     "placement for the kit it models to be the kit Zed casts."
 )
 
-# Head only (D-89). W first is the mechanic above; the rest of the seed
+# Head only. W first is the mechanic above; the rest of the seed
 # order — E before Q, R last — is a DPS and scheduling preference no
 # declaration can honestly express, so the resolver's hand seed keeps it.
 # R in particular is deliberately undeclared: Marked for Death stores the

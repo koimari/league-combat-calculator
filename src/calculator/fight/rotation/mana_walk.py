@@ -32,7 +32,7 @@ from .mana_declarations import (
 
 
 def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
-    """Admit MANA casts through the typed resource ledger (P3 slice 1).
+    """Admit MANA casts through the typed resource ledger.
 
     One account per fight owner owns every transition: base regeneration
     ticks, external restores (Catalyst's Eternity, Essence Reaver's
@@ -306,7 +306,7 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
                             "swing_index": row["swing_index"],
                         }
                     )
-                    # P1 Slice 12 (R1): a DENIED arming cast never fires
+                    # A DENIED arming cast never fires
                     # its swings, so the fight never saved that burst
                     # time — return it to the ordinary restore budget.
                     #  The first denied swing of the cast mints the
@@ -445,7 +445,7 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
             # (in-game sequence: cast, hit, refund).  With the
             # basic_attack detonation option no mark is ever pending
             # (nothing is armed), so nothing consumes here.
-            # P1 Slice 13 (R1): the mark's 4s window is enforced — a
+            # The mark's 4s window is enforced — a
             # detonation landing after the window is receipted
             # ``mark_expired`` and never refunds (the cached prose "marks
             # ... for 4 seconds", the binary DetonationTimeout 4.0, the
@@ -581,8 +581,8 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
 
     # Marks still pending when the fight ends were never detonated by an
     # ability in-window — receipted, never guessed (fail closed).  A mark
-    # whose 4s window elapsed before the fight ended is ``mark_expired``
-    # (P1 Slice 13), otherwise ``mark_undetonated``.
+    # whose 4s window elapsed before the fight ended is ``mark_expired``,
+    # otherwise ``mark_undetonated``.
     for mark in pending_marks:
         if not mark["accepted"]:
             if (

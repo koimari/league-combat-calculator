@@ -45,7 +45,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         ),
     },
     cc_kinds=MODULE_CC,
-    # Cull the Meek cleaves once around Renekton and Slice's dash damages
+    # Cull the Meek cleaves once around Renekton and E's dash damages
     # what it passes through once — the boundary claim that carries
     # MODULE_CC's reviewed answers into the event ledger.  W and R already
     # author their own strike and tick timings below.

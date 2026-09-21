@@ -68,10 +68,9 @@ def _glacial_storm(
     # because the ledger cannot see it: with the ticks authored below, a
     # ``cc_kind`` here (or a ``dot_duration``) makes Anivia the roster's
     # first ``enhanced_consume`` producer, R's chill feeding E's "Enhanced
-    # Damage".  That empties the cast-dependency audit's dated
-    # acknowledged-gap list, which answers recorded ruling H6 / D-88 —
-    # reserved for its own slice with its own investigator receipt, not a
-    # side effect of this review.
+    # Damage".  That empties the cast-dependency audit's acknowledged-gap
+    # list, which is a modelling change owing its own evidence rather than
+    # a side effect of this review.
     parts = [
         DamagePart(
             "magic",
@@ -187,8 +186,8 @@ SLOTS = {
 # neither — the recast happens "while the ice is in flight after its cast
 # time", on a flight the cache gives a speed for and no distance.  R's
 # ticks land on their cached every-0.5-second beat and every one of them
-# slows, but stating it here is the ``enhanced_consume`` ruling reserved
-# to its own slice (see ``_glacial_storm``).  W's wall "knock[s] all units
+# slows, but stating it here would make the ``enhanced_consume`` claim
+# (see ``_glacial_storm``).  W's wall "knock[s] all units
 # away from it" and authors no damage part.
 MODULE_CC = {"E": "none", "Q": CC_PER_PART, "W": "knockback", "R": CC_PER_PART}
 

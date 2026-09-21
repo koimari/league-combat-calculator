@@ -250,7 +250,7 @@ class FightParams(FightConfig):
         The cast-order check here is deliberately champion-agnostic: a
         request is a non-empty list of distinct ability slots, and *which*
         slots a given champion may be told to cast is decided against its
-        parsed kit in :meth:`validate_for_champion` (D-11).
+        parsed kit in :meth:`validate_for_champion`.
         """
         validate_cast_order_shape(self.cast_order, field="Cast order")
 
@@ -342,7 +342,7 @@ class FightParams(FightConfig):
             ValueError: A requested slot is not orderable for this kit.
             cast_dependency.CastDependencyError: The parse holds a cast slot
                 that is neither a base slot nor stamped ``recast_of``, so
-                nothing can say whether a request may name it (D-11).
+                nothing can say whether a request may name it.
         """
         if self.cast_order is None:
             return

@@ -80,7 +80,7 @@ def _required_amp_slot(
     rule is a programming error, not an amp worth zero — the effect's own
     existence is the proof a holder is present.  It raises rather than
     returning ``None``, because returning would price the mechanic at zero
-    with nothing saying so, which is the failure this campaign exists to end.
+    with nothing saying so.
     """
     resolved = _amp_slot(state, slot, effect.rune_name)
     if resolved is None:

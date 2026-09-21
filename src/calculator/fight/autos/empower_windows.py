@@ -119,8 +119,8 @@ def _empower_window_procs(
     consumed_by = frozenset(window["consumed_by"])
     refresh_on_consume = bool(window.get("refresh_on_consume"))
 
-    # Phase 0 = consumer, phase 1 = arm: the documented tie-break falls
-    # out of the sort key instead of a special case inside the walk.
+    # Rank 0 = consumer, rank 1 = arm: the tie-break falls out of the sort
+    # key instead of a special case inside the walk.
     events: list[tuple[float, int, str]] = [
         (float(time), 0, kind) for time, kind in consumer_times if kind in consumed_by
     ]

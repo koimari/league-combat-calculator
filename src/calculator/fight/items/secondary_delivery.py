@@ -141,8 +141,7 @@ def _add_bolt_delivery(
                 # states its magnitude, so a partially declared row
                 # would hand the walk a price missing a producer while
                 # the stamp took the pair engine's whole figure out of
-                # the roster total.  That is the half-performed
-                # retirement umbrella Amendment L, Ruling 1 calls worse
+                # the roster total.  That half-performed move is worse
                 # than neither half.  Unstamped, the pair engine goes on
                 # pricing it exactly as it did.
                 # A COARSE copied row is not stamped either, and for a
@@ -182,7 +181,7 @@ def _add_bolt_delivery(
                     # One event per CONTRIBUTING SOURCE rather than per
                     # damage type: a summed event cannot carry one
                     # producer's declaration, and a declaration is one
-                    # producer's magnitude (D-60).  Every amount, every
+                    # producer's magnitude.  Every amount, every
                     # type total and the row total are unchanged.
                     copied_row["damage_events"] = [
                         {

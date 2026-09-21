@@ -173,7 +173,7 @@ def _primal_howl(
         ability,
         rank,
         duration_source=_E_REDUCTION_SOURCE,
-        # D-04: a modifier names its classes; this kit's cache names no
+        # A modifier names its classes; this kit's cache names no
         # excluded type, so the full enum IS the declaration, never an
         # empty one, and never Alistar's narrowed pair, which his own
         # cached note sources and this one does not.

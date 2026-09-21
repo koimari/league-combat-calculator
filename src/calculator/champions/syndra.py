@@ -162,7 +162,7 @@ def _dark_sphere_second_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     simulated.
 
     ``recast_of="Q"`` is the single authority for this row's parentage
-    (D-11): it is what keeps the charge riding Q's slot in a requested
+    it is what keeps the charge riding Q's slot in a requested
     cast order instead of being dropped, and what the rotation resolver
     reads to place it after Q. Nothing may infer the link from the name.
 

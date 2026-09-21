@@ -234,7 +234,7 @@ def _unbreakable_will(
         ability,
         rank,
         duration_source=_R_DURATION_SOURCE,
-        # D-04: true damage is explicitly excluded by the cached ability
+        # True damage is explicitly excluded by the cached ability
         # note ("True damage cannot be reduced by any means"), so the
         # declared set is physical + magic only, NOT the full enum.
         damage_classes=frozenset({DamageClass.PHYSICAL, DamageClass.MAGIC}),

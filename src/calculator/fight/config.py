@@ -180,7 +180,7 @@ class FightConfig:
     # engine consumes them before a simultaneous cast is admitted; ordinary
     # one-pair callers leave this empty.
     resource_restore_events: tuple[tuple[float, float], ...] = ()
-    # Account owner for the typed mana resource ledger (P3 slice 1).  The
+    # Account owner for the typed mana resource ledger.  The
     # one-pair engine defaults to "main"; the coupled participant timeline
     # keys each attacker's fight by its participant id.
     resource_ledger_owner: str = "main"

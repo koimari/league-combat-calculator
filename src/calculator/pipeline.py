@@ -82,7 +82,7 @@ def resolve_ledger_inputs(  # pylint: disable=too-many-arguments,too-many-positi
 # always identical across candidates.  Memoize the derived params by
 # (params identity, order): frozen instances are safe to share, the strong
 # reference guards ``id()`` recycling, the leading ``data_version()``
-# retires every entry derived from a replaced cache (D-49), and the bound
+# retires every entry derived from a replaced cache, and the bound
 # keeps candidate churn from growing the memo without limit.
 _CAST_ORDER_PARAMS_MEMO: dict[
     tuple[int, int, tuple[str, ...]], tuple["FightParams", "FightParams"]
@@ -268,19 +268,19 @@ def run_fight(
         # slot is folded back in after its parent.  Before this, a requested
         # order was passed to the engine verbatim and every recast row it did
         # not name — Syndra's second Dark Sphere charge — silently vanished
-        # from the damage breakdown (D-11).
+        # from the damage breakdown.
         resolved_user_order = list(params.cast_order)
         params.validate_cast_order_for_kit(
             champion_data.get("name", ""), ability_damages
         )
         # A declared ordering prerequisite states impossibility, not
-        # preference (D-86): casting Syndra's E before her Q would have the
+        # preference: casting Syndra's E before her Q would have the
         # engine author a stun that cannot happen, and an amplifier price
         # off it.  The order checked is the EXPANDED one, because that is
         # what the engine casts — a recast folded in after its parent can
         # satisfy a dependency the request never named, and could equally
         # invert one.  A champion that declares nothing gets an empty tuple
-        # and reaches no new failure mode (D-85).
+        # and reaches no new failure mode.
         expanded_order = expand_user_order(resolved_user_order, ability_damages)
         check_order_satisfies_dependencies(
             expanded_order,
@@ -318,7 +318,7 @@ def run_fight(
                 _annotate_deathfire_categories(ability_damages, champion_data)
     # ``score_only`` is the request for a narrowed result; whether the light
     # tuple ledger can serve it is projection satisfaction over the declared
-    # adequacy conditions, not a conjunction kept here (D-38, criterion 15).
+    # adequacy conditions, not a conjunction kept here.
     tuple_ledger = score_only and (
         ledger_projection(
             resolve_ledger_inputs(

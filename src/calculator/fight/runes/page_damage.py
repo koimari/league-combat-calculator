@@ -24,8 +24,8 @@ def _add_rune_proc_damage(state: FightState, rotation: RotationResult) -> None:
     does not empowers every later trigger. Each proc is priced once and
     recorded as a timestamped damage event for the ledger and timeline
     consumers, and the rune's own disclosures reach the notes whether
-    it procced or not — a withheld half that goes quiet at zero is the
-    silent zero this campaign removes.
+    it procced or not — a withheld half that goes quiet at zero is a
+    silent zero.
 
     A rune whose trigger is an input the fight has no event for reads it
     off the page's declared options through its own ``armed`` rule, and an

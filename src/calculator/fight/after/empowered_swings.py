@@ -79,8 +79,8 @@ def _author_empowered_swing_events(
     event to ride — which is what keeps Leona Q, Cho'Gath E, Fiora E and
     Jax W coarse for a control-armed holder shield.
 
-    A swing is priced from the ledger slice the reattribution removes
-    (wave 1E) and timed from :attr:`_EmpoweredSwings.times`.  Those name
+    A swing is priced from the ledger rows the reattribution removes and
+    timed from :attr:`_EmpoweredSwings.times`.  Those name
     the same attack in a stream whose swings are alike; where they are
     not, taking a different swing's damage would re-price the row and the
     auto row's crit split with it, which this wave may not do.

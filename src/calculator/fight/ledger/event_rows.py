@@ -84,7 +84,7 @@ _VAMP_SOURCE_PREFIXES = ("auto_attacks", "on_hit_")
 
 
 # The control stream alone: an immobilize walk never reads a damage trigger,
-# and asking for one would build a projection it discards (D-30).
+# and asking for one would build a projection it discards.
 _CONTROL_TRIGGER_ONLY = frozenset({TriggerKind.CC})
 
 

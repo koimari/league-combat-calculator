@@ -120,7 +120,7 @@ class Measured(_QuantityAlgebra):
 
     @property
     def disposition(self) -> Disposition:
-        """This quantity's tag — ``Disposition`` as a projection (D-72)."""
+        """This quantity's tag — ``Disposition`` as a projection."""
         return Disposition.MEASURED
 
     def read(self) -> float:
@@ -188,9 +188,8 @@ class Starved(_QuantityAlgebra):
     A programming error rather than a data condition: a consumer and a
     projection disagree about what the projection can represent.  Reading it
     raises ``ProjectionStarvation`` — lazily, on the *first read* rather than
-    at construction, so the failure surfaces where the question was asked
-    (D-25).  Exactly one handler catches it, at the request boundary in
-    ``src/app.py``.
+    at construction, so the failure surfaces where the question was asked.
+    Exactly one handler catches it, at the request boundary in ``src/app.py``.
     """
 
     field: str
@@ -203,11 +202,11 @@ class Starved(_QuantityAlgebra):
         return Disposition.STARVED
 
     def read(self) -> float:
-        """Never returns: the campaign's one lazily-raised failure."""
+        """Never returns: the one lazily-raised failure of this union."""
         raise projection_starvation(self.field, self.producer, self.reason)
 
 
-# The four dispositions as a value type (D-72).  ``Disposition`` survives as
+# The four dispositions as a value type.  ``Disposition`` survives as
 # this union's tag projection rather than as a parallel annotation, which is
 # what makes "every leaf carries exactly one disposition" a property of the
 # type instead of a discipline maintained by tests.

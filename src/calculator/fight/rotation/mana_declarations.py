@@ -171,9 +171,9 @@ def _return_denied_burst_budget(
 ) -> None:
     """Return one denied burst cast's time to the ordinary restore budget.
 
-    P1 Slice 12 (R1): the pre-admission schedule subtracted every planned
-    burst cast's time from the ordinary count; a cast whose arming
-    admission was DENIED never fires, so the fight's ordinary stream is
+    The pre-admission schedule subtracts every planned burst cast's time
+    from the ordinary count; a cast whose arming admission was DENIED never
+    fires, so the fight's ordinary stream is
     uninterrupted and its restores must not shrink.  The first denied
     swing of a cast mints the returned ordinary rows at the current
     count's continuation (they ride their own scheduled times and heap
@@ -212,7 +212,7 @@ def _auto_restore_decl(
 
     A champion entry (Jayce's W passive) carries ``resource_restore_per_auto``
     as a typed dict ``{amount, source, atoms}``.  More than one declaring
-    entry is not representable in this slice and raises (fail closed); the
+    entry is not representable and raises (fail closed); the
     returned tuple names the declaring slot for the ledger detail rows.
     """
     declaring: list[tuple[str, dict[str, Any]]] = []
@@ -328,7 +328,7 @@ def _auto_restore_schedule(
                     "arming_ordinal": ordinal,
                     "swing_index": swing_index + 1,
                     "hits": hits,
-                    # P1 Slice 12 (R1): this cast's burst-time
+                    # This cast's burst-time
                     # contribution — a DENIED arming cast never fires
                     # its swings, so its budget is returned to the
                     # ordinary stream (the denied cast cannot shrink

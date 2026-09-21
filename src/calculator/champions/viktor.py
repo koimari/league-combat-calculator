@@ -102,7 +102,7 @@ def _siphon_power(packet_q):
 #
 # Two facts this declaration does not carry, both out of the module's
 # modelled kit: Arcane Storm also "disrupt[s] their channeled abilities",
-# an interrupt the campaign's kind vocabulary has no word for and which no
+# an interrupt ``control_spec``'s kind vocabulary has no word for and no
 # control-armed item passive keys on; and the W augment Magnetize would
 # make "Viktor's other abilities ... slow enemies hit by 20%", which the
 # Hex Fragment augments (out of scope here) are the only way to buy.

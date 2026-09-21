@@ -19,7 +19,7 @@ class StackingProc(NamedTuple):
     target's falling health per proc, so the two numbers are per packet and
     a caller holding only one of them would have to recover the other by
     dividing a mitigation back out — the ratio step the from-declaration
-    pricing path exists to remove (umbrella Amendment L, Ruling 3).
+    pricing path exists to remove.
 
     ``raw`` is pre-mitigation and already carries the pair-local factor the
     engine applies outside :func:`_mitigate`, which is the magnitude a

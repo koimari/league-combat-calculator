@@ -371,8 +371,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
                     # The one charged strike whose packet earns a part amp:
                     # this true instance rides the swing, so the basic amp
                     # multiplies it below and the declaration says so with
-                    # its class rather than pre-multiplying the magnitude
-                    # (umbrella Amendment M, Ruling 1's ordering).
+                    # its class rather than pre-multiplying the magnitude.
                     "declared": _strike_declaration(
                         charged_strike.strike_mechanic_id(ultimate_auto_buff.item_name),
                         raw_true,

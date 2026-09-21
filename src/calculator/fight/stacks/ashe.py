@@ -96,7 +96,7 @@ def _feed_ashe_focus_stack(
                     status=(False, "below_cap"),
                 )
         elif q_window_end > 0.0 and time < q_window_end:
-            # P1 Slice 11: the "while Ranger's Focus is INACTIVE" clause
+            # The "while Ranger's Focus is INACTIVE" clause
             # — the flurry-window swings generate NO Focus (a named
             # denial distinct from at_cap, the stack never mutates); the
             # gains resume at t >= q_window_end.
@@ -142,7 +142,7 @@ def _feed_ashe_focus_stack(
 
 
 def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
-    """Add Ashe's live Focus stack lifecycle receipts (P1 Slice 10).
+    """Add Ashe's live Focus stack lifecycle receipts.
 
     The Focus stack machine runs POST-ROTATION over the engine's
     already-priced per-swing events: each auto attack at its swing time

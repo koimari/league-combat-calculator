@@ -156,9 +156,9 @@ def _add_shadowflame_cinderbloom(
             "damage_events": bonus_events,
             # Which mechanic this row is the pair engine's reading of, taken
             # from the rule the slot resolved rather than spelled again here.
-            # Phase 4 S7 settled which engine owns Cinderbloom — the walk,
-            # because the predicate reads the target's health under a whole
-            # roster's fire — so this row is the honest one-attacker preview
+            # The walk owns Cinderbloom, because the predicate reads the
+            # target's health under a whole roster's fire — so this row is
+            # the honest one-attacker preview
             # and the roster composition reads the stamp and drops it.  The
             # pair fight's own receipt publishes it unchanged: that surface
             # is the single-attacker question, where the preview is the
