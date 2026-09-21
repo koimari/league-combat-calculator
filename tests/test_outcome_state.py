@@ -65,7 +65,7 @@ def test_rewriting_the_same_value_is_still_a_rewrite() -> None:
     """Two rules answering one question agree today; that is not the test."""
     ledger = outcome_state.OutcomeLedger()
     ledger.write(action(1), damage=42.0)
-    with pytest.raises(quantity.StarvedSignal):
+    with pytest.raises(quantity.StarvedSignal, match=r"already recorded applied=42\.0"):
         ledger.write(action(1), damage=42.0)
 
 
@@ -73,7 +73,7 @@ def test_two_kernel_kwargs_naming_one_outcome_field_collide() -> None:
     """``damage`` and ``applied_amount`` are one field, so they cannot both win."""
     ledger = outcome_state.OutcomeLedger()
     ledger.write(action(2), damage=5.0)
-    with pytest.raises(quantity.StarvedSignal):
+    with pytest.raises(quantity.StarvedSignal, match=r"already recorded applied=5\.0"):
         ledger.write(action(2), applied_amount=5.0)
 
 
@@ -106,7 +106,7 @@ def test_a_second_refusal_raises_unless_the_first_is_preserved() -> None:
     ledger.skip(action(6), "holder_health_gate")
     ledger.skip(action(6), "redirect_gate", preserve_reason=True)
     assert ledger.get(6).skipped_reason == "holder_health_gate"
-    with pytest.raises(quantity.StarvedSignal):
+    with pytest.raises(quantity.StarvedSignal, match="already recorded skipped_reason"):
         ledger.skip(action(6), "redirect_gate")
 
 
@@ -318,11 +318,11 @@ class TestAtMostOneAppliedContribution:
     def test_one_slot_writing_two_applied_aliases_is_a_rewrite_not_a_duplicate(
         self,
     ) -> None:
-        """The write-once rule still owns the one-slot case, by its own name."""
+        """The write-once rule still owns the one-slot case, by its own reason."""
         ledger = outcome_state.OutcomeLedger()
         packet = self.contribution(0, source="mandate", subject=1, event=7)
         ledger.write(packet, damage=40.0)
-        with pytest.raises(quantity.StarvedSignal):
+        with pytest.raises(quantity.StarvedSignal, match="already recorded applied"):
             ledger.write(packet, applied_amount=40.0)
 
     def test_a_refusal_claims_no_contribution(self) -> None:
@@ -468,7 +468,7 @@ class TestTheReceiptWalkRunsIt:
             event={},
         )
         ledger.write(first, damage=40.0)
-        with pytest.raises(quantity.StarvedSignal):
+        with pytest.raises(quantity.StarvedSignal, match="two applied contributions"):
             ledger.write(second, damage=40.0)
 
     def test_the_production_ledger_refuses_a_second_answer(self) -> None:
@@ -479,7 +479,7 @@ class TestTheReceiptWalkRunsIt:
         )
         packet = SurvivalAction(kind=ActionKind.DAMAGE, aidx=0, event={})
         ledger.write(packet, overkill=1.0)
-        with pytest.raises(quantity.StarvedSignal):
+        with pytest.raises(quantity.StarvedSignal, match="already recorded overkill"):
             ledger.write(packet, overkill=2.0)
 
 
