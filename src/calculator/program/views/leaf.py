@@ -1,7 +1,7 @@
 """Where every leaf the five views publish is born, and the writers that collect them.
 
 :func:`serialize_leaf` is **the only producer of a payload leaf and of that
-leaf's ``dispositions`` entry** (D-72).  A bare JSON number cannot carry a
+leaf's ``dispositions`` entry**.  A bare JSON number cannot carry a
 field, so the wire shape is a sibling map keyed by leaf path; the reason that
 map cannot drift from the leaves is not a test but the fact that one function
 emits both in one call.  The payload-schema test's two-way key-set equality is
@@ -26,8 +26,7 @@ class LeafOut:
     says which of the two it is; a ``WITHHELD`` leaf is **absent** from the
     payload while its entry stays, carrying the receipts.  Returning a value
     of ``None`` for the withheld case and leaving the caller to decide would
-    have made a serialized ``null`` one typo away, which is the blank this
-    campaign exists to stop shipping.
+    have made a serialized ``null`` one typo away.
     """
 
     path: str
@@ -201,8 +200,8 @@ class LeafWriter:
     producer: every leaf it writes and every entry it records comes out of one
     ``serialize_leaf`` call, so "one writer" survives having an ergonomic
     front end.  Views use it because the alternative -- each view assembling a
-    dict literal and a map separately -- is precisely the two-things-kept-in-
-    step-by-hand arrangement the campaign exists to remove.
+    dict literal and a map separately -- is the two-things-kept-in-step-by-
+    hand arrangement one writer exists to remove.
 
     Leaves are written through :meth:`block`, which writes into the caller's
     own mapping so the published key order stays the order the view spells;
@@ -245,7 +244,7 @@ class LeafWriter:
 class RankingWriter(LeafWriter):
     """The writer for a payload whose numbers choose a build.
 
-    The write half of D-62's second rule.  ``/api/bis`` and ``/api/optimize``
+    The write half of the ranking rule.  ``/api/bis`` and ``/api/optimize``
     do not merely publish their numbers, they *rank* by them, so a preview
     reaching one of those payloads is a build chosen by a fight that never
     happened.  Refusing it here means a view that retagged a block
@@ -262,7 +261,7 @@ class RankingWriter(LeafWriter):
     the two surfaces are not symmetrical: BIS scores a *published* payload
     and can be asked what its numbers mean, while the optimizer scores
     thousands of candidate payloads written through :data:`DISCARD`, which
-    by ruling carries no map at all.
+    carries no map at all.
     """
 
     __slots__ = ()

@@ -8,9 +8,9 @@ and a spell-shielded hit emits no bonus because the bonus was never an event
 of its own.
 
 :data:`RIDER_KINDS` is the vocabulary itself, read off this module rather
-than re-listed: ``scripts/receipt_walk_schedule.py`` resolves umbrella
-Amendment P's named kernel mechanisms against it, so a rider that leaves the
-tree stops resolving on the commit that removes it.
+than re-listed: ``scripts/receipt_walk_schedule.py`` resolves its named
+kernel mechanisms against it, so a rider that leaves the tree stops
+resolving on the commit that removes it.
 """
 
 from __future__ import annotations

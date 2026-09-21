@@ -54,7 +54,7 @@ def published_quantity(
 
     The companion of :func:`published_tag`, and the half without which
     :class:`Quantity`'s propagation never reaches a serving surface.  A
-    ``WITHHELD`` leaf is **absent** from the payload by ruling, so a consumer
+    ``WITHHELD`` leaf is **absent** from the payload, so a consumer
     that reads it as ``payload.get(path, 0.0)`` gets a zero no rule computed
     and folds it into a total that then claims to be measured — the incident,
     at the aggregate, inside the one surface the algebra exists to protect.

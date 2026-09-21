@@ -1,4 +1,4 @@
-"""The five projections of one walk (Phase 4).
+"""The five projections of one walk.
 
 A view answers one consumer's shape and re-runs no arithmetic: every number
 it emits is already a leaf of the walk's result, and every digit count it

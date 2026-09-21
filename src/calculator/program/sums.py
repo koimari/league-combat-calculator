@@ -20,13 +20,13 @@ class SumPlan:
 
     The receipt publishes three event panels and a reader that wants every
     event of a fight unions them.  Nothing said what that union should do
-    with an id on two panels — D-65's own note is that three sources are
-    unioned with only a comment preventing a double count — and the answer
+    with an id on two panels, and a comment was all that stood between the
+    three sources and a double count — and the answer
     turns out to matter: a Redemption Intervention is published once on
     ``events`` as the damage it dealt and once on ``support_events`` as the
     support packet that dealt it, same id, same amount.  Summing the panels
     counts that 219.2 twice, and the wrong total is a perfectly ordinary
-    number, which is this campaign's whole subject.
+    number, which is why the plan is a value and not a convention.
 
     A plan is that union made a value.  :attr:`members` is every published
     ``(panel, event_id)`` pair in declared order; :attr:`ids` is what a

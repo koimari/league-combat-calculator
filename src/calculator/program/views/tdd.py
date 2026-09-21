@@ -10,8 +10,8 @@ visible.
 
 Every number here carries :data:`~. .ViewTag.APPLIED`, and that is a claim
 rather than a default.  ``THEORETICAL`` is the pair engine's own preview --
-what one attacker versus one defender *would* have produced -- and D-62
-forbids folding it into a coupled total, so a pair-authored preview does not
+what one attacker versus one defender *would* have produced -- and folding
+it into a coupled total is forbidden, so a pair-authored preview does not
 reach this block at all.  The tag is published beside every leaf through the
 ``dispositions`` map so a consumer can see which of the two it is holding
 instead of inferring it from where the number came from.
@@ -58,8 +58,8 @@ def tdd_leaves(
     block: dict[str, Any] = {}
     # The block says what its numbers mean, once.  Every aggregate here is
     # what the coupled walk delivered against the roster; a pair-authored
-    # preview is THEORETICAL and D-62 forbids folding one into a coupled
-    # total, so none reaches this block at all.
+    # preview is THEORETICAL and folding one into a coupled total is
+    # forbidden, so none reaches this block at all.
     leaf = writer.block(block, "objective", ViewTag.APPLIED)
     leaf.measured(
         "main_team_damage_before_death",

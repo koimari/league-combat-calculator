@@ -54,8 +54,8 @@ class AttackerOutcome:
     ``champion`` and an empty ``team``.  Reading identity off the roster
     instead would quietly *fix* that -- and this stage is pure, so it may
     relocate the decision but not revise it.  The published strings are
-    therefore whatever the composition folded, and correcting them is its own
-    slice with its own baseline move.
+    therefore whatever the composition folded, and correcting them moves a
+    baseline.
     """
 
     participant_id: str

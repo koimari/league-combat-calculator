@@ -22,7 +22,7 @@ def mixed_view_fold(left: ViewTag, right: ViewTag) -> TypeError:
 class Tagged:
     """A quantity and what it means — the only thing a fold may add.
 
-    ``Quantity.__add__`` (D-72) propagates *dispositions* through a sum: a
+    ``Quantity.__add__`` propagates *dispositions* through a sum: a
     withheld member makes the total withheld, a structural zero folds as
     zero.  It says nothing about views, because a disposition answers "did a
     rule produce this" and a tag answers "which engine's answer is it".  Both
@@ -55,8 +55,7 @@ def fold_tagged(parts: Iterable[Tagged]) -> Tagged:
         TypeError: two parts carry different tags.
         ValueError: there are no parts.  An empty fold has no view to carry,
             and answering ``Measured(0.0)`` would invent one -- which is the
-            zero-versus-absent confusion the whole campaign is about, at the
-            aggregate.
+            zero-versus-absent confusion, at the aggregate.
     """
     total: Tagged | None = None
     for part in parts:

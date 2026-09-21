@@ -149,7 +149,7 @@ def run_passes[Result](
     Nothing here re-enters ``run_pass`` from inside ``run_pass``: the passes
     are siblings in a loop rather than ancestors on a stack, which is what
     makes "one walk per pass" a countable property instead of a claim about
-    a recursion whose depth nobody can see (D-70).
+    a recursion whose depth nobody can see.
 
     The budget comes from the declarations and never from the request, so a
     pass asking for a dependency the composition never declared gets a named

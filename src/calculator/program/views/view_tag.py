@@ -15,7 +15,7 @@ class ViewTag(Enum):
     engine's pre-coupling authoring of a number that one attacker-versus-one
     -defender fight would have produced, and ``APPLIED`` is what the coupled
     walk actually delivered against the roster.  Tagging a non-number would
-    re-open the zero-versus-absent confusion this campaign exists to close.
+    re-open the zero-versus-absent confusion the tag exists to close.
 
     The distinction is load-bearing rather than descriptive.  Imperial
     Mandate's Command is priced twice today -- once pair-side as a preview
@@ -23,7 +23,7 @@ class ViewTag(Enum):
     symptom.  So a sum may never mix tags, ``THEORETICAL`` is never an
     optimizer objective and never feeds BIS, and at most one ``APPLIED``
     contribution may exist for one ``(mechanic, subject, event_id)`` across
-    every producer (D-62).
+    every producer.
     """
 
     THEORETICAL = "theoretical"
@@ -33,7 +33,7 @@ class ViewTag(Enum):
 class UnrankableNumber(TypeError):
     """A number the surfaces that pick a winner may not fold into a score.
 
-    D-62's second half — ``THEORETICAL`` is never an optimizer objective and
+    The ranking half — ``THEORETICAL`` is never an optimizer objective and
     never feeds BIS — as a refusal rather than as a review note.  A preview
     is what one attacker-versus-one-defender fight *would* have produced;
     ranking builds by it means ranking by a number no roster delivered, and

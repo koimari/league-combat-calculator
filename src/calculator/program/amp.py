@@ -13,7 +13,7 @@ would silently drop a second Mandate holder's contribution — the incident's
 own shape, mandated by a rule.
 
 :func:`live_amp_riders` is the second, and the one this package's docstring
-calls the coupled-lane interpreter of Phase 3's ``delta_amp`` declarations.
+calls the coupled-lane interpreter of the ``delta_amp`` declarations.
 It answers one question — which of a holder's declared amplifiers cannot be
 resolved to a number before the walk runs — and hands each of them to the
 kernel as a :class:`~..survival.actions.LiveAmp` value the walk evaluates by
@@ -21,14 +21,13 @@ tag.  It is derived from the declarations rather than keyed on a slot name,
 so a second live-predicate amp joins the walk on the commit that declares
 one.
 
-**What is not here.**  ``modifier_events`` — the compiler from Phase 3's
+**What is not here.**  ``modifier_events`` — the compiler from a
 declared ``DeltaAmpRule`` to armed damage-modifier events —
 is a separate compiler for the amps that *do* resolve to a number up front,
 and no authority move has needed it yet: Bloodsong's arrives through
 ``item_support_effects``' own packets and Shadowflame's is a rider, not a
 packet.  Naming it here with an empty body would be a declaration that
-outruns its implementation, which is the failure this campaign exists to
-remove; the sentence is the marker instead.
+outruns its implementation; the sentence is the marker instead.
 """
 
 from __future__ import annotations
@@ -86,9 +85,9 @@ def arm_key(
 class ArmingDrop:
     """One arming that collided with an earlier one, and why it was dropped.
 
-    A receipt, not a log line.  The campaign's invariant is that a number the
-    model did not compute must never be indistinguishable from one it
-    computed as zero, and an arming silently discarded on a collision is that
+    A receipt, not a log line.  A number the model did not compute must
+    never be indistinguishable from one it computed as zero, and an arming
+    silently discarded on a collision is that
     failure at the point where the number is *born*.  So the drop is a value
     the composition publishes, carrying the holder that got there first.
     """
@@ -231,9 +230,9 @@ def live_amp_for(riders: Sequence[LiveAmpRider], damage_type: str) -> LiveAmp | 
     ``None`` is the ordinary answer and means no holder declared one for
     this class of damage.  Two claimants raise: a packet carries one rider
     field, so a second amplifier would have to be dropped, and dropping it
-    silently is this campaign's own failure at the moment the number is
-    born.  How two live amps compose is a modelling ruling nobody has made,
-    and the raise is what makes somebody make it.
+    silently loses it at the moment the number is born.  How two live amps
+    compose is a modelling decision nobody has made, and the raise is what
+    makes somebody make it.
     """
     claiming = [rider for rider in riders if rider.rides(damage_type)]
     if not claiming:

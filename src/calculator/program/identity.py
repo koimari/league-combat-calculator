@@ -42,7 +42,7 @@ from typing import NamedTuple, NewType
 # means without dragging the alias into the hot tuple.
 PIdx = NewType("PIdx", int)
 
-# Phase 2's ``trigger_stream.CAPABILITIES`` key.  One spelling, declared here
+# The ``trigger_stream.CAPABILITIES`` key.  One spelling, declared here
 # rather than invented per consumer, so it never becomes a third name for
 # ``MechanicCapability.mechanic``.
 MechanicId = NewType("MechanicId", str)

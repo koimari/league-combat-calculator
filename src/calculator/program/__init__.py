@@ -1,4 +1,4 @@
-"""The logical layer of the coupled simulation (Phase 4).
+"""The logical layer of the coupled simulation.
 
 ``program/`` answers "what happened, and to whom"; ``survival/`` answers
 "what that does to state".  The dependency runs one way, ``program ->

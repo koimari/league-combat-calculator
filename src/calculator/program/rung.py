@@ -5,7 +5,7 @@ walk.  "Fell back" alone is not a diagnosis: a fallback the request gate
 forced, one this candidate's own loadout forced, and one a search-invariant
 failure forced have different costs and different fixes, and a histogram that
 reported only *compiled* and *not compiled* would read as uniform fallback
-with no cause.  Four rungs, so the histogram names the cause (D-69).
+with no cause.  Four rungs, so the histogram names the cause.
 
 **Two vocabularies, deliberately, and this module holds the bridge.**
 ``work_counters.Rung`` is the published *label* — a ``StrEnum`` whose four
@@ -53,7 +53,7 @@ class CompiledFull:
 class FallbackScope(Enum):
     """Whether a receipt-walk fallback was the request's or the candidate's.
 
-    Not a fifth rung: D-69 rules four states, and these two share one — the
+    Not a fifth rung: there are four states, and these two share one — the
     receipt walk priced the evaluation either way.  They are published under
     different labels because they have different fixes.  A ``REQUEST_GATE``
     fallback refused before any candidate was looked at (no roster, receipt
@@ -75,7 +75,7 @@ class ReceiptWalk:
     cannot represent rather than reporting an unexplained slow path.
     ``scope`` says whose refusal it was, and it is required for the same
     reason: "fell back" without a scope is the uniform-fallback histogram
-    D-69 exists to replace.
+    the four rungs exist to replace.
     """
 
     reason: str

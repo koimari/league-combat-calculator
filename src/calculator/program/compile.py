@@ -6,14 +6,13 @@ stage: two in ``survival/actions``, six in ``survival/compile`` and one in
 to disagree about a field, and they did -- the receipt adapter and the score
 compiler each rebuilt the same sort key by hand, in two spellings, and a
 phase written as a float at one of them was invisible at the other.  A
-mechanic priced by one engine and not the other is failure mode C of the
-incident this campaign exists to close.
+mechanic priced by one engine and not the other is what that disagreement
+costs.
 
-So construction lives here, once.  Counter 5 of the migration frontier is the
-count of ``SurvivalAction(...)`` expressions **outside this file**, and its
-target is one: ``survival/actions``'s ``_ACTION_DEFAULT_ROW``, the issue-#171
-fast constructor's default row, which is the declared performance fallback
-the phase's criterion 17 keeps.
+So construction lives here, once.  ``scripts/behavior_frontier.py`` counts
+``SurvivalAction(...)`` expressions **outside this file**, and its target is
+one: ``survival/actions``'s ``_ACTION_DEFAULT_ROW``, the fast constructor's
+default row, which is a declared performance fallback.
 
 Outside, and only outside — so the arithmetic is worth stating plainly, since
 "nine become one" reads as a subtraction and is not one.  What the counter
@@ -405,12 +404,11 @@ def declared_packet_of(
     interpreter compiled, the attack class the rule declares — which is what
     decides *which* of the holder's amplifiers this packet earns — the
     effective resistance the packet itself met, which the pair engine's own
-    re-pricing windows keep in step (umbrella Amendment N, Ruling 1), and the
-    basic-attack swing composition it was delivered through, if it was
-    (umbrella Amendment R, Ruling 1).  The remaining term, the amplifier
-    itself, is resolved on this side from the declarations that produce it
-    (umbrella Amendment M, Ruling 1): a walk that took a pre-multiplied
-    number would be reading the pair engine's price again under another name.
+    re-pricing windows keep in step, and the basic-attack swing composition
+    it was delivered through, if it was.  The remaining term, the amplifier
+    itself, is resolved on this side from the declarations that produce it:
+    a walk that took a pre-multiplied number would be reading the pair
+    engine's price again under another name.
 
     One home for both compositions, because a roster composes a pair fight in
     two places and the score path is the one that picks the optimizer's
@@ -419,8 +417,7 @@ def declared_packet_of(
     A packet stamped as re-priced with no declaration on it is a stop, not a
     fallback: the pair engine's number has already left the roster total by
     the time this runs, so returning nothing would delete the family's
-    damage — the half-performed retirement umbrella Amendment L, Ruling 1
-    calls worse than neither half.
+    damage — a half-performed move, which is worse than neither half.
     """
     if not isinstance(declaration, tuple) or not 3 <= len(declaration) <= len(
         AuthoredDeclaration._fields
@@ -445,10 +442,9 @@ def declared_packet_of(
     if routing is None:
         return packet
     # A routing family re-delivered this packet at a second subject, and what
-    # a route does to a packet has exactly one home (umbrella Amendment R,
-    # Ruling 3): the share is applied there and the provenance recorded
-    # there, so a site that scaled the magnitude itself would be a second
-    # reader of one rule.
+    # a route does to a packet has exactly one home: the share is applied
+    # there and the provenance recorded there, so a site that scaled the
+    # magnitude itself would be a second reader of one rule.
     return route_declared_packet(packet, routing)
 
 
@@ -578,8 +574,7 @@ def action_from_event(
         # marker stays a disjunct: the bus classifies it
         # ``UNCLASSIFIED_CONTROL``, control
         # nobody narrowed — and narrowing Steadfast to reject it would be a
-        # semantic correction, which is Phase 0's to make and not a
-        # refactor's.
+        # semantic correction, which moves a number.
         immobilized=is_immobilizing_event(event) or bool(get("crowd_control")),
         cc_kind=cc_kind,
         cc_duration=max(0.0, float(get("cc_duration", 0.0) or 0.0)),
@@ -1599,7 +1594,7 @@ class WalkCompiler:
 
         **The one thing it refuses is the aura.**  Whether a second holder
         of one mechanic arms a second modifier on one subject is a declared
-        per-mechanic fact (D-66) and the receipt composition answers it with
+        per-mechanic fact and the receipt composition answers it with
         an :class:`~.amp.ArmingLedger` built once per composed fight.  The
         compiled path has no such moment: the roster panel is compiled once
         per search and the candidate's own actions once per evaluation, so

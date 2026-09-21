@@ -281,8 +281,7 @@ def _damage_event_rows(
         # A live-predicate amplifier that rode this packet.  It is
         # published because the bonus is folded into the host row's
         # damage rather than filed as a source of its own, and a
-        # number with no rule beside it is exactly what this campaign
-        # exists to stop shipping.
+        # number with no rule beside it is a number nobody can check.
         if event.get("live_amp_source"):
             amp: dict[str, Any] = {}
             leaf.raw("live_amp", amp)
@@ -544,7 +543,7 @@ def _support_event_rows(
             refusal,
         )
         # Present only on an arming a declared ``IDEMPOTENT_AURA``
-        # collapsed into an earlier holder's (D-66).  Absent
+        # collapsed into an earlier holder's.  Absent
         # everywhere else, so the key's presence *is* the statement
         # and a zero applied amount never has to be interpreted.
         if event.get("dedupe"):
@@ -664,7 +663,7 @@ def receipt(program: Program, result: WalkResult) -> dict[str, Any]:
     support_events = _support_event_rows(
         result.support_events, writer, "support_events"
     )
-    # D-65: the three panels are three sources a reader unions, and what
+    # The three panels are three sources a reader unions, and what
     # kept that union from double-counting was a comment.  Building the plan
     # *is* the check -- ``SumPlan`` refuses at construction -- so a receipt
     # **one of whose panels published an event id twice** fails here rather

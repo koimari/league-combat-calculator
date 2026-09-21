@@ -7,8 +7,7 @@ is, and until this module the decision was made 118 times inside the kernel:
 digit count spelled at the call site is unverifiable — nothing can say what
 the precision of a field *is*, only what one line happened to do to it — so
 every ``(field, digits)`` pair the public projection uses lives here, in one
-mapping, and :func:`round_field` is the only rounding this layer performs
-(D-71).
+mapping, and :func:`round_field` is the only rounding this layer performs.
 
 The scope of that rule is ``program/``, deliberately.  Within ``program/``
 the count of ``round(`` outside this module is **zero**, gated by migration

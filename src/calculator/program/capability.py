@@ -31,8 +31,8 @@ class MechanicView:
     widening is this class's job and not the declaration's: a walk half is
     read by two lanes — the receipt walk and the compiled score walk — and
     the bus cannot name ``EngineLane`` at all, because that enum's home
-    opens ``data/`` at import and the bus is a leaf that may not (D-35).
-    Widening here is what makes D-62's "exactly one tag per
+    opens ``data/`` at import and the bus is a leaf that may not.
+    Widening here is what makes "exactly one tag per
     ``(mechanic, EngineLane)``" a total function rather than a sentence.
     """
 
@@ -48,8 +48,7 @@ class CapabilityView:
     Built once per request and read many times, so it is a mapping rather
     than a scan.  A mechanic the registry does not declare is *absent*, and
     :meth:`compilability_for` says so by raising: an undeclared mechanic that
-    defaulted to compilable is exactly the silent success this campaign
-    exists to remove.
+    defaulted to compilable would be a silent success.
     """
 
     mechanics: Mapping[MechanicId, MechanicView]
@@ -81,7 +80,7 @@ class CapabilityView:
 #: A pair half is read by the pair engine; a walk half is read by both walks,
 #: which is the widening ``program/`` owns -- the bus may not name
 #: ``EngineLane`` at all, because that enum's home opens ``data/`` at import
-#: and the bus is a leaf that may not (D-35).
+#: and the bus is a leaf that may not.
 _LANES_OF: Mapping[Engine, tuple[EngineLane, ...]] = MappingProxyType(
     {
         Engine.PAIR: (EngineLane.PAIR_ENGINE,),
