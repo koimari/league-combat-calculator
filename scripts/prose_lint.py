@@ -25,12 +25,16 @@ read past, and the cached text ``static/reviewed-packets.json`` carries into
 every packet module is out of an AST's reach.
 
 A seventh, ``pointer``, is prose citing the project's own history -- a
-numbered work phase, a dated decision, a named unit of work -- where the
-reason itself belongs.  A hit is allowed when the same line names a
-repository path that resolves, which is what keeps
-``docs/receipts/campaign-stages.json`` citable; prose citing a wiki URL or
+numbered work phase, a dated decision, a runbook rule, a review stage, a
+named unit of work -- where the reason itself belongs.  A hit is allowed
+when the same line names a repository path that resolves *and* holds the
+citation, which is what keeps ``docs/receipts/campaign-stages.json``
+citable while an unrelated path rescues nothing; prose citing a wiki URL or
 a game file for a number is evidence and is never reported.  It is the one
-rule that reaches ``TESTS_SCOPE`` as well as ``TARGETS``.
+rule that reaches ``TESTS_SCOPE`` as well as ``TARGETS``, and the one that
+reads every string a module states rather than computes: a docstring, the
+note under a constant, a command's help text, and published assumption
+text.
 
 An eighth, ``unsourced_constant``, reports a module-level numeric literal under
 ``CHAMPIONS_SCOPE`` whose provenance nothing states: a citation, a cached field
@@ -86,10 +90,14 @@ HISTORY = re.compile(
     re.IGNORECASE,
 )
 POINTER = re.compile(
-    r"\bAmendment\b|\bRuling\b|\bD-\d{2,3}\b|\bPhase \d|\bwave \d|\bslice\b|\bcampaign\b",
+    r"\bAmendment\b|\bRuling\b|\b[DR]-\d{1,3}\b|\bD\d{1,2}\b|\bCP\d"
+    r"|\bPhase \d|\bwave \d|\bslice\b|\bcampaign\b",
     re.IGNORECASE,
 )
 BANNER = re.compile(r"^# -{5,}$")
+#: The keywords a call documents itself through, which is how a command's own
+#: help text is prose the reader meets rather than a string the code passes.
+DOC_KEYWORDS = ("description", "help", "epilog")
 # A repository path, which is what makes a pointer resolve.
 REPO_PATH = re.compile(r"[\w.-]+(?:/[\w.-]+)+")
 #: Which rules a file in each scope answers to.  A test's prose answers to
@@ -318,10 +326,42 @@ def _dead_banners(
     ]
 
 
-def _resolves(raw: str, root: Path) -> bool:
-    """Whether this line names a repository path that exists."""
+def _is_prose(node: ast.expr | None) -> bool:
+    """Whether this expression is a string a reader meets as written."""
+    return isinstance(node, ast.Constant) and isinstance(node.value, str)
+
+
+def _prose_constants(tree: ast.Module) -> list[ast.Constant]:
+    """Every string a module states rather than computes, in reading order."""
+    return sorted(_stated_strings(tree), key=lambda text: text.lineno)
+
+
+def _stated_strings(tree: ast.Module) -> Iterable[ast.Constant]:
+    """The four doors prose arrives through, each in its own walk.
+
+    A scope's docstring, the note under a constant, a command's own help
+    text, and published assumption text.
+    """
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Expr) and _is_prose(node.value):
+            yield node.value
+        elif isinstance(node, ast.Call):
+            yield from (
+                word.value
+                for word in node.keywords
+                if word.arg in DOC_KEYWORDS and _is_prose(word.value)
+            )
+    for value in _assumption_values(tree):
+        yield from (e for e in _assumption_elements(value) if _is_prose(e))
+
+
+def _resolves(raw: str, root: Path, cited: str) -> bool:
+    """Whether this line names an existing path that holds the citation.
+
+    A path that is not the thing cited answers for nothing.
+    """
     return any(
-        ".." not in match and (root / match).exists()
+        ".." not in match and cited.lower() in match.lower() and (root / match).exists()
         for match in REPO_PATH.findall(raw)
     )
 
@@ -339,10 +379,13 @@ def _cite(
         if EVIDENCE.search(raw):
             continue
         for kind, pattern in rules:
-            if not pattern.search(raw):
+            hits = list(pattern.finditer(raw))
+            if not hits:
                 continue
-            if pattern is POINTER and _resolves(raw, root):
-                break
+            if pattern is POINTER and all(
+                _resolves(raw, root, hit.group()) for hit in hits
+            ):
+                continue
             found[kind].append(f"{where}:{line + offset}: {raw.strip()[:100]}")
             break
 
@@ -364,14 +407,14 @@ def scan(root: Path = ROOT, exclude: tuple[str, ...] = ()) -> dict[str, list[str
         tree = ast.parse(source)
         tested = where.startswith(f"{TESTS_SCOPE}/")
         rules = TEST_RULES if tested else SOURCE_RULES
+        for text in _prose_constants(tree):
+            _cite(found, where, text.lineno, text.value, rules=rules, root=root)
         for node in ast.walk(tree):
             doc = _docstring(node)
-            if doc is None:
+            if doc is None or tested or not isinstance(node, FUNCS):
                 continue
-            _cite(found, where, doc.lineno, doc.value, rules=rules, root=root)
             body = _span(node.body[1:]) or 1  # a stub's docstring is its body
-            lines = doc.end_lineno - doc.lineno + 1
-            if not tested and isinstance(node, FUNCS) and lines > body:
+            if doc.end_lineno - doc.lineno + 1 > body:
                 found["long_docstring"].append(f"{where}:{doc.lineno}: {node.name}")
         funcs = [n for n in ast.walk(tree) if isinstance(n, FUNCS)]
         heads = _definition_spans(funcs)

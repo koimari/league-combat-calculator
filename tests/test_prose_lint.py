@@ -1,4 +1,4 @@
-"""D7's counters: docstrings and comments in src/ and scripts/ hold current state."""
+"""The prose counters: what src/, scripts/ and tests/ may say about themselves."""
 
 import pytest
 
@@ -103,12 +103,27 @@ _TRAILING = 2.0  # 1.5 cast + 0.5 recovery
 '''
 
 
-#: One pointer beside a path that resolves and one beside nothing.
+#: One pointer beside the path that holds it, one beside nothing, and one
+#: beside a path that resolves and answers for something else.
 POINTERS = '''"""Seed."""
 
-# Phase 4 ruled it, and docs/stages.json records the ruling.
+# The stages are recorded in docs/campaign-stages.json.
 # Phase 4 ruled it.
+# Phase 4 ruled it, and docs/stages.json records something else.
 _KEPT = 1
+'''
+
+
+#: The three doors beside a docstring that publish prose: the note under a
+#: constant, a command's help text, and an assumption string.
+BESIDE_THE_DOCSTRING = '''"""Seed."""
+
+RANK = 1
+"""What Phase 2 ruled about this rank."""
+
+ASSUMPTIONS = ["Phase 3 priced this slot"]
+
+parser = argparse.ArgumentParser(description="the Phase 4 frontier")
 '''
 
 
@@ -233,13 +248,24 @@ def test_a_preamble_answers_to_the_definition_it_introduces(tmp_path):
 
 
 def test_a_pointer_beside_a_path_that_resolves_is_not_reported(tmp_path):
-    """The one exemption, and it is checked against the tree."""
+    """The one exemption: the path resolves and it holds the citation."""
     (tmp_path / "src").mkdir()
     (tmp_path / "scripts").mkdir()
     (tmp_path / "src" / "seed.py").write_text(POINTERS, encoding="utf-8")
     (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "campaign-stages.json").write_text("{}", encoding="utf-8")
     (tmp_path / "docs" / "stages.json").write_text("{}", encoding="utf-8")
-    assert scan(root=tmp_path)["pointer"] == ["src/seed.py:4: # Phase 4 ruled it."]
+    hits = scan(root=tmp_path)["pointer"]
+    assert [hit.split(":")[1] for hit in hits] == ["4", "5"], hits
+
+
+def test_prose_beside_a_docstring_answers_to_the_pointer_rule(tmp_path):
+    """A constant's note, a command's help text and an assumption string."""
+    (tmp_path / "src").mkdir()
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "src" / "seed.py").write_text(BESIDE_THE_DOCSTRING, encoding="utf-8")
+    hits = scan(root=tmp_path)["pointer"]
+    assert [hit.split(":")[1] for hit in hits] == ["4", "6", "8"], hits
 
 
 def test_a_test_file_answers_to_the_pointer_rule_and_to_nothing_else(tmp_path):
