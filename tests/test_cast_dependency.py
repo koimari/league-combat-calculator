@@ -32,17 +32,8 @@ from src.calculator.cast_dependency import (
     CastDependencyError,
     ConflictingInferenceError,
     CustomOrderViolatesDependencyError,
-    DeclaredCycleError,
-    DuplicateDependencyError,
-    MissingLatentReasonError,
     ResolvedCycleError,
-    SelfDependencyError,
     SuppressedInference,
-    SuppressionScopeError,
-    UnknownDependencyKindError,
-    UnknownInferredKindError,
-    UnknownSlotError,
-    UnsourcedDependencyError,
     active_dependencies,
     check_order_satisfies_dependencies,
     expand_user_order,
@@ -297,17 +288,14 @@ class TestVocabularies:
         assert outside == {}
 
     def test_every_error_is_a_cast_dependency_error(self) -> None:
-        """One base, so a boundary catches the family and keeps its 4xx."""
+        """One base, so a boundary catches the family and keeps its 4xx.
+
+        The three subclasses exist because a caller discriminates them:
+        the audit reports a conflicting inference apart from every other
+        walk error, `champion_rotation_rule` answers `None` on a resolved
+        cycle, and the order probe catches the violation it provoked.
+        """
         for error in (
-            UnknownSlotError,
-            SelfDependencyError,
-            DuplicateDependencyError,
-            UnknownDependencyKindError,
-            UnsourcedDependencyError,
-            SuppressionScopeError,
-            UnknownInferredKindError,
-            MissingLatentReasonError,
-            DeclaredCycleError,
             ConflictingInferenceError,
             ResolvedCycleError,
             CustomOrderViolatesDependencyError,
@@ -338,11 +326,11 @@ class TestImportGate:
         _validate([])
 
     def test_an_unknown_slot_raises(self) -> None:
-        with pytest.raises(UnknownSlotError, match="Z"):
+        with pytest.raises(CastDependencyError, match="Z"):
             _validate([_dep(slot="Z")])
 
     def test_an_unknown_required_slot_raises(self) -> None:
-        with pytest.raises(UnknownSlotError, match="requires="):
+        with pytest.raises(CastDependencyError, match="requires="):
             _validate([_dep(requires="Z")])
 
     def test_a_synthetic_slot_the_module_declares_is_legal(self) -> None:
@@ -350,31 +338,31 @@ class TestImportGate:
         _validate([_dep(slot="E", requires="Q2")])
 
     def test_a_self_dependency_raises(self) -> None:
-        with pytest.raises(SelfDependencyError):
+        with pytest.raises(CastDependencyError, match="requires itself"):
             _validate([_dep(slot="E", requires="E")])
 
     def test_a_repeated_pair_raises(self) -> None:
-        with pytest.raises(DuplicateDependencyError):
+        with pytest.raises(CastDependencyError, match="declared twice"):
             _validate([_dep(), _dep()])
 
     def test_the_same_slot_may_require_two_others(self) -> None:
         _validate([_dep(requires="Q"), _dep(requires="Q2")])
 
     def test_an_unknown_kind_raises(self) -> None:
-        with pytest.raises(UnknownDependencyKindError, match="stack_consume"):
+        with pytest.raises(CastDependencyError, match="stack_consume"):
             _validate([_dep(kind="stack_consume")])
 
     def test_an_inferred_kind_is_not_a_declarable_kind(self) -> None:
         for kind in sorted(INFERRED_EDGE_KINDS):
-            with pytest.raises(UnknownDependencyKindError):
+            with pytest.raises(CastDependencyError, match="declares kind"):
                 _validate([_dep(kind=kind)])
 
     def test_an_empty_reason_raises(self) -> None:
-        with pytest.raises(UnsourcedDependencyError, match="no reason"):
+        with pytest.raises(CastDependencyError, match="no reason"):
             _validate([_dep(reason="   ")])
 
     def test_an_empty_source_raises(self) -> None:
-        with pytest.raises(UnsourcedDependencyError):
+        with pytest.raises(CastDependencyError, match="revision_id"):
             _validate([_dep(source="")])
 
     @pytest.mark.parametrize(
@@ -390,15 +378,15 @@ class TestImportGate:
     )
     def test_a_source_that_is_not_url_at_revision_raises(self, source: str) -> None:
         """Prose checked only for non-emptiness would let the seed come back."""
-        with pytest.raises(UnsourcedDependencyError, match="revision_id"):
+        with pytest.raises(CastDependencyError, match="revision_id"):
             _validate([_dep(source=source)])
 
     def test_a_declared_cycle_raises(self) -> None:
-        with pytest.raises(DeclaredCycleError, match="cyclic"):
+        with pytest.raises(CastDependencyError, match="cyclic"):
             _validate([_dep(slot="E", requires="Q"), _dep(slot="Q", requires="E")])
 
     def test_a_longer_declared_cycle_raises(self) -> None:
-        with pytest.raises(DeclaredCycleError):
+        with pytest.raises(CastDependencyError, match="cyclic"):
             _validate(
                 [
                     _dep(slot="E", requires="Q"),
@@ -430,20 +418,20 @@ class TestSuppressionCannotBroaden:
         self, setup: str, consume: str
     ) -> None:
         """From E-requires-Q it must be impossible to express E->W (D-81)."""
-        with pytest.raises(SuppressionScopeError, match="exact reverse pair"):
+        with pytest.raises(CastDependencyError, match="exact reverse pair"):
             _validate([_dep(suppresses=(_suppression(setup=setup, consume=consume),))])
 
     def test_an_unknown_inferred_kind_raises(self) -> None:
-        with pytest.raises(UnknownInferredKindError, match="cc_enabler"):
+        with pytest.raises(CastDependencyError, match="cc_enabler"):
             _validate([_dep(suppresses=(_suppression(kind="cc_enabler"),))])
 
     def test_a_suppression_with_no_reason_raises(self) -> None:
-        with pytest.raises(UnsourcedDependencyError, match="no reason"):
+        with pytest.raises(CastDependencyError, match="no reason"):
             _validate([_dep(suppresses=(_suppression(reason=""),))])
 
     def test_a_blank_latent_reason_raises(self) -> None:
         """Present-but-empty is the half the leaf can see; the merge owns the rest."""
-        with pytest.raises(MissingLatentReasonError, match="latent_reason"):
+        with pytest.raises(CastDependencyError, match="latent_reason"):
             _validate([_dep(suppresses=(_suppression(latent_reason=" "),))])
 
     def test_a_stated_latent_reason_is_accepted(self) -> None:
@@ -465,7 +453,7 @@ class TestSuppressionCannotBroaden:
         )
 
     def test_a_repeated_suppression_triple_raises(self) -> None:
-        with pytest.raises(DuplicateDependencyError, match="twice"):
+        with pytest.raises(CastDependencyError, match="twice"):
             _validate([_dep(suppresses=(_suppression(), _suppression()))])
 
     def test_two_kinds_of_the_same_pair_are_distinct_suppressions(self) -> None:
@@ -486,13 +474,13 @@ class TestCastOrderDeclaration:
         )
 
     def test_a_slot_outside_the_surface_raises(self) -> None:
-        with pytest.raises(UnknownSlotError, match="CAST_ORDER"):
+        with pytest.raises(CastDependencyError, match="CAST_ORDER"):
             validate_cast_order_declaration(
                 ["Q", "Z"], [], slot_surface=SURFACE, module="synthetic"
             )
 
     def test_a_repeated_slot_raises(self) -> None:
-        with pytest.raises(DuplicateDependencyError, match="repeats"):
+        with pytest.raises(CastDependencyError, match="repeats"):
             validate_cast_order_declaration(
                 ["Q", "W", "Q"], [], slot_surface=SURFACE, module="synthetic"
             )
@@ -541,11 +529,11 @@ class TestOrderableSlots:
 
     def test_an_unstamped_synthetic_slot_raises(self) -> None:
         """No hand parent-slot table: the stamp is the one authority (D-11)."""
-        with pytest.raises(UnknownSlotError, match="recast_of"):
+        with pytest.raises(CastDependencyError, match="recast_of"):
             orderable_slots({"Q": {}, "Q2": {}})
 
     def test_a_blank_stamp_does_not_count_as_stamped(self) -> None:
-        with pytest.raises(UnknownSlotError):
+        with pytest.raises(CastDependencyError, match="recast_of"):
             orderable_slots({"Q": {}, "R_buff": {"recast_of": ""}})
 
 
@@ -707,7 +695,7 @@ class TestTheContractCarriesDeclarations:
 
     def test_a_declaration_outside_the_modules_own_slots_fails_at_import(self) -> None:
         module = _champion_module(CAST_DEPENDENCIES=(_dep(requires="Z"),))
-        with pytest.raises(UnknownSlotError):
+        with pytest.raises(CastDependencyError, match="not one of this"):
             contract_from_module("Synthetic", "synthetic", module)
 
     def test_a_declaration_that_is_not_a_cast_dependency_fails_at_import(self) -> None:
@@ -1014,7 +1002,7 @@ class TestThePacketCompilerCarriesDeclarations:
         assert slots.cast_dependencies == ()
 
     def test_a_slot_the_packet_never_compiled_fails_closed(self) -> None:
-        with pytest.raises(UnknownSlotError):
+        with pytest.raises(CastDependencyError, match="not one of this"):
             build_packet_module(
                 "Jinx", self.SHA, cast_dependencies=(_dep(requires="Q2"),)
             )

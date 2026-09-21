@@ -340,7 +340,7 @@ class FightParams(FightConfig):
 
         Raises:
             ValueError: A requested slot is not orderable for this kit.
-            cast_dependency.UnknownSlotError: The parse holds a cast slot
+            cast_dependency.CastDependencyError: The parse holds a cast slot
                 that is neither a base slot nor stamped ``recast_of``, so
                 nothing can say whether a request may name it (D-11).
         """

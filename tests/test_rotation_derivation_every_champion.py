@@ -39,8 +39,8 @@ from src.calculator.cast_dependency import (
     DEPENDENCY_KINDS,
     INFERRED_EDGE_KINDS,
     CastDependency,
+    CastDependencyError,
     ConflictingInferenceError,
-    MissingLatentReasonError,
     ResolvedCycleError,
     SuppressedInference,
 )
@@ -791,7 +791,7 @@ class TestPrecedenceTable:
     def test_a_suppression_matching_nothing_must_say_why(self) -> None:
         """Row 6 — a latent suppression is a claim about an absent inference."""
         declaration = _declaration(suppresses=(_reverse_suppression(),))
-        with pytest.raises(MissingLatentReasonError) as caught:
+        with pytest.raises(CastDependencyError) as caught:
             merge_declared_edges("Synthetic", [], [declaration], _LIVE)
         assert "latent_reason" in str(caught.value)
 
@@ -1037,7 +1037,7 @@ class TestSyndrasSuppressionsAreLoadBearing:
         declarations = _syndra_declarations(
             Q2={"suppresses": (replace(suppression, latent_reason=None),)}
         )
-        with pytest.raises(MissingLatentReasonError) as caught:
+        with pytest.raises(CastDependencyError) as caught:
             _syndra_merge(champion_by_name["Syndra"], level, splinters, declarations)
         assert "E -> Q2 (cc_setup) matched no inferred edge" in str(caught.value)
 

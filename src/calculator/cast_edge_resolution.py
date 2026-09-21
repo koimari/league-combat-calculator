@@ -8,8 +8,8 @@ from typing import Any
 
 from .cast_dependency import (
     CastDependency,
+    CastDependencyError,
     ConflictingInferenceError,
-    MissingLatentReasonError,
     SuppressedInference,
     active_dependencies,
 )
@@ -103,7 +103,7 @@ def merge_declared_edges(
             declaration and no suppression covers it.  "Declared always
             wins" would settle a real modelling disagreement silently in
             the module's favour (D-82).
-        MissingLatentReasonError: A suppression matched nothing and says
+        CastDependencyError: A suppression matched nothing and says
             nothing about why — a claim about an inference nobody can
             see.
     """
@@ -163,7 +163,7 @@ def merge_declared_edges(
             if triple in matched:
                 continue
             if suppression.latent_reason is None:
-                raise MissingLatentReasonError(
+                raise CastDependencyError(
                     f"{champion_name}: the suppression of {suppression.setup} -> "
                     f"{suppression.consume} ({suppression.kind}) matched no "
                     "inferred edge in this parse and declares no "

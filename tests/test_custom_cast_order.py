@@ -28,7 +28,7 @@ if str(ROOT / "scripts") not in sys.path:
 import golden_snapshot
 
 from src.calculator.cast_dependency import (
-    UnknownSlotError,
+    CastDependencyError,
     expand_user_order,
     orderable_slots,
 )
@@ -245,7 +245,7 @@ class TestOrderableSlotsAnswerTheChampionQuestion:
         """Neither a base slot nor a declared recast — nothing may guess (D-11)."""
         kit = dict(_syndra_kit(120))
         kit["W2"] = {"name": "Invented recast", "cooldown": 4.0, "total_raw": 10.0}
-        with pytest.raises(UnknownSlotError, match="W2"):
+        with pytest.raises(CastDependencyError, match="W2"):
             orderable_slots(cast_slot_surface(kit))
 
     def test_the_raise_is_reachable_from_the_request_path(self):
@@ -261,7 +261,7 @@ class TestOrderableSlotsAnswerTheChampionQuestion:
         kit["W2"] = {"name": "Invented recast", "cooldown": 4.0, "total_raw": 10.0}
         assert "W2" in cast_slot_surface(kit)
         params = _fight_params(cast_order=["Q", "W", "E", "R"])
-        with pytest.raises(UnknownSlotError, match="W2"):
+        with pytest.raises(CastDependencyError, match="W2"):
             params.validate_for_champion("Syndra", 18, kit=kit)
 
     def test_the_surface_tells_cast_slots_from_riders_by_spelling(self):

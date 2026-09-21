@@ -68,80 +68,14 @@ INFERRED_EDGE_KINDS: frozenset[str] = frozenset(
 
 
 class CastDependencyError(ValueError):
-    """Base for every declared-cast-dependency failure.
+    """A declared cast dependency is malformed, or resolution refused it.
 
-    A ``ValueError`` so the request boundary keeps mapping a malformed
-    user order to a 4xx without a new handler.
+    Raised directly for every import-time defect in a declaration, and the
+    base of the three failures below, which exist because a caller catches
+    each of them apart from the rest.  A ``ValueError`` so the request
+    boundary keeps mapping a malformed user order to a 4xx without a new
+    handler.
     """
-
-
-# ── import-time: a module's declaration is malformed ──────────────────────
-
-
-class UnknownSlotError(CastDependencyError):
-    """A declaration names a slot this module's own slot map does not have.
-
-    Also raised for a synthetic slot that is neither a base cast slot nor
-    stamped ``recast_of``: parentage is never guessed from a name.
-    """
-
-
-class SelfDependencyError(CastDependencyError):
-    """A slot declares that it requires itself."""
-
-
-class DuplicateDependencyError(CastDependencyError):
-    """A declaration repeats itself.
-
-    The same ordered pair declared twice, the same suppression triple
-    nested twice, or a slot repeated inside ``CAST_ORDER``.
-    """
-
-
-class UnknownDependencyKindError(CastDependencyError):
-    """A declared ``kind`` is outside ``DEPENDENCY_KINDS``."""
-
-
-class UnsourcedDependencyError(CastDependencyError):
-    """A declaration carries no written justification.
-
-    An empty ``reason``, an empty ``source``, or a ``source`` that is not
-    ``"<wiki url>@<revision_id>"``. A free-text string checked only for
-    non-emptiness would accept four plausible sentences, so the shape is
-    checked here.  The shape is all
-    a stdlib leaf can check: resolving the revision itself against the
-    committed wiki audit is
-    ``scripts/cast_dependency_audit.py``'s, gated by
-    ``tests/test_cast_dependency_audit.py``.
-    """
-
-
-class SuppressionScopeError(CastDependencyError):
-    """A nested suppression is not its parent's exact reverse pair.
-
-    From ``CastDependency(slot="E", requires="Q")`` it must be impossible
-    to express a suppression of ``E→W``; structure, not review, is what
-    prevents a silently broadened suppression.
-    """
-
-
-class UnknownInferredKindError(CastDependencyError):
-    """A suppression names a kind outside ``INFERRED_EDGE_KINDS``."""
-
-
-class MissingLatentReasonError(CastDependencyError):
-    """A suppression that suppresses nothing does not say why.
-
-    Two halves. Here, at import: a ``latent_reason`` that is present but
-    blank. At merge, in ``rotation_resolver``: a suppression matching no
-    inferred edge whose ``latent_reason`` is ``None``. Both are the same
-    defect — a claim about an inference nobody can see — and the merge is
-    the only surface that knows which suppressions matched.
-    """
-
-
-class DeclaredCycleError(CastDependencyError):
-    """The declared graph alone is cyclic, so no order can satisfy it."""
 
 
 # ── resolve-time: declarations and inferences disagree ────────────────────
@@ -257,14 +191,15 @@ def validate_cast_dependencies(
         module: The module name, for the failure message.
 
     Raises:
-        CastDependencyError: One of the nine import-time subclasses.
+        CastDependencyError: The declaration is malformed, naming the module
+            and the pair that failed.
     """
     declarations = tuple(deps)
     seen_pairs: set[tuple[str, str]] = set()
     for dep in declarations:
         _validate_endpoints(dep, slot_surface=slot_surface, module=module)
         if dep.kind not in DEPENDENCY_KINDS:
-            raise UnknownDependencyKindError(
+            raise CastDependencyError(
                 f"{module}: {dep.slot} requires {dep.requires} declares kind "
                 f"{dep.kind!r}, which is not one of "
                 f"{sorted(DEPENDENCY_KINDS)}"
@@ -272,7 +207,7 @@ def validate_cast_dependencies(
         _validate_justification(dep, module=module)
         pair = (dep.slot, dep.requires)
         if pair in seen_pairs:
-            raise DuplicateDependencyError(
+            raise CastDependencyError(
                 f"{module}: {dep.slot} requires {dep.requires} is declared twice"
             )
         seen_pairs.add(pair)
@@ -280,7 +215,7 @@ def validate_cast_dependencies(
 
     cycle = _first_declared_cycle(declarations)
     if cycle is not None:
-        raise DeclaredCycleError(
+        raise CastDependencyError(
             f"{module}: declared dependencies are cyclic: {' -> '.join(cycle)}"
         )
 
@@ -298,20 +233,20 @@ def validate_cast_order_declaration(
     module's own declarations, so a contradiction fails at import.
 
     Raises:
-        UnknownSlotError: The order names a slot outside the surface.
-        DuplicateDependencyError: The order repeats a slot.
+        CastDependencyError: The order names a slot outside the surface, or
+            repeats one.
         CustomOrderViolatesDependencyError: The order inverts one of the
             module's own declarations.
     """
     seen: set[str] = set()
     for slot in order:
         if slot not in slot_surface:
-            raise UnknownSlotError(
+            raise CastDependencyError(
                 f"{module}: CAST_ORDER names {slot!r}, which is not one of this "
                 f"module's slots {sorted(slot_surface)}"
             )
         if slot in seen:
-            raise DuplicateDependencyError(f"{module}: CAST_ORDER repeats {slot!r}")
+            raise CastDependencyError(f"{module}: CAST_ORDER repeats {slot!r}")
         seen.add(slot)
     check_order_satisfies_dependencies(order, deps, seen)
 
@@ -337,14 +272,14 @@ def orderable_slots(slot_surface: Mapping[str, Mapping[str, Any]]) -> tuple[str,
     result never depends on parse order.
 
     Raises:
-        UnknownSlotError: A synthetic slot carries no ``recast_of`` stamp.
+        CastDependencyError: A synthetic slot carries no ``recast_of`` stamp.
     """
     orderable: set[str] = set()
     for slot, entry in slot_surface.items():
         if slot == "P" or _recast_parent(entry):
             continue
         if slot not in BASE_CAST_SLOTS:
-            raise UnknownSlotError(
+            raise CastDependencyError(
                 f"slot {slot!r} is neither a base cast slot nor stamped "
                 "recast_of; recast parentage has one authority and it is "
                 "the parsed entry, never the slot's name"
@@ -427,22 +362,22 @@ def _validate_endpoints(
     """Both endpoints are this module's own slots, and they differ."""
     for role, slot in (("slot", dep.slot), ("requires", dep.requires)):
         if slot not in slot_surface:
-            raise UnknownSlotError(
+            raise CastDependencyError(
                 f"{module}: dependency {role}={slot!r} is not one of this "
                 f"module's slots {sorted(slot_surface)}"
             )
     if dep.slot == dep.requires:
-        raise SelfDependencyError(f"{module}: {dep.slot} requires itself")
+        raise CastDependencyError(f"{module}: {dep.slot} requires itself")
 
 
 def _validate_justification(dep: CastDependency, *, module: str) -> None:
     """Non-empty reason and a ``<url>@<revision_id>`` source."""
     if not dep.reason.strip():
-        raise UnsourcedDependencyError(
+        raise CastDependencyError(
             f"{module}: {dep.slot} requires {dep.requires} carries no reason"
         )
     if not _is_sourced(dep.source):
-        raise UnsourcedDependencyError(
+        raise CastDependencyError(
             f"{module}: {dep.slot} requires {dep.requires} carries source "
             f"{dep.source!r}, which is not '<wiki url>@<revision_id>'"
         )
@@ -464,35 +399,35 @@ def _validate_suppressions(dep: CastDependency, *, module: str) -> None:
     seen: set[tuple[str, str, str]] = set()
     for suppression in dep.suppresses:
         if suppression.setup != dep.slot or suppression.consume != dep.requires:
-            raise SuppressionScopeError(
+            raise CastDependencyError(
                 f"{module}: {dep.slot} requires {dep.requires} suppresses "
                 f"{suppression.setup}->{suppression.consume}, but a suppression "
                 f"may only be its parent's exact reverse pair "
                 f"{dep.slot}->{dep.requires}"
             )
         if suppression.kind not in INFERRED_EDGE_KINDS:
-            raise UnknownInferredKindError(
+            raise CastDependencyError(
                 f"{module}: suppression {suppression.setup}->"
                 f"{suppression.consume} names inferred kind "
                 f"{suppression.kind!r}, which is not one of "
                 f"{sorted(INFERRED_EDGE_KINDS)}"
             )
         if not suppression.reason.strip():
-            raise UnsourcedDependencyError(
+            raise CastDependencyError(
                 f"{module}: suppression {suppression.setup}->"
                 f"{suppression.consume} carries no reason"
             )
         if suppression.latent_reason is not None and not (
             suppression.latent_reason.strip()
         ):
-            raise MissingLatentReasonError(
+            raise CastDependencyError(
                 f"{module}: suppression {suppression.setup}->"
                 f"{suppression.consume} declares a blank latent_reason; either "
                 "say why the inference is absent or leave it None"
             )
         triple = suppression.triple
         if triple in seen:
-            raise DuplicateDependencyError(
+            raise CastDependencyError(
                 f"{module}: suppression {suppression.setup}->"
                 f"{suppression.consume} ({suppression.kind}) is declared twice"
             )
