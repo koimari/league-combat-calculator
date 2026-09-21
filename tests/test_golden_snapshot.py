@@ -268,7 +268,7 @@ _MIDDLE_REMOVED = _events(
 class TestIdentityKeyedListMatching:
     """R-15's membership transitions, keyed on the event's own identity.
 
-    A slice that removes a row from an event list shifts every later ordinal.
+    Removing a row from an event list shifts every later ordinal.
     Paired by position, that manufactures value diffs between two *different*
     events — the defect that produced two dissenting oracle verdicts about a
     comparison with no referent.  Paired by ``event_id`` — the attacker's id
@@ -483,8 +483,8 @@ class TestOriginOrdinalIdentity:
 class TestBareStringListIdentity:
     """A bare string is its own address, and only where a member left or came.
 
-    Phase 5's seed retirement replaced the rotation record's hand-written
-    ``setup`` / ``consume`` / ``sources`` lists with derived ones of a
+    The rotation record's ``setup`` / ``consume`` / ``sources`` lists are
+    derived rather than hand-written, and are
     different length, and positional pairing turned seventeen surviving or
     added members into value questions.  Pairing such a list by its own
     strings is guarded on the lengths differing, which is what makes this a
@@ -650,12 +650,10 @@ class TestCoupledCoverage:
 class TestDeferralFamilyCoverage:
     """R-12's second reading: no receipt-walk deferral family is unseen.
 
-    The umbrella's Amendment L, Ruling 2 makes a covering scenario the first
-    act of a family's retirement, because against a family the baseline holds
-    no roster for, the retirement slice's ``Expected qualifying occurrences``
-    line reads zero, no investigator is ever owed, and the re-pricing ships
-    unseen — the campaign's founding failure shape wearing the campaign's own
-    gate as a disguise.
+    A covering scenario is the first act of a family's retirement, because
+    against a family the baseline holds no roster for, the expected
+    occurrence count reads zero, no investigator is ever owed, and the
+    re-pricing ships unseen behind a green gate.
     """
 
     def test_the_scenario_set_covers_every_deferral_family(self):
@@ -671,8 +669,8 @@ class TestDeferralFamilyCoverage:
         matching the declarations, both fail here — which is what makes a
         fifteenth family arrive on the commit that declares it.
 
-        The mapping is EMPTY since 2026-08-17, when umbrella Amendment F's
-        fourteenth row retired, and that is asserted as the derived fact it is
+        The mapping is EMPTY, every deferral family having retired, and that
+        is asserted as the derived fact it is
         rather than papered over: it is empty because the schedule receipt it
         joins has no family rows left, and it would stop being empty on the
         commit that defers a new one.  The per-family clause below still binds
@@ -756,8 +754,8 @@ class TestDeferralFamilyCoverage:
 class TestHolderAmpCoverage:
     """R-12's third reading: no static holder amp goes unarmed.
 
-    The umbrella's Amendment M, Ruling 2 makes arming them a covering
-    scenario's job.  The pair engine applies the holder's own amplifiers to
+    Arming them is a covering scenario's job.  The pair engine applies the
+    holder's own amplifiers to
     an item active and to an ability-triggered item proc; a family re-priced
     out of those rows while no scenario arms an amp would drop the term from
     every total that holds it, and a scenario set in which every amp reads
@@ -828,7 +826,7 @@ class TestHolderAmpCoverage:
         # The ability amp is armed: it has a row of its own, which an
         # unarmed Actualizer — an active nobody triggered — would not write.
         assert rows["ability_amp_Actualizer"]["total_damage"] > 0
-        # Ruling 1's two seed cases, both on an Abyssal Mask holder: an item
+        # The two seed cases, both on an Abyssal Mask holder: an item
         # active, and an ability-triggered item proc.
         for row in ("active_Hextech Rocketbelt", "proc_Stormsurge"):
             assert rows[row]["total_damage"] > 0
@@ -838,9 +836,9 @@ class TestHolderAmpCoverage:
 
         It writes no row of its own, so "armed" is measured by dropping the
         item that declares it and re-running the same roster: both seed rows
-        fall by exactly the declared amp.  That is the term Amendment M's
-        Ruling 1 says the walk's from-declaration price does not yet carry,
-        and this is the baseline being able to see it.
+        fall by exactly the declared amp.  That is the term the walk's
+        from-declaration price has to carry, and this is the baseline being
+        able to see it.
         """
         armed = next(
             scenario
@@ -869,8 +867,8 @@ class TestHolderAmpCoverage:
 class TestRepricingWindowCoverage:
     """R-12's fourth reading: no re-pricing window goes unarmed.
 
-    The umbrella's Amendment N, Ruling 3 makes arming them a covering
-    scenario's job.  The pair engine re-prices packets it already authored
+    Arming them is a covering scenario's job.  The pair engine re-prices
+    packets it already authored
     once the complete ledger exists — a lethality window rescales later
     physical packets, a lifeline's max-health raise reprices later burn ticks
     — while the walk's from-declaration price knows only the one effective
@@ -1135,8 +1133,8 @@ def _declared_swing_value(owner, term):
 class TestSwingTermCoverage:
     """R-12's fifth reading: no target-side swing term goes unarmed.
 
-    The umbrella's Amendment R, Ruling 4 makes arming them a covering
-    scenario's job.  ``survival.pricing.price_declared_packet`` carries what
+    Arming them is a covering scenario's job.
+    ``survival.pricing.price_declared_packet`` carries what
     ``_mitigate`` carries — a resistance and the holder's own amps — while a
     packet delivered as a basic-attack swing is priced by
     ``fight.mitigation._mitigate_basic_attack_swing`` and meets three further terms on
@@ -1177,8 +1175,8 @@ class TestSwingTermCoverage:
     def test_the_term_mapping_spans_every_defence_shape_that_declares_one(self):
         """The mapping reads ``writes``, not one payload class.
 
-        Ruling 4's own measured correction: the terms are declared across two
-        rule shapes, and a mapping keyed on the opening-defence shape alone
+        The terms are declared across two rule shapes, and a mapping keyed on
+        the opening-defence shape alone
         would report the plating multiplier covered by an incomplete set.
         This asserts the incompleteness is real — that some owner declares a
         swing term through a payload that is *not* an ``OpeningDefenseRule``
@@ -1284,7 +1282,7 @@ class TestSwingTermCoverage:
         assert set(carried) == set(declarations)
 
     def test_the_plating_multiplier_is_a_pure_factor_on_the_swing(self):
-        """A factor on a linear mitigation, which is why Ruling 1 folds it.
+        """A factor on a linear mitigation, which is why it folds.
 
         Measured with Rock Solid held inert, because a flat subtraction
         applied after the factor would stop the ratio being the factor — the
@@ -1303,7 +1301,7 @@ class TestSwingTermCoverage:
         )
 
     def test_rock_solid_is_a_capped_flat_subtraction_and_not_a_factor(self):
-        """The term Ruling 1 says never folds, measured as what it is.
+        """The term that never folds, measured as what it is.
 
         The step between an armed swing and the same swing with only the
         flat pair inert is ``min(flat, per_hit × cap)`` — an absolute amount
@@ -1356,7 +1354,7 @@ class TestSwingTermCoverage:
     def test_the_bolt_and_the_copied_on_hit_row_move_in_opposite_directions(self):
         """Why the terms are armed under the bolt, and why one row is not enough.
 
-        Ruling 3 gives the two rows different producers, but they are not
+        The two rows have different producers, but they are not
         independently priceable: the copied on-hit strikes read the secondary
         subject's *current* health, so a subject that takes less from the
         bolt carries more health into them.  A fixture that armed a term and
@@ -1507,21 +1505,21 @@ class TestSyndraPinScenarios:
 
 
 def declared_exact_moves():
-    """Per-attacker totals a landed semantic slice declared it would move.
+    """Per-attacker totals a landed semantic change declared it would move.
 
-    R-17: a correction lands against the *committed* baselines plus a
-    committed allowlist of expected diff paths, and the baselines are
-    re-captured once per phase boundary.  This file is one of those
-    baselines, so its equality gate reads the same allowlists — a declaration
-    that lives in ``docs/receipts/`` and is reverted with its slice, never an
+    A correction lands against the *committed* baselines plus a committed
+    allowlist of expected diff paths, and the baselines are re-captured
+    periodically.  This file is one of those baselines, so its equality gate
+    reads the same allowlists — a declaration that lives in
+    ``docs/receipts/`` and is reverted with the change that made it, never an
     edit to this test.
 
     Each entry names both values, so an allowlisted total may be exactly the
-    one the baseline still holds or exactly the one the slice declared, and
-    nothing else.  That keeps the entry harmless after the phase-boundary
-    re-capture instead of turning a stale allowlist into a permanent hole.
+    one the baseline still holds or exactly the one the change declared, and
+    nothing else.  That keeps the entry harmless after a re-capture instead
+    of turning a stale allowlist into a permanent hole.
 
-    Two receipts may claim one key — a leaf a later slice moved again — and
+    Two receipts may claim one key — a leaf a later change moved again — and
     the later declaration is the live one, so precedence is the receipt
     *name* rather than the ``Path``: comparing paths on Windows folds case,
     which would order the receipts differently here than on a POSIX runner
@@ -1540,20 +1538,19 @@ def declared_exact_moves():
 
 
 def declared_exact_new_scenarios():
-    """Scenarios a landed slice declared this baseline does not hold yet.
+    """Scenarios a landed change declared this baseline does not hold yet.
 
     The same mechanism as :func:`declared_exact_moves` and for the same
     reason, over the one shape a per-key allowlist cannot express: a scenario
     the committed capture predates entirely has no old total to name, so it
     is declared by name.  Adding a covering scenario is its own act and the
-    capture is the integration agent's next commit (R-17, R-32, and the
-    umbrella's Amendment L, Ruling 2), so between the two this baseline
-    legitimately holds fewer scenarios than the harness runs.
+    capture is the integration agent's next commit, so between the two this
+    baseline legitimately holds fewer scenarios than the harness runs.
 
     The declaration is bounded on both sides: a name here must be one the
     scenario set actually holds, so a typo is a red rather than a waiver, and
     it never excuses a scenario going *missing* — only the equality below is
-    relaxed, and only in the direction the ruling permits.
+    relaxed, and only in the direction a declaration names.
     """
     declared: set[str] = set()
     for receipt in sorted(

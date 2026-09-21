@@ -1,22 +1,21 @@
-"""Phase 0 sentinels — deferred semantics pinned, with zero ``src/`` change.
+"""Sentinels: deferred semantics pinned, with zero ``src/`` change.
 
 A correction with no reachable fixture is a declaration wearing a
-correction's clothes, so where Phase 0 declines to change behaviour it says
-so in a test instead: the sentinel pins today's answer, names the decision
-that deferred it, and goes red on the commit that changes the answer without
-re-reading this file.  Each sentinel also pins the size of its own
-population, because a sentinel that is green over an empty set proves
-nothing.
+correction's clothes, so where behaviour is deliberately left alone a test
+says so instead: the sentinel pins today's answer, names what deferred it,
+and goes red on the commit that changes the answer without re-reading this
+file.  Each sentinel also pins the size of its own population, because a
+sentinel that is green over an empty set proves nothing.
 
 Seven sentinels, one class each:
 
-* :class:`TestCommandWindowsMergeByRefresh` — D-12, the merge census.
-* :class:`TestCommandDoesNotAmpItsOwnTimestamp` — D-13, the same-tick tie.
-* :class:`TestCommandExpiryBoundaryDiverges` — D-13, ``start < t <= end``.
-* :class:`TestIsAttackOrSpellVersusFromAllSources` — D-04, the delivery gate.
-* :class:`TestCommandMarksOnlyTheFirstPairDefender` — H2, ``CcScope``.
-* :class:`TestAbyssalAuraHasNoRangeOrDeathCondition` — D-66, arm-time keys.
-* :class:`TestSupportValueMixesUnits` — D-14/H3, the utility objective.
+* :class:`TestCommandWindowsMergeByRefresh` — the merge census.
+* :class:`TestCommandDoesNotAmpItsOwnTimestamp` — the same-tick tie.
+* :class:`TestCommandExpiryBoundaryDiverges` — ``start < t <= end``.
+* :class:`TestIsAttackOrSpellVersusFromAllSources` — the delivery gate.
+* :class:`TestCommandMarksOnlyTheFirstPairDefender` — ``CcScope``.
+* :class:`TestAbyssalAuraHasNoRangeOrDeathCondition` — arm-time keys.
+* :class:`TestSupportValueMixesUnits` — the utility objective.
 """
 
 import math
@@ -61,24 +60,24 @@ FROM_ALL_SOURCES_PRODUCERS = 5
 # holder's own fight can read.  This is the Command sentinels' population and
 # umbrella criterion 15 requires it to be non-empty.  It was three — Ahri,
 # Pantheon, Syndra — while those were the only reviewed ``cc_kind`` markers in
-# the registry; the full-coverage campaign's decision 6 made every champion
-# module author its own kit's crowd-control facts, and the population grows
+# the registry; every champion module now authors its own kit's
+# crowd-control facts, and the population grows
 # with every module that lands (40 at the time of writing).
 #
 # **A floor, not an equality**, and the difference is the sentinel's own
 # stated purpose: "pinned so the sweep cannot shrink in silence: a champion
 # that starts withholding is a champion whose later immobilizes stop being
-# swept."  Shrinking is the defect.  Growth is decision 6 working, and an
-# equality here would go red on each of the campaign's remaining champion
-# batches and be re-pinned without being read — which is the failure mode
-# D-26 exists to prevent, arriving through the gate meant to prevent it.
+# swept."  Shrinking is the defect.  Growth is the champion tree filling in,
+# and an equality here would go red on each new module and be re-pinned
+# without being read, which is the failure the pin exists to prevent
+# arriving through the gate meant to prevent it.
 COMMAND_CC_AUTHORS = 31
 
 # Champion modules that withhold a time-based answer and are swept through
 # one rotation instead.  Pinned so the sweep cannot shrink in silence: a
 # champion that starts withholding is a champion whose later immobilizes
-# stop being swept.  Zero is the campaign's own criterion 1 — the withhold
-# machinery is kept and its trigger population emptied — so this number
+# stop being swept.  Zero is the end state — the withhold machinery is kept
+# and its trigger population emptied — so this number
 # going *up* is a regression, not a new champion.
 TIME_BASED_WITHHOLDING_CHAMPIONS = 0
 
@@ -174,8 +173,8 @@ class _CommandSweep(NamedTuple):
 def command_slot() -> delta_amp.AmpSlot:
     """Command's declared chain slot — where its window now comes from.
 
-    Phase 3 moved the window's duration, its merge policy and its expiry
-    boundary out of two engine helpers and into the rule's
+    The window's duration, its merge policy and its expiry boundary live on
+    the rule rather than in two engine helpers, in the rule's
     ``TriggerWindow(IMMOBILIZE, merge=REFRESH, boundary=OPEN_CLOSED)``, which
     is what these sentinels said the phase would do.  They read the same
     facts through the declaration, so the sentinel and the policy it pins
@@ -199,7 +198,7 @@ def command_slot() -> delta_amp.AmpSlot:
 def command_sweep() -> _CommandSweep:
     """Every registered champion's authored immobilizes, holding Mandate.
 
-    The sweep is the whole registry, not a sample, because D-12's question —
+    The sweep is the whole registry, not a sample, because the question —
     can two Command windows ever overlap? — is a question about the corpus
     of authored markers rather than about one champion.  Time-based is the
     maximal fight mode for that question (a longer window authors more
@@ -368,8 +367,7 @@ class TestCommandWindowsMergeByRefresh:
 
     Command's rule merges overlapping immobilizes by moving the mark's expiry
     to the last one plus its duration — ``merge=REFRESH``, which is what both
-    engines have always computed and, since the ruling, what the declaration
-    calls it.  The additive reading the League Wiki's "extend the duration"
+    engines compute and what the declaration calls it.  The additive reading the League Wiki's "extend the duration"
     wording admits is filed with its cost in
     ``item_behavior_catalog.ACKNOWLEDGED_READING_DIVERGENCES``.
 
@@ -381,7 +379,7 @@ class TestCommandWindowsMergeByRefresh:
     """
 
     def test_the_population_is_pinned_and_is_not_empty(self):
-        """D-26: the sentinel names how much it is green over."""
+        """The sentinel names how much it is green over."""
         sweep = command_sweep()
         assert sweep.authors, (
             "D-12: no registered champion authors an immobilize a Mandate "
@@ -483,7 +481,7 @@ class TestCommandDoesNotAmpItsOwnTimestamp:
     ``window_holds`` is ``start < t <= end``, so damage authored at exactly an
     immobilize's timestamp is outside the window it opened — including damage
     the reconstructed ledger sorts *after* the trigger.  That coarseness is
-    priced here rather than argued about, and the ruling that keeps it is in
+    priced here rather than argued about, and the reason it stays is in
     ``delta_amp.AmpSlot.window_holds``' docstring:
 
     * the secondary sort key is not an authored ordering for these rows.
@@ -500,11 +498,11 @@ class TestCommandDoesNotAmpItsOwnTimestamp:
 
     The defect is upstream, in a cast timeline that puts several casts on one
     instant.  This sentinel turns red when that is fixed, or when the rank
-    ladder moves, which are the two commits that should re-read the ruling.
+    ladder moves, which are the two commits that should re-read this.
     """
 
     def test_the_tie_population_is_not_empty_and_is_priced(self):
-        """D-26: the coarseness costs something, and the number is stated."""
+        """The coarseness costs something, and the number is stated."""
         sweep = command_sweep()
         tied = {name: value for name, value in sweep.tie.items() if value > 0.0}
         assert tied, (
@@ -544,16 +542,16 @@ class TestCommandExpiryBoundaryDiverges:
     arms the modifier after equal-time damage.
 
     Reachable only on exact float equality, which no committed scenario
-    produces, so Phase 0 characterised the divergence rather than unifying
-    it: unifying it would be an unfixtured change to both engines at once.
-    Phase 3 declared the boundary ``OPEN_CLOSED``, and this sentinel
-    is what that declaration has to satisfy — it now reads the pair half
+    produces, so the divergence is characterised rather than unified:
+    unifying it would be an unfixtured change to both engines at once.  The
+    declared boundary is ``OPEN_CLOSED``, and this sentinel is what that
+    declaration has to satisfy — it reads the pair half
     through the declaration itself, so the divergence is pinned between a
     declared policy and the walk rather than between two spellings.
     """
 
     def test_the_population_is_five_timed_producers_and_is_not_empty(self):
-        """D-26: only a producer with a closing instant can disagree."""
+        """Only a producer with a closing instant can disagree."""
         timed = timed_cross_participant_producers()
         assert timed, "D-13: no cross-participant producer carries an expiry"
         assert len(timed) == TIMED_CROSS_PARTICIPANT_PRODUCERS, (
@@ -618,12 +616,12 @@ class TestIsAttackOrSpellVersusFromAllSources:
     C3 declines to widen the gate: silently widening a gate inside a commit
     labelled "add a typed field" is a second correction riding the first,
     and no committed baseline scenario reaches the branch, so the widening
-    would land unfixtured.  When a later slice widens it, this sentinel is
-    what turns red.
+    would land unfixtured.  The commit that widens it turns this sentinel
+    red.
     """
 
     def test_the_population_is_five_producers_and_is_not_empty(self):
-        """D-26: the sentinel names how much it is green over."""
+        """The sentinel names how much it is green over."""
         admitting_other = {
             source
             for source, declared in declared_classes_by_producer().items()
@@ -676,15 +674,14 @@ class TestCommandMarksOnlyTheFirstPairDefender:
     Reordering the roster moves the mark, which is the proof that no
     targeting rule is involved.
 
-    H2 is the human-owned decision that answers it — how many roster targets
-    does one cone stun, and on what source — and the umbrella's recorded
-    ruling until then is *deferred, default shipped*: ``CcScope.Unreviewed``
-    resolves to a single target.  This sentinel pins the default so the day
+    How many roster targets one cone stun reaches, and on what source, is a
+    human-owned decision.  Until it is made ``CcScope.Unreviewed`` resolves
+    to a single target.  This sentinel pins that default so the day
     ``CcScope`` takes a sourced value is a day this file is re-read.
     """
 
     def test_the_population_is_three_enemies_and_one_is_marked(self):
-        """D-26: three enemies could be marked; exactly one is."""
+        """Three enemies could be marked; exactly one is."""
         combat = sentinel_roster(("Imperial Mandate",), ("Aatrox", "Malphite", "Garen"))
         enemies = [
             row["participant_id"]
@@ -731,16 +728,15 @@ class TestAbyssalAuraHasNoRangeOrDeathCondition:
     radius and no holder-liveness field, so a dead holder's curse still
     prices the enemy's incoming magic damage for the rest of the window.
 
-    Phase 0 does not fix this.  Both conditions are arm-time preconditions on
-    an idempotent aura, and D-66 is where an aura's arm key and its arming
-    conditions are ruled — with a `HolderStacking` field Phase 4 introduces
-    and Phase 0 cannot write against.  Pricing a curse whose precondition
-    never ran is the campaign's own invariant, so it is pinned here rather
-    than left as a comment.
+    This is not fixed here.  Both conditions are arm-time preconditions on
+    an idempotent aura, and an aura's arm key and its arming conditions are
+    declared together on the `HolderStacking` field.  Pricing a curse whose
+    precondition never ran is a number nobody measured, so it is pinned here
+    rather than left as a comment.
     """
 
     def test_the_population_is_every_enemy_and_is_not_empty(self):
-        """D-26: the aura curses the whole enemy team, unconditionally."""
+        """The aura curses the whole enemy team, unconditionally."""
         combat = sentinel_roster(
             ("Imperial Mandate", "Abyssal Mask"), ("Aatrox", "Malphite", "Garen")
         )
@@ -813,7 +809,7 @@ class TestAbyssalAuraHasNoRangeOrDeathCondition:
 
 
 class TestSupportValueMixesUnits:
-    """One ``support_value`` sum adds hit points to a unitless amp (D-14, H3).
+    """One ``support_value`` sum adds hit points to a unitless amp.
 
     ``support_value`` is the sum of every non-damage support event's applied
     amount, with no unit axis anywhere in the accumulator: a Locket shield
@@ -821,9 +817,9 @@ class TestSupportValueMixesUnits:
     0.07, the amp *fraction*, to the same total.  A Mandate holder is
     therefore worth about a thousandth of a shield in the utility objective.
 
-    H3 is the human-owned decision — does amplification count as support
-    value at all, and in what unit — and D-14 rules that Phase 0 pins the
-    behaviour by characterisation and excludes it from every coverage
+    Whether amplification counts as support value at all, and in what unit,
+    is a human-owned decision.  Until it is made, the behaviour is pinned by
+    characterisation and excluded from every coverage
     expectation, because it is a product decision about the objective and
     not a defect with an oracle.
     """
@@ -836,7 +832,7 @@ class TestSupportValueMixesUnits:
         )
 
     def test_the_population_is_three_events_over_two_units(self):
-        """D-26: the sum is green over a real mixture, not one event."""
+        """The sum is green over a real mixture, not one event."""
         events = [
             event
             for event in self._roster()["support_events"]
