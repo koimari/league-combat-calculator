@@ -618,10 +618,8 @@ class TestAWithheldComponentMakesEveryTotalReadingItWithheld:
         )
 
     def test_the_total_refuses_and_names_the_member_it_swallowed(self) -> None:
-        from src.calculator.quantity import WithheldHasNoValue
-
         combat, focus_id = self._withheld_receipt()
-        with pytest.raises(WithheldHasNoValue) as raised:
+        with pytest.raises(ValueError) as raised:
             self._score(combat, focus_id)
         assert self.RECEIPT in str(raised.value)
 

@@ -33,7 +33,6 @@ from src.calculator.coverage_evidence import (
     UTILITY_DIMENSIONS,
     Absence,
     Claim,
-    CoverageClaimError,
     EffectKey,
     EffectTag,
     OptionSchema,
@@ -142,31 +141,31 @@ def test_a_well_formed_table_validates() -> None:
 
 def test_unknown_lane_is_rejected() -> None:
     """A lane outside the closed four cannot be claimed on."""
-    with pytest.raises(CoverageClaimError, match="lane 'jungle'"):
+    with pytest.raises(ValueError, match="lane 'jungle'"):
         validate_claim(claim(lane="jungle"))
 
 
 def test_unknown_status_is_rejected() -> None:
     """A status outside the closed eight has no policy cell."""
-    with pytest.raises(CoverageClaimError, match="status 'probably_fine'"):
+    with pytest.raises(ValueError, match="status 'probably_fine'"):
         validate_claim(claim(status="probably_fine"))
 
 
 def test_status_illegal_on_its_lane_is_rejected() -> None:
     """``not_target_relevant`` is the target classifier's spelling alone."""
-    with pytest.raises(CoverageClaimError, match="not claimable on the 'attacker'"):
+    with pytest.raises(ValueError, match="not claimable on the 'attacker'"):
         validate_claim(claim(status="not_target_relevant", evidence=(SOURCE,)))
 
 
 def test_unknown_subject_kind_is_rejected() -> None:
     """A claim's subject is an item or a precedence rule; there is no third."""
-    with pytest.raises(CoverageClaimError, match="subject_kind 'champion'"):
+    with pytest.raises(ValueError, match="subject_kind 'champion'"):
         validate_claim(claim(subject_kind="champion"))
 
 
 def test_blank_subject_is_rejected() -> None:
     """A claim that names nothing backs nothing."""
-    with pytest.raises(CoverageClaimError, match="subject must be a non-blank"):
+    with pytest.raises(ValueError, match="subject must be a non-blank"):
         validate_claim(claim(subject="   "))
 
 
@@ -177,32 +176,32 @@ def test_blank_subject_is_rejected() -> None:
 
 def test_missing_required_evidence_kind_is_rejected() -> None:
     """``modeled_effect`` without a TestRef is a claim nothing can fail on."""
-    with pytest.raises(CoverageClaimError, match=r"missing \['TestRef'\]"):
+    with pytest.raises(ValueError, match=r"missing \['TestRef'\]"):
         validate_claim(claim(evidence=(IMPL, PAIR_IMPL)))
 
 
 def test_absence_on_a_positive_claim_is_rejected() -> None:
     """A claim cannot say the mechanic is modelled and also that it is not."""
-    with pytest.raises(CoverageClaimError, match=r"forbids evidence \['Absence'\]"):
+    with pytest.raises(ValueError, match=r"forbids evidence \['Absence'\]"):
         validate_claim(claim(evidence=(IMPL, NODE, ABSENCE)))
 
 
 def test_positive_evidence_on_a_negative_claim_is_rejected() -> None:
     """A refusal carries its reason and nothing that looks like coverage."""
-    with pytest.raises(CoverageClaimError, match="forbids evidence"):
+    with pytest.raises(ValueError, match="forbids evidence"):
         validate_claim(claim(status="withheld", evidence=(ABSENCE, IMPL)))
 
 
 def test_two_absences_on_a_negative_claim_are_rejected() -> None:
     """A refusal has exactly one reason, so the receipt is unambiguous."""
     second = Absence(reason="A second, different reason.", issue_refs=(41,))
-    with pytest.raises(CoverageClaimError, match="carries 2 Absence members"):
+    with pytest.raises(ValueError, match="carries 2 Absence members"):
         validate_claim(claim(status="withheld", evidence=(ABSENCE, second)))
 
 
 def test_min_count_below_the_cell_floor_is_rejected() -> None:
     """A certified event needs three members: impl, guard and test."""
-    with pytest.raises(CoverageClaimError, match="at least 3 evidence members"):
+    with pytest.raises(ValueError, match="at least 3 evidence members"):
         validate_claim(
             claim(
                 lane="target",
@@ -214,7 +213,7 @@ def test_min_count_below_the_cell_floor_is_rejected() -> None:
 
 def test_certified_status_without_a_certification_guard_is_rejected() -> None:
     """The role rule the kind-level cell cannot express."""
-    with pytest.raises(CoverageClaimError, match="role 'certification_guard'"):
+    with pytest.raises(ValueError, match="role 'certification_guard'"):
         validate_claim(
             claim(
                 lane="target",
@@ -242,7 +241,7 @@ def test_modeled_state_accepts_any_of_the_three_state_homes(home) -> None:
 
 def test_modeled_state_naming_no_state_home_is_rejected() -> None:
     """Three members are not enough if none of them supplies the state."""
-    with pytest.raises(CoverageClaimError, match="needs one of"):
+    with pytest.raises(ValueError, match="needs one of"):
         validate_claim(
             claim(status="modeled_state", evidence=(IMPL, GUARD, NODE)),
         )
@@ -250,27 +249,25 @@ def test_modeled_state_naming_no_state_home_is_rejected() -> None:
 
 def test_support_packet_lane_without_a_packet_source_is_rejected() -> None:
     """The lane overlay: a support-packet claim names its packet."""
-    with pytest.raises(CoverageClaimError, match=r"missing \['PacketSource'\]"):
+    with pytest.raises(ValueError, match=r"missing \['PacketSource'\]"):
         validate_claim(claim(lane="support_packet", evidence=(IMPL, NODE, OTHER_NODE)))
 
 
 def test_stats_only_carrying_a_packet_source_is_rejected() -> None:
     """An item that emits a packet is not stats-only."""
-    with pytest.raises(
-        CoverageClaimError, match=r"forbids evidence \['PacketSource'\]"
-    ):
+    with pytest.raises(ValueError, match=r"forbids evidence \['PacketSource'\]"):
         validate_claim(claim(status="stats_only", evidence=(SOURCE, PACKET)))
 
 
 def test_empty_evidence_is_rejected() -> None:
     """Every claim names what backs it — that is the whole point."""
-    with pytest.raises(CoverageClaimError, match="evidence is empty"):
+    with pytest.raises(ValueError, match="evidence is empty"):
         validate_claim(claim(evidence=()))
 
 
 def test_repeated_evidence_member_is_rejected() -> None:
     """A duplicate inflates the member count without backing anything."""
-    with pytest.raises(CoverageClaimError, match="is repeated"):
+    with pytest.raises(ValueError, match="is repeated"):
         validate_claim(
             claim(
                 lane="target",
@@ -282,7 +279,7 @@ def test_repeated_evidence_member_is_rejected() -> None:
 
 def test_a_foreign_object_in_the_evidence_tuple_is_rejected() -> None:
     """The union is closed; a bare string is not evidence."""
-    with pytest.raises(CoverageClaimError, match="is not one of the 9 evidence kinds"):
+    with pytest.raises(ValueError, match="is not one of the 9 evidence kinds"):
         validate_claim(
             claim(evidence=(IMPL, NODE, "tests/test_smoke.py::test_imports"))
         )
@@ -295,31 +292,31 @@ def test_a_foreign_object_in_the_evidence_tuple_is_rejected() -> None:
 
 def test_dimension_outside_the_closed_set_is_rejected() -> None:
     """A dimension that names no measured outcome is a product label."""
-    with pytest.raises(CoverageClaimError, match="dimension 'synergy'"):
+    with pytest.raises(ValueError, match="dimension 'synergy'"):
         validate_claim(claim(dimensions=("synergy",)))
 
 
 def test_repeated_dimension_is_rejected() -> None:
     """Dimensions are a set written as a tuple, so repeats are a typo."""
-    with pytest.raises(CoverageClaimError, match="repeat a member"):
+    with pytest.raises(ValueError, match="repeat a member"):
         validate_claim(claim(dimensions=("on_hit", "on_hit")))
 
 
 def test_utility_claim_with_no_dimension_is_rejected() -> None:
     """A utility claim naming no outcome claims nothing."""
-    with pytest.raises(CoverageClaimError, match="names no outcome"):
+    with pytest.raises(ValueError, match="names no outcome"):
         validate_claim(claim(lane="utility", dimensions=()))
 
 
 def test_issue_refs_on_a_negative_claim_are_rejected() -> None:
     """One home per claim: a refusal's refs live on its Absence."""
-    with pytest.raises(CoverageClaimError, match="issue refs on its Absence"):
+    with pytest.raises(ValueError, match="issue refs on its Absence"):
         validate_claim(claim(status="withheld", evidence=(ABSENCE,), issue_refs=(40,)))
 
 
 def test_non_positive_issue_ref_is_rejected() -> None:
     """An issue number is a positive integer, never a flag."""
-    with pytest.raises(CoverageClaimError, match="not a positive issue number"):
+    with pytest.raises(ValueError, match="not a positive issue number"):
         validate_claim(claim(issue_refs=(0,)))
 
 
@@ -331,13 +328,13 @@ def test_non_positive_issue_ref_is_rejected() -> None:
 def test_key_disagreeing_with_its_claim_is_rejected() -> None:
     """A claim filed against an item it says nothing about."""
     entry = claim()
-    with pytest.raises(CoverageClaimError, match="disagrees with the claim"):
+    with pytest.raises(ValueError, match="disagrees with the claim"):
         validate_claim_table({("item", "Abyssal Mask", "attacker"): entry})
 
 
 def test_key_that_is_not_a_triple_is_rejected() -> None:
     """The key is ``(subject_kind, subject, lane)`` and nothing shorter."""
-    with pytest.raises(CoverageClaimError, match=r"is not a .subject_kind"):
+    with pytest.raises(ValueError, match=r"is not a .subject_kind"):
         validate_claim_table({"Imperial Mandate": claim()})
 
 
@@ -513,7 +510,7 @@ def test_key_that_is_not_a_triple_is_rejected() -> None:
 )
 def test_malformed_evidence_member_is_rejected(member, message: str) -> None:
     """Each evidence kind's shape rule, reached by the case that breaks it."""
-    with pytest.raises(CoverageClaimError, match=message):
+    with pytest.raises(ValueError, match=message):
         validate_evidence(member, claim="item:Imperial Mandate@attacker")
 
 
@@ -558,11 +555,11 @@ def test_the_matrix_refuses_every_illegal_cell() -> None:
     """The accessor is a guard in its own right, not only through a claim."""
     for lane in sorted(LANES):
         for status in sorted(CLAIM_STATUSES - LANE_STATUSES[lane]):
-            with pytest.raises(CoverageClaimError, match="not claimable on the"):
+            with pytest.raises(ValueError, match="not claimable on the"):
                 status_policy(lane, status)
-    with pytest.raises(CoverageClaimError, match="lane 'jungle'"):
+    with pytest.raises(ValueError, match="lane 'jungle'"):
         status_policy("jungle", "modeled_effect")
-    with pytest.raises(CoverageClaimError, match="status 'probably_fine'"):
+    with pytest.raises(ValueError, match="status 'probably_fine'"):
         status_policy("attacker", "probably_fine")
 
 

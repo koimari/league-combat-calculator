@@ -25,7 +25,7 @@ from src.calculator.data_fetcher import (
     _item_name_index,
     fetch_item_data,
 )
-from src.calculator.item_behavior_catalog import BehaviorCatalogError, behavior_rules
+from src.calculator.item_behavior_catalog import behavior_rules
 from src.calculator.pipeline import run_fight
 from src.calculator.scenario import parse_scenario_request, resolve_scenario
 
@@ -197,7 +197,7 @@ class TestTheFourWaysItFailsClosed:
 
     def test_a_formula_no_term_schema_describes_is_refused(self, install):
         install(formula="flat_ap_typo")
-        with pytest.raises(BehaviorCatalogError, match="no term schema describes"):
+        with pytest.raises(RuntimeError, match="no term schema describes"):
             calculate_payload({**REQUEST, "items": [NAME]}, deterministic=True)
 
     def test_an_unparsed_entry_names_the_key_it_is_missing(self, install):
@@ -208,5 +208,5 @@ class TestTheFourWaysItFailsClosed:
     def test_a_mechanic_no_capability_declares_has_no_pricing_home(self, install):
         """A rule with no capability names no pricing home, so it is refused."""
         install(capability=False)
-        with pytest.raises(BehaviorCatalogError, match="declares no capability"):
+        with pytest.raises(RuntimeError, match="declares no capability"):
             calculate_payload({**REQUEST, "items": [NAME]}, deterministic=True)

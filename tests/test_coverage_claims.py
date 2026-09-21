@@ -40,7 +40,6 @@ from src.calculator.coverage_evidence import (
     UTILITY_DIMENSIONS,
     Absence,
     Claim,
-    CoverageClaimError,
     EffectKey,
     EffectTag,
     OptionSchema,
@@ -1894,7 +1893,7 @@ def test_a_tracked_review_on_no_claim_lane_stops_the_corpus(
         "_REVIEW_ISSUE_REFS",
         {**item_coverage._REVIEW_ISSUE_REFS, "Elixir of Iron": (40,)},
     )
-    with pytest.raises(CoverageClaimError, match="Elixir of Iron"):
+    with pytest.raises(ValueError, match="Elixir of Iron"):
         item_coverage._validate_issue_ref_routing()
 
 

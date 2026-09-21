@@ -462,7 +462,7 @@ def test_a_structural_zero_with_no_reason_cannot_be_constructed() -> None:
 
 def test_reading_a_withheld_quantity_raises_naming_its_receipts() -> None:
     """A withheld leaf has receipts instead of a number, and says so."""
-    with pytest.raises(quantity.WithheldHasNoValue) as excinfo:
+    with pytest.raises(ValueError) as excinfo:
         WITHHELD.read()
     assert "Bandlepipes" in str(excinfo.value)
 

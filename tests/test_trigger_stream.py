@@ -45,7 +45,6 @@ from src.calculator.program.compile import WalkCompiler, action_from_event
 from src.calculator.program.views.view_tag import ViewTag
 from src.calculator.quantity import ProjectionStarvation, projection_starvation
 from src.calculator.roster_composition import ActorRequest
-from src.calculator.support_event_view import EventViewStarvationError
 from src.calculator.survival.compile import (
     UncompilableActionError,
     unrepresentable_template_receipt,
@@ -888,7 +887,7 @@ def test_registry_validation_rejects_each_structural_defect(
     broken[capability.mechanic] = capability
     monkeypatch.setattr(ts, "CAPABILITIES", broken)
     monkeypatch.setattr(ts, "_DECLARATIONS", tuple(broken.values()))
-    with pytest.raises(ts.TriggerRegistryError, match=message):
+    with pytest.raises(RuntimeError, match=message):
         ts._validate_registry()
 
 
@@ -897,7 +896,7 @@ def test_registry_validation_rejects_duplicate_mechanic_ids(monkeypatch):
     monkeypatch.setattr(
         ts, "_DECLARATIONS", (_capability(), _capability(engine=ts.Engine.PAIR))
     )
-    with pytest.raises(ts.TriggerRegistryError, match="duplicate mechanic ids"):
+    with pytest.raises(RuntimeError, match="duplicate mechanic ids"):
         ts._validate_registry()
 
 
@@ -909,7 +908,7 @@ def test_a_paired_capability_pointing_at_a_walk_half_is_rejected(monkeypatch):
     )
     monkeypatch.setattr(ts, "CAPABILITIES", broken)
     monkeypatch.setattr(ts, "_DECLARATIONS", tuple(broken.values()))
-    with pytest.raises(ts.TriggerRegistryError, match=re.escape("Engine.PAIR")):
+    with pytest.raises(RuntimeError, match=re.escape("Engine.PAIR")):
         ts._validate_registry()
 
 
@@ -929,7 +928,7 @@ def test_a_paired_capability_naming_no_delivery_is_rejected(monkeypatch):
     )
     monkeypatch.setattr(ts, "CAPABILITIES", broken)
     monkeypatch.setattr(ts, "_DECLARATIONS", tuple(broken.values()))
-    with pytest.raises(ts.TriggerRegistryError, match="names no delivery"):
+    with pytest.raises(RuntimeError, match="names no delivery"):
         ts._validate_registry()
 
 
@@ -976,7 +975,7 @@ def test_a_self_scoped_delivery_naming_nothing_is_rejected(monkeypatch, empty):
     broken["synthetic.mechanic"] = _capability(packet_source=empty)
     monkeypatch.setattr(ts, "CAPABILITIES", broken)
     monkeypatch.setattr(ts, "_DECLARATIONS", tuple(broken.values()))
-    with pytest.raises(ts.TriggerRegistryError, match="naming nothing"):
+    with pytest.raises(RuntimeError, match="naming nothing"):
         ts._validate_registry()
 
 
@@ -1461,7 +1460,7 @@ def test_a_divergence_reference_that_resolves_in_nothing_is_still_rejected():
         divergence_ref="bloodsong.expose_weakness",
         holder_stacking=ts.HolderStacking.PER_HOLDER,
     )
-    with pytest.raises(ts.TriggerRegistryError, match="resolves in no"):
+    with pytest.raises(RuntimeError, match="resolves in no"):
         ts._validate_pairing(capability.mechanic, capability)
 
 
@@ -2124,7 +2123,7 @@ def test_a_tuple_ledger_names_the_holder_before_the_bus_can_starve(item):
     holder = _support_actor("main:Annie", "main", (item,))
     ally = _support_actor("ally:Pantheon", "ally", ())
     result = {"damage_events_tuple": True, "damage_events": [(0.0, 100.0, "Q")]}
-    with pytest.raises(EventViewStarvationError):
+    with pytest.raises(ValueError):
         derive_item_support_effects(holder, result, [holder, ally])
     assert item in ts.tuple_incapable_items()
 
@@ -2560,7 +2559,7 @@ def test_the_two_phase_four_fields_reject_their_own_defects(overrides, message):
     can be wrong for a whole release without a symptom.
     """
     capability = _capability(**overrides)
-    with pytest.raises(ts.TriggerRegistryError, match=message):
+    with pytest.raises(RuntimeError, match=message):
         ts._validate_view_semantics(capability.mechanic, capability)
 
 

@@ -19,7 +19,6 @@ from .contract_vocabulary import (
     COVERAGE_CHANNELS,
     REQUIRED_CHAMPION_SLOTS,
     REVIEW_STATUS,
-    ChampionModuleContractError,
     DeclarationSites,
 )
 from .slot_cc import CC_PER_PART
@@ -46,16 +45,16 @@ def _stat_conversion(module: ModuleType) -> BonusHealthConversion | None:
     if declared is None:
         return None
     if not isinstance(declared, BonusHealthConversion):
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{module.__name__} MODULE_STAT_CONVERSION must be a "
             "stat_conversion.BonusHealthConversion"
         )
     if not declared.source.strip():
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{module.__name__} MODULE_STAT_CONVERSION must name its source"
         )
     if not 0.0 < declared.attack_damage_ratio < 1.0:
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{module.__name__} MODULE_STAT_CONVERSION attack_damage_ratio "
             f"{declared.attack_damage_ratio!r} is not a share of the denied health"
         )
@@ -68,12 +67,12 @@ def _agreeing(
     """The one value every present carrier holds.
 
     Raises:
-        ChampionModuleContractError: Two carriers disagree.
+        ValueError: Two carriers disagree.
     """
     first_label, first = declared[0]
     for label, value in declared[1:]:
         if value != first:
-            raise ChampionModuleContractError(
+            raise ValueError(
                 f"{module.__name__} declares conflicting {what}: "
                 f"{first_label} and {label} disagree"
             )
@@ -86,7 +85,7 @@ def _declared_cast_dependencies(
     """The one declaration the module, its parser and its slot map agree on.
 
     Raises:
-        ChampionModuleContractError: A carrier holds something other than
+        ValueError: A carrier holds something other than
             a sequence of ``CastDependency``, or two carriers disagree.
     """
     declared = _present(
@@ -102,7 +101,7 @@ def _declared_cast_dependencies(
         if not isinstance(value, (tuple, list)) or any(
             not isinstance(row, CastDependency) for row in value
         ):
-            raise ChampionModuleContractError(
+            raise ValueError(
                 f"{sites.module.__name__} {label} must be a sequence of "
                 "CastDependency declarations"
             )
@@ -131,7 +130,7 @@ def _packet_declaration(
     rests on this pin).
 
     Raises:
-        ChampionModuleContractError: The carriers disagree, the pin is not
+        ValueError: The carriers disagree, the pin is not
             a SHA-256 hex digest, the spec is not a dict, the two are not
             paired, or the module pins a digest its parser does not carry.
     """
@@ -157,17 +156,17 @@ def _packet_declaration(
     if (spec_rows or digest_rows) and getattr(
         sites.parser, "packet_sha256", None
     ) is None:
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{sites.module.__name__} pins a packet digest its parse_abilities does "
             "not carry: the parser was not the one build_packet_module "
             "compiled, so the pin guards nothing"
         )
     if packet_spec is not None and not isinstance(packet_spec, dict):
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{sites.module.__name__} packet spec must be a dict when stamped"
         )
     if (packet_spec is None) != (packet_sha256 is None):
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{sites.module.__name__} packet declaration and digest must be paired"
         )
     if packet_sha256 is not None and (
@@ -175,7 +174,7 @@ def _packet_declaration(
         or len(packet_sha256) != 64
         or any(character not in hexdigits for character in packet_sha256)
     ):
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{sites.module.__name__} PACKET_SHA256 must be a SHA-256 hex digest"
         )
     return packet_spec, packet_sha256
@@ -241,7 +240,7 @@ def _module_cc(sites: DeclarationSites) -> dict[str, str]:
     since a packet module must never call ``build_parser`` itself.
 
     Raises:
-        ChampionModuleContractError: The declaration is malformed, leaves an
+        ValueError: The declaration is malformed, leaves an
             emitted champion slot unnamed, names a slot the module does not
             emit, uses an unknown kind, or disagrees with what the module
             wired into its parser.
@@ -253,18 +252,18 @@ def _module_cc(sites: DeclarationSites) -> dict[str, str]:
     )
     declared = getattr(sites.module, "MODULE_CC", None)
     if declared is None:
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{sites.module.__name__} declares no MODULE_CC — every module states "
             "its reviewed crowd control at that one name, one entry for "
             "every champion slot it emits"
         )
     if not isinstance(declared, dict):
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{sites.module.__name__} MODULE_CC must be a dict of slot -> cc kind"
         )
     unknown_slots = sorted(set(declared) - set(sites.slots))
     if unknown_slots:
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{sites.module.__name__} MODULE_CC declares slot(s) {unknown_slots} "
             f"the module does not emit (its slots are {sorted(sites.slots)})"
         )
@@ -275,20 +274,20 @@ def _module_cc(sites: DeclarationSites) -> dict[str, str]:
         if not isinstance(kind, str) or kind not in allowed
     )
     if invalid:
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{sites.module.__name__} MODULE_CC has invalid cc kind(s) {invalid} "
             "(known kinds are defined by ability_spec.CC_KIND_VOCABULARY, "
             "plus engine.CC_PER_PART for a slot whose kind varies)"
         )
     wired = getattr(sites.parser, "cc_kinds", None)
     if declared and wired is None:
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{sites.module.__name__} declares MODULE_CC but never wired it into "
             f"{wiring}(..., cc_kinds=MODULE_CC) — an unwired declaration "
             "reviews nothing"
         )
     if wired is not None and dict(wired) != dict(declared):
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{sites.module.__name__} declares MODULE_CC {dict(declared)} but wired "
             f"{dict(wired)} into {wiring} — one declaration, one wiring"
         )
@@ -298,7 +297,7 @@ def _module_cc(sites: DeclarationSites) -> dict[str, str]:
         if slot in sites.slots and slot not in declared
     ]
     if unnamed:
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{sites.module.__name__} MODULE_CC names no kind for slot(s) {unnamed} "
             "— the map is total over the slots the module emits, because an "
             "absent slot and a reviewed 'none' read the same downstream; "
@@ -311,12 +310,12 @@ def _refuse_restatements(module: ModuleType) -> None:
     """Stop a module that restates a fact whose home is elsewhere.
 
     Raises:
-        ChampionModuleContractError: The module declares ``REVIEW_STATUS``
+        ValueError: The module declares ``REVIEW_STATUS``
             or ``PACKET_SPEC``.
     """
     restated = [name for name in _RESTATED_FACTS if hasattr(module, name)]
     if restated:
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{module.__name__} declares {restated}: the review status is the "
             f"contract's ({REVIEW_STATUS!r}) and the packet spec rides the "
             "parser build_packet_module returns, so a module restates neither"
@@ -329,31 +328,31 @@ def _coverage_channels(
     """The engine channels a module names for its unemitted ``modeled`` slots.
 
     Raises:
-        ChampionModuleContractError: The declaration is malformed, names an
+        ValueError: The declaration is malformed, names an
             unknown channel, hangs on a slot that is not ``modeled``, or a
             ``modeled`` slot the module neither emits nor gives a channel.
     """
     declared = getattr(module, "COVERAGE_CHANNELS", None) or {}
     if not isinstance(declared, dict):
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{module.__name__} COVERAGE_CHANNELS must map a slot to its channels"
         )
     channels: dict[str, tuple[str, ...]] = {}
     for slot, named in declared.items():
         if slot not in REQUIRED_CHAMPION_SLOTS:
-            raise ChampionModuleContractError(
+            raise ValueError(
                 f"{module.__name__} COVERAGE_CHANNELS names slot {slot!r}, "
                 "which is not one of P/Q/W/E/R"
             )
         row = (named,) if isinstance(named, str) else tuple(named)
         unknown = sorted(set(row) - COVERAGE_CHANNELS)
         if not row or unknown:
-            raise ChampionModuleContractError(
+            raise ValueError(
                 f"{module.__name__} COVERAGE_CHANNELS[{slot!r}] must name at "
                 f"least one known channel; unknown: {unknown}"
             )
         if coverage[slot] != "modeled":
-            raise ChampionModuleContractError(
+            raise ValueError(
                 f"{module.__name__} COVERAGE_CHANNELS[{slot!r}] prices a slot "
                 f"the coverage map calls {coverage[slot]!r}; a channel is how "
                 "a modeled slot reaches the fight"
@@ -365,7 +364,7 @@ def _coverage_channels(
         if status == "modeled" and slot not in slots and slot not in channels
     )
     if unpriced:
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{module.__name__} calls {unpriced} modeled but neither emits "
             "them nor names the COVERAGE_CHANNELS channel that prices them"
         )
@@ -393,16 +392,14 @@ def _ultimate_recasts(module: ModuleType, slots: Mapping[str, Any]) -> bool:
     """Whether the timed scheduler may recast this kit's R on its cooldown.
 
     Raises:
-        ChampionModuleContractError: The declaration is not a bool, or a
+        ValueError: The declaration is not a bool, or a
             module with no R slot claims its ultimate recasts.
     """
     declared = getattr(module, "ULTIMATE_RECASTS", False)
     if not isinstance(declared, bool):
-        raise ChampionModuleContractError(
-            f"{module.__name__} ULTIMATE_RECASTS must be a bool"
-        )
+        raise ValueError(f"{module.__name__} ULTIMATE_RECASTS must be a bool")
     if declared and "R" not in slots:
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{module.__name__} certifies ULTIMATE_RECASTS but emits no R slot"
         )
     return declared
@@ -411,7 +408,5 @@ def _ultimate_recasts(module: ModuleType, slots: Mapping[str, Any]) -> bool:
 def _require_list(module: ModuleType, field_name: str) -> list[Any]:
     value = getattr(module, field_name, None)
     if not isinstance(value, list):
-        raise ChampionModuleContractError(
-            f"{module.__name__} must declare {field_name} as a list"
-        )
+        raise ValueError(f"{module.__name__} must declare {field_name} as a list")
     return value

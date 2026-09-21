@@ -72,19 +72,6 @@ class LedgerDemand:
     reason: str
 
 
-class UndeclaredStatRead(KeyError):
-    """A probe read a champion stat its condition did not declare."""
-
-    def __init__(self, condition: AdequacyCondition, field: str) -> None:
-        super().__init__(
-            f"{condition.value} reads champion stat {field!r}, which is not in "
-            "its declared requires_fields; a condition derived from a stat it "
-            "does not declare is a gate nobody can audit"
-        )
-        self.condition = condition
-        self.field = field
-
-
 _ITEM_HEAL_READER = "pipeline._item_self_healing_events"
 
 

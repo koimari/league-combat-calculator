@@ -109,10 +109,6 @@ _UNSERVED: Mapping[ResultProjection, frozenset[AdequacyCondition]] = MappingProx
 )
 
 
-class ProjectionRegistryError(RuntimeError):
-    """A projection or condition declaration is structurally invalid."""
-
-
 def _validate_declarations() -> None:
     """Structural cross-check of this module's four tables, at import.
 
@@ -124,29 +120,27 @@ def _validate_declarations() -> None:
     functions that happen to agree today.
     """
     if len(DECLARATIONS) != len(_DECLARATIONS):
-        raise ProjectionRegistryError("two declarations name one condition")
+        raise RuntimeError("two declarations name one condition")
     missing = set(AdequacyCondition) - set(DECLARATIONS)
     if missing:
-        raise ProjectionRegistryError(
+        raise RuntimeError(
             "undeclared adequacy conditions: "
             + ", ".join(sorted(condition.value for condition in missing))
         )
     if set(_UNSERVED) != set(ResultProjection):
-        raise ProjectionRegistryError("a projection declares no unserved set")
+        raise RuntimeError("a projection declares no unserved set")
     probed = frozenset(LEDGER_CONDITIONS) | frozenset(SHIELD_OUTCOME_CONDITIONS)
     if probed != set(AdequacyCondition):
-        raise ProjectionRegistryError(
-            "every condition needs a probe on the gate that reads it"
-        )
+        raise RuntimeError("every condition needs a probe on the gate that reads it")
     shared = frozenset(LEDGER_CONDITIONS) & frozenset(SHIELD_OUTCOME_CONDITIONS)
     if shared != {AdequacyCondition.TARGET_THRESHOLD_HEAL}:
-        raise ProjectionRegistryError(
+        raise RuntimeError(
             "the two gates share exactly the threshold-heal clause; "
             f"they now share {sorted(condition.value for condition in shared)}"
         )
     for condition in shared:
         if _LEDGER_PROBES[condition] is not _SHIELD_PROBES[condition]:
-            raise ProjectionRegistryError(
+            raise RuntimeError(
                 f"{condition.value} is read by two functions, not one; a "
                 "mirrored clause is a clause that can diverge"
             )
@@ -223,7 +217,6 @@ def shield_outcome_projection(inputs: ShieldOutcomeInputs) -> ResultProjection:
 __all__ = [
     "LEDGER_CONDITIONS",
     "SHIELD_OUTCOME_CONDITIONS",
-    "ProjectionRegistryError",
     "ledger_demands",
     "ledger_projection",
     "shield_outcome_demands",

@@ -36,7 +36,6 @@ from src.calculator.item_behavior import (
     STAT_DERIVATION_TARGET_PAYLOADS,
     STAT_DERIVATION_UNGRANTED_PAYLOADS,
     ActiveWindowCastEconomyRule,
-    BehaviorRuleError,
     DerivedStat,
     EngineLane,
     FightFacts,
@@ -158,7 +157,7 @@ def test_a_declared_absence_publishes_no_field_at_all() -> None:
 def test_a_manaflow_ledger_missing_half_its_keys_is_a_stop() -> None:
     """A charge ledger is claimed whole or not at all."""
     entry = dict(item_effects.ITEM_EFFECTS[MANAFLOW_HOLDER])
-    with pytest.raises(catalog.BehaviorCatalogError, match="claimed whole"):
+    with pytest.raises(RuntimeError, match="claimed whole"):
         catalog._manaflow_rule(
             ValueSource("ITEM_EFFECTS", MANAFLOW_HOLDER),
             frozenset(entry) - {"manaflow_bonus_mana_max"},
@@ -340,7 +339,7 @@ def test_an_entry_whose_whole_mechanic_is_declared_elsewhere_compiles_nothing() 
 
 def test_an_entry_the_family_claims_with_no_signature_key_is_a_stop() -> None:
     """A derivation that derives nothing is a parse that failed."""
-    with pytest.raises(catalog.BehaviorCatalogError, match="derives nothing"):
+    with pytest.raises(RuntimeError, match="derives nothing"):
         catalog._compile_stat_derivation(
             RuleFamily.STAT_DERIVATION,
             ValueSource("ITEM_EFFECTS", "Long Sword"),
@@ -645,7 +644,7 @@ def test_a_channel_that_names_no_channel_is_refused() -> None:
     declaration that never said where it goes.
     """
     rule = _slot(CHANNEL_HASTE_HOLDER, RestrictedChannelRule).rule
-    with pytest.raises(BehaviorRuleError, match="names the channel"):
+    with pytest.raises(ValueError, match="names the channel"):
         validate_rule(replace(rule, payload=replace(rule.payload, channel=None)))
 
 

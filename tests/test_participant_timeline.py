@@ -6046,9 +6046,6 @@ class TestCatalystIsTwoPassesAndNotARecursion:
         alike, and /api/calculate would turn both into a 400.
         """
         from src.calculator import participant_timeline as timeline
-        from src.calculator.program.dependency import IncompleteDependency
-
-        assert not issubclass(IncompleteDependency, ValueError)
 
         def broken(actor, incoming, duration):
             return ((), False)
@@ -6056,12 +6053,13 @@ class TestCatalystIsTwoPassesAndNotARecursion:
         original = timeline._declared_resource_restores
         timeline._declared_resource_restores = broken
         try:
-            with pytest.raises(IncompleteDependency) as raised:
+            with pytest.raises(RuntimeError) as raised:
                 self._timeline()
         finally:
             timeline._declared_resource_restores = original
 
-        assert "mana_spent_heal" in raised.value.dependency.mechanic
+        assert not isinstance(raised.value, ValueError)
+        assert "mana_spent_heal" in str(raised.value)
         assert "restore ledger is unavailable" in str(raised.value)
 
     def test_the_compiled_lane_is_closed_to_a_patched_pass(self):
@@ -6182,7 +6180,7 @@ class TestSelfStateEventIdsNameTheirOwner:
 
     Without the re-key a roster holding one champion twice publishes one id
     twice on one panel, which ``precision.SumPlan`` refuses at construction
-    (``DuplicateSumMember``) -- and refusing it is right twice over, because
+    (``ValueError``) -- and refusing it is right twice over, because
     an event id is also the walk's join key, so a shared id cross-links two
     actors' riders as well as double-counting one panel.
     """

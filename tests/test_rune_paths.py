@@ -18,7 +18,7 @@ from src.calculator.item_behavior import (
     Probe,
     chain_rank,
 )
-from src.calculator.item_behavior_catalog import BehaviorCatalogError, behavior_rules
+from src.calculator.item_behavior_catalog import behavior_rules
 from src.calculator.rune_paths import (
     domination,
     inspiration,
@@ -123,7 +123,7 @@ class TestCoupDeGrace:
             "target_sideways",
         )
         source = ValueSource("RUNE_EFFECTS", "Coup de Grace")
-        with pytest.raises(BehaviorCatalogError, match="not one of"):
+        with pytest.raises(RuntimeError, match="not one of"):
             item_behavior_catalog._target_health_gate_rule(source)
 
     def test_a_description_naming_the_other_side_fails_closed(self, monkeypatch):
@@ -134,7 +134,7 @@ class TestCoupDeGrace:
             "target_above",
         )
         source = ValueSource("RUNE_EFFECTS", "Coup de Grace")
-        with pytest.raises(BehaviorCatalogError, match="description reordered"):
+        with pytest.raises(RuntimeError, match="description reordered"):
             item_behavior_catalog._target_health_gate_rule(source)
 
 

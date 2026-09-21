@@ -79,7 +79,6 @@ __all__ = [
     "Stream",
     "Trigger",
     "TriggerKind",
-    "TriggerRegistryError",
     "applies_control",
     "authored_triggers",
     "cross_participant_packet_source",
@@ -272,10 +271,6 @@ _MECHANIC_SLUG = re.compile(r"^[a-z0-9_]+\.[a-z0-9_]+$")
 _IMPL_PATH = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)+$")
 
 _DAMAGE_TYPES = frozenset({"physical", "magic", "true"})
-
-
-class TriggerRegistryError(RuntimeError):
-    """A declaration is structurally invalid; raised at import of this module."""
 
 
 # A row is seventeen facts; a record of seventeen fields is the honest
@@ -1707,18 +1702,18 @@ def _validate_registry() -> None:
     counts = Counter(capability.mechanic for capability in _DECLARATIONS)
     duplicates = sorted(name for name, count in counts.items() if count > 1)
     if duplicates:
-        raise TriggerRegistryError(f"duplicate mechanic ids: {duplicates}")
+        raise RuntimeError(f"duplicate mechanic ids: {duplicates}")
     for mechanic, capability in CAPABILITIES.items():
         if not _MECHANIC_SLUG.match(mechanic):
-            raise TriggerRegistryError(
+            raise RuntimeError(
                 f"{mechanic!r} is not a <owner_slug>.<effect_slug> mechanic id"
             )
         if not isinstance(
             capability.owner, (ItemOwner, RuneOwner, ChampionSlotOwner, EngineOwner)
         ):
-            raise TriggerRegistryError(f"{mechanic} declares no MechanicOwner")
+            raise RuntimeError(f"{mechanic} declares no MechanicOwner")
         if not _IMPL_PATH.match(capability.impl):
-            raise TriggerRegistryError(
+            raise RuntimeError(
                 f"{mechanic} declares impl={capability.impl!r}, which is not a "
                 "dotted path to the function implementing it"
             )
@@ -1726,7 +1721,7 @@ def _validate_registry() -> None:
             isinstance(capability.packet_source, SELF_SCOPED_DELIVERIES)
             and not (delivery_reference(capability) or "").strip()
         ):
-            raise TriggerRegistryError(
+            raise RuntimeError(
                 f"{mechanic} declares a "
                 f"{type(capability.packet_source).__name__} naming nothing; a "
                 "delivery with an empty literal is a number no reader can "
@@ -1737,12 +1732,12 @@ def _validate_registry() -> None:
         if Stream.TAKEDOWN in capability.reads and Field.TARGET_ID not in (
             capability.needs
         ):
-            raise TriggerRegistryError(
+            raise RuntimeError(
                 f"{mechanic} reads the takedown stream and does not need "
                 "TARGET_ID; a takedown with no target cannot be attributed"
             )
         if capability.needs - _row_fields(capability.reads):
-            raise TriggerRegistryError(
+            raise RuntimeError(
                 f"{mechanic} needs raw-row fields "
                 f"{sorted(f.value for f in capability.needs)} while declaring "
                 f"reads={sorted(s.value for s in capability.reads)}; a field is "
@@ -1774,19 +1769,19 @@ def _validate_view_semantics(mechanic: str, capability: MechanicCapability) -> N
     """
     tags = capability.view_tags
     if set(tags) != {capability.engine}:
-        raise TriggerRegistryError(
+        raise RuntimeError(
             f"{mechanic} runs on {capability.engine.value} and declares "
             f"view_tags for {sorted(engine.value for engine in tags)}; a half "
             "tags the engine it runs on, exactly once, because a tag says "
             "what *this* half's numbers mean (D-62)"
         )
     if not all(isinstance(tag, ViewTag) for tag in tags.values()):
-        raise TriggerRegistryError(
+        raise RuntimeError(
             f"{mechanic} declares a view tag that is not a ViewTag member"
         )
     dual_sided = capability.pairing is Pairing.PAIRED
     if dual_sided and not isinstance(capability.holder_stacking, HolderStacking):
-        raise TriggerRegistryError(
+        raise RuntimeError(
             f"{mechanic} is dual-sided and declares "
             f"holder_stacking={capability.holder_stacking!r}; a mechanic two "
             "roster participants can hold has to say whether the second one "
@@ -1794,7 +1789,7 @@ def _validate_view_semantics(mechanic: str, capability: MechanicCapability) -> N
             "(D-66)"
         )
     if not dual_sided and capability.holder_stacking is not None:
-        raise TriggerRegistryError(
+        raise RuntimeError(
             f"{mechanic} is {capability.pairing.value} and declares "
             f"holder_stacking={capability.holder_stacking.value}; only a "
             "dual-sided mechanic has an arming-dedupe question to answer"
@@ -1805,27 +1800,27 @@ def _validate_pairing(mechanic: str, capability: MechanicCapability) -> None:
     """The three pairing implications, split out to keep the loop readable."""
     if capability.pairing is Pairing.PAIRED:
         if capability.pair_of is None:
-            raise TriggerRegistryError(f"{mechanic} is PAIRED and declares no pair_of")
+            raise RuntimeError(f"{mechanic} is PAIRED and declares no pair_of")
         partner = CAPABILITIES.get(capability.pair_of)
         if partner is None or partner.engine is not Engine.PAIR:
-            raise TriggerRegistryError(
+            raise RuntimeError(
                 f"{mechanic} pairs with {capability.pair_of!r}, which is not a "
                 "declared Engine.PAIR capability"
             )
         if delivery_reference(capability) is None:
-            raise TriggerRegistryError(
+            raise RuntimeError(
                 f"{mechanic} is PAIRED and names no delivery — neither a "
                 "packet_source nor a RiderDelivery; the walk half's delivery "
                 "is what the pair half is paired against"
             )
     elif capability.pair_of is not None:
-        raise TriggerRegistryError(
+        raise RuntimeError(
             f"{mechanic} is {capability.pairing.value} and carries "
             f"pair_of={capability.pair_of!r}"
         )
     if capability.pairing is Pairing.UNPAIRED_KNOWN_DEFECT:
         if capability.divergence_ref not in DIVERGENCES:
-            raise TriggerRegistryError(
+            raise RuntimeError(
                 f"{mechanic} is an unpaired known defect and its "
                 f"divergence_ref {capability.divergence_ref!r} resolves in no "
                 "DivergenceReceipt"
@@ -1835,12 +1830,12 @@ def _validate_pairing(mechanic: str, capability: MechanicCapability) -> None:
         # reviewed fact is that they do not agree numerically.  Only SOLO is
         # nonsense — one engine cannot disagree with nobody.
         if capability.pairing is not Pairing.PAIRED:
-            raise TriggerRegistryError(
+            raise RuntimeError(
                 f"{mechanic} is {capability.pairing.value} and carries a "
                 "divergence_ref; a disagreement needs two declared halves"
             )
         if capability.divergence_ref not in DIVERGENCES:
-            raise TriggerRegistryError(
+            raise RuntimeError(
                 f"{mechanic} carries divergence_ref "
                 f"{capability.divergence_ref!r}, which resolves in no "
                 "DivergenceReceipt"

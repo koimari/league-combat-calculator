@@ -10,7 +10,6 @@ import pytest
 
 from src.calculator.ability_spec import DamageClass
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.champions.inputs import ChampionInputError
 from src.calculator.champions.module_helpers import (
     innate_on_hit,
     named_damage,
@@ -222,7 +221,7 @@ class TestCappedOption:
 
     def test_an_undeclared_option_is_refused(self) -> None:
         """The helper closes the ``.get(key, literal)`` its call sites had."""
-        with pytest.raises(ChampionInputError, match="which its OPTIONS"):
+        with pytest.raises(KeyError, match="which its OPTIONS"):
             capped_option(_ctx(), "never_declared", 5)
 
 
@@ -309,7 +308,7 @@ class TestReducedSecondaryHits:
 
     def test_an_undeclared_option_is_refused(self) -> None:
         ctx = _ctx()
-        with pytest.raises(ChampionInputError):
+        with pytest.raises(KeyError):
             reduced_secondary_hits(
                 ctx,
                 self._ability(),
@@ -429,7 +428,7 @@ class TestEmpoweredAutoEntry:
         assert list(entry)[-1] == "detail"
 
     def test_a_row_with_no_cached_name_is_refused(self) -> None:
-        with pytest.raises(ChampionInputError, match="carries no 'name'"):
+        with pytest.raises(KeyError, match="carries no 'name'"):
             empowered_auto_entry(
                 {"effects": []}, 3, "magic", dict(self._PROC), cooldown=0.0, detail="x"
             )

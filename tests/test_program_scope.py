@@ -27,7 +27,7 @@ class TestTheVocabularyIsClosed:
         """Every reviewed member resolves; the unreviewed one raises."""
         assert scope.scope_policy(scope.SingleTarget()) == route.PairDefender()
         assert scope.scope_policy(scope.MultiTarget(cap=3)) == route.AllOpponents()
-        with pytest.raises(scope.UnscopedCrowdControl):
+        with pytest.raises(ValueError, match="unreviewed crowd-control scope"):
             scope.scope_policy(scope.Unreviewed(ability="Syndra E"))
 
     def test_a_policy_the_union_does_not_hold_raises_rather_than_resolving(self):
@@ -111,7 +111,7 @@ class TestTheMarkRidesTheTrigger:
         assert marked == (2, 3)
 
     def test_a_mark_whose_trigger_reached_nobody_routes_to_nobody(self):
-        with pytest.raises(route.UnroutableEvent):
+        with pytest.raises(ValueError, match="cannot be resolved"):
             route.resolve_route(
                 route.TriggerTarget(),
                 route.RouteContext(author=0, holder=0, trigger_subjects=()),

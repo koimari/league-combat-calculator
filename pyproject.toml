@@ -96,7 +96,7 @@ ignore = [
   "PLR2004",
   # Em dashes and multiplication signs in prose are intended.
   "RUF001", "RUF002", "RUF003",
-  # Exception names read as the sentence they raise (WithheldHasNoValue).
+  # Exception names read as the sentence they raise (StarvedSignal, CacheUnavailable).
   "N818",
   # Module singletons (db engine, economy memos) are set once by their loader.
   "PLW0603",

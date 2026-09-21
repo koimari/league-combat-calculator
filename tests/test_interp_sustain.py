@@ -553,5 +553,5 @@ def test_a_grant_missing_the_ramp_that_arms_it_raises(
     }
     monkeypatch.setitem(item_effects.ITEM_EFFECTS, SATURATING_HOLDER, patched)
     monkeypatch.setattr(catalog, "_schema_keys", lambda source, entry: frozenset(entry))
-    with pytest.raises(catalog.BehaviorCatalogError, match="amp_max"):
+    with pytest.raises(RuntimeError, match="amp_max"):
         catalog.behavior_rules(SATURATING_HOLDER)

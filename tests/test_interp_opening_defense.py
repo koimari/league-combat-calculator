@@ -175,7 +175,7 @@ def test_deleting_the_interpreter_withholds_rather_than_granting_nothing(
         if family is not RuleFamily.OPENING_DEFENSE
     }
     monkeypatch.setattr(interpreters, "RESOLVERS", remaining)
-    with pytest.raises(interpreters.InterpreterRegistryError, match="withheld"):
+    with pytest.raises(RuntimeError, match="withheld"):
         resolve_defense(_rule("Kaenic Rookern", DefenseMechanic.MAGEBANE), _subject())
 
 

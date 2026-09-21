@@ -185,11 +185,6 @@ from .value_ref import (
 )
 from .value_source_receipt import SourceReceipt
 
-
-class BehaviorCatalogError(RuntimeError):
-    """The catalog's closure is broken — a tag, kind or source has no family."""
-
-
 # ── tag → family, total and single-valued over the 38 registry tags ───────
 
 TAG_FAMILY: Mapping[str, RuleFamily] = {
@@ -2182,7 +2177,7 @@ def _whole_total_magnitude(source: ValueSource, entry: Mapping[str, Any]) -> Mag
             seconds_per_stack=ASSUMED_SECONDS_PER_AMP_STACK,
             model=RampModel.EXACT,
         )
-    raise BehaviorCatalogError(
+    raise RuntimeError(
         f"{source.label} declares a whole-total amp in no shape the "
         "magnitude union names; a new schema is a new member and a new "
         "interpreter branch, never a silent zero"
@@ -2466,7 +2461,7 @@ def _compile_ally_delta_amp(
         if len(missing) == len(keys):
             continue
         if missing:
-            raise BehaviorCatalogError(
+            raise RuntimeError(
                 f"ALLY_ITEM_EFFECTS[{source.owner!r}] declares the {slot.value} chain "
                 f"slot and is missing {missing}; a partly-parsed amplifier is a "
                 "registry defect, not an item that quietly amplifies nothing"
@@ -2477,7 +2472,7 @@ def _compile_ally_delta_amp(
         if slot is AmpChainSlot.POST_IMMOBILIZE:
             rules.append(_post_immobilize_rule(source))
             continue
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             f"ALLY_ITEM_EFFECTS[{source.owner!r}] is declared in the {slot.value} chain "
             "slot and no compiler builds that slot's rule yet"
         )
@@ -2542,14 +2537,14 @@ def _cached_health_gate(owner: str) -> Comparison:
     stated = str(rune_effects.cached_effects(owner).value("damage_amp_health_gate"))
     cached = CACHED_HEALTH_GATE_WORDS.get(stated)
     if cached is None:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             f"RUNE_EFFECTS[{owner!r}] states the {stated!r} health gate, which "
             f"is not one of {sorted(CACHED_HEALTH_GATE_WORDS)} — wiki parse "
             "degraded or a gate no chain slot reads"
         )
     declared = TARGET_HEALTH_GATE_DIRECTIONS[owner]
     if cached is not declared:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             f"RUNE_EFFECTS[{owner!r}] states a {stated!r} gate and this catalog "
             f"declares the {declared.value} one — wiki description reordered"
         )
@@ -2617,7 +2612,7 @@ def _compile_rune_amp(source: ValueSource) -> tuple[BehaviorRule, ...]:
         return (_lasting_proc_amp_rule(source),)
     if slot is AmpChainSlot.TARGET_HEALTH_GATE:
         return (_target_health_gate_rule(source),)
-    raise BehaviorCatalogError(
+    raise RuntimeError(
         f"{source.label} is declared in the {slot.value} chain slot "
         "and no compiler builds that slot's rule yet"
     )
@@ -2736,7 +2731,7 @@ def _damage_formula(
     name = str(entry.get("formula")) if formula_name is None else formula_name
     schema = schemas.get(name)
     if schema is None:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             f"{source.label} declares formula {name!r}, which no term "
             "schema describes; a new registry schema is a new entry in the "
             "table, never a silent zero"
@@ -2817,7 +2812,7 @@ def _compile_secondary_target(
     """
     del family
     if DELIVERY_KEY not in entry:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             f"{source.label} routes packets at a second subject and declares "
             f"no {DELIVERY_KEY!r}, so its rows have nothing to be called"
         )
@@ -3200,7 +3195,7 @@ def _swing_group_refs(
         return None
     missing = sorted(key for key in keys if key not in schema)
     if missing:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             f"{source.label} carries the swing-rate group {keys[0]!r} "
             f"and is missing {missing}; a schedule is claimed whole or not at "
             "all, because half of one re-rates the attack stream with a "
@@ -3278,7 +3273,7 @@ def _compile_charged_strike(
         rules.append(shape(source, entry))
     rules.extend(_swing_schedule_rules(source, entry))
     if not rules:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             f"{source.label} is claimed by the charged-strike family and "
             "carries neither one of its tags nor a swing-rate key group; a "
             "charged strike that strikes nothing is a parse that failed"
@@ -3547,7 +3542,7 @@ def _compile_resistance_shred(
     if tag == "mr_reduction_stacking":
         rules.append(_vile_decay_rule(source))
     if not rules:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             f"{source.label} carries tag {tag!r} in the resistance-shred "
             "family and no compiler builds a rule for it; a shred with no "
             "declaration is an item that quietly cuts nothing"
@@ -3724,7 +3719,7 @@ def _compile_crit_profile(
     if FORCED_CRIT_RATIO_KEY in schema:
         rules.append(_forced_crit_rule(source, entry))
     if not rules:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             f"{source.label} is tagged into the crit-profile family and "
             f"carries none of {sorted(CRIT_PROFILE_KEYS)}; a crit modifier that "
             "modifies nothing is a parse that failed, not an item with no "
@@ -3835,7 +3830,7 @@ def _compile_damage_routing(
         rules.append(_shield_bypass_rule(source))
     rules.extend(_compile_defense(family, source, entry))
     if not rules:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             f"{source.label} is offered to the damage-routing compiler "
             f"carrying tag {tag!r} and no routing signature key; a routing rule "
             "that routes nothing is a parse that failed"
@@ -3991,7 +3986,7 @@ def _saturating_stat_rules(
             if named not in schema
         )
         if missing:
-            raise BehaviorCatalogError(
+            raise RuntimeError(
                 f"{source.label} carries the saturating grant {key!r} and "
                 f"is missing {missing}; the grant and the ramp that arms it are "
                 "claimed together, because a grant nothing arms would be paid "
@@ -4050,7 +4045,7 @@ def _compile_sustain(
     rules = _sustain_rule_list(source, schema)
     rules.extend(_compile_defense(family, source, entry))
     if not rules and not any(key in schema for key in SUSTAIN_DECLARED_ELSEWHERE):
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             f"{source.label} is tagged into the sustain family and "
             "carries none of its signature keys; sustain that restores nothing "
             "is a parse that failed, not an item with no behaviour"
@@ -4991,7 +4986,7 @@ def producers_for(
             continue
         missing = shape.missing(entry)
         if missing:
-            raise BehaviorCatalogError(
+            raise RuntimeError(
                 f"{registry} declares the {producer.value} producer and is "
                 f"missing {list(missing)}; a partly-parsed producer is a "
                 "registry defect, not an item that quietly emits nothing"
@@ -5078,7 +5073,7 @@ def _defense_policy(owner: str, key: str | None, kind: type) -> Any:
     try:
         return kind(str(value))
     except ValueError as error:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             f"ITEM_EFFECTS[{owner!r}][{key!r}] is {value!r}, which is not a "
             f"{kind.__name__}"
         ) from error
@@ -5672,7 +5667,7 @@ def _manaflow_rule(source: ValueSource, schema: frozenset[str]) -> BehaviorRule:
     interval, per_trigger, per_champion, ceiling = MANAFLOW_KEYS
     missing = sorted(key for key in MANAFLOW_KEYS if key not in schema)
     if missing:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             f"{source.label} carries a manaflow ledger missing {missing}; "
             "a charge ledger is claimed whole or not at all, because half of "
             "one is a parse that dropped a key rather than a weaker item"
@@ -5884,7 +5879,7 @@ def _compile_stat_derivation(
             if key in schema
         )
         if not elsewhere:
-            raise BehaviorCatalogError(
+            raise RuntimeError(
                 f"{source.label} is tagged into the stat-derivation "
                 "family and carries none of its signature keys; a derivation "
                 "that derives nothing is a parse that failed, not an item with "
@@ -5940,7 +5935,7 @@ def registry_entries(
         tag = item_entry.get("type")
         family = TAG_FAMILY.get(str(tag))
         if family is None:
-            raise BehaviorCatalogError(
+            raise RuntimeError(
                 f"ITEM_EFFECTS[{owner!r}] carries tag {tag!r}, which no family "
                 "claims — extend TAG_FAMILY in the slice that models it"
             )
@@ -6029,7 +6024,7 @@ def _validate_declared_pricing_homes(rules: tuple[BehaviorRule, ...]) -> None:
         if rule.family not in PACKET_AUTHORING_FAMILIES:
             continue
         if rule.mechanic_id not in trigger_stream.CAPABILITIES:
-            raise BehaviorCatalogError(
+            raise RuntimeError(
                 f"{rule.owner!r} compiles {rule.mechanic_id!r} in the "
                 f"{rule.family.value} family and trigger_stream.CAPABILITIES "
                 "declares no capability for it, so no step owns its price"
@@ -6093,7 +6088,7 @@ def rune_amp_entries(
         return ()
     entry = rune_effects.RUNE_EFFECTS.get(owner)
     if not isinstance(entry, Mapping):
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             f"{owner!r} declares an amp-chain slot and RUNE_EFFECTS holds no "
             "record for it — a declaration against a missing rune is a stop, "
             "not a rune that quietly amplifies nothing"
@@ -6212,32 +6207,32 @@ def _validate_tag_closure(tags: frozenset[str] | None = None) -> None:
     if mapped != known:
         missing = sorted(known - mapped)
         extra = sorted(mapped - known)
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             "TAG_FAMILY must be total over item_effects' effect tags; "
             f"unmapped={missing} unknown={extra}"
         )
     for tag, family in TAG_FAMILY.items():
         if not isinstance(family, RuleFamily):
-            raise BehaviorCatalogError(f"TAG_FAMILY[{tag!r}] is not a RuleFamily")
+            raise RuntimeError(f"TAG_FAMILY[{tag!r}] is not a RuleFamily")
 
 
 def _validate_h4_closure() -> None:
     """The ten undispatched tags are declared, split four/six, and reasoned."""
     if len(H4_DEAD_TAGS) != 4 or len(H4_SELF_REFERENTIAL_TAGS) != 6:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             "H4 is a four/six split: four dead tags and six self-referential "
             "ones. Changing the membership is the human's decision, not a "
             "consequence of an edit here"
         )
     ten = H4_DEAD_TAGS | H4_SELF_REFERENTIAL_TAGS
     if H4_DEAD_TAGS & H4_SELF_REFERENTIAL_TAGS:
-        raise BehaviorCatalogError("a tag cannot be both dead and self-referential")
+        raise RuntimeError("a tag cannot be both dead and self-referential")
     unknown = sorted(ten - frozenset(TAG_FAMILY))
     if unknown:
-        raise BehaviorCatalogError(f"H4 names tags no registry declares: {unknown}")
+        raise RuntimeError(f"H4 names tags no registry declares: {unknown}")
     unreasoned = sorted(ten - frozenset(H4_TAG_REASONS))
     if unreasoned or frozenset(H4_TAG_REASONS) != ten:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             "every H4 tag carries an explicit reason for the family it "
             f"fails closed into; missing={unreasoned}"
         )
@@ -6248,7 +6243,7 @@ def _validate_action_kind_closure(kinds: frozenset[Any] | None = None) -> None:
     mapped = frozenset(ACTION_KIND_FAMILY)
     declared = frozenset(ActionKind) if kinds is None else kinds
     if mapped != declared:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             "ACTION_KIND_FAMILY must be total over ActionKind; unmapped="
             f"{sorted(str(getattr(kind, 'value', kind)) for kind in declared - mapped)}"
         )
@@ -6266,7 +6261,7 @@ def _validate_defense_source_closure(
     declared = frozenset(DefenseMechanic) if mechanics is None else mechanics
     mapped = frozenset(DEFENSE_SOURCE_FAMILY)
     if mapped != declared:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             "DEFENSE_SOURCE_FAMILY must name every DefenseMechanic; unmapped="
             f"{sorted(str(getattr(m, 'value', m)) for m in declared - mapped)} "
             f"stale={sorted(str(getattr(m, 'value', m)) for m in mapped - declared)}"
@@ -6293,7 +6288,7 @@ def _validate_event_certification(
         for mechanic in frozenset(claimed) - known
     )
     if unknown:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             "every event-certified mechanic is one this catalog declares or "
             f"cites; unknown={unknown}"
         )
@@ -6303,7 +6298,7 @@ def _validate_event_certification(
         if not str(reason).strip()
     )
     if unexplained:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             "an event-certified mechanic withholds a calculation, so each one "
             f"states why its timing cannot be inferred; unexplained={unexplained}"
         )
@@ -6325,20 +6320,20 @@ def _validate_defense_migration() -> None:
         mechanic.value for mechanic in frozenset(DefenseMechanic) - covered
     )
     if unnamed:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             "every DefenseMechanic is either declared with the entry shape "
             "that carries it or owned by a champion; unshaped="
             f"{unnamed}"
         )
     for mechanic, declaration in DEFENSE_DECLARATIONS.items():
         if not declaration.shape.requires:
-            raise BehaviorCatalogError(
+            raise RuntimeError(
                 f"{mechanic.value} declares no signature key, so no entry "
                 "could ever carry it"
             )
         for field in declaration.writes:
             if field not in DEFENSE_FIELD_COMBINE:
-                raise BehaviorCatalogError(
+                raise RuntimeError(
                     f"{mechanic.value} writes {field} with no declared combine"
                 )
     _validate_defense_entry_closure()
@@ -6368,7 +6363,7 @@ def _validate_defense_entry_closure() -> None:
         if not claimed:
             unclaimed.append(owner)
     if unclaimed:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             "every entry tagged as a defence must be claimed by one declared "
             f"mechanic's signature key; unclaimed={sorted(unclaimed)}"
         )
@@ -6391,7 +6386,7 @@ def _validate_defense_receipts() -> None:
             if not isinstance(entry, Mapping) or not declaration.shape.claims(entry):
                 continue
             if CITATION_KEYS - frozenset(entry):
-                raise BehaviorCatalogError(
+                raise RuntimeError(
                     f"{mechanic.value} declares no constant receipt and "
                     f"ITEM_EFFECTS[{owner!r}] carries no complete citation of "
                     "its own, so the rule would be declared against an "
@@ -6403,12 +6398,12 @@ def _validate_compilers() -> None:
     """One compiler per family, and every stub names the slice that retires it."""
     families = frozenset(RuleFamily)
     if len(families) != RULE_FAMILY_COUNT:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             f"RuleFamily is closed at {RULE_FAMILY_COUNT}; it now has "
             f"{len(families)} members"
         )
     if frozenset(_COMPILERS) != families:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             "_COMPILERS must be total over RuleFamily; unmapped="
             f"{sorted(family.value for family in families - frozenset(_COMPILERS))}"
         )
@@ -6425,11 +6420,11 @@ def _validate_delta_amp_migration() -> None:
     )
     named = MIGRATED_DELTA_AMP_TAGS | frozenset(DELTA_AMP_UNMIGRATED_TAGS)
     if MIGRATED_DELTA_AMP_TAGS & frozenset(DELTA_AMP_UNMIGRATED_TAGS):
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             "a delta-amp tag cannot be both migrated and awaiting a slice"
         )
     if named != declared:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             "every delta_amp tag is either migrated or carries the slice that "
             f"retires it; unnamed={sorted(declared - named)} "
             f"stale={sorted(named - declared)}"
@@ -6451,7 +6446,7 @@ def _validate_target_health_gate_closure() -> None:
     )
     declared = frozenset(TARGET_HEALTH_GATE_DIRECTIONS)
     if gated != declared:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             "every target-health-gated rune declares which side it arms on; "
             f"undeclared={sorted(gated - declared)} "
             f"stale={sorted(declared - gated)}"
@@ -6463,12 +6458,12 @@ def _validate_ally_packet_migration() -> None:
     declared = frozenset(AllyProducer)
     migrated = frozenset(ALLY_PACKET_DECLARATIONS)
     if migrated != declared:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             "every AllyProducer is declared; "
             f"undeclared={sorted(p.value for p in declared - migrated)}"
         )
     if frozenset(ALLY_ENTRY_SHAPES) != declared:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             "every AllyProducer declares the entry shape that carries it; "
             f"unshaped={sorted(p.value for p in declared - frozenset(ALLY_ENTRY_SHAPES))}"
         )
@@ -6488,7 +6483,7 @@ def _validate_ally_entry_closure() -> None:
         if isinstance(entry, Mapping) and not producers_for("ALLY_ITEM_EFFECTS", entry)
     )
     if unclaimed:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             "every ALLY_ITEM_EFFECTS record is an ally packet by construction "
             "and must match one producer's value keys; unclaimed="
             f"{unclaimed}"
@@ -6505,7 +6500,7 @@ def _validate_ally_entry_closure() -> None:
     }
     orphans = sorted(producer.value for producer in frozenset(AllyProducer) - carried)
     if orphans:
-        raise BehaviorCatalogError(
+        raise RuntimeError(
             f"these producers are declared and no registry record carries "
             f"them: {orphans}"
         )
@@ -6571,7 +6566,6 @@ __all__ = [
     "TARGET_HEALTH_GATE_DIRECTIONS",
     "UNDECLARED_DEFENSE_MECHANICS",
     "AllyPacketDeclaration",
-    "BehaviorCatalogError",
     "Compiler",
     "DefenseDeclaration",
     "DefenseShape",

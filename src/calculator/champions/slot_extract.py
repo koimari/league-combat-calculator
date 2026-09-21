@@ -9,7 +9,7 @@ from .attribute_classifier import (
     is_damage_attribute,
     is_primary_damage_attribute,
 )
-from .inputs import ChampionInputError, target_stat
+from .inputs import target_stat
 from .scaling import is_flat_unit, resolve_scaling
 
 ModifierOverride = Callable[[str, float], float | None]
@@ -283,7 +283,7 @@ def ability_name(ability: Mapping[str, Any]) -> str:
     """
     name = ability.get("name")
     if not isinstance(name, str) or not name:
-        raise ChampionInputError(
+        raise KeyError(
             f"cached ability row carries no 'name' (data/champions.json, "
             f"icon {ability.get('icon')!r})"
         )

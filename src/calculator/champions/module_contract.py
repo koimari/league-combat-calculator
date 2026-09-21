@@ -13,7 +13,6 @@ from .contract_vocabulary import (
     REQUIRED_CHAMPION_SLOTS,
     VALID_COVERAGE,
     ChampionModuleContract,
-    ChampionModuleContractError,
     DeclarationSites,
     default_coverage,
 )
@@ -37,52 +36,40 @@ def contract_from_module(
     _refuse_restatements(module)
     parser = getattr(module, "parse_abilities", None)
     if not callable(parser):
-        raise ChampionModuleContractError(
-            f"{module.__name__} must declare callable parse_abilities"
-        )
+        raise ValueError(f"{module.__name__} must declare callable parse_abilities")
 
     slots = getattr(module, "SLOTS", None)
     if not isinstance(slots, dict) or not slots:
-        raise ChampionModuleContractError(
-            f"{module.__name__} must declare a non-empty SLOTS dict"
-        )
+        raise ValueError(f"{module.__name__} must declare a non-empty SLOTS dict")
     if any(not callable(slot_parser) for slot_parser in slots.values()):
-        raise ChampionModuleContractError(
-            f"{module.__name__} SLOTS values must all be callable"
-        )
+        raise ValueError(f"{module.__name__} SLOTS values must all be callable")
 
     options = _require_list(module, "OPTIONS")
     assumptions = _require_list(module, "ASSUMPTIONS")
     sources = _require_list(module, "SOURCES")
     if any(not isinstance(row, dict) for row in options):
-        raise ChampionModuleContractError(
-            f"{module.__name__} OPTIONS rows must be dictionaries"
-        )
+        raise ValueError(f"{module.__name__} OPTIONS rows must be dictionaries")
     if any(not isinstance(row, str) or not row.strip() for row in assumptions):
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{module.__name__} ASSUMPTIONS rows must be non-empty strings"
         )
     if not sources or any(not isinstance(row, dict) or not row for row in sources):
-        raise ChampionModuleContractError(
-            f"{module.__name__} SOURCES must contain source dictionaries"
-        )
+        raise ValueError(f"{module.__name__} SOURCES must contain source dictionaries")
 
     derived_coverage = default_coverage(slots)
     coverage = getattr(module, "MODULE_COVERAGE", None)
     if coverage is None:
         coverage = derived_coverage
     if not isinstance(coverage, dict) or set(coverage) != set(REQUIRED_CHAMPION_SLOTS):
-        raise ChampionModuleContractError(
-            f"{module.__name__} MODULE_COVERAGE must declare P/Q/W/E/R"
-        )
+        raise ValueError(f"{module.__name__} MODULE_COVERAGE must declare P/Q/W/E/R")
     invalid_coverage = set(coverage.values()) - VALID_COVERAGE
     if invalid_coverage:
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{module.__name__} MODULE_COVERAGE has invalid values: "
             f"{sorted(invalid_coverage)}"
         )
     if coverage is not derived_coverage and coverage == derived_coverage:
-        raise ChampionModuleContractError(
+        raise ValueError(
             f"{module.__name__} MODULE_COVERAGE restates what its SLOTS derive; "
             "declare it only when an emitted slot is no_damage or partial, or "
             "an unemitted one is priced through a COVERAGE_CHANNELS channel"

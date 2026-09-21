@@ -161,5 +161,5 @@ def test_deleting_the_interpreter_withholds_rather_than_granting_nothing(
         if family is not RuleFamily.COMBAT_STATE
     }
     monkeypatch.setattr(interpreters, "RESOLVERS", remaining)
-    with pytest.raises(interpreters.InterpreterRegistryError, match="withheld"):
+    with pytest.raises(RuntimeError, match="withheld"):
         resolve_defense(_rule("Force of Nature", DefenseMechanic.STEADFAST), _subject())

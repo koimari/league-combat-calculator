@@ -192,7 +192,7 @@ def test_deleting_the_interpreter_withholds_rather_than_granting_nothing(
         if family is not RuleFamily.REACTIVE
     }
     monkeypatch.setattr(interpreters, "RESOLVERS", remaining)
-    with pytest.raises(interpreters.InterpreterRegistryError, match="withheld"):
+    with pytest.raises(RuntimeError, match="withheld"):
         resolve_defense(
             _rule("Armored Advance", DefenseMechanic.NOXIAN_ENDURANCE), _subject()
         )

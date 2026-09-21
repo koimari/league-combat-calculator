@@ -4,7 +4,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
-from .inputs import ChampionInputError, champion_stat, target_stat
+from .inputs import champion_stat, target_stat
 from .skill_orders import get_ability_rank
 
 # ---------------------------------------------------------------------------
@@ -86,7 +86,7 @@ class SlotCtx:
         would be published as a measured number.
         """
         if key not in self.option_defaults:
-            raise ChampionInputError(
+            raise KeyError(
                 f"{self.champion_name or 'a champion module'} read option "
                 f"{key!r}, which its OPTIONS declaration does not contain — "
                 f"an undeclared option is unwired input, not a default (D-24)"

@@ -273,16 +273,6 @@ def _starved_streams(names: Collection[str]) -> list[tuple[str, str]]:
     )
 
 
-class EventViewStarvationError(ValueError):
-    """A declared event-view holder was handed the light tuple ledger.
-
-    The tuple rows are positional, so every scan below reads them as an
-    empty stream and prices the item at zero without failing.  That is a
-    projection a consumer cannot answer from — a programming error, not a
-    data condition — so it is raised rather than absorbed.
-    """
-
-
 def require_event_view(result: Mapping[str, Any], names: Collection[str]) -> None:
     """Raise when a declared event-view holder is handed tuple rows.
 
@@ -298,7 +288,7 @@ def require_event_view(result: Mapping[str, Any], names: Collection[str]) -> Non
     if not starved:
         return
     read = "; ".join(f"{item} reads {stream}" for item, stream in starved)
-    raise EventViewStarvationError(
+    raise ValueError(
         "STARVED: the score-only tuple ledger cannot answer the item support "
         f"scan — {read}.  The pipeline's tuple gate must keep dict rows for "
         "every event-view holder."

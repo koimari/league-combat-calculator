@@ -14,7 +14,7 @@ vocabulary is checked against its producer: every BUILD stat here must be a key
 ``stats.calculate_total_stats`` emits and every TARGET stat one
 ``FightParams.target_stats`` emits, so a rename turns red here rather than
 pricing zero in every reader.
-An accessor raises :class:`ChampionInputError` for a name outside its
+An accessor raises :class:`KeyError` for a name outside its
 vocabulary.  A name inside it returns the wired value, or the default this
 module declares when the block does not carry the key, stated once with a reason.
 """
@@ -30,7 +30,6 @@ __all__ = [
     "RESERVED_OPTION_DEFAULTS",
     "SCALING_INPUTS",
     "TARGET_STATS",
-    "ChampionInputError",
     "InputDefault",
     "OptionsRows",
     "bool_option",
@@ -42,10 +41,6 @@ __all__ = [
     "target_stat",
     "use_options_rows",
 ]
-
-
-class ChampionInputError(KeyError):
-    """A champion formula read an input outside its declared vocabulary."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -216,7 +211,7 @@ def _resolve(
     """One vocabulary read: wired value, declared default, or raise."""
     declared = vocabulary.get(name)
     if declared is None:
-        raise ChampionInputError(
+        raise KeyError(
             f"{champion or 'a champion module'} read {kind} {name!r}, which "
             f"is not a declared {kind} — champions/inputs.py holds the "
             f"vocabulary, and an undeclared read is an unwired input rather "
@@ -276,7 +271,7 @@ def declared_option_defaults(champion: str) -> dict[str, Any]:
     join it because no module declares them and every module may read them.
     """
     if _OPTIONS_ROWS is None:
-        raise ChampionInputError(
+        raise KeyError(
             f"no OPTIONS source is wired, so {champion!r} has no declared "
             "defaults; src/calculator/champions/__init__.py wires it through "
             "use_options_rows"

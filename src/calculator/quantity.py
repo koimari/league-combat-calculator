@@ -5,18 +5,6 @@ from dataclasses import dataclass
 from .ability_spec import Disposition
 
 
-class WithheldHasNoValue(ValueError):
-    """A caller asked a withheld quantity for the number it refused to give.
-
-    Distinct from ``ProjectionStarvation`` on purpose.  A withheld leaf is a
-    *modelled* refusal — coverage declined to price the mechanic and named a
-    receipt — so the payload omits the number and publishes the receipt, and a
-    consumer reaching for the number anyway has misread the contract.  A
-    starved one is a programming error, which is why it raises the campaign's
-    one lazily-raised exception instead.
-    """
-
-
 class StarvedSignal(RuntimeError):
     """A leaf has no value a rule computed, and saying so is the only answer.
 
@@ -179,7 +167,7 @@ class Withheld(_QuantityAlgebra):
 
     def read(self) -> float:
         """Never: a withheld leaf carries receipts instead of a number."""
-        raise WithheldHasNoValue(
+        raise ValueError(
             f"withheld quantity has no value; its receipts are {list(self.receipts)}"
         )
 

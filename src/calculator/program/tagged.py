@@ -10,23 +10,12 @@ from ..quantity import Quantity
 from .views.view_tag import UnrankableNumber, ViewTag
 
 
-class MixedViewFold(TypeError):
-    """Two numbers meaning different things were added together.
-
-    A ``TypeError`` and not a ``ValueError``, because the operands are not
-    the same *kind* of number: one is what the coupled walk delivered and the
-    other is what a single pair fight would have produced.  Their sum is not
-    a wrong total, it is not a total.
-    """
-
-    def __init__(self, left: ViewTag, right: ViewTag) -> None:
-        """Name both meanings, because the fix depends on which is wrong."""
-        super().__init__(
-            f"a {left.value} quantity may not be folded with a {right.value} "
-            "one; a sum may never mix views (D-62)"
-        )
-        self.left = left
-        self.right = right
+def mixed_view_fold(left: ViewTag, right: ViewTag) -> TypeError:
+    """Both meanings named: a ``TypeError``, because their sum is not a total."""
+    return TypeError(
+        f"a {left.value} quantity may not be folded with a {right.value} "
+        "one; a sum may never mix views (D-62)"
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,7 +44,7 @@ class Tagged:
         if not isinstance(other, Tagged):
             return NotImplemented
         if other.tag is not self.tag:
-            raise MixedViewFold(self.tag, other.tag)
+            raise mixed_view_fold(self.tag, other.tag)
         return Tagged(quantity=self.quantity + other.quantity, tag=self.tag)
 
 
@@ -63,7 +52,7 @@ def fold_tagged(parts: Iterable[Tagged]) -> Tagged:
     """Add every part, propagating both the disposition and the view.
 
     Raises:
-        MixedViewFold: two parts carry different tags.
+        TypeError: two parts carry different tags.
         ValueError: there are no parts.  An empty fold has no view to carry,
             and answering ``Measured(0.0)`` would invent one -- which is the
             zero-versus-absent confusion the whole campaign is about, at the

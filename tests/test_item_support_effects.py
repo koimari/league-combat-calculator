@@ -1154,7 +1154,7 @@ class TestEventViewStarvation:
         holder = _actor("main:Annie", "main", (item,))
         ally = _actor("ally:Pantheon", "ally", ())
         with pytest.raises(
-            support_event_view.EventViewStarvationError,
+            ValueError,
             match=f"{re.escape(item)} reads {stream}",
         ):
             derive_item_support_effects(holder, self.TUPLE_RESULT, [holder, ally])
@@ -1180,7 +1180,7 @@ class TestEventViewStarvation:
         """Echoes of Helia's missing guard was a latent ``AttributeError``."""
         holder = _actor("ally:Lulu", "ally", ("Echoes of Helia",))
         ally = _actor("main:Ahri", "main", ())
-        with pytest.raises(support_event_view.EventViewStarvationError) as raised:
+        with pytest.raises(ValueError) as raised:
             derive_item_support_effects(
                 holder,
                 self.TUPLE_RESULT,

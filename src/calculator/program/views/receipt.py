@@ -681,7 +681,7 @@ def receipt(program: Program, result: WalkResult) -> dict[str, Any]:
     # production total folds over ``SumPlan.ids``, so nothing published
     # today was double-counting and nothing published today can trip it.
     # The permanent red is ``tests/test_program_precision.py``'s
-    # ``DuplicateSumMember`` pair; the endpoint's own arm -- a named 400,
+    # ``ValueError`` pair; the endpoint's own arm -- a named 400,
     # never a 500 and never a served payload -- is asserted in
     # ``tests/test_app.py``.
     sum_plan(

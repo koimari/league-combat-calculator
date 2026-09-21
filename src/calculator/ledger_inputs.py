@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any, NamedTuple, Protocol
 
-from .ledger_declarations import DECLARATIONS, AdequacyCondition, UndeclaredStatRead
+from .ledger_declarations import DECLARATIONS, AdequacyCondition
 from .rune_effects import RunePage
 from .trigger_stream import ChampionSlotOwner
 
@@ -128,5 +128,9 @@ class LedgerInputs:  # pylint: disable=too-many-instance-attributes
     def raw_stat(self, condition: AdequacyCondition, field: str) -> object:
         """One declared champion stat, uncoerced, or a refusal."""
         if field not in DECLARATIONS[condition].requires_fields:
-            raise UndeclaredStatRead(condition, field)
+            raise KeyError(
+                f"{condition.value} reads champion stat {field!r}, which is "
+                "not in its declared requires_fields; a condition derived "
+                "from a stat it does not declare is a gate nobody can audit"
+            )
         return self.stats.get(field, 0.0)

@@ -18,7 +18,6 @@ from src.calculator.interpreters import charged_strike, rearmed_swings
 from src.calculator.interpreters.rule_selection import rules_of
 from src.calculator.item_behavior import (
     BehaviorRule,
-    BehaviorRuleError,
     EmpoweredAutoBuffRule,
     EmpoweredHitRule,
     EngineLane,
@@ -30,7 +29,6 @@ from src.calculator.item_behavior import (
     validate_rule,
 )
 from src.calculator.item_behavior_catalog import (
-    BehaviorCatalogError,
     behavior_rules,
     build_context,
 )
@@ -452,7 +450,7 @@ def test_a_window_only_schedule_compiles_to_the_no_sibling_spelling() -> None:
 def test_a_schedule_that_schedules_nothing_is_refused() -> None:
     """A rule carrying neither mechanic raises rather than rating a stream."""
     live = _swing_rule(RAMP)
-    with pytest.raises(BehaviorRuleError):
+    with pytest.raises(ValueError):
         validate_rule(
             BehaviorRule(
                 family=RuleFamily.CHARGED_STRIKE,
@@ -481,5 +479,5 @@ def test_a_half_declared_key_group_raises_naming_the_missing_key(
         "_schema_keys",
         lambda source, entry: frozenset(entry),
     )
-    with pytest.raises(BehaviorCatalogError, match="seething_duration"):
+    with pytest.raises(RuntimeError, match="seething_duration"):
         behavior_rules(RAMP)

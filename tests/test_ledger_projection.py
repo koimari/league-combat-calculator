@@ -199,7 +199,7 @@ def test_a_probe_cannot_read_a_stat_its_condition_did_not_declare(monkeypatch):
     """``requires_fields`` is load-bearing, not a comment beside the probe."""
     inputs = _inputs("Annie", ("Luden's Echo",), 0.0, monkeypatch)["ledger"]
     assert inputs.raw_stat(C.LIFESTEAL_STAT, "lifesteal_percent") == 0.0
-    with pytest.raises(ledger_declarations.UndeclaredStatRead):
+    with pytest.raises(KeyError, match="requires_fields"):
         inputs.raw_stat(C.LIFESTEAL_STAT, "omnivamp_percent")
 
 

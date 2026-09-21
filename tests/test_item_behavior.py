@@ -28,7 +28,6 @@ from src.calculator.item_behavior import (
     SUBJECT_AUTHORITY,
     Always,
     BehaviorRule,
-    BehaviorRuleError,
     BonusTyping,
     BuildContext,
     Compilable,
@@ -132,9 +131,9 @@ def test_a_roster_scoped_subject_is_incompatible_with_pair_only() -> None:
 
 def test_the_typing_axis_bans_empty_means_all() -> None:
     """D-04: both class sets are required and neither may be empty."""
-    with pytest.raises(BehaviorRuleError, match="damage_classes"):
+    with pytest.raises(ValueError, match="damage_classes"):
         Typing(frozenset(), frozenset(AttackClass))
-    with pytest.raises(BehaviorRuleError, match="attack_classes"):
+    with pytest.raises(ValueError, match="attack_classes"):
         Typing(frozenset(DamageClass), frozenset())
 
 
@@ -165,13 +164,13 @@ def test_a_valid_rule_validates() -> None:
 
 def test_a_payload_may_not_wear_another_familys_name() -> None:
     """A family and its payload type are one fact declared in one table."""
-    with pytest.raises(BehaviorRuleError, match="belongs to"):
+    with pytest.raises(ValueError, match="belongs to"):
         validate_rule(_rule(family=RuleFamily.SUSTAIN))
 
 
 def test_an_undeclared_payload_type_is_refused() -> None:
     """A payload PAYLOAD_FAMILY does not know is a family nobody assigned."""
-    with pytest.raises(BehaviorRuleError, match="not a declared"):
+    with pytest.raises(ValueError, match="not a declared"):
         validate_rule(_rule(payload=object()))
 
 
@@ -200,7 +199,7 @@ def test_a_payload_with_no_structural_reading_is_refused(
 ) -> None:
     """The omission fails closed, naming the payload and where to declare it."""
     monkeypatch.delitem(PAYLOAD_VALIDATORS, type(_rule().payload))
-    with pytest.raises(BehaviorRuleError, match="no structural reading"):
+    with pytest.raises(ValueError, match="no structural reading"):
         validate_rule(_rule())
 
 
@@ -216,7 +215,7 @@ def test_every_restricted_channel_names_its_packet_or_none() -> None:
 def test_a_receipt_only_rule_states_its_cause() -> None:
     """A fallback with no reason is the silence this phase removes."""
     validate_rule(_rule(compilability=ReceiptOnly(*_AMP_REFUSAL)))
-    with pytest.raises(BehaviorRuleError, match="reason"):
+    with pytest.raises(ValueError, match="reason"):
         ReceiptOnly("  ", ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER)
 
 
@@ -298,18 +297,18 @@ def test_a_rule_with_an_open_string_policy_field_does_not_compile() -> None:
     """
     rule = _rule()
     open_string = replace(rule, payload=replace(rule.payload, pool="all events"))
-    with pytest.raises(BehaviorRuleError, match=re.escape("payload.pool holds a str")):
+    with pytest.raises(ValueError, match=re.escape("payload.pool holds a str")):
         validate_rule(open_string)
 
     a_dict = replace(rule, payload=replace(rule.payload, bonus_typing={"true": 1.0}))
     with pytest.raises(
-        BehaviorRuleError, match=re.escape("payload.bonus_typing holds a dict")
+        ValueError, match=re.escape("payload.bonus_typing holds a dict")
     ):
         validate_rule(a_dict)
 
     a_callable = replace(rule, payload=replace(rule.payload, magnitude=lambda: 0.07))
     with pytest.raises(
-        BehaviorRuleError, match=re.escape("payload.magnitude holds a function")
+        ValueError, match=re.escape("payload.magnitude holds a function")
     ):
         validate_rule(a_callable)
 
@@ -334,7 +333,7 @@ def test_the_open_string_refusal_reaches_inside_a_collection() -> None:
             typing=Typing(frozenset({"magic"}), frozenset({"ability"})),  # type: ignore[arg-type]
         ),
     )
-    with pytest.raises(BehaviorRuleError, match=r"damage_classes\[\] holds a str"):
+    with pytest.raises(ValueError, match=r"damage_classes\[\] holds a str"):
         validate_rule(stringly)
 
 

@@ -31,7 +31,7 @@ from src.calculator.item_behavior import (
     Probe,
     chain_rank,
 )
-from src.calculator.item_behavior_catalog import BehaviorCatalogError, behavior_rules
+from src.calculator.item_behavior_catalog import behavior_rules
 from src.calculator.rune_paths import precision, sorcery
 from src.calculator.value_ref import ValueSource
 from src.calculator.value_ref import resolve as resolve_ref
@@ -70,7 +70,7 @@ class TestCutDownNeedsNoNewKind:
             "target_below",
         )
         source = ValueSource("RUNE_EFFECTS", "Cut Down")
-        with pytest.raises(BehaviorCatalogError, match="description reordered"):
+        with pytest.raises(RuntimeError, match="description reordered"):
             item_behavior_catalog._target_health_gate_rule(source)
 
 

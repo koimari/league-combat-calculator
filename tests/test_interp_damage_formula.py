@@ -133,9 +133,9 @@ def test_a_floor_is_its_own_axis_not_a_term() -> None:
 def test_a_formula_with_no_terms_is_refused_at_declaration_time() -> None:
     """A strike that is a sum of nothing is an item that quietly deals nothing."""
     from src.calculator.ability_spec import DamageClass
-    from src.calculator.item_behavior import BehaviorRuleError, NoScaling
+    from src.calculator.item_behavior import NoScaling
 
-    with pytest.raises(BehaviorRuleError):
+    with pytest.raises(ValueError, match="at least one term"):
         DamageFormula(
             terms=(),
             scaling=NoScaling(),

@@ -16,7 +16,7 @@ first two more than bookkeeping:
   in.  ``scripts/behavior_frontier.py --check`` fails on the same population,
   so the rule is enforced by the gate as well as by this file.
 * **An unwired read raises.**  A name outside its vocabulary is a
-  ``ChampionInputError``, not a zero.
+  ``KeyError``, not a zero.
 * **The vocabulary is checked against its producers.**  Every ``BUILD`` name
   must be a key ``calculate_total_stats`` really emits and every ``TARGET``
   name a key ``FightParams.target_stats`` really emits — so a stat renamed
@@ -37,7 +37,6 @@ from src.calculator.champions.inputs import (
     CHAMPION_STATS,
     RESERVED_OPTION_DEFAULTS,
     TARGET_STATS,
-    ChampionInputError,
     champion_stat,
     declared_option_defaults,
     target_stat,
@@ -174,9 +173,9 @@ def test_the_reserved_option_keys_are_the_pipeline_s_own_set() -> None:
 
 def test_an_undeclared_stat_raises_instead_of_reading_zero() -> None:
     """The unwired read fails loud — the whole point of the vocabulary."""
-    with pytest.raises(ChampionInputError, match="bonus_attack_speed_percent"):
+    with pytest.raises(KeyError, match="bonus_attack_speed_percent"):
         champion_stat({"attack_damage": 100.0}, "bonus_attack_speed_percent")
-    with pytest.raises(ChampionInputError, match="target_shield"):
+    with pytest.raises(KeyError, match="target_shield"):
         target_stat({}, "target_shield")
 
 
@@ -198,7 +197,7 @@ def test_an_undeclared_option_raises_and_a_declared_one_falls_back() -> None:
     )
     assert ctx.option("q_stacks") == 2
     assert ctx.option("q_empowered") is True
-    with pytest.raises(ChampionInputError, match="q_phantom"):
+    with pytest.raises(KeyError, match="q_phantom"):
         ctx.option("q_phantom")
 
 
@@ -219,7 +218,7 @@ def test_option_defaults_refuse_to_answer_with_no_wired_source(
 ) -> None:
     """An unwired port names the registry that fills it, never a bare default."""
     monkeypatch.setattr(inputs, "_OPTIONS_ROWS", None)
-    with pytest.raises(ChampionInputError, match="champions/__init__"):
+    with pytest.raises(KeyError, match="champions/__init__"):
         declared_option_defaults("Pantheon")
 
 

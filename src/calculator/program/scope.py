@@ -146,30 +146,16 @@ def scope_policy(scope: CcScope) -> route.RoutePolicy:
         case MultiTarget():
             return route.AllOpponents()
         case Unreviewed():
-            raise UnscopedCrowdControl(scope)
+            raise ValueError(
+                f"{scope.ability} has an unreviewed crowd-control scope and "
+                "no route policy; call reviewed_scope() first so the shipped "
+                "H2 default lands with the disclosure that qualifies it"
+            )
         case _:
             raise TypeError(
                 f"{type(scope).__name__} is not a CcScope; the union is closed "
                 f"({', '.join(member.__name__ for member in CC_SCOPES)})"
             )
-
-
-class UnscopedCrowdControl(ValueError):
-    """An :class:`Unreviewed` scope asked for a policy — a programming error.
-
-    Never a data condition: an unreviewed ability is the *ordinary* case and
-    :func:`reviewed_scope` answers it.  Reaching this means a call site read
-    the scope and skipped the default, which would deliver the mark with no
-    disclosure beside it.
-    """
-
-    def __init__(self, scope: Unreviewed) -> None:
-        super().__init__(
-            f"{scope.ability} has an unreviewed crowd-control scope and no "
-            "route policy; call reviewed_scope() first so the shipped H2 "
-            "default lands with the disclosure that qualifies it"
-        )
-        self.scope = scope
 
 
 __all__ = [
@@ -179,7 +165,6 @@ __all__ = [
     "MultiTarget",
     "SingleTarget",
     "Unreviewed",
-    "UnscopedCrowdControl",
     "reviewed_scope",
     "scope_policy",
 ]

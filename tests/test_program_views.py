@@ -285,7 +285,7 @@ def test_no_view_module_rounds_outside_the_registry() -> None:
 
 def test_a_field_the_registry_does_not_know_cannot_be_published() -> None:
     """Fail closed: the projection cannot invent a precision for a new leaf."""
-    with pytest.raises(precision.UnregisteredField):
+    with pytest.raises(KeyError):
         precision.round_field("a_leaf_somebody_added", 1.0)
 
 
@@ -712,15 +712,15 @@ def test_two_quantities_meaning_the_same_thing_fold() -> None:
 
 def test_folding_two_views_is_a_construction_error() -> None:
     """Criterion 4: unrepresentable rather than merely tested for."""
-    from src.calculator.program.tagged import MixedViewFold, Tagged
+    from src.calculator.program.tagged import Tagged
 
     applied = Tagged(Measured(amount=1.0), ViewTag.APPLIED)
     preview = Tagged(Measured(amount=1.0), ViewTag.THEORETICAL)
-    with pytest.raises(MixedViewFold) as raised:
+    with pytest.raises(TypeError) as raised:
         _ = applied + preview
-    assert (raised.value.left, raised.value.right) == (
-        ViewTag.APPLIED,
-        ViewTag.THEORETICAL,
+    assert str(raised.value) == (
+        f"a {ViewTag.APPLIED.value} quantity may not be folded with a "
+        f"{ViewTag.THEORETICAL.value} one; a sum may never mix views (D-62)"
     )
 
 

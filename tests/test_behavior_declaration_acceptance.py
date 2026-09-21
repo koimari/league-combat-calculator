@@ -54,7 +54,6 @@ from src.calculator.item_support_effects import derive_item_support_effects
 from src.calculator.program.views.view_tag import ViewTag
 from src.calculator.roster_composition import ActorRequest
 from src.calculator.support_event_view import (
-    EventViewStarvationError,
     require_event_view,
 )
 
@@ -317,7 +316,7 @@ def test_the_light_tuple_path_raises_rather_than_pricing_a_declaration_at_zero(
     cold_memo(trigger_stream, "streams_for")
     assert aura in trigger_stream.tuple_incapable_items()
     require_event_view({"damage_events": []}, (aura,))
-    with pytest.raises(EventViewStarvationError) as raised:
+    with pytest.raises(ValueError) as raised:
         require_event_view({"damage_events_tuple": True}, (aura,))
     assert aura in str(raised.value)
     assert "damage_events" in str(raised.value)

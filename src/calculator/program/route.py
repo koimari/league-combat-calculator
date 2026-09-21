@@ -10,10 +10,13 @@ and it produces a number no reader can trace back to a rule.
 A :data:`RoutePolicy` is that decision, named.  Ten members cover every live
 delivery shape, :func:`resolve_route` is **total** over the union — a
 policy with no branch raises rather than returning an empty tuple — and an
-unresolvable context raises :class:`UnroutableEvent` instead of quietly
-delivering to nobody.  An empty result is legal only where a policy's own
-docstring says the empty roster is the answer (no teammates, no opponents);
-everywhere else emptiness means the context was wrong.
+unresolvable context raises through :func:`unroutable_event` instead of
+quietly delivering to nobody: a context is assembled by the builder from the
+roster it already has, so a missing trigger subject or an out-of-range
+teammate is the builder and the author disagreeing, never a data condition.
+An empty result is legal only where a policy's own docstring says the empty
+roster is the answer (no teammates, no opponents); everywhere else emptiness
+means the context was wrong.
 
 :class:`RouteAnnotation` is the other half.  Twelve labels in the live
 support layer read like scopes and are not: they are disclosures a receipt
@@ -172,19 +175,9 @@ class ResolvedRoute:
 # ---------------------------------------------------------------------------
 
 
-class UnroutableEvent(ValueError):
-    """A policy whose context cannot answer it — a programming error.
-
-    Never a data condition: a context is assembled by the builder from the
-    roster it already has, so a missing trigger subject or an out-of-range
-    teammate means the builder and the author disagree.  Raising names both
-    halves rather than delivering the event to nobody.
-    """
-
-    def __init__(self, policy: RoutePolicy, reason: str) -> None:
-        super().__init__(f"{type(policy).__name__} cannot be resolved: {reason}")
-        self.policy = policy
-        self.reason = reason
+def unroutable_event(policy: RoutePolicy, reason: str) -> ValueError:
+    """*policy* and the *reason* its context cannot answer it, both named."""
+    return ValueError(f"{type(policy).__name__} cannot be resolved: {reason}")
 
 
 @dataclass(frozen=True, slots=True)
@@ -207,7 +200,7 @@ class RouteContext:
 
 
 def _checked(policy: RoutePolicy, subjects: Sequence[PIdx], roster: int) -> tuple:
-    """Every subject inside the roster, or an :class:`UnroutableEvent`.
+    """Every subject inside the roster, or a refusal naming the policy.
 
     A negative or over-range slot is the shape a stale index takes, and the
     walk would read it as somebody else's state, so the bound is checked
@@ -215,7 +208,7 @@ def _checked(policy: RoutePolicy, subjects: Sequence[PIdx], roster: int) -> tupl
     """
     for subject in subjects:
         if not 0 <= int(subject) < roster:
-            raise UnroutableEvent(
+            raise unroutable_event(
                 policy, f"subject {int(subject)} is outside a roster of {roster}"
             )
     return tuple(subjects)
@@ -239,7 +232,7 @@ def resolve_route(  # pylint: disable=too-many-return-statements
             return _checked(policy, (ctx.holder,), roster_size)
         case PairDefender():
             if ctx.pair_defender is None:
-                raise UnroutableEvent(policy, "the context names no pair defender")
+                raise unroutable_event(policy, "the context names no pair defender")
             return _checked(policy, (ctx.pair_defender,), roster_size)
         case AllOpponents():
             return _checked(policy, ctx.opponents, roster_size)
@@ -255,7 +248,7 @@ def resolve_route(  # pylint: disable=too-many-return-statements
             return _checked(policy, policy.targets, roster_size)
         case TriggerTarget():
             if not ctx.trigger_subjects:
-                raise UnroutableEvent(
+                raise unroutable_event(
                     policy,
                     "the triggering event reached nobody; a mark that hit no "
                     "subject routes to no subject rather than to roster slot zero",
@@ -293,7 +286,6 @@ __all__ = [
     "SelfAndOneTeammate",
     "SelfOnly",
     "TriggerTarget",
-    "UnroutableEvent",
     "resolve",
     "resolve_route",
 ]

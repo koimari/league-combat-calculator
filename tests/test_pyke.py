@@ -8,7 +8,6 @@ from src.calculator.champions import (
     get_champion_stat_conversion,
     pyke,
 )
-from src.calculator.champions.contract_vocabulary import ChampionModuleContractError
 from src.calculator.champions.module_contract import contract_from_module
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.stat_conversion import BonusHealthConversion
@@ -76,7 +75,7 @@ class TestGiftOfTheDrownedOnesStatConversion:
     )
     def test_an_unusable_declaration_fails_the_import_gate(self, monkeypatch, declared):
         monkeypatch.setattr(pyke, "MODULE_STAT_CONVERSION", declared, raising=True)
-        with pytest.raises(ChampionModuleContractError):
+        with pytest.raises(ValueError):
             contract_from_module("Pyke", "pyke", pyke)
 
     def test_a_champion_with_no_declaration_keeps_its_item_health(self):

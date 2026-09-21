@@ -52,7 +52,6 @@ from .reference_vocabulary import (
 )
 from .value_source_receipt import (
     SourceReceipt,
-    UnsourcedDeclarationError,
     live_registry,
 )
 
@@ -104,7 +103,7 @@ def receipt_for(
         return entry
     if declared is not None:
         return declared
-    raise UnsourcedDeclarationError(
+    raise ValueError(
         f"{source.label} carries no complete citation "
         "(source_url + source_revision_id + source_revision_timestamp) and the "
         "family declared no constant receipt — a rule may not be declared "

@@ -25,7 +25,6 @@ from typing import Any, Literal
 from .coverage_evidence import (
     Claim,
     ClaimLane,
-    CoverageClaimError,
     EffectKey,
     Evidence,
     OptionSchema,
@@ -1630,7 +1629,7 @@ def _validate_issue_ref_routing() -> None:
         item for item in _REVIEW_ISSUE_REFS if _issue_ref_lane(item) is None
     )
     if unrouted:
-        raise CoverageClaimError(
+        raise ValueError(
             f"{unrouted} carry tracked review issues and no claim on any lane, "
             "so review_issue_refs would publish a ref no claim carries"
         )

@@ -14,7 +14,7 @@ structural impossibility — a claim whose shape cannot be backed by anything,
 whatever the codebase happens to contain.  So it imports nothing from
 ``src.calculator``, reads no file, touches no ``data/`` cache, and runs a
 single pass of string and set checks over the table, raising
-:class:`CoverageClaimError`.  Whether a claim's evidence resolves against the
+:class:`ValueError`.  Whether a claim's evidence resolves against the
 real tree is the *resolution* tier's question (``tests/coverage_resolver.py``,
 on every ``pytest`` run); exact node ids and duplicate detection are the *full
 session* tier's.  A load gate that imported the modules it describes would be
@@ -156,15 +156,6 @@ UTILITY_DIMENSIONS: frozenset[str] = frozenset(
 )
 
 
-class CoverageClaimError(ValueError):
-    """A claim whose shape cannot be backed; raised at import, never caught.
-
-    A ``ValueError`` because a malformed declaration is a programming error
-    in the module that authored it — the import fails, loudly, at the first
-    claim that cannot be true.
-    """
-
-
 # ── shared shape checks ───────────────────────────────────────────────────
 
 
@@ -180,9 +171,9 @@ class ClaimGuard:
     name: str
 
     def text(self, value: object, *, field: str) -> str:
-        """A non-blank string, or a :class:`CoverageClaimError` naming *field*."""
+        """A non-blank string, or a :class:`ValueError` naming *field*."""
         if not isinstance(value, str) or not value.strip():
-            raise CoverageClaimError(
+            raise ValueError(
                 f"{self.name}: {field} must be a non-blank string, got {value!r}"
             )
         return value
@@ -190,7 +181,7 @@ class ClaimGuard:
     def no_whitespace(self, value: str, *, field: str) -> None:
         """Reject internal whitespace in a token that names a code location."""
         if any(character.isspace() for character in value):
-            raise CoverageClaimError(
+            raise ValueError(
                 f"{self.name}: {field} {value!r} carries whitespace; it names one "
                 "location, not a sentence"
             )
@@ -199,9 +190,7 @@ class ClaimGuard:
         """A bare Python identifier that is not a keyword."""
         text = self.text(value, field=field)
         if not text.isidentifier() or keyword.iskeyword(text):
-            raise CoverageClaimError(
-                f"{self.name}: {field} {text!r} is not a plain identifier"
-            )
+            raise ValueError(f"{self.name}: {field} {text!r} is not a plain identifier")
 
     def dotted_path(self, value: object, *, field: str) -> None:
         """A dotted path of at least two identifier segments.
@@ -218,7 +207,7 @@ class ClaimGuard:
             segment.isidentifier() and not keyword.iskeyword(segment)
             for segment in segments
         ):
-            raise CoverageClaimError(
+            raise ValueError(
                 f"{self.name}: {field} {text!r} is not a dotted path of at least two "
                 "identifier segments"
             )
@@ -226,7 +215,7 @@ class ClaimGuard:
     def membership(self, value: object, allowed: frozenset[str], *, field: str) -> None:
         """A member of a closed vocabulary, named in the message when it is not."""
         if value not in allowed:
-            raise CoverageClaimError(
+            raise ValueError(
                 f"{self.name}: {field} {value!r} is not one of {sorted(allowed)}"
             )
 
@@ -280,7 +269,7 @@ class PacketSource:
         text = guard.text(self.source, field="PacketSource.source")
         residue = text.replace("{}", "")
         if "{" in residue or "}" in residue:
-            raise CoverageClaimError(
+            raise ValueError(
                 f"{guard.name}: PacketSource.source {text!r} carries a named or "
                 "unbalanced brace; an f-string slot collapses to '{}'"
             )
@@ -305,7 +294,7 @@ class PairedSides:
         text = guard.text(self.mechanic, field="PairedSides.mechanic")
         owner, dot, effect = text.partition(".")
         if not dot or "." in effect:
-            raise CoverageClaimError(
+            raise ValueError(
                 f"{guard.name}: PairedSides.mechanic {text!r} is not "
                 "'<owner_slug>.<effect_slug>'"
             )
@@ -337,7 +326,7 @@ class EffectKey:
         key = guard.text(self.key, field="EffectKey.key")
         guard.no_whitespace(key, field="EffectKey.key")
         if _looks_numeric(key):
-            raise CoverageClaimError(
+            raise ValueError(
                 f"{guard.name}: EffectKey.key {key!r} is a number; evidence names "
                 "the registry key, never its value (CLAUDE.md rule 5)"
             )
@@ -415,18 +404,18 @@ class TestRef:
         location, bracket, parametrization = text.partition("[")
         guard.no_whitespace(location, field="TestRef.node_id")
         if bracket and not parametrization.endswith("]"):
-            raise CoverageClaimError(
+            raise ValueError(
                 f"{guard.name}: TestRef.node_id {text!r} opens a parametrization id "
                 "and never closes it"
             )
         if any(character in text for character in "\r\n\t"):
-            raise CoverageClaimError(
+            raise ValueError(
                 f"{guard.name}: TestRef.node_id {text!r} spans lines; a node id is "
                 "one line"
             )
         path, separator, node = location.partition("::")
         if not separator or not node or not path.endswith(".py"):
-            raise CoverageClaimError(
+            raise ValueError(
                 f"{guard.name}: TestRef.node_id {text!r} is not " "'<path>.py::<node>'"
             )
 
@@ -448,16 +437,14 @@ class SourceRef:
         url = guard.text(self.url, field="SourceRef.url")
         guard.no_whitespace(url, field="SourceRef.url")
         if not url.startswith("https://") or len(url) <= len("https://"):
-            raise CoverageClaimError(
-                f"{guard.name}: SourceRef.url {url!r} is not an https url"
-            )
+            raise ValueError(f"{guard.name}: SourceRef.url {url!r} is not an https url")
         if isinstance(self.revision_id, bool):
-            raise CoverageClaimError(
+            raise ValueError(
                 f"{guard.name}: SourceRef.revision_id {self.revision_id!r} is not "
                 "an integer"
             )
         if self.revision_id <= 0:
-            raise CoverageClaimError(
+            raise ValueError(
                 f"{guard.name}: SourceRef.revision_id {self.revision_id} is not a "
                 "positive revision"
             )
@@ -479,13 +466,13 @@ class Absence:
         """A written reason and at least one tracked issue."""
         guard.text(self.reason, field="Absence.reason")
         if not isinstance(self.issue_refs, tuple) or not self.issue_refs:
-            raise CoverageClaimError(
+            raise ValueError(
                 f"{guard.name}: Absence.issue_refs is empty; a refusal names the "
                 "issue that tracks it"
             )
         for ref in self.issue_refs:
             if not isinstance(ref, int) or isinstance(ref, bool) or ref <= 0:
-                raise CoverageClaimError(
+                raise ValueError(
                     f"{guard.name}: Absence.issue_refs holds {ref!r}, which is not "
                     "a positive issue number"
                 )
@@ -683,7 +670,7 @@ def status_policy(lane: ClaimLane, status: ClaimStatus) -> EvidencePolicy:
     guard.membership(lane, LANES, field="lane")
     guard.membership(status, CLAIM_STATUSES, field="status")
     if status not in LANE_STATUSES[lane]:
-        raise CoverageClaimError(
+        raise ValueError(
             f"status_policy: status {status!r} is not claimable on the {lane!r} "
             f"lane; that lane yields {sorted(LANE_STATUSES[lane])}"
         )
@@ -708,7 +695,7 @@ def claim_name(claim: Claim) -> str:
 def validate_evidence(ev: Evidence, *, claim: str) -> None:
     """Reject a malformed evidence member; ``claim`` only names it in the message."""
     if not isinstance(ev, EVIDENCE_TYPES):
-        raise CoverageClaimError(
+        raise ValueError(
             f"{claim}: {ev!r} is not one of the {len(EVIDENCE_TYPES)} evidence "
             f"kinds {sorted(EVIDENCE_KINDS)}"
         )
@@ -731,14 +718,12 @@ def _validate_vocabulary(claim: Claim, *, name: str) -> None:
 def _validate_evidence_set(claim: Claim, policy: EvidencePolicy, *, name: str) -> None:
     """Every member valid and distinct, and the cell's matrix satisfied."""
     if not isinstance(claim.evidence, tuple) or not claim.evidence:
-        raise CoverageClaimError(
-            f"{name}: evidence is empty; every claim names what backs it"
-        )
+        raise ValueError(f"{name}: evidence is empty; every claim names what backs it")
     seen: set[Evidence] = set()
     for member in claim.evidence:
         validate_evidence(member, claim=name)
         if member in seen:
-            raise CoverageClaimError(
+            raise ValueError(
                 f"{name}: evidence member {member!r} is repeated; a duplicate "
                 "inflates the member count without backing anything"
             )
@@ -747,17 +732,17 @@ def _validate_evidence_set(claim: Claim, policy: EvidencePolicy, *, name: str) -
     present = {type(member).__name__ for member in claim.evidence}
     missing = policy.required - present
     if missing:
-        raise CoverageClaimError(
+        raise ValueError(
             f"{name}: status {claim.status!r} requires evidence "
             f"{sorted(policy.required)} and is missing {sorted(missing)}"
         )
     intruding = policy.forbidden & present
     if intruding:
-        raise CoverageClaimError(
+        raise ValueError(
             f"{name}: status {claim.status!r} forbids evidence " f"{sorted(intruding)}"
         )
     if len(claim.evidence) < policy.min_count:
-        raise CoverageClaimError(
+        raise ValueError(
             f"{name}: status {claim.status!r} needs at least "
             f"{policy.min_count} evidence members, got {len(claim.evidence)}"
         )
@@ -769,7 +754,7 @@ def _validate_field_rules(claim: Claim, *, name: str) -> None:
     if claim.status in NEGATIVE_STATUSES:
         absences = [m for m in claim.evidence if isinstance(m, Absence)]
         if len(absences) != 1:
-            raise CoverageClaimError(
+            raise ValueError(
                 f"{name}: status {claim.status!r} carries {len(absences)} "
                 "Absence members; a refusal has exactly one reason"
             )
@@ -777,7 +762,7 @@ def _validate_field_rules(claim: Claim, *, name: str) -> None:
     if claim.status == "modeled_state":
         present = {type(member).__name__ for member in claim.evidence}
         if not present & STATE_HOME_KINDS:
-            raise CoverageClaimError(
+            raise ValueError(
                 f"{name}: status 'modeled_state' needs one of "
                 f"{sorted(STATE_HOME_KINDS)}; without one the claim says the "
                 "state is supplied and names nothing that supplies it"
@@ -786,7 +771,7 @@ def _validate_field_rules(claim: Claim, *, name: str) -> None:
         isinstance(m, Symbol) and m.role == "certification_guard"
         for m in claim.evidence
     ):
-        raise CoverageClaimError(
+        raise ValueError(
             f"{name}: status 'modeled_event_certified' needs a Symbol with "
             "role 'certification_guard'; without it the claim says an event "
             "is certified and names nothing that certifies it"
@@ -796,32 +781,28 @@ def _validate_field_rules(claim: Claim, *, name: str) -> None:
 def _validate_dimensions(claim: Claim, *, name: str) -> None:
     """Closed dimensions, no repeats, and a utility claim that names one."""
     if not isinstance(claim.dimensions, tuple):
-        raise CoverageClaimError(f"{name}: dimensions must be a tuple")
+        raise ValueError(f"{name}: dimensions must be a tuple")
     guard = ClaimGuard(name)
     for dimension in claim.dimensions:
         guard.membership(dimension, UTILITY_DIMENSIONS, field="dimension")
     if len(set(claim.dimensions)) != len(claim.dimensions):
-        raise CoverageClaimError(
-            f"{name}: dimensions {list(claim.dimensions)} repeat a member"
-        )
+        raise ValueError(f"{name}: dimensions {list(claim.dimensions)} repeat a member")
     if claim.lane == "utility" and not claim.dimensions:
-        raise CoverageClaimError(
-            f"{name}: a utility claim with no dimension names no outcome"
-        )
+        raise ValueError(f"{name}: a utility claim with no dimension names no outcome")
 
 
 def _validate_issue_refs(claim: Claim, *, name: str) -> None:
     """Issue refs have one home per claim."""
     if not isinstance(claim.issue_refs, tuple):
-        raise CoverageClaimError(f"{name}: issue_refs must be a tuple")
+        raise ValueError(f"{name}: issue_refs must be a tuple")
     if claim.status in NEGATIVE_STATUSES and claim.issue_refs:
-        raise CoverageClaimError(
+        raise ValueError(
             f"{name}: a negative claim carries its issue refs on its Absence, "
             f"not on the claim; drop {list(claim.issue_refs)}"
         )
     for ref in claim.issue_refs:
         if not isinstance(ref, int) or isinstance(ref, bool) or ref <= 0:
-            raise CoverageClaimError(
+            raise ValueError(
                 f"{name}: issue_refs holds {ref!r}, which is not a positive "
                 "issue number"
             )
@@ -854,13 +835,13 @@ def validate_claim_table(
     """
     for key, claim in claims.items():
         if not isinstance(key, tuple) or len(key) != 3:
-            raise CoverageClaimError(
+            raise ValueError(
                 f"claim key {key!r} is not a (subject_kind, subject, lane) triple"
             )
         validate_claim(claim)
         expected = (claim.subject_kind, claim.subject, claim.lane)
         if key != expected:
-            raise CoverageClaimError(
+            raise ValueError(
                 f"claim key {key!r} disagrees with the claim it addresses, "
                 f"{expected!r}"
             )
@@ -884,7 +865,6 @@ __all__ = [
     "ClaimGuard",
     "ClaimLane",
     "ClaimStatus",
-    "CoverageClaimError",
     "EffectKey",
     "EffectTag",
     "Evidence",

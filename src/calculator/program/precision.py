@@ -293,25 +293,15 @@ for _table in _TABLES:
 ROUNDING: Mapping[str, int] = MappingProxyType(_FLAT)
 
 
-class UnregisteredField(KeyError):
-    """A field asked this registry for a precision it never declared.
-
-    Fail closed and by name.  The alternative — a default digit count — is
-    the campaign's own failure shape one layer down: a field nobody decided
-    the precision of would be published at some precision anyway, and no
-    reader could tell that answer from a decided one.
-    """
-
-
 def digits_for(field: str) -> int:
     """The declared precision of *field*, a bare name or ``block.name``.
 
-    Raises :class:`UnregisteredField` naming the field when none is declared.
+    Raises :class:`KeyError` naming the field when none is declared.
     """
     try:
         return ROUNDING[field]
     except KeyError:
-        raise UnregisteredField(
+        raise KeyError(
             f"{field!r} has no declared precision; add it to "
             f"program.precision.ROUNDING rather than rounding at the call site"
         ) from None

@@ -114,8 +114,8 @@ from .program.compile import (
 )
 from .program.dependency import (
     CrossPassDependency,
-    IncompleteDependency,
     PassRequest,
+    incomplete_dependency,
     run_passes,
 )
 from .program.identity import MechanicId, PIdx
@@ -597,7 +597,7 @@ def _routed_pair_defender_id(
     through :func:`program.route.resolve_route` under
     :class:`program.route.PairDefender`, so the subject is bounded against
     the roster and an id the roster does not hold raises
-    :class:`program.route.UnroutableEvent` instead of quietly addressing
+    ``program.route.unroutable_event`` instead of quietly addressing
     somebody else's state.
 
     It replaces a scan that re-derived the same fact independently, by
@@ -616,7 +616,7 @@ def _routed_pair_defender_id(
     }
     subject = slots.get(pair_defender_id)
     if subject is None:
-        raise program_route.UnroutableEvent(
+        raise program_route.unroutable_event(
             program_route.PairDefender(),
             f"{pair_defender_id!r} is not a participant of this roster",
         )
@@ -5508,7 +5508,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             )
             if not complete:
                 slot = mana_spent_heal_slot(actor.items)
-                raise IncompleteDependency(
+                raise incomplete_dependency(
                     _cross_pass_dependency(slot),
                     pass_index,
                     detail=(

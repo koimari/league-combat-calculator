@@ -93,11 +93,6 @@ from . import (
 )
 from .stat_derivation import declared_stat_derivations
 
-
-class InterpreterRegistryError(RuntimeError):
-    """The (family, lane) map does not say what it claims to say."""
-
-
 #: One rule's kernel fields for one lane.  Build-time only: the context
 #: carries a level, an owner and a data version and deliberately carries no
 #: walk state, and the lane is stamped onto every field emitted.
@@ -579,7 +574,7 @@ def resolve_defense(rule: BehaviorRule, subject: DefenseSubject) -> DefenseOutco
     """
     resolver = RESOLVERS.get(rule.family)
     if resolver is None:
-        raise InterpreterRegistryError(
+        raise RuntimeError(
             f"{rule.mechanic_id} declares {rule.family.value} and no "
             "interpreter serves the defense_resolver lane, so its defence is "
             "withheld rather than resolved"
@@ -591,7 +586,7 @@ def lanes_for(family: RuleFamily) -> frozenset[EngineLane]:
     """The lanes that owe *family* an interpreter."""
     lanes = _FAMILY_LANES.get(family)
     if lanes is None:
-        raise InterpreterRegistryError(
+        raise RuntimeError(
             f"{family.value} declares no lanes; every family says which engines "
             "have to answer for it"
         )
@@ -1045,7 +1040,7 @@ def validate_registrations() -> None:
     failures.extend(_validate_authority_agreement(owners))
     failures.extend(reachability_report(owners).orphan_branches)
     if failures:
-        raise InterpreterRegistryError("; ".join(failures))
+        raise RuntimeError("; ".join(failures))
 
 
 validate_registrations()
@@ -1057,7 +1052,6 @@ __all__ = [
     "RESOLVERS",
     "UNSERVED_LANE_RECEIPTS",
     "FieldsFn",
-    "InterpreterRegistryError",
     "ReachabilityReport",
     "ResolveFn",
     "UnservedLane",

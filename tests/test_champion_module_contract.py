@@ -14,7 +14,6 @@ from src.calculator.champions import (
 from src.calculator.champions.contract_vocabulary import (
     REQUIRED_CHAMPION_SLOTS,
     VALID_COVERAGE,
-    ChampionModuleContractError,
     coverage,
     default_coverage,
 )
@@ -213,12 +212,12 @@ class TestOneHomePerFact:
         """Every registered module is reviewed; a module that says otherwise
         must not register as reviewed, and one that says so is a second home."""
         for status in ("draft", "reviewed_module"):
-            with pytest.raises(ChampionModuleContractError, match="REVIEW_STATUS"):
+            with pytest.raises(ValueError, match="REVIEW_STATUS"):
                 self._contract(REVIEW_STATUS=status)
 
     def test_a_coverage_map_equal_to_the_derivation_is_refused(self):
         slots = {"Q": lambda ctx: None, "W": lambda ctx: None}
-        with pytest.raises(ChampionModuleContractError, match="restates"):
+        with pytest.raises(ValueError, match="restates"):
             self._contract(SLOTS=slots, MODULE_COVERAGE=default_coverage(slots))
 
     def test_a_coverage_map_that_says_more_than_the_derivation_survives(self):
@@ -229,7 +228,7 @@ class TestOneHomePerFact:
     def test_modeled_without_a_row_or_a_channel_is_refused(self):
         """The relabel this campaign bans: ``modeled`` backed by nothing."""
         declared = dict.fromkeys("PQWER", "out_of_scope") | {"Q": "modeled"}
-        with pytest.raises(ChampionModuleContractError, match=r"\['P'\]"):
+        with pytest.raises(ValueError, match=r"\['P'\]"):
             self._contract(MODULE_COVERAGE=declared | {"P": "modeled"})
 
     def test_a_channel_names_the_engine_home_that_prices_the_slot(self):
@@ -245,14 +244,14 @@ class TestOneHomePerFact:
 
     def test_a_channel_the_vocabulary_does_not_know_is_refused(self):
         declared = dict.fromkeys("PQWER", "out_of_scope") | {"Q": "modeled"}
-        with pytest.raises(ChampionModuleContractError, match="unknown"):
+        with pytest.raises(ValueError, match="unknown"):
             self._contract(
                 MODULE_COVERAGE=declared, COVERAGE_CHANNELS={"Q": ("vibes",)}
             )
 
     def test_a_channel_on_a_slot_the_map_does_not_call_modeled_is_refused(self):
         declared = dict.fromkeys("PQWER", "out_of_scope") | {"Q": "modeled"}
-        with pytest.raises(ChampionModuleContractError, match="out_of_scope"):
+        with pytest.raises(ValueError, match="out_of_scope"):
             self._contract(
                 MODULE_COVERAGE=declared,
                 COVERAGE_CHANNELS={"R": ("self_healing_rule",)},
@@ -341,7 +340,7 @@ class TestModuleCcDeclaration:
         """Totality is the point: a slot left out reads to every consumer
         exactly like the reviewed "none" next to it, so the map names every
         slot the module emits or registration stops."""
-        with pytest.raises(ChampionModuleContractError, match="names no kind"):
+        with pytest.raises(ValueError, match="names no kind"):
             self._contract(
                 MODULE_CC={"Q": "none"},
                 parse_abilities=self._wired_parser({"Q": "none"}),
@@ -353,7 +352,7 @@ class TestModuleCcDeclaration:
         say writes the empty dict and the reason above it."""
         module = self._module()
         del module.MODULE_CC
-        with pytest.raises(ChampionModuleContractError, match="declares no MODULE_CC"):
+        with pytest.raises(ValueError, match="declares no MODULE_CC"):
             contract_from_module("Fake", "fake_champion", module)
 
     def test_a_declaration_survives_onto_the_contract(self):
@@ -364,24 +363,22 @@ class TestModuleCcDeclaration:
         assert contract.cc_kinds == declared
 
     def test_a_slot_the_module_does_not_emit_is_refused(self):
-        with pytest.raises(ChampionModuleContractError, match=r"\['E'\]"):
+        with pytest.raises(ValueError, match=r"\['E'\]"):
             self._contract(MODULE_CC={"E": "stun"})
 
     def test_an_unknown_kind_is_refused(self):
-        with pytest.raises(ChampionModuleContractError, match="stunn"):
+        with pytest.raises(ValueError, match="stunn"):
             self._contract(MODULE_CC={"Q": "stunn"})
 
     def test_a_non_mapping_declaration_is_refused(self):
-        with pytest.raises(ChampionModuleContractError, match="must be a dict"):
+        with pytest.raises(ValueError, match="must be a dict"):
             self._contract(MODULE_CC=["Q"])
 
     def test_a_declaration_nobody_wired_is_refused(self):
         """The silent no-op this whole shape exists to prevent: a module
         that states its kit's control and never hands it to the engine
         would review nothing while reading as reviewed."""
-        with pytest.raises(
-            ChampionModuleContractError, match=r"build_parser\(\.\.\., cc_kinds"
-        ):
+        with pytest.raises(ValueError, match=r"build_parser\(\.\.\., cc_kinds"):
             self._contract(wire=False)
 
     def test_silence_keeps_the_one_cast_ultimate_rule(self):
@@ -398,19 +395,17 @@ class TestModuleCcDeclaration:
         assert contract.ultimate_recasts is True
 
     def test_certifying_an_ultimate_the_module_does_not_emit_is_refused(self):
-        with pytest.raises(ChampionModuleContractError, match="emits no R slot"):
+        with pytest.raises(ValueError, match="emits no R slot"):
             self._contract(ULTIMATE_RECASTS=True)
 
     def test_a_non_boolean_certification_is_refused(self):
-        with pytest.raises(ChampionModuleContractError, match="must be a bool"):
+        with pytest.raises(ValueError, match="must be a bool"):
             self._contract(ULTIMATE_RECASTS="yes")
 
     def test_a_packet_module_is_told_to_wire_through_the_compiler(self):
         """A packet module never calls ``build_parser`` itself, so the
         instruction it gets names ``build_packet_module`` instead."""
-        with pytest.raises(
-            ChampionModuleContractError, match=r"build_packet_module\(\.\.\., cc_kinds"
-        ):
+        with pytest.raises(ValueError, match=r"build_packet_module\(\.\.\., cc_kinds"):
             self._contract(
                 wire=False,
                 parse_abilities=TestPacketPinCarriers._stamped_parser(),
@@ -420,7 +415,7 @@ class TestModuleCcDeclaration:
     def test_a_declaration_disagreeing_with_its_wiring_is_refused(self):
         """Two carriers of one fact must not silently diverge — the same
         rule ``CAST_DEPENDENCIES`` obeys."""
-        with pytest.raises(ChampionModuleContractError, match="one declaration"):
+        with pytest.raises(ValueError, match="one declaration"):
             self._contract(
                 MODULE_CC={"Q": "stun"},
                 parse_abilities=self._wired_parser({"Q": "none"}),
@@ -509,7 +504,7 @@ class TestPacketPinCarriers:
     def test_a_module_restating_the_packet_spec_fails_import(self):
         """The spec rides the compiled parser; a module copy is a second
         home that could disagree with it, so it is refused outright."""
-        with pytest.raises(ChampionModuleContractError, match="PACKET_SPEC"):
+        with pytest.raises(ValueError, match="PACKET_SPEC"):
             self._contract(
                 parse_abilities=self._stamped_parser(),
                 PACKET_SHA256=self.DIGEST,
@@ -521,9 +516,7 @@ class TestPacketPinCarriers:
             packet_spec = {"slots": {}}
             packet_sha256 = TestPacketPinCarriers.DIGEST
 
-        with pytest.raises(
-            ChampionModuleContractError, match="conflicting packet declarations"
-        ):
+        with pytest.raises(ValueError, match="conflicting packet declarations"):
             self._contract(
                 parse_abilities=self._stamped_parser(),
                 PACKET_SHA256=self.DIGEST,
@@ -531,9 +524,7 @@ class TestPacketPinCarriers:
             )
 
     def test_a_module_digest_disagreeing_with_its_parsers_stamp_fails_import(self):
-        with pytest.raises(
-            ChampionModuleContractError, match="conflicting packet digests"
-        ):
+        with pytest.raises(ValueError, match="conflicting packet digests"):
             self._contract(
                 parse_abilities=self._stamped_parser(), PACKET_SHA256="b" * 64
             )
@@ -542,7 +533,7 @@ class TestPacketPinCarriers:
         """The retired shape: ``parse_abilities = build_parser(SLOTS, ...)``
         after ``build_packet_module`` — the pin was checked against the
         asset, but the parser it vouches for is not the one that runs."""
-        with pytest.raises(ChampionModuleContractError, match="does not carry"):
+        with pytest.raises(ValueError, match="does not carry"):
             self._contract(PACKET_SHA256=self.DIGEST)
 
     def test_an_empty_carrier_shadows_nothing(self):
@@ -642,9 +633,9 @@ class TestCoverageBuilder:
         assert set(built.values()) <= VALID_COVERAGE
 
     def test_a_slot_outside_the_kit_is_refused(self) -> None:
-        with pytest.raises(ChampionModuleContractError, match="not champion slots"):
+        with pytest.raises(ValueError, match="not champion slots"):
             coverage(no_damage="PX")
 
     def test_one_slot_may_not_hold_two_statuses(self) -> None:
-        with pytest.raises(ChampionModuleContractError, match="named one slot twice"):
+        with pytest.raises(ValueError, match="named one slot twice"):
             coverage(no_damage="P", out_of_scope="P")

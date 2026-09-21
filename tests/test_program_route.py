@@ -79,19 +79,19 @@ class TestFailClosed:
     def test_a_trigger_that_reached_nobody_routes_to_nobody_loudly(self) -> None:
         """Never roster slot zero, which is what the deleted scan returned."""
         ctx = route.RouteContext(author=0, holder=0, trigger_subjects=())
-        with pytest.raises(route.UnroutableEvent) as caught:
+        with pytest.raises(ValueError) as caught:
             route.resolve_route(route.TriggerTarget(), ctx, roster_size=ROSTER)
-        assert "roster slot zero" in caught.value.reason
+        assert "roster slot zero" in str(caught.value)
 
     def test_a_pair_policy_with_no_pair_defender_raises(self) -> None:
         ctx = route.RouteContext(author=0, holder=0)
-        with pytest.raises(route.UnroutableEvent):
+        with pytest.raises(ValueError, match="no pair defender"):
             route.resolve_route(route.PairDefender(), ctx, roster_size=ROSTER)
 
     @pytest.mark.parametrize("slot", [-1, ROSTER, ROSTER + 3])
     def test_a_subject_outside_the_roster_raises(self, slot: int) -> None:
         """A stale index would otherwise read as somebody else's state."""
-        with pytest.raises(route.UnroutableEvent, match="outside a roster"):
+        with pytest.raises(ValueError, match="outside a roster"):
             route.resolve_route(route.ExplicitTargets((slot,)), CTX, roster_size=ROSTER)
 
     def test_an_empty_opponent_roster_is_a_legal_empty_answer(self) -> None:

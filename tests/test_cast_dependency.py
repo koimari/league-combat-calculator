@@ -49,7 +49,6 @@ from src.calculator.champions import (
     get_champion_option_rotation,
     module_survey,
 )
-from src.calculator.champions.contract_vocabulary import ChampionModuleContractError
 from src.calculator.champions.module_contract import contract_from_module
 from src.calculator.champions.packet_module import PacketSlotMap, build_packet_module
 from src.calculator.data_fetcher import get_champion
@@ -700,7 +699,7 @@ class TestTheContractCarriesDeclarations:
 
     def test_a_declaration_that_is_not_a_cast_dependency_fails_at_import(self) -> None:
         module = _champion_module(CAST_DEPENDENCIES=({"slot": "E"},))
-        with pytest.raises(ChampionModuleContractError, match="CAST_DEPENDENCIES"):
+        with pytest.raises(ValueError, match="CAST_DEPENDENCIES"):
             contract_from_module("Synthetic", "synthetic", module)
 
     def test_a_cast_order_contradicting_a_declaration_fails_at_import(self) -> None:
@@ -923,13 +922,13 @@ class TestAnEmptyCarrierShadowsNothing:
         """No carrier quietly wins a real disagreement."""
         module = _champion_module(CAST_DEPENDENCIES=(_dep(),))
         module.parse_abilities.cast_dependencies = (_dep(requires="W"),)
-        with pytest.raises(ChampionModuleContractError, match="disagree"):
+        with pytest.raises(ValueError, match="disagree"):
             contract_from_module("Synthetic", "synthetic", module)
 
     def test_the_disagreement_names_both_carriers(self) -> None:
         module = _champion_module(CAST_DEPENDENCIES=(_dep(),))
         module.SLOTS = _SlotMap(module.SLOTS, (_dep(requires="W"),))
-        with pytest.raises(ChampionModuleContractError) as caught:
+        with pytest.raises(ValueError) as caught:
             contract_from_module("Synthetic", "synthetic", module)
         assert "module CAST_DEPENDENCIES" in str(caught.value)
         assert "SLOTS.cast_dependencies" in str(caught.value)
@@ -937,9 +936,7 @@ class TestAnEmptyCarrierShadowsNothing:
     def test_a_malformed_carrier_is_named_in_the_failure(self) -> None:
         module = _champion_module()
         module.parse_abilities.cast_dependencies = ({"slot": "E"},)
-        with pytest.raises(
-            ChampionModuleContractError, match=r"parse_abilities\.cast_dependencies"
-        ):
+        with pytest.raises(ValueError, match=r"parse_abilities\.cast_dependencies"):
             contract_from_module("Synthetic", "synthetic", module)
 
     def test_no_registered_champion_carries_a_shadowing_carrier(self) -> None:

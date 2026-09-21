@@ -9,8 +9,8 @@ The shape here removes the recursion without removing the dependency.  A
 *what changes between them*, the program is rebuilt per pass from the same
 inputs plus a :class:`~.build.ParamPatch`, and the walk is entered once per
 pass and never from inside itself.  ``max_passes`` is bounded and declared, so
-a dependency that never settles raises :class:`IncompleteDependency` naming
-itself rather than recursing until the stack ends.
+a dependency that never settles raises through :func:`incomplete_dependency`,
+naming itself rather than recursing until the stack ends.
 
 **The driver takes a pass function**, not a program: one callable, invoked
 once per pass, whose result is either the finished composition or a
@@ -65,37 +65,22 @@ class CrossPassDependency:
             )
 
 
-class IncompleteDependency(RuntimeError):
-    """A declared dependency the pass budget did not satisfy.
+def incomplete_dependency(
+    dependency: CrossPassDependency,
+    passes_run: int,
+    *,
+    detail: str | None = None,
+) -> RuntimeError:
+    """A declared dependency the pass budget did not satisfy, plus *detail*.
 
-    Replaces the untyped ``ValueError`` the recursive path raises.  Untyped
-    is the problem, not the raise: a caller cannot tell "this build needs
-    another pass" from "this build is malformed" when both arrive as the
-    same exception, so one of them gets caught by a handler written for the
-    other.
-
-    ``detail`` carries whatever the *asking* site knows and the declaration
-    does not — which participant, which slot, which ledger came back short.
-    It rides beside the declaration rather than replacing it, because the
-    declaration is what says how many passes were owed and the detail is
-    what says why the last one could not use them.
+    A ``RuntimeError`` and never a ``ValueError``, so a caller can tell
+    "needs another pass" from "this build is malformed".
     """
-
-    def __init__(
-        self,
-        dependency: CrossPassDependency,
-        passes_run: int,
-        *,
-        detail: str | None = None,
-    ) -> None:
-        message = (
-            f"{dependency.mechanic!r} still depends on {dependency.reads!r} "
-            f"after {passes_run} of {dependency.max_passes} declared passes"
-        )
-        super().__init__(f"{message}; {detail}" if detail else message)
-        self.dependency = dependency
-        self.passes_run = passes_run
-        self.detail = detail
+    message = (
+        f"{dependency.mechanic!r} still depends on {dependency.reads!r} "
+        f"after {passes_run} of {dependency.max_passes} declared passes"
+    )
+    return RuntimeError(f"{message}; {detail}" if detail else message)
 
 
 @dataclass(frozen=True, slots=True)
@@ -182,7 +167,7 @@ def run_passes[Result](
         if not isinstance(outcome, PassRequest):
             return outcome
         if outcome.dependency not in declared:
-            raise IncompleteDependency(
+            raise incomplete_dependency(
                 outcome.dependency,
                 index,
                 detail=(
@@ -192,15 +177,15 @@ def run_passes[Result](
             )
         pending = outcome
         patch = patch_for_pass(outcome.dependency, outcome.value, index + 1)
-    raise IncompleteDependency(pending.dependency, budget)
+    raise incomplete_dependency(pending.dependency, budget)
 
 
 __all__ = [
     "CrossPassDependency",
-    "IncompleteDependency",
     "PassFunction",
     "PassOutcome",
     "PassRequest",
+    "incomplete_dependency",
     "pass_count",
     "patch_for_pass",
     "run_passes",

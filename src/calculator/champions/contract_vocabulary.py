@@ -57,10 +57,6 @@ def default_coverage(slots: Mapping[str, Any]) -> dict[str, str]:
     }
 
 
-class ChampionModuleContractError(ValueError):
-    """A registered champion module does not publish a valid contract."""
-
-
 def coverage(*, no_damage: str = "", out_of_scope: str = "") -> dict[str, str]:
     """A module's own five-slot reading, named by exception.
 
@@ -72,11 +68,9 @@ def coverage(*, no_damage: str = "", out_of_scope: str = "") -> dict[str, str]:
     named = no_damage + out_of_scope
     unknown = sorted(set(named) - set(REQUIRED_CHAMPION_SLOTS))
     if unknown:
-        raise ChampionModuleContractError(
-            f"coverage() named {unknown}, which are not champion slots"
-        )
+        raise ValueError(f"coverage() named {unknown}, which are not champion slots")
     if len(set(named)) != len(named):
-        raise ChampionModuleContractError(
+        raise ValueError(
             "coverage() named one slot twice: "
             f"no_damage={no_damage!r} out_of_scope={out_of_scope!r}"
         )

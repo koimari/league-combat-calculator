@@ -233,7 +233,7 @@ def test_an_interpreter_no_declaration_reaches_is_an_orphan_branch(
             if all(rule.family is not family for rule in catalog.behavior_rules(owner))
         ),
     )
-    with pytest.raises(interpreters.InterpreterRegistryError, match=r"orphan|reaches"):
+    with pytest.raises(RuntimeError, match=r"orphan|reaches"):
         interpreters.validate_registrations()
 
 
@@ -246,7 +246,7 @@ def test_a_registration_on_a_lane_the_family_never_declared_is_refused(
         "INTERPRETERS",
         {(RuleFamily.ALLY_PACKET, EngineLane.PAIR_ENGINE): _stub_fields},
     )
-    with pytest.raises(interpreters.InterpreterRegistryError, match="declares no"):
+    with pytest.raises(RuntimeError, match="declares no"):
         interpreters.validate_registrations()
 
 
@@ -268,9 +268,7 @@ def test_a_defence_family_with_no_resolver_is_refused(
             if family is not RuleFamily.SUSTAIN
         },
     )
-    with pytest.raises(
-        interpreters.InterpreterRegistryError, match="no resolver answers"
-    ):
+    with pytest.raises(RuntimeError, match="no resolver answers"):
         interpreters.validate_registrations()
 
 
@@ -423,9 +421,7 @@ def test_an_unserved_lane_with_no_receipt_is_refused(
             if key != (RuleFamily.ON_HIT_STRIKE, EngineLane.PAIR_ENGINE)
         },
     )
-    with pytest.raises(
-        interpreters.InterpreterRegistryError, match="unreceipted zero"
-    ) as raised:
+    with pytest.raises(RuntimeError, match="unreceipted zero") as raised:
         interpreters.validate_registrations()
     assert "on_hit_strike" in str(raised.value)
     assert "pair_engine" in str(raised.value)
@@ -458,9 +454,7 @@ def test_a_dated_gap_receipt_no_declaration_reaches_is_refused(
             )
         },
     )
-    with pytest.raises(
-        interpreters.InterpreterRegistryError, match="receipt for nothing"
-    ) as raised:
+    with pytest.raises(RuntimeError, match="receipt for nothing") as raised:
         interpreters.validate_registrations()
     assert "routes to" not in str(raised.value), (
         "the planted row's route is sound, so the only complaint must be that "
@@ -524,7 +518,7 @@ def test_a_compiled_gap_is_excused_by_the_rules_own_receipt(
     interpreters.validate_registrations()
 
     _only_rule(monkeypatch, _StubRule(RuleFamily.DELTA_AMP, Compilable()))
-    with pytest.raises(interpreters.InterpreterRegistryError, match="unreceipted zero"):
+    with pytest.raises(RuntimeError, match="unreceipted zero"):
         interpreters.validate_registrations()
 
 
@@ -560,9 +554,7 @@ def test_a_subject_its_authority_cannot_see_is_refused(
             )
         },
     )
-    with pytest.raises(
-        interpreters.InterpreterRegistryError, match="which cannot see it"
-    ):
+    with pytest.raises(RuntimeError, match="which cannot see it"):
         interpreters.validate_registrations()
 
 
@@ -652,7 +644,7 @@ def test_a_route_the_registry_does_not_serve_is_refused(
                 if key != (pair[0], via[0])
             },
         )
-    with pytest.raises(interpreters.InterpreterRegistryError, match=complaint):
+    with pytest.raises(RuntimeError, match=complaint):
         interpreters.validate_registrations()
 
 

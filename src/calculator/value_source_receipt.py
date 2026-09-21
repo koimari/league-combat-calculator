@@ -9,15 +9,6 @@ from . import item_effects, rune_effects
 from .reference_vocabulary import VALUE_REGISTRIES, ValueRefError, ValueRegistry
 
 
-class UnsourcedDeclarationError(ValueError):
-    """No citation could be resolved for a declaration's owner.
-
-    Raised by :func:`receipt_for`.  A declaration with no receipt is a number
-    whose provenance is a memory, which is what every audit in this
-    repository exists to make impossible.
-    """
-
-
 @dataclass(frozen=True, slots=True)
 class SourceReceipt:
     """The revision a declaration's numbers were read from.

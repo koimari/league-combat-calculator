@@ -34,7 +34,7 @@ def test_the_registry_is_not_writable_through_its_public_name() -> None:
 
 def test_a_field_with_no_declared_precision_raises_naming_itself() -> None:
     """Fail closed: an undeclared field never gets a default digit count."""
-    with pytest.raises(precision.UnregisteredField) as excinfo:
+    with pytest.raises(KeyError) as excinfo:
         precision.digits_for("a_field_nobody_declared")
     assert "a_field_nobody_declared" in str(excinfo.value)
     assert "ROUNDING" in str(excinfo.value)
@@ -49,7 +49,7 @@ def test_round_field_rounds_at_the_declared_precision() -> None:
 
 def test_round_field_refuses_a_field_it_has_no_precision_for() -> None:
     """``round_field`` is ``digits_for`` plus a call; it fails the same way."""
-    with pytest.raises(precision.UnregisteredField):
+    with pytest.raises(KeyError):
         precision.round_field("a_field_nobody_declared", 1.0)
 
 
@@ -144,11 +144,11 @@ class TestTheSumPlanCountsEachEventOnce:
         id makes that panel's own rows repeat -- so it raises where the
         cross-panel case is recorded.
         """
-        with pytest.raises(sums.DuplicateSumMember, match="twice"):
+        with pytest.raises(ValueError, match="twice"):
             sums.sum_plan({"events": [{"event_id": "d0"}, {"event_id": "d0"}]})
 
     def test_the_refusal_is_on_the_type_not_on_the_builder(self) -> None:
-        with pytest.raises(sums.DuplicateSumMember):
+        with pytest.raises(ValueError):
             sums.SumPlan(members=(("events", "x"), ("events", "x")))
 
     def test_a_row_with_no_id_contributes_no_member(self) -> None:

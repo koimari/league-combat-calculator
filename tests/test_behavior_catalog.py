@@ -49,7 +49,7 @@ def test_the_tag_map_is_total_and_single_valued() -> None:
 
 def test_a_new_effect_tag_fails_the_catalog() -> None:
     """R-05's red for the tag closure, through the validator's seam."""
-    with pytest.raises(catalog.BehaviorCatalogError, match="unmapped"):
+    with pytest.raises(RuntimeError, match="unmapped"):
         catalog._validate_tag_closure(  # pylint: disable=protected-access
             frozenset(known_effect_types()) | {"brand_new_mechanic"}
         )
@@ -64,7 +64,7 @@ def test_the_catalog_import_runs_the_tag_closure(
         "known_effect_types",
         lambda: frozenset(known_effect_types()) | {"brand_new_mechanic"},
     )
-    with pytest.raises(catalog.BehaviorCatalogError):
+    with pytest.raises(RuntimeError):
         catalog.validate_catalog()
 
 
@@ -99,7 +99,7 @@ def test_every_action_kind_has_a_family() -> None:
 
 def test_a_new_action_kind_fails_the_catalog() -> None:
     """R-05's red for the ActionKind closure."""
-    with pytest.raises(catalog.BehaviorCatalogError, match="ActionKind"):
+    with pytest.raises(RuntimeError, match="ActionKind"):
         catalog._validate_action_kind_closure(  # pylint: disable=protected-access
             frozenset(ActionKind) | {"a_new_transition"}
         )
@@ -123,7 +123,7 @@ def test_every_defense_mechanic_is_declared_or_cited() -> None:
 
 def test_a_new_defense_mechanic_fails_the_catalog() -> None:
     """R-05's red for the defensive closure."""
-    with pytest.raises(catalog.BehaviorCatalogError, match="unmapped"):
+    with pytest.raises(RuntimeError, match="unmapped"):
         catalog._validate_defense_source_closure(  # pylint: disable=protected-access
             frozenset(DefenseMechanic) | {"a_new_defence"}
         )
@@ -155,7 +155,7 @@ def test_an_unnamed_delta_amp_tag_fails_the_catalog(
 ) -> None:
     """R-05's red for the partial-migration closure."""
     monkeypatch.setattr(catalog, "MIGRATED_DELTA_AMP_TAGS", frozenset())
-    with pytest.raises(catalog.BehaviorCatalogError, match="unnamed"):
+    with pytest.raises(RuntimeError, match="unnamed"):
         catalog.validate_catalog()
 
 
@@ -206,7 +206,7 @@ def test_an_h4_tag_without_a_reason_fails_the_catalog(
     reasons = dict(catalog.H4_TAG_REASONS)
     reasons.pop("target_state")
     monkeypatch.setattr(catalog, "H4_TAG_REASONS", reasons)
-    with pytest.raises(catalog.BehaviorCatalogError, match="reason"):
+    with pytest.raises(RuntimeError, match="reason"):
         catalog.validate_catalog()
 
 
@@ -261,7 +261,7 @@ def test_an_unknown_tag_in_the_registry_raises_rather_than_compiling_nothing(
     entry = dict(ITEM_EFFECTS["Black Cleaver"])
     entry["type"] = "not_a_known_tag"
     monkeypatch.setitem(ITEM_EFFECTS, "Black Cleaver", entry)
-    with pytest.raises(catalog.BehaviorCatalogError, match="no family claims"):
+    with pytest.raises(RuntimeError, match="no family claims"):
         catalog.behavior_rules("Black Cleaver")
 
 
@@ -325,9 +325,9 @@ class TestBuiltPerRule:
         """The fold adds no error handling of its own: a stop reaches the caller."""
 
         def build(rule, ctx):
-            raise catalog.BehaviorCatalogError(f"{rule.owner} cannot build")
+            raise RuntimeError(f"{rule.owner} cannot build")
 
-        with pytest.raises(catalog.BehaviorCatalogError, match="cannot build"):
+        with pytest.raises(RuntimeError, match="cannot build"):
             catalog.built_per_rule(
                 catalog.behavior_rules("Black Cleaver"), build, facts=self._FACTS
             )
@@ -341,7 +341,7 @@ def test_an_unexplained_certified_mechanic_fails_the_catalog() -> None:
     unexplainable to the caller it refuses, which is the failure this campaign
     exists to remove rather than a new one it may introduce.
     """
-    with pytest.raises(catalog.BehaviorCatalogError, match="unexplained"):
+    with pytest.raises(RuntimeError, match="unexplained"):
         catalog._validate_event_certification(  # pylint: disable=protected-access
             {DefenseMechanic.LIFELINE_MAW: ""}
         )

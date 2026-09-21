@@ -105,7 +105,7 @@ class TestTheEntryShapeDecidesWhoCarriesAProducer:
         """A broken parse must not read as an item that emits nothing."""
         entry = dict(catalog.item_effects.ITEM_EFFECTS["Fimbulwinter"])
         del entry["everlasting_duration"]
-        with pytest.raises(catalog.BehaviorCatalogError, match="partly-parsed"):
+        with pytest.raises(RuntimeError, match="partly-parsed"):
             catalog.producers_for("ITEM_EFFECTS", entry)
 
     def test_one_record_may_carry_two_producers(self) -> None:

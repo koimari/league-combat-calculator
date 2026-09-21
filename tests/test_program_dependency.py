@@ -2,9 +2,9 @@
 
 ``program/dependency`` is the front door for cross-pass work.  What it has to
 buy over the recursive path is boundedness and a type: a dependency declares
-how many passes it needs, a pass budget that runs out raises
-:class:`IncompleteDependency` rather than the untyped ``ValueError`` a caller
-cannot tell from a malformed build, and passes are shared rather than summed.
+how many passes it needs, a pass budget that runs out raises a
+``RuntimeError`` rather than the ``ValueError`` a caller cannot tell from a
+malformed build, and passes are shared rather than summed.
 
 S4 landed the declaration; S8 lands :func:`~.dependency.run_passes`, the
 driver that consumes it, and the properties asserted of the driver are the
@@ -82,20 +82,20 @@ class TestTheSecondPassDiffersOnlyByAPatch:
 class TestTheFailureIsTypedRatherThanUntyped:
     """A caller can tell "needs another pass" from "this build is malformed"."""
 
-    def test_it_carries_the_dependency_and_the_passes_run(self) -> None:
-        error = dependency.IncompleteDependency(CATALYST, 2)
-        assert error.dependency is CATALYST
-        assert error.passes_run == 2
+    def test_it_names_the_dependency_and_the_passes_run(self) -> None:
+        error = dependency.incomplete_dependency(CATALYST, 2)
         assert "catalyst_pool" in str(error)
+        assert "after 2 of" in str(error)
 
     def test_it_is_not_a_bare_value_error(self) -> None:
-        assert not issubclass(dependency.IncompleteDependency, ValueError)
+        error = dependency.incomplete_dependency(CATALYST, 2)
+        assert isinstance(error, RuntimeError)
+        assert not isinstance(error, ValueError)
 
     def test_a_detail_rides_along_without_replacing_the_declaration(self) -> None:
-        error = dependency.IncompleteDependency(
+        error = dependency.incomplete_dependency(
             CATALYST, 1, detail="ally:Lulu exposes no finite pre-mitigation damage"
         )
-        assert error.dependency is CATALYST
         assert "catalyst_pool" in str(error)
         assert "ally:Lulu" in str(error)
 
@@ -155,19 +155,19 @@ class TestTheBudgetRaisesRatherThanRecursing:
             calls.append(index)
             return dependency.PassRequest(CATALYST, float(index))
 
-        with pytest.raises(dependency.IncompleteDependency) as raised:
+        with pytest.raises(RuntimeError) as raised:
             dependency.run_passes(run_pass, (CATALYST,))
         assert calls == [1, 2]
-        assert raised.value.passes_run == 2
-        assert raised.value.dependency is CATALYST
+        assert "after 2 of" in str(raised.value)
+        assert CATALYST.mechanic in str(raised.value)
 
     def test_an_undeclared_request_is_refused_by_name(self) -> None:
         """A roster that declared nothing gets one pass, and says so."""
-        with pytest.raises(dependency.IncompleteDependency) as raised:
+        with pytest.raises(RuntimeError) as raised:
             dependency.run_passes(
                 lambda index, patch: dependency.PassRequest(CATALYST, 1.0), ()
             )
-        assert raised.value.passes_run == 1
+        assert "after 1 of" in str(raised.value)
         assert "declares no" in str(raised.value)
 
     def test_the_driver_returns_the_pass_result_untouched(self) -> None:

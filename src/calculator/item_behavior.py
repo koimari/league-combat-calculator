@@ -53,11 +53,6 @@ from .reference_vocabulary import ValueRefError
 from .value_ref import VALUE_REF_TYPES, AnyValueRef, LevelValueRef, resolve_flat
 from .value_source_receipt import SourceReceipt
 
-
-class BehaviorRuleError(ValueError):
-    """A declaration is structurally impossible — checked without imports."""
-
-
 # ── lanes and families ────────────────────────────────────────────────────
 
 
@@ -243,7 +238,7 @@ class ReceiptOnly:
     def __post_init__(self) -> None:
         """A fallback with no stated cause is the silence this phase removes."""
         if not self.reason.strip():
-            raise BehaviorRuleError("ReceiptOnly needs a reason")
+            raise ValueError("ReceiptOnly needs a reason")
 
 
 Compilability = Compilable | ReceiptOnly
@@ -623,12 +618,12 @@ class Typing:
     def __post_init__(self) -> None:
         """Reject the empty-means-all spelling D-04 bans."""
         if not self.damage_classes:
-            raise BehaviorRuleError(
+            raise ValueError(
                 "Typing.damage_classes must name every class the rule applies "
                 "to; empty-means-all is banned (D-04)"
             )
         if not self.attack_classes:
-            raise BehaviorRuleError(
+            raise ValueError(
                 "Typing.attack_classes must name every class the rule applies "
                 "to; empty-means-all is banned (D-04)"
             )
@@ -695,12 +690,12 @@ def chain_rank(slot: AmpChainSlot) -> int:
 def _validate_amp_chain() -> None:
     """The chain names every slot exactly once, checked at import."""
     if len(AMP_CHAIN_ORDER) != len(frozenset(AMP_CHAIN_ORDER)):
-        raise BehaviorRuleError("AMP_CHAIN_ORDER holds a slot twice")
+        raise ValueError("AMP_CHAIN_ORDER holds a slot twice")
     if frozenset(AMP_CHAIN_ORDER) != frozenset(AmpChainSlot):
         missing = sorted(
             slot.value for slot in frozenset(AmpChainSlot) - frozenset(AMP_CHAIN_ORDER)
         )
-        raise BehaviorRuleError(f"AMP_CHAIN_ORDER omits chain slots: {missing}")
+        raise ValueError(f"AMP_CHAIN_ORDER omits chain slots: {missing}")
 
 
 _validate_amp_chain()
@@ -851,14 +846,14 @@ class DamageFormula:
     def __post_init__(self) -> None:
         """A formula with no terms is a number nobody declared."""
         if not self.terms:
-            raise BehaviorRuleError(
+            raise ValueError(
                 "a DamageFormula names at least one term; a formula with no "
                 "shares is an item that quietly deals nothing"
             )
         if not isinstance(self.scaling, SCALING_TYPES):
-            raise BehaviorRuleError("a DamageFormula declares its scaling")
+            raise ValueError("a DamageFormula declares its scaling")
         if not isinstance(self.floor, FLOOR_TYPES):
-            raise BehaviorRuleError("a DamageFormula declares its floor")
+            raise ValueError("a DamageFormula declares its floor")
 
 
 @dataclass(frozen=True, slots=True)
@@ -904,7 +899,7 @@ class SecondaryDelivery(Enum):
         for member in cls:
             if member.value[0] == tag:
                 return member
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{tag!r} is not one of the declared secondary deliveries "
             f"{sorted(member.value[0] for member in cls)}"
         )
@@ -2789,23 +2784,23 @@ def validate_rule(rule: BehaviorRule) -> None:
     later tiers' questions, deliberately not asked here.
     """
     if not rule.owner.strip():
-        raise BehaviorRuleError("a BehaviorRule names an owner")
+        raise ValueError("a BehaviorRule names an owner")
     if not rule.mechanic_id.strip():
-        raise BehaviorRuleError(f"{rule.owner!r}: a BehaviorRule names a mechanic_id")
+        raise ValueError(f"{rule.owner!r}: a BehaviorRule names a mechanic_id")
     declared = PAYLOAD_FAMILY.get(type(rule.payload))
     if declared is None:
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: {type(rule.payload).__name__} is not a declared "
             "payload type; add it to PAYLOAD_FAMILY in the slice that migrates "
             "its family"
         )
     if declared is not rule.family:
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: payload {type(rule.payload).__name__} belongs to "
             f"{declared.value}, not {rule.family.value}"
         )
     if not isinstance(rule.compilability, COMPILABILITY_TYPES):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: compilability is not declared")
+        raise ValueError(f"{rule.mechanic_id}: compilability is not declared")
     _validate_policy_types(rule)
     _validate_payload(rule)
 
@@ -2821,7 +2816,7 @@ def _validate_payload(rule: BehaviorRule) -> None:
     payload = rule.payload
     validate = PAYLOAD_VALIDATORS.get(type(payload))
     if validate is None:
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: {type(payload).__name__} has no structural "
             "reading; add it to PAYLOAD_VALIDATORS beside its PAYLOAD_FAMILY row"
         )
@@ -2912,13 +2907,13 @@ def _validate_cooldown_proc(rule: BehaviorRule, payload: CooldownProcRule) -> No
         "late_phase",
     ):
         if not isinstance(getattr(payload, name), bool):
-            raise BehaviorRuleError(
+            raise ValueError(
                 f"{rule.mechanic_id}: {name} is a declared bool with no default"
             )
     if (payload.threshold is not None) != (
         payload.trigger is ProcTrigger.DAMAGE_THRESHOLD
     ):
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a damage-threshold trigger carries its share "
             "and window, and no other trigger may; the two are one statement"
         )
@@ -2946,7 +2941,7 @@ def _validate_spellblade(rule: BehaviorRule, payload: SpellbladeRule) -> None:
         (payload.self_heal_ap_ratio, payload.self_heal_bonus_health_ratio),
     ):
         if (pair[0] is None) != (pair[1] is None):
-            raise BehaviorRuleError(
+            raise ValueError(
                 f"{rule.mechanic_id}: a sibling mechanic is declared whole or "
                 "not at all; half of one is a parse that dropped a number"
             )
@@ -2965,12 +2960,12 @@ def _validate_periodic(rule: BehaviorRule, payload: PeriodicRule) -> None:
     _validate_refs(rule, optional, optional=True)
     for name, value in optional.items():
         if value is not None and name not in allowed:
-            raise BehaviorRuleError(
+            raise ValueError(
                 f"{rule.mechanic_id}: a {payload.cadence.value} strike declares "
                 f"{name}, which belongs to a different cadence"
             )
     if payload.cadence is PeriodicCadence.REFRESHED_BURN and payload.duration is None:
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a burn is a window one hit re-arms and has to "
             "say how long that window is"
         )
@@ -2992,7 +2987,7 @@ def _validate_refs(
         if optional and value is None:
             continue
         if not isinstance(value, VALUE_REF_TYPES):
-            raise BehaviorRuleError(
+            raise ValueError(
                 f"{rule.mechanic_id}: {name} is a sourced reference, never a "
                 "number in the declaration"
                 + (" (or None where the mechanic has none)" if optional else "")
@@ -3009,7 +3004,7 @@ def _validate_swing_schedule(rule: BehaviorRule, payload: SwingScheduleRule) -> 
     """
     stacks, window = payload.decaying_stacks, payload.refunded_window
     if stacks is None and window is None:
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a swing schedule declares a ramp, a re-armed "
             "window or both; one that schedules neither is a dropped key group "
             "rather than an item whose attacks land at the ordinary rate"
@@ -3040,16 +3035,14 @@ def _validate_formula(rule: BehaviorRule, formula: DamageFormula) -> None:
     """A formula's terms are sourced shares of declared bases."""
     for term in formula.terms:
         if not isinstance(term, Term):
-            raise BehaviorRuleError(f"{rule.mechanic_id}: a formula holds Terms")
+            raise ValueError(f"{rule.mechanic_id}: a formula holds Terms")
         if not isinstance(term.basis, Basis):
-            raise BehaviorRuleError(
-                f"{rule.mechanic_id}: a term says what it is a share of"
-            )
+            raise ValueError(f"{rule.mechanic_id}: a term says what it is a share of")
         if not isinstance(
             term.coefficient,
             (*VALUE_REF_TYPES, MeleeRangedSplit, LevelSteppedRate),
         ):
-            raise BehaviorRuleError(
+            raise ValueError(
                 f"{rule.mechanic_id}: a term's coefficient is a sourced "
                 "reference, never a number in the declaration"
             )
@@ -3061,9 +3054,7 @@ def _validate_secondary_target(
     """A secondary-target rule names a count and a share, both sourced."""
     for field_name in ("max_targets", "damage_share"):
         if not isinstance(getattr(payload, field_name), VALUE_REF_TYPES):
-            raise BehaviorRuleError(
-                f"{rule.mechanic_id}: {field_name} is a sourced reference"
-            )
+            raise ValueError(f"{rule.mechanic_id}: {field_name} is a sourced reference")
 
 
 def _validate_defense(rule: BehaviorRule, payload: RulePayload) -> None:
@@ -3075,18 +3066,16 @@ def _validate_defense(rule: BehaviorRule, payload: RulePayload) -> None:
     registry that owns it.
     """
     if not isinstance(payload.mechanic, DefenseMechanic):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: a defence names one DefenseMechanic"
-        )
+        raise ValueError(f"{rule.mechanic_id}: a defence names one DefenseMechanic")
     for field in payload.writes:
         if field not in DEFENSE_FIELD_COMBINE:
-            raise BehaviorRuleError(
+            raise ValueError(
                 f"{rule.mechanic_id}: {field!r} is not a defensive field with a "
                 "declared combine rule"
             )
     for index, reference in enumerate(payload.values):
         if not isinstance(reference, VALUE_REF_TYPES):
-            raise BehaviorRuleError(
+            raise ValueError(
                 f"{rule.mechanic_id}: value {index} is a sourced reference, "
                 "never a number in the declaration"
             )
@@ -3099,9 +3088,7 @@ def _validate_defense(rule: BehaviorRule, payload: RulePayload) -> None:
     if isinstance(payload, ReactiveRule) and not isinstance(
         payload.trigger, TriggerEvent
     ):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: a reactive defence says what arms it"
-        )
+        raise ValueError(f"{rule.mechanic_id}: a reactive defence says what arms it")
 
 
 def _validate_ally_packet(rule: BehaviorRule, payload: AllyPacketRule) -> None:
@@ -3114,34 +3101,34 @@ def _validate_ally_packet(rule: BehaviorRule, payload: AllyPacketRule) -> None:
     stop filling in.
     """
     if not payload.packets:
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a producer that emits no packet is an item "
             "that quietly does nothing"
         )
     kinds: list[PacketKind] = []
     for spec in payload.packets:
         if not isinstance(spec, PacketSpec):
-            raise BehaviorRuleError(f"{rule.mechanic_id}: packets holds PacketSpecs")
+            raise ValueError(f"{rule.mechanic_id}: packets holds PacketSpecs")
         if not isinstance(spec.kind, PacketKind) or not isinstance(
             spec.recipients, Recipients
         ):
-            raise BehaviorRuleError(
+            raise ValueError(
                 f"{rule.mechanic_id}: a packet names a kind and its recipients"
             )
         if spec.kind in kinds:
-            raise BehaviorRuleError(
+            raise ValueError(
                 f"{rule.mechanic_id}: declares {spec.kind.value} twice; one kind "
                 "is one declared packet"
             )
         kinds.append(spec.kind)
     _validate_secondary_recipients(rule, payload)
     if not payload.values:
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a producer declares the numbers it reads"
         )
     for reference in payload.values:
         if not isinstance(reference, VALUE_REF_TYPES):
-            raise BehaviorRuleError(
+            raise ValueError(
                 f"{rule.mechanic_id}: values holds sourced references, never "
                 "numbers in the declaration"
             )
@@ -3159,7 +3146,7 @@ def _validate_ramp_subjects(rule: BehaviorRule, payload: AllyPacketRule) -> None
         if not isinstance(ramp, LevelRamp) or not isinstance(
             ramp.subject, LevelSubject
         ):
-            raise BehaviorRuleError(
+            raise ValueError(
                 f"{rule.mechanic_id}: a level ramp names its two ends and "
                 "whose level reads it"
             )
@@ -3172,7 +3159,7 @@ def _validate_ramp_subjects(rule: BehaviorRule, payload: AllyPacketRule) -> None
         if isinstance(reference, LevelValueRef)
     )
     if declared != scaled:
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: level ramps {declared} and level-scaled "
             f"values {scaled} disagree; a ramp with no declared subject is a "
             "number read at a guessed level"
@@ -3186,20 +3173,20 @@ def _validate_secondary_recipients(rule: BehaviorRule, payload: AllyPacketRule) 
         spec.recipients for spec in payload.packets if spec.recipients is not primary
     }
     if len(others) > 1:
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: reaches {len(others) + 1} recipient classes and "
             "secondary_target names one; a third class needs its own declared axis"
         )
     if not others:
         if payload.secondary_target is not None:
-            raise BehaviorRuleError(
+            raise ValueError(
                 f"{rule.mechanic_id}: every packet lands on {primary.value} and "
                 "the rule still declares a secondary_target"
             )
         return
     (second,) = others
     if payload.secondary_target is not second:
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: emits to {second.value} beside {primary.value} "
             f"and declares secondary_target={payload.secondary_target}; the "
             "second class a producer reaches is declared, never inferred (D-50)"
@@ -3209,7 +3196,7 @@ def _validate_secondary_recipients(rule: BehaviorRule, payload: AllyPacketRule) 
 def _validate_shred_payload(rule: BehaviorRule, payload: ResistanceShredRule) -> None:
     """A shred names a resistance, a ramp and the damage that applies a stack."""
     if payload.subject is not Subject.TARGET:
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a resistance shred acts on the target's "
             "resistances; no other subject has any to reduce"
         )
@@ -3366,7 +3353,7 @@ def _validate_stat_reference(
 def _validate_stat_derivation(rule: BehaviorRule, payload: RulePayload) -> None:
     """A stat derivation says which stat, from where, and how it is available."""
     if not isinstance(payload.availability, StatAvailability):
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a stat derivation declares when the stat is "
             "in the block the engines read; an undeclared availability is the "
             "assumed-active claim this family exists to make visible"
@@ -3377,20 +3364,18 @@ def _validate_stat_derivation(rule: BehaviorRule, payload: RulePayload) -> None:
         else Subject.HOLDER
     )
     if payload.subject is not expected:
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a stat derivation acts on {expected.value}; "
             "only an aura reduces a stat on somebody else"
         )
     if isinstance(payload, StatConversionRule) and not isinstance(
         payload.basis, StatBasis
     ):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: a conversion names the stat it reads"
-        )
+        raise ValueError(f"{rule.mechanic_id}: a conversion names the stat it reads")
     if isinstance(payload, RestrictedChannelRule) and not isinstance(
         payload.channel, RestrictedChannel
     ):
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a restricted channel names the channel its "
             "number reaches; an unnamed one is the mis-channelling the "
             "declaration exists to refuse"
@@ -3398,7 +3383,7 @@ def _validate_stat_derivation(rule: BehaviorRule, payload: RulePayload) -> None:
     if not isinstance(payload, STAT_DERIVATION_UNGRANTED_PAYLOADS) and not isinstance(
         getattr(payload, "granted", None), DerivedStat
     ):
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a stat derivation names the stat it grants"
         )
     if (
@@ -3406,7 +3391,7 @@ def _validate_stat_derivation(rule: BehaviorRule, payload: RulePayload) -> None:
         and payload.transform_bonus_mana is not None
         and payload.max_charges is None
     ):
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a manaflow ledger that transforms declares "
             "the charge ceiling it transforms at; a transform with no ceiling "
             "is a parse that dropped a key"
@@ -3420,14 +3405,14 @@ def _validate_stat_derivation(rule: BehaviorRule, payload: RulePayload) -> None:
 def _validate_sustain(rule: BehaviorRule, payload: RulePayload) -> None:
     """A sustain rule heals its holder and reads only sourced numbers."""
     if payload.subject is not Subject.HOLDER:
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a sustain rule puts health back on the holder "
             "and declares no other subject; a heal aimed elsewhere is an ally "
             "packet"
         )
     if isinstance(payload, SustainStatRule):
         if not isinstance(payload.stat, SustainStat):
-            raise BehaviorRuleError(
+            raise ValueError(
                 f"{rule.mechanic_id}: a stat grant says which vampirism stat it feeds"
             )
         _validate_saturating_grant(rule, payload)
@@ -3468,9 +3453,9 @@ def _validate_damage_routing(
 ) -> None:
     """A routing rule names its typing and acts on the target it re-routes."""
     if not isinstance(payload.typing, Typing):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: typing is not declared (D-04)")
+        raise ValueError(f"{rule.mechanic_id}: typing is not declared (D-04)")
     if payload.subject is not Subject.TARGET:
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a routing rule changes where damage lands on "
             "the target and has no other subject"
         )
@@ -3486,9 +3471,9 @@ def _validate_crit_profile(
     a rule reading a number no engine gives it.
     """
     if not isinstance(payload.typing, Typing):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: typing is not declared (D-04)")
+        raise ValueError(f"{rule.mechanic_id}: typing is not declared (D-04)")
     if payload.subject is not Subject.HOLDER:
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a crit profile changes the holder's own "
             "critical strikes and has no other subject"
         )
@@ -3496,7 +3481,7 @@ def _validate_crit_profile(
         _validate_refs(rule, {"bonus": payload.bonus})
         return
     if not isinstance(payload.occurrence, CritOccurrence):
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a forced crit says which strike it lands on"
         )
     _validate_refs(
@@ -3506,7 +3491,7 @@ def _validate_crit_profile(
     if payload.heal is None:
         return
     if not isinstance(payload.heal, ForcedCritHeal):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: heal is not a ForcedCritHeal")
+        raise ValueError(f"{rule.mechanic_id}: heal is not a ForcedCritHeal")
     _validate_refs(
         rule,
         {
@@ -3524,11 +3509,11 @@ def _validate_execute(rule: BehaviorRule, payload: ExecuteRule) -> None:
     _validate_refs(rule, {"threshold": payload.threshold})
 
 
-def _validate_shield_bypass(rule: BehaviorRule, payload: ShieldBypassRule) -> None:
+def _validate_shield_bypass(rule: BehaviorRule, payload: RulePayload) -> None:
     """A shield bypass pays melee and ranged holders differently, on a trigger."""
     _validate_damage_routing(rule, payload)
     if not isinstance(payload.fraction, MeleeRangedSplit):
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a shield bypass pays melee and ranged "
             "holders differently and declares both"
         )
@@ -3541,18 +3526,16 @@ def _validate_shield_bypass(rule: BehaviorRule, payload: ShieldBypassRule) -> No
         },
     )
     if not isinstance(payload.trigger, TriggerEvent):
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a shield bypass says what opens its window"
         )
 
 
-def _validate_cooldown_refund(
-    rule: BehaviorRule, payload: AttackCooldownRefundRule
-) -> None:
+def _validate_cooldown_refund(rule: BehaviorRule, payload: RulePayload) -> None:
     """A cooldown refund names its share and the event that pays it."""
     _validate_refs(rule, {"refund_fraction": payload.refund_fraction})
     if not isinstance(payload.trigger, TriggerEvent):
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: a cooldown refund names the event that refunds it"
         )
 
@@ -3560,28 +3543,28 @@ def _validate_cooldown_refund(
 def _validate_amp_axes(rule: BehaviorRule, payload: RulePayload) -> None:
     """Each of an amplifier's policy axes is a member of its own union."""
     if not isinstance(payload.activation, ACTIVATION_TYPES):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: activation is not in the union")
+        raise ValueError(f"{rule.mechanic_id}: activation is not in the union")
     if not isinstance(payload.consumption, CONSUMPTION_TYPES):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: consumption is not in the union")
+        raise ValueError(f"{rule.mechanic_id}: consumption is not in the union")
     if not isinstance(payload.magnitude, MAGNITUDE_TYPES):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: magnitude is not in the union")
+        raise ValueError(f"{rule.mechanic_id}: magnitude is not in the union")
     if not isinstance(payload.typing, Typing):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: typing is not declared (D-04)")
+        raise ValueError(f"{rule.mechanic_id}: typing is not declared (D-04)")
     if not isinstance(payload.bonus_typing, BonusTyping):
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: bonus_typing must say what the bonus lands as"
         )
 
 
-def _validate_delta_amp(rule: BehaviorRule, payload: DeltaAmpRule) -> None:
+def _validate_delta_amp(rule: BehaviorRule, payload: RulePayload) -> None:
     """A chained amplifier's axes, plus the chain position it acts at."""
     _validate_amp_axes(rule, payload)
     if isinstance(payload.lane_chain_rank, bool) or not isinstance(
         payload.lane_chain_rank, int
     ):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: lane_chain_rank must be an int")
+        raise ValueError(f"{rule.mechanic_id}: lane_chain_rank must be an int")
     if not 0 <= payload.lane_chain_rank < len(AMP_CHAIN_ORDER):
-        raise BehaviorRuleError(
+        raise ValueError(
             f"{rule.mechanic_id}: lane_chain_rank {payload.lane_chain_rank} names no "
             "slot in AMP_CHAIN_ORDER"
         )
@@ -3692,7 +3675,7 @@ def _validate_policy_types(rule: BehaviorRule) -> None:
     """
     for site, value in policy_walk(rule).sites:
         if callable(value) or isinstance(value, (dict, str)):
-            raise BehaviorRuleError(
+            raise ValueError(
                 f"{rule.mechanic_id}: policy field {site} holds a "
                 f"{type(value).__name__}; every policy axis is a closed union "
                 "or a ValueRef, and the identifier and citation fields are the "
@@ -3968,7 +3951,6 @@ __all__ = [
     "AttackCooldownRefundRule",
     "Basis",
     "BehaviorRule",
-    "BehaviorRuleError",
     "BelowHalfHealingRule",
     "BonusTyping",
     "BuildContext",

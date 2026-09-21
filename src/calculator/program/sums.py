@@ -14,17 +14,6 @@ from typing import Any
 SUM_PANELS: tuple[str, ...] = ("events", "healing_events", "support_events")
 
 
-class DuplicateSumMember(ValueError):
-    """One panel published one event id twice, so its own rows repeat.
-
-    Named rather than generic because the failure it describes has no
-    symptom: a total that counted one event twice is a plausible number.
-    This is the unambiguous half — a *panel* repeating an id is a defect
-    whatever the id means.  The cross-panel half is not a defect and is not
-    refused; see :attr:`SumPlan.shared`.
-    """
-
-
 @dataclass(frozen=True, slots=True)
 class SumPlan:
     """The event ids one published total sums, in the order it sums them.
@@ -76,7 +65,7 @@ class SumPlan:
         seen: dict[tuple[str, str], bool] = {}
         for member in self.members:
             if member in seen:
-                raise DuplicateSumMember(
+                raise ValueError(
                     f"panel {member[0]!r} publishes event id {member[1]!r} twice; "
                     "its own rows would count that event twice"
                 )

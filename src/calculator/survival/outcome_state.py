@@ -55,7 +55,7 @@ OUTCOME_FIELDS: tuple[str, ...] = (
 )
 
 
-def outcome_rewritten(slot: int, field: str, old: Any, new: Any) -> StarvedSignal:
+def outcome_rewritten(slot: int, field: str, old: object, new: object) -> StarvedSignal:
     """A transition answered a question another transition already answered.
 
     The slot, the field and both values are in the message, because "a field
@@ -76,7 +76,9 @@ def outcome_rewritten(slot: int, field: str, old: Any, new: Any) -> StarvedSigna
     )
 
 
-def duplicate_applied(key: tuple[Any, ...], first: int, second: int) -> StarvedSignal:
+def duplicate_applied(
+    key: tuple[str, int, int], first: int, second: int
+) -> StarvedSignal:
     """Two producers claimed the same applied contribution.
 
     At most one applied contribution exists per ``(mechanic, subject,

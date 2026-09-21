@@ -24,7 +24,7 @@ from src.calculator.value_ref import (
     resolve,
     resolve_flat,
 )
-from src.calculator.value_source_receipt import SourceReceipt, UnsourcedDeclarationError
+from src.calculator.value_source_receipt import SourceReceipt
 
 
 def test_the_registry_union_is_three_members() -> None:
@@ -205,7 +205,7 @@ def test_receipt_for_reads_the_entry_when_the_citation_is_complete(
 
 def test_a_partial_citation_is_not_silently_completed() -> None:
     """Two of three keys is not a receipt, and no rung invents the third."""
-    with pytest.raises(UnsourcedDeclarationError, match="Abyssal Mask"):
+    with pytest.raises(ValueError, match="Abyssal Mask"):
         receipt_for("ALLY_ITEM_EFFECTS", "Abyssal Mask")
 
 
@@ -223,7 +223,7 @@ def test_the_declared_constant_is_the_second_rung() -> None:
 
 def test_an_unsourced_owner_raises_rather_than_returning_a_blank_receipt() -> None:
     """No rule is declared against a number nobody can point at."""
-    with pytest.raises(UnsourcedDeclarationError):
+    with pytest.raises(ValueError):
         receipt_for("ITEM_EFFECTS", "No Such Item")
 
 

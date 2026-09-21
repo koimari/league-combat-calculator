@@ -48,7 +48,6 @@ from src.calculator.item_behavior_catalog import (
     COMPILED_KERNEL_CAN_AMP,
     COMPILED_KERNEL_CANNOT_AMP,
     RUNE_AMP_SLOTS,
-    BehaviorCatalogError,
     behavior_rules,
     build_context,
     rule_owners,
@@ -355,7 +354,7 @@ def test_a_missing_command_key_names_the_item_and_the_key(
     broken = dict(ALLY_ITEM_EFFECTS["Imperial Mandate"])
     broken.pop(dropped)
     monkeypatch.setitem(ALLY_ITEM_EFFECTS, "Imperial Mandate", broken)
-    with pytest.raises(BehaviorCatalogError, match=f"Imperial Mandate.*{dropped}"):
+    with pytest.raises(RuntimeError, match=f"Imperial Mandate.*{dropped}"):
         _command_slot("Imperial Mandate")
 
 
