@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-#: ``TRAPS.md`` holds 6,035 words in the house form, one fact and one fix per
+#: ``TRAPS.md`` holds 6,098 words in the house form, one fact and one fix per
 #: bullet at about 40 words. Its number is a ceiling, not headroom: a new trap
 #: fits by being written that way, and lifting the ceiling takes a reason in
 #: the commit that lifts it. The other two hold a fixed subject and their
