@@ -210,8 +210,8 @@ SLOTS = {
 }
 
 # The revision this declaration was read from, the same parent entry
-# SOURCES publishes below. scripts/cast_dependency_audit.py asks that a
-# declaration carry one.
+# SOURCES publishes below. ``cast_dependency`` validates the
+# ``<wiki url>@<revision_id>`` shape on every declaration.
 _WIKI_SOURCE = "https://wiki.leagueoflegends.com/en-us/Brand@4023911"
 
 # Head only. Q opening is the mechanic below; the rest of the seed

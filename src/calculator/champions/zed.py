@@ -126,8 +126,8 @@ MODULE_COVERAGE = coverage(no_damage="PW")
 OPTIONS: list[dict[str, Any]] = []
 
 # The revision these declarations were read from, the parent entry SOURCES
-# publishes. scripts/cast_dependency_audit.py asks that a declaration
-# carry one.
+# publishes. ``cast_dependency`` validates the ``<wiki url>@<revision_id>``
+# shape on every declaration.
 _WIKI_SOURCE = "https://wiki.leagueoflegends.com/en-us/Zed@4026038"
 
 _SHADOW_MIMICS_Q_AND_E = (

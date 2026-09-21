@@ -368,8 +368,8 @@ MODULE_CC = {
 }
 
 # The revision these declarations were read from, the same parent entry
-# SOURCES publishes below. scripts/cast_dependency_audit.py asks that a
-# declaration carry one.
+# SOURCES publishes below. ``cast_dependency`` validates the
+# ``<wiki url>@<revision_id>`` shape on every declaration.
 _WIKI_SOURCE = "https://wiki.leagueoflegends.com/en-us/Syndra@4024662"
 
 _STUN_RIDES_A_SPHERE = (
