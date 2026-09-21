@@ -366,7 +366,7 @@ class TestOnTheHuntCarriesNoDamage:
 
 
 class TestOnTheHuntCloses:
-    """Both sourced effects are priced, so the Olaf-R rule no longer holds it.
+    """Both sourced effects are priced, so the Olaf-R rule does not hold it.
 
     The slot was ``out_of_scope`` on the SECOND effect, not the first: the
     movement grant has ridden ``resolve_move_speed`` since the Teemo-W
