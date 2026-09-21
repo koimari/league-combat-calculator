@@ -98,8 +98,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Harrier) prices data/champions.json P 'Bonus Physical Damage': 15 : 132.35 by "
-    "level + 40% bonus AD.",
+    "P (Harrier) prices data/champions.json P 'Bonus Physical Damage': "
+    "15 : 132.35 (based on level) (+ 40% bonus AD).",
     "It fires when a basic attack consumes the Harrier mark, like the Nautilus and "
     "Poppy passives.",
     "The Harrier mark needs Quinn's Q, E or R or Valor; the on-hit is priced per auto "

@@ -227,10 +227,10 @@ ASSUMPTIONS = [
     "The fight prices the whole wave as one event, with no per-projectile crit roll.",
     "P (Love Tap) rides a basic attack that tags a new enemy, adding 50 to 130% of "
     "total AD as physical.",
-    "Love Tap's ladder is 50/60/70/80/90/100/110/120/130% at levels "
-    "1/4/7/9/11/13/20/25/30, asserted at parse time.",
-    "The game file's MissFortunePassive TotalDamage is mStat 2 with no mStatFormula "
-    "over those ByCharLevelBreakpoints.",
+    "Love Tap's ByCharLevelBreakpoints ladder is 50/60/70/80/90/100/110/120/130% at "
+    "levels 1/4/7/9/11/13/20/25/30.",
+    "The game file's MissFortunePassive TotalDamage is mStat 2 with no mStatFormula, "
+    "asserted at parse time.",
     "The cached 'Per-Level Scaling' row 50-100 reproduces the first six tiers.",
     "P's mark expires only on attacking a different enemy, so the duel gives one tap "
     "by default (p_procs).",
