@@ -1841,28 +1841,28 @@ def _support_effect_templates(
                 {"target_scope": "self_and_all_teammates"},
                 all_actors,
             )
-            for recipient_index, recipient_id in enumerate(recipients):
-                templates.append(
-                    {
-                        "kind": PacketKind.CLEANSE.value,
-                        "time": cast_time,
-                        "amount": 1.0,
-                        "target_scope": "self_and_all_teammates",
-                        "target_policy": "self_and_all_selected_teammates",
-                        "cleanse_item": "Milio R",
-                        "cleanse_group": group,
-                        "cast_blocked_by_attacker_control": True,
-                        "source_key": "Milio R",
-                        "utility_kind": "cleanse",
-                        "source": "Milio R — Breath of Life",
-                        "attacker": attacker.participant_id,
-                        "target": recipient_id,
-                        "_event_id": (
-                            f"{attacker.participant_id}:cleanse:R:"
-                            f"{cast_index}:{recipient_index}"
-                        ),
-                    }
-                )
+            templates.extend(
+                {
+                    "kind": PacketKind.CLEANSE.value,
+                    "time": cast_time,
+                    "amount": 1.0,
+                    "target_scope": "self_and_all_teammates",
+                    "target_policy": "self_and_all_selected_teammates",
+                    "cleanse_item": "Milio R",
+                    "cleanse_group": group,
+                    "cast_blocked_by_attacker_control": True,
+                    "source_key": "Milio R",
+                    "utility_kind": "cleanse",
+                    "source": "Milio R — Breath of Life",
+                    "attacker": attacker.participant_id,
+                    "target": recipient_id,
+                    "_event_id": (
+                        f"{attacker.participant_id}:cleanse:R:"
+                        f"{cast_index}:{recipient_index}"
+                    ),
+                }
+                for recipient_index, recipient_id in enumerate(recipients)
+            )
     elif champion_name in ("DrMundo", "Dr. Mundo"):
         # P2 Slice 8: Goes Where He Pleases — the passive IMMUNITY arm.
         #  One arm packet per fight at t=0 (self scope, pre-damage
@@ -2310,9 +2310,7 @@ def _simulate_survival(
     expanded_healing: dict[str, list[dict[str, Any]]] = defaultdict(list)
     redirect_children: dict[str, dict[str, Any]] = {}
     for participant_id, events in healing.items():
-        bucket = expanded_healing[participant_id]
-        for event in events:
-            bucket.append(dict(event))
+        expanded_healing[participant_id].extend(dict(event) for event in events)
 
     def _insert_receipt_clone(
         source_event: dict[str, Any], clone: dict[str, Any]
@@ -3235,16 +3233,16 @@ def _context_setup(
     # #169).  The candidate's own Warmog still falls back per evaluation.
     for actor in context.roster_actors:
         actor_i = context.index_of[actor.participant_id]
-        for event in _warmog_heart_tick_events(actor, params.fight_duration_seconds):
-            base.actions.append(
-                action_from_event(
-                    event,
-                    TransitionRank.RECOVERY,
-                    actor_i,
-                    context.index_of,
-                    subject_id=actor.participant_id,
-                )
+        base.actions.extend(
+            action_from_event(
+                event,
+                TransitionRank.RECOVERY,
+                actor_i,
+                context.index_of,
+                subject_id=actor.participant_id,
             )
+            for event in _warmog_heart_tick_events(actor, params.fight_duration_seconds)
+        )
     # Knight's Vow (P3 package 3S): stage the receipt scheduler's Sacrifice
     # split + holder heals onto the search-invariant base panel once, so the
     # compiled path prices the same redirect the receipt walk does.

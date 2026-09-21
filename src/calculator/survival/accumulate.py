@@ -10,6 +10,7 @@ recorded.
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from itertools import chain
 from typing import Any
 
 
@@ -30,11 +31,9 @@ def accumulate_support_values(
     support_value = [0.0] * count
     healing_output = [0.0] * count
     by_target: dict[str, list[tuple[int, int, bool]]] = {}
-    for target_id, attacker_i, aidx, is_heal in fresh_entries:
-        by_target.setdefault(target_id, []).append((attacker_i, aidx, is_heal))
-    for target_id, attacker_i, aidx, is_heal in base_entries:
-        by_target.setdefault(target_id, []).append((attacker_i, aidx, is_heal))
-    for target_id, attacker_i, aidx, is_heal in sig_entries:
+    for target_id, attacker_i, aidx, is_heal in chain(
+        fresh_entries, base_entries, sig_entries
+    ):
         by_target.setdefault(target_id, []).append((attacker_i, aidx, is_heal))
     for entries in by_target.values():
         for attacker_i, aidx, is_heal in entries:

@@ -406,25 +406,25 @@ def _apply_grey_health(
             heal_event,
         )
         ledgers.healing["main"].append(heal_event)
-    for index, (grant_time, source, amount, window) in enumerate(grey_shields):
-        ledgers.support_effects["main"].append(
-            {
-                "time": float(grant_time),
-                "kind": "shield",
-                "amount": float(amount),
-                "duration": float(window),
-                "source": source,
-                "source_key": source,
-                "attacker": "main",
-                "target": "main",
-                "target_scope": "self",
-                "target_policy": "self",
-                "_event_id": f"main:grey:{source}:shield:{index}",
-                # Grey health is banked by damage already taken, so the
-                # barrier this press raises arms after it.
-                SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,
-            }
-        )
+    ledgers.support_effects["main"].extend(
+        {
+            "time": float(grant_time),
+            "kind": "shield",
+            "amount": float(amount),
+            "duration": float(window),
+            "source": source,
+            "source_key": source,
+            "attacker": "main",
+            "target": "main",
+            "target_scope": "self",
+            "target_policy": "self",
+            "_event_id": f"main:grey:{source}:shield:{index}",
+            # Grey health is banked by damage already taken, so the
+            # barrier this press raises arms after it.
+            SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,
+        }
+        for index, (grant_time, source, amount, window) in enumerate(grey_shields)
+    )
     for taken, events in ((True, main_incoming), (False, main_outgoing)):
         for event in events:
             receipt = _grey_health_event_receipt(

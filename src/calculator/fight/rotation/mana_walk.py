@@ -133,19 +133,21 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
             {"kind": "ordinary", "auto_index": index + 1}
             for index in range(len(ordinary_times))
         ]
-        for swing in swing_events:
-            auto_restore_rows.append(
-                {
-                    "kind": "swing",
-                    "auto_index": len(auto_restore_rows) + 1,
-                    "arming_key": swing["arming_key"],
-                    "burst_seconds": swing.get("burst_seconds", 0.0),
-                    "arming_ordinal": swing["arming_ordinal"],
-                    "swing_index": swing["swing_index"],
-                }
-            )
-        for row_index, restore_time in enumerate(ordinary_times):
-            timeline.append((restore_time, 0, -4, row_index, "auto_restore", "", 0.0))
+        auto_restore_rows.extend(
+            {
+                "kind": "swing",
+                "auto_index": len(ordinary_times) + offset,
+                "arming_key": swing["arming_key"],
+                "burst_seconds": swing.get("burst_seconds", 0.0),
+                "arming_ordinal": swing["arming_ordinal"],
+                "swing_index": swing["swing_index"],
+            }
+            for offset, swing in enumerate(swing_events, start=1)
+        )
+        timeline.extend(
+            (restore_time, 0, -4, row_index, "auto_restore", "", 0.0)
+            for row_index, restore_time in enumerate(ordinary_times)
+        )
         for row_index in range(len(ordinary_times), len(auto_restore_rows)):
             swing = swing_events[row_index - len(ordinary_times)]
             if swing["time"] <= state.fight_duration_seconds + _CAST_SCHEDULE_EPS:
@@ -160,10 +162,10 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     # per-auto restore walk does and sort on the restore phase, so a swing
     # at 1.0 takes the charge a cast at 1.2 then finds spent.
     manaflow_swings = _manaflow_swing_rows(state, plan, manaflow)
-    for row_index, swing_row in enumerate(manaflow_swings):
-        timeline.append(
-            (swing_row["time"], 0, -5, row_index, "manaflow_on_hit", "", 0.0)
-        )
+    timeline.extend(
+        (swing_row["time"], 0, -5, row_index, "manaflow_on_hit", "", 0.0)
+        for row_index, swing_row in enumerate(manaflow_swings)
+    )
     heapq.heapify(timeline)
 
     sequence = 0
