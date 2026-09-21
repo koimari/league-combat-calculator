@@ -1,6 +1,6 @@
 """The front door for the on-hit strike interpreter.
 
-The claim this slice makes is that eight items' on-hit damage is now a
+The claim is that eight items' on-hit damage is a
 declaration, and that the declaration reproduces the registry's own formula
 ladder term for term.  So what is pinned here is the *arithmetic identity*:
 each schema's number is recomputed from the registry entry by hand and

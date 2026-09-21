@@ -6,7 +6,7 @@ a reactive shield must not absorb the hit that armed it, which is why it is
 not an opening defence with a delay, and Thorns writes no resolved defensive
 state at all because what it produces is an event.
 
-``thorns_effects`` moved here from the number registry with this slice.  The
+``thorns_effects`` lives here rather than in the number registry.  The
 record the coupled timeline consumes is unchanged; where its numbers come
 from is not — the item's own declaration rather than a tag comparison inside
 ``item_effects``.

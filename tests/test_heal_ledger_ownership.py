@@ -35,10 +35,10 @@ from src.calculator.support_scan import (
 
 
 def test_registry_membership_and_single_definition():
-    """One registry of the module-owned heal slots — the phase 1 trio, the
-    phase 2 audit (11 self double-grants + 5 fabricated ally heals), Soraka
-    Q, and the W3 scan's three — defined exactly once (a second assignment
-    shadows the first at import time — the E9-3/E9-2 history).  Rakan Q is
+    """One registry of the module-owned heal slots — the first trio, the
+    audited eleven self double-grants and five fabricated ally heals, Soraka
+    Q, and the scan's three — defined exactly once, because a second
+    assignment shadows the first at import time.  Rakan Q is
     deliberately absent: its scanner ally branch stays at its own amount
     (see ``_SCOPE_OVERRIDES``)."""
     assert (

@@ -4,7 +4,7 @@ A champion module derives a reading when its option key is ABSENT, which it
 states by testing ``ctx.options.get(key) is None``. The browser decides
 whether the key arrives, so the two halves have to agree: the module's
 branch and the option row's ``derives`` flag. They did not, and every
-derived reading in the campaign was unreachable through ``/advanced`` while
+derived reading was unreachable through ``/advanced`` while
 the API answered it correctly (SR9).
 
 The scan below is over the source, not over a hand-written list, so a new
@@ -145,7 +145,7 @@ def test_the_campaign_s_derived_options_are_all_flagged():
     """The permanent floor: the count cannot silently fall to zero.
 
     A vacuous scan would pass both rows above, so this pins that the flag is
-    actually carried by the roster the campaign derived.
+    actually carried by the derived roster.
     """
     flagged = {
         key

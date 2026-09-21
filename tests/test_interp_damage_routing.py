@@ -6,7 +6,7 @@ third is built by the defensive resolver at the opening, because that is
 where a deferral schedule has to exist before the first packet lands.
 
 The deferral is the interesting case: its registry entry is tagged as a
-*starting defence*, and until this slice it was the last mechanic in
+*starting defence*, and it was the last mechanic in
 `defensive_effects` still matched by item name. The tests below pin that the
 resolved state it produces is the one the retired branch produced, field for
 field.

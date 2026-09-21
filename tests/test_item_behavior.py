@@ -95,7 +95,7 @@ def test_the_family_union_is_closed_at_eighteen() -> None:
 
 
 def test_the_engine_lane_vocabulary_is_not_spelled_lane() -> None:
-    """D-45: Phase 1 owns ClaimLane, Phase 3 owns EngineLane."""
+    """``coverage_evidence`` owns ClaimLane, ``item_behavior`` owns EngineLane."""
     assert {lane.name for lane in EngineLane} == {
         "PAIR_ENGINE",
         "RECEIPT_WALK",
@@ -130,7 +130,7 @@ def test_a_roster_scoped_subject_is_incompatible_with_pair_only() -> None:
 
 
 def test_the_typing_axis_bans_empty_means_all() -> None:
-    """D-04: both class sets are required and neither may be empty."""
+    """Both class sets are required and neither may be empty."""
     with pytest.raises(ValueError, match="damage_classes"):
         Typing(frozenset(), frozenset(AttackClass))
     with pytest.raises(ValueError, match="attack_classes"):
@@ -138,7 +138,7 @@ def test_the_typing_axis_bans_empty_means_all() -> None:
 
 
 def test_a_zero_policy_is_required_and_carries_a_reason() -> None:
-    """D-24: the invariant at rule granularity, with no default to fall through."""
+    """The zero policy at rule granularity, with no default to fall through."""
     with pytest.raises(ValueError, match="reason"):
         ZeroPolicy(Disposition.STRUCTURAL_ZERO, "   ")
     with pytest.raises(TypeError):
@@ -365,7 +365,7 @@ def test_the_utility_vocabulary_is_the_single_home_both_readers_project() -> Non
     """The flip's other side: two readers, one home, asserted in both directions.
 
     ``item_outcomes.UTILITY_OUTCOMES`` now holds ``UtilityDimension`` members
-    rather than open strings, and Phase 1's
+    rather than open strings, and
     ``coverage_evidence.UTILITY_DIMENSIONS`` is asserted equal to this enum's
     values rather than to whatever the per-item declaration happens to
     contain.  The two readers can therefore only disagree with the home, never
@@ -398,7 +398,7 @@ def test_every_utility_member_is_spelled_the_way_it_serializes() -> None:
 
     The dimension strings are a public payload field.  An enum whose member
     name and value can drift would give a reader two names for one dimension,
-    which is the drift the single-home ruling exists to stop.
+    which is the drift one home exists to stop.
     """
     for dimension in UtilityDimension:
         assert dimension.name == dimension.value.upper()

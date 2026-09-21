@@ -387,7 +387,7 @@ def _main_heals(combat: dict) -> list[dict]:
 #: fires (no movement simulation).  The passive's REGENERATION stream --
 #: "an additional 0.04% : 0.23% (based on level) of maximum health every
 #: 0.5 seconds", the cached P's second row -- is priced by the self-heal
-#: rule since the sustain slice, and it publishes under the same ability
+#: rule, and it publishes under the same ability
 #: name.  So "no pickup heal" is a claim about the AMOUNT and cadence, not
 #: about the name: a pickup receipt would be an order of magnitude larger
 #: than a tick and would not sit on the half-second.
@@ -467,7 +467,7 @@ def _kernel_survival(
         _dummy_combatant("enemy", "enemy"),
         _dummy_combatant("main", "main", health=main_health),
     ]
-    # P2 Slice 8: the passive immunity is ARMED by the t=0 arm packet
+    # The passive immunity is ARMED by the t=0 arm packet
     # (the participant-timeline authoring mirror).
     arm = {
         "kind": "crowd_control_resist",

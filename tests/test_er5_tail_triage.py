@@ -1,7 +1,7 @@
 """The ER5 tail, split by what the evidence already decides about it.
 
 A raw count of ``x.get(key, <literal>)`` reads says the tail is about 1,278
-defects. The campaign's repeated finding is the opposite: most are
+defects. The measured finding is the opposite: most are
 contracts. ``scripts/tail_site_triage.py`` makes that checkable by
 answering the two clauses a machine can, and this pins the split so the
 count cannot be quoted as a debt figure again.
@@ -100,7 +100,7 @@ def test_a_censused_key_on_a_non_row_receiver_is_not_a_candidate():
 
 
 def test_the_tolerance_signal_finds_the_modules_it_was_built_from():
-    """The two readers that taught the campaign clause 5 must land there.
+    """The two readers clause 5 was written for must land there.
 
     Without this the signal could silently degrade to matching nothing and
     the split would quietly become optimistic.

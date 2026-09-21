@@ -87,7 +87,7 @@ class TestTheEntryShapeDecidesWhoCarriesAProducer:
     """Dispatch is on the record's value keys, never on the item's name."""
 
     def test_the_ally_registry_is_matched_exactly(self) -> None:
-        """D-47: the hand-authored registry is refresh-inert, so exact is safe."""
+        """The hand-authored registry is refresh-inert, so exact is safe."""
         entry = dict(catalog.item_effects.ALLY_ITEM_EFFECTS["Cryptbloom"])
         assert catalog.producers_for("ALLY_ITEM_EFFECTS", entry) == (
             AllyProducer.LIFE_FROM_DEATH,
@@ -233,7 +233,7 @@ class TestTheEmissionShapeIsAskableWithoutNamingAnItem:
 
 
 class TestDFiftysSecondTargetIsDeclaredNotInferred:
-    """D-50: a producer reaching two roster classes says which."""
+    """A producer reaching two roster classes says which."""
 
     def test_a_single_class_producer_declares_no_secondary(self) -> None:
         payload = _slot(AllyProducer.LIFE_FROM_DEATH).rule.payload

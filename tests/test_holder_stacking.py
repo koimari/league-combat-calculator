@@ -1,10 +1,10 @@
-"""Two holders of one mechanic: one modifier, or two (D-66, criterion 10).
+"""Two holders of one mechanic: one modifier, or two.
 
 Abyssal Mask's Unmake is an aura.  Two holders standing in range of one
 enemy curse it *once* — a second curse would double a 12% amp nobody grants
 twice.  Imperial Mandate's Command is a per-holder pool: two Mandate holders
 each pay their own amplification, and dropping the second one would be the
-campaign's founding incident re-created by a rule rather than by an
+dropped contribution re-created by a rule rather than by an
 accident.
 
 So "does a second holder arm a second modifier?" is a per-mechanic
@@ -215,7 +215,7 @@ def test_a_mechanic_with_no_declared_stacking_is_never_keyed():
 
     A packet whose source names no dual-sided mechanic is admitted without a
     key being built at all.  Inventing an answer for it would be a policy
-    where the campaign requires a declaration.
+    where a declaration is required.
     """
     ledger = ArmingLedger(arming_stacking())
     for holder in (FIRST_HOLDER, SECOND_HOLDER):

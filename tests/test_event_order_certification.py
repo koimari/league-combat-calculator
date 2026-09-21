@@ -115,7 +115,7 @@ def test_soraka_equinox_emits_the_delayed_eruption_hit():
 
 @pytest.mark.parametrize(("champion", "source"), [("Shen", "Q")])
 def test_empowered_attack_packets_certify_their_authored_swing_ledger(champion, source):
-    """Wave 1B: Shen Q's bonus hits carry authored swing timing."""
+    """Shen Q's bonus hits carry authored swing timing."""
     result = run_fight(_load_public_champion(champion), 18, [], _timed_params())
     assert result["timeline_coverage"]["complete"] is True
     assert source in result["timeline_coverage"]["exact_sources"]
@@ -154,7 +154,7 @@ def test_multi_hit_or_ally_mark_packets_are_certified_or_explicitly_non_damage(
     [("Shen", "Q")],
 )
 def test_calculate_api_surfaces_certified_empowered_attack_timeline(champion, source):
-    """Wave 1B: the public API does not report Shen Q as coarse."""
+    """The public API does not report Shen Q as coarse."""
     with app.test_client() as client:
         response = client.post(
             "/api/calculate",

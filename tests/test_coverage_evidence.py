@@ -5,7 +5,7 @@
 codebase happens to contain.  Every rule it enforces therefore owes a test
 that reaches it, because a validator whose branch no test can trigger is
 indistinguishable from a validator that returns ``None`` — which is the
-failure this whole campaign is about, one size smaller.
+failure the claim table exists to catch, one size smaller.
 
 Resolution — does this evidence name something that actually exists — is
 ``tests/coverage_resolver.py``'s and is deliberately absent here.  The two
@@ -522,7 +522,7 @@ def test_malformed_evidence_member_is_rejected(member, message: str) -> None:
 def test_the_evidence_union_is_the_closed_nine() -> None:
     """Nine members, and ``StreamMembership`` deliberately absent.
 
-    It would resolve against five hand name sets Phase 2 deleted, so it
+    It would resolve against five hand name sets nothing declares, so it
     could only ever be evidence for something that does not exist.
     """
     assert {
@@ -590,7 +590,7 @@ def test_the_support_packet_overlay_adds_exactly_one_requirement() -> None:
 def test_utility_dimensions_project_the_single_home() -> None:
     """Set equality against ``UtilityDimension`` — the projection, mechanised.
 
-    The load tier may not import ``src.calculator`` (D-20, asserted below over
+    The load tier may not import ``src.calculator`` (asserted below over
     this module's own AST), so the projection cannot be a live read and this
     assertion is what discharges it instead.  Authority is the enum's; the
     frozenset is its shadow, and a member added to either side fails here on
@@ -604,7 +604,7 @@ def test_utility_dimensions_project_the_single_home() -> None:
 
 
 # ---------------------------------------------------------------------------
-# The load tier's own boundary (D-20, criterion 2)
+# The load tier's own boundary
 # ---------------------------------------------------------------------------
 
 _STDLIB_IMPORTS = frozenset({"keyword", "collections.abc", "dataclasses", "typing"})
@@ -628,7 +628,7 @@ def _code_only(text: str) -> str:
 def test_the_load_gate_imports_nothing_and_reads_nothing() -> None:
     """No package import, no filesystem, no ``data/`` — asserted over source.
 
-    The tier boundary is the ruling, and a load gate that quietly
+    The tier boundary is the rule, and a load gate that quietly
     grew an import would be a startup cost on every request plus a bypass of
     the caching layer.  Checking it over the AST rather than by reading is
     what keeps it true on the commit that breaks it.
@@ -658,7 +658,7 @@ def test_the_load_gate_imports_nothing_and_reads_nothing() -> None:
 
 
 def test_claim_lane_is_exported_here_and_is_not_spelled_lane() -> None:
-    """D-45: two lane vocabularies, never both spelled ``Lane``."""
+    """Two lane vocabularies, never both spelled ``Lane``."""
     assert "ClaimLane" in coverage_evidence.__all__
 
 

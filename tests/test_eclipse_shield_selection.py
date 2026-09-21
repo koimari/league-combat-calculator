@@ -258,7 +258,7 @@ def test_same_time_eclipse_grants_are_additive_and_input_order_independent():
 
 
 def test_same_time_damage_resolves_before_both_eclipse_shields():
-    """Section 4.26 pins damage at phase 0 before Eclipse at phase 0.5."""
+    """Damage resolves at rank 0, before Eclipse at rank 0.5."""
     result, _ = _receipt(
         [
             _shield("eclipse:weak", 1.0, 60.0),

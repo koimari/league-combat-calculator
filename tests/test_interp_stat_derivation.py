@@ -534,7 +534,7 @@ def test_an_item_with_no_percentage_penetration_is_asked_no_channel_question() -
 
 
 def test_an_undeclared_channel_is_a_named_stop_rather_than_the_ordinary_one() -> None:
-    """D-26's synthetic fixture for a branch no ordinary shop item reaches.
+    """The synthetic fixture for a branch no ordinary shop item reaches.
 
     Two cached items carry percent armour penetration and are declared by
     nobody — Perplexity is Arena-only and Ohmwrecker is a map object — so no

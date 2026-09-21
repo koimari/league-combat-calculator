@@ -1,4 +1,4 @@
-"""One immobilize predicate, one home (C5, D-08).
+"""One immobilize predicate, one home.
 
 Force of Nature's Steadfast counts *immobilizing* crowd control, and the
 walk decided what that meant with its own five-member literal — a sixth of

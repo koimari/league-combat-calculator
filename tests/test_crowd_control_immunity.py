@@ -6,7 +6,7 @@ NEW leaf) plus the minimal Morgana E wiring that replaces the bespoke
 handling in ``survival/transitions.py`` (``_apply_crowd_control`` /
 ``_crowd_control_immunity_active`` / the immunity branch of ``_apply_shield``).
 It follows the styles of ``test_delivery_interaction_eligibility.py``
-(P2 Slice 1) and ``test_spell_shield_eligibility.py`` (P2 Slice 2): kernel
+and ``test_spell_shield_eligibility.py``: kernel
 unit tests with minimal ``_CcAction`` actors, timeline tests through
 ``participant_timeline._simulate_survival`` (the same style the spell-shield
 matrix uses), and ``src.app`` -> ``POST /api/calculate`` consumer tests for
@@ -123,7 +123,7 @@ except ImportError:  # pragma: no cover - expected until the kernel lands
 def _require_contract():
     """Return the planned crowd-control eligibility kernel.
 
-    The module does not exist until the RLM-1 owner lands P2 Slice 3;
+    The module does not exist until the immunity kernel lands;
     every contract-API assertion calls this so the suite collects and each
     row fails with the named pending-kernel marker instead of one
     collection error (the intended signal, reported to the owner)."""

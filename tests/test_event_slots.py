@@ -1,4 +1,4 @@
-"""Phase 4 S1 — the kernel's four event references, as integer slots.
+"""The kernel's four event references, as integer slots.
 
 ``SurvivalAction`` carried four ``str | None`` reference fields: the packet's
 own event id, its trigger's, its deferral batch's and its Defy trigger's.

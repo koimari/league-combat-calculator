@@ -74,7 +74,7 @@ R22 | Caster crowd-control at activation (sourced castability): Mikael's Purify 
 R23 | QSS/Mercurial actives: option validation today (named 400) vs post-contract options
 R24 | Mercurial: self cleanse + SEPARATE movement utility effect (amount 50%, duration 2s, its own atoms)
 R25 | A cleanse packet that finds no eligible control records utility and truncates nothing
-R26 | Support-packet arming-priority baseline: cleanse/movement ride phase 1.0 (total-order baseline)
+R26 | Support-packet arming priority: cleanse and movement ride rank 1.0 (total-order baseline)
 R27 | QSS/Mercurial castability exemption: self-cast fires while the caster is stunned/charmed (exempt; truncates the caster's own interval; receipt fired_while_crowd_controlled=true) — the suppression denial is R7 (caster_control_blocks_cleanse) and airborne stays excluded_control_kind (R8)
 """
 
@@ -111,7 +111,7 @@ except ImportError:  # pragma: no cover - expected until the kernel lands
 def _require_contract():
     """Return the planned cleanse-eligibility kernel.
 
-    The module does not exist until the RLM-1 owner lands P2 Slice 4;
+    The module does not exist until the cleanse kernel lands;
     every contract-API assertion calls this so the suite collects and each
     NEW-CONTRACT row fails with the named pending-kernel marker instead of
     one collection error (the intended signal, reported to the owner)."""
@@ -1884,7 +1884,7 @@ def test_r16_app_spell_shield_blocks_control_mikaels_heal_still_fires():
 def test_r17_same_timestamp_control_and_cleanse_total_order():
     """Timeline + kernel, NEW-CONTRACT: a control packet and a cleanse at
     one timestamp resolve by the walk's total order — the control applies
-    (phase 0.0) before the cleanse (phase 1.0), so the same-timestamp
+    (rank 0.0) before the cleanse (rank 1.0), so the same-timestamp
     control is removed ENTIRELY (start >= activation); the outcome is
     deterministic across repeated runs and identified by stable_event_key."""
     combatants = [
@@ -2388,7 +2388,7 @@ def test_r22_mikaels_heal_stays_gated_while_caster_is_ccd():
 # NOTE: the CURRENT "rejected with a named 400" variant (neither self item
 # declared an active option in ITEM_INPUT_OPTIONS, so an explicit active
 # option was rejected with "Unknown item option target: <item>") was removed
-# here — it does not describe the tree.  The owner landed the P2 Slice 4
+# here — it does not describe the tree.  The owner landed the cleanse
 # active option for both Quicksilver Sash and Mercurial Scimitar, so the
 # named-400 rejection this row asserted is not reachable anymore; it is
 # superseded, not merely unpinned.  The PRIMARY variant directly below
@@ -2409,7 +2409,7 @@ def test_r22_mikaels_heal_stays_gated_while_caster_is_ccd():
     ],
 )
 def test_r23_new_self_cleanse_option_accepted_and_applied(item, source):
-    """App level, NEW-CONTRACT: the slice adds an active option for both
+    """App level, NEW-CONTRACT: an active option for both
     self items; arming it authors a self-cast cleanse that truncates the
     holder's active charm and (Mercurial only) grants the separate movement
     utility receipted in utility_outcomes.  Today the option is rejected
@@ -2518,7 +2518,7 @@ def test_r24_mercurial_movement_is_a_separate_utility_effect():
 
 
 def test_r25_cleanse_packet_records_utility_and_truncates_nothing():
-    """Timeline level, CURRENT (the canonical baseline the slice replaces):
+    """Timeline level, CURRENT (the canonical baseline this replaces):
     a cleanse-kind packet is recorded as a utility effect (applied_amount)
     and truncates NOTHING — the stun interval and its downtime stand."""
     cleanse = _cleanse_packet(1.5, target="target", attacker="caster")

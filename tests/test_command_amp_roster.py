@@ -1,13 +1,14 @@
 """Command priced on both sides of one roster, as numbers (criterion 18).
 
-Imperial Mandate's Command is the incident this campaign is named after, and
+Imperial Mandate's Command priced at zero with no error, and
 it is dual-sided: the pair engine prices the holder's own post-immobilize amp
 (``fight.after.amplifiers._apply_command_amp``) and the coupled walk prices every *other*
 participant's through the ``Imperial Mandate — Command`` packet, with the
 holder carried as ``owner`` so the two halves can never both price him.
 
-Phase 1 makes deleting either half fail on a missing evidence member and
-Phase 2 makes emptying its trigger stream fail on a source assertion.  This
+The claim table makes deleting either half fail on a missing evidence
+member, and the bus makes emptying its trigger stream fail on a source
+assertion.  This
 file is the number-level half: one roster — a Mandate holder whose E authors
 a ``stun``, an ally who does not hold the item, and one enemy — whose totals
 are pinned and whose no-Command control totals are different.  Delete
@@ -377,8 +378,8 @@ class TestTwoImmobilizesMergeIntoOneRefreshedWindow:
     reading — ``merge=REFRESH``, filed with its open alternative in
     ``item_behavior_catalog.ACKNOWLEDGED_READING_DIVERGENCES``.
 
-    This class is what that ruling has to satisfy, and what the additive
-    reading would have to break to land.  It replaces the Phase 0 sentinel
+    This class is what the merge policy has to satisfy, and what the
+    additive reading would have to break to land.  It replaces the sentinel
     that asserted no authored pair could merge: that fact stopped being true
     when the champion corpus grew, and the sentinel's own message asked for
     exactly this — "give it a fixture and an oracle receipt before landing

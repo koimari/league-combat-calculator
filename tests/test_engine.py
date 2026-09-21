@@ -1503,7 +1503,7 @@ class TestDeclarationOnAPartlessSlot:
     moves onto it, and ``fight.cast_control_marker._declared_cc_marker`` reads the kind to
     stamp on those swing events off the entry's parts.  Returning quietly
     on ``parts == ()`` therefore made the declaration a no-op that read as
-    reviewed — the exact shape this campaign exists to end.
+    reviewed, which is a claim nobody can check.
     """
 
     def test_an_empower_shell_gets_the_marker_the_swings_read(self) -> None:

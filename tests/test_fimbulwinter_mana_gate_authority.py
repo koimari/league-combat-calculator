@@ -9,7 +9,7 @@ runtime reads the contract rather than a literal.
 The unavailable path is still the fail-closed contract and is still tested,
 through ``_desourced_gate()``: it swaps the entry's own status to
 ``source_unavailable`` so the branch is exercised against a synthetic
-de-sourcing rather than being deleted with the ruling.
+de-sourcing rather than being deleted with the reading.
 """
 
 from contextlib import contextmanager
@@ -243,7 +243,7 @@ class TestManaInputValidation:
 class TestTwentyPercentBoundaryIsAuthored:
     """The sourced boundary, pinned from both sides.
 
-    Fimbulwinter revision 3984419 is the ruling (campaign U11a): the shield
+    Fimbulwinter revision 3984419 is the source: the shield
     arms while the holder is ABOVE 20% of maximum mana, so the comparison is
     strict and the boundary itself denies.  A de-sourced gate collapses every
     one of these positions onto the same named receipt, which is what the

@@ -1,4 +1,4 @@
-"""P2 delivery/eligibility kernel slice — acceptance matrix (Braum E, Yasuo W).
+"""The delivery and eligibility kernel: acceptance matrix (Braum E, Yasuo W).
 
 This file is the RLM-2 acceptance-matrix suite for the shared
 ``src/calculator/delivery_eligibility.py`` kernel (typed delivery

@@ -38,7 +38,7 @@ from src.calculator.support_effects import derive_ally_effects
 from src.calculator.support_scan import _MODULE_AUTHORED_HEAL_SLOTS
 from tests.survival_probe import survival_of
 
-# The 15 slots this phase adds to the registry (phase 1's three are locked
+# The 15 slots beyond the first three, which are locked
 # in tests/test_heal_ledger_ownership.py).
 PHASE2_SLOTS = [
     ("Sona", "W"),

@@ -701,7 +701,7 @@ class TestExplicitActivation:
         assert _main_heals(combat)  # the separate heal receipt still lands
 
     def test_w_cleanse_receipt_uses_slice4_shape(self):
-        # P2-5 contract: the W cleanse receipt carries the Slice 4
+        # Contract: the W cleanse receipt carries the
         # decision field set (the acceptance matrix's exact shape) plus
         # the caster ``cleanse_use`` receipt.
         combat = _app_combat({}, {"Q": 5, "W": 0, "E": 5, "R": 0})

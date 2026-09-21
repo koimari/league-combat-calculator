@@ -1866,7 +1866,7 @@ def test_coupled_auto_sources_are_coarse_in_coverage_itself():
 class TestOnHitSwingEvents:
     """On-hit rows author real per-swing timestamps in timed fights.
 
-    Phase 1 of timestamp certification: every on-hit application rides a
+    Timestamp certification: every on-hit application rides a
     simulated auto swing, so the rows can author exact ``damage_events``
     at those swing times instead of collapsing to the coarse effect
     phase. Ability-carried on-hit applications have no authored
@@ -3373,7 +3373,7 @@ class TestEmpoweredSwingAttribution:
         # earlier hits instead of six times against full target health.  F3
         # derives E (Blunt Force Trauma, bonus-AD buff) first, shifting the
         # buff/auto cadence — the total is re-captured with the derivation.
-        # Re-captured with the landing-instant ruling: Q is current-health
+        # Re-captured at the landing instant: Q is current-health
         # damage, so it is priced against what had actually landed by each
         # cast rather than against the rotation's running total.  The
         # conservation invariant itself is the sibling row below.

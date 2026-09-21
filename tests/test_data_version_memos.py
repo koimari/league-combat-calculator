@@ -16,7 +16,7 @@ Two properties are checked here and neither is a convention:
   puts it in one of them — including one spelled off the naming convention,
   which is the hole S10 closed after finding an already-governed member
   sitting in it.  No count is stated here: the population is meant to grow,
-  and a number in this docstring would be the drift the campaign is about.
+  and a number in this docstring would be a second home for the count.
 * **The key really carries the version.**  Each of the seven is exercised
   through its own front door: memoize a value, mutate the source in place so
   identity cannot see the change, bump the counter, and assert the answer
@@ -216,9 +216,9 @@ def test_declared_tables_partition_every_memo_in_the_tree() -> None:
     assert scan_memos() == declared
 
 
-# The seven non-rotation survivors D-49 names, by name rather than by count.
+# The seven non-rotation survivors, by name rather than by count.
 # A count agrees with itself after a swap, and this population *grows*: a memo
-# a later slice creates over item-derived values is required by D-49's own
+# a later change creates over item-derived values is required by the
 # rule — "keyed on by every item-derived memo" — to join the table, so a
 # length assertion would turn obeying the decision into a failure.  What
 # cannot happen is one of these seven leaving.
@@ -236,7 +236,7 @@ D49_SURVIVORS: frozenset[str] = frozenset(
 
 
 def test_the_phase_keys_its_survivors_and_the_rotation_lane_keys_its_own() -> None:
-    """The split D-49 rules, as the two populations rather than as prose.
+    """The split, as the two populations rather than as prose.
 
     Membership and not size: both tables are meant to grow — a later memo
     over item-derived values is *required* to join the keyed one — so a
@@ -300,7 +300,7 @@ def test_the_keyed_tables_all_say_data_version_and_the_others_do_not() -> None:
 
 
 def test_rotation_memos_are_keyed_by_their_own_lane() -> None:
-    """Phase 5's half of D-49 is asserted here, not assumed."""
+    """The rotation half is asserted here, not assumed."""
     matrix = (SRC_ROOT / "calculator" / "ability_dps_matrix.py").read_text("utf-8")
     rule = (SRC_ROOT / "calculator" / "champion_rotation_rule.py").read_text("utf-8")
     assert "cache_key = (champion_name, data_version())" in matrix
@@ -546,10 +546,10 @@ def test_state_proto_memo_key_carries_the_version_and_every_input() -> None:
 
     The key gained the compiled below-half healing bonus when 3.9 made that
     number a parameter rather than a read, and lost ``id(combatant)`` at
-    Phase 4 S10, which is where migration frontier counter 7 reached zero.
+    the commit where migration frontier counter 7 reached zero.
     A key that stopped short of its inputs would serve one participant's
     state to a caller that asked with another — silently, which is the whole
-    failure this campaign is about.
+    failure the counter exists to catch.
 
     Read through the key function rather than off the source text: what the
     key must contain is a set of values, and a text match cannot say whether

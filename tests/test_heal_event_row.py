@@ -92,7 +92,7 @@ def test_the_accessors_do_not_collide_with_the_local_names_they_join():
 
     ``heal_time`` and ``heal_amount`` are already local variables in the
     modules that read these rows. An import that shadows a local is how two
-    earlier slices of this campaign broke, once for 230 tests, so the names
+    an import that shadows a local broke, once for 230 tests, so the names
     are chosen to make that impossible rather than to be caught later.
     """
     import re

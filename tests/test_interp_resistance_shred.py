@@ -1,7 +1,7 @@
 """The front door for the resistance-shred interpreter — two models, one home.
 
 The two stacking reductions in the registry are summed by two different
-models, and before this slice each model's arithmetic sat beside its own
+models, and each model's arithmetic would otherwise sit beside its own
 typed record with nothing saying which was which.  What is checked here is
 therefore not "the numbers are right" — the golden baseline pins that — but
 that each model *is what it says it is*: the Cesàro closed form reproduces the

@@ -1,4 +1,4 @@
-"""Gnar Mega form — Rage Gene game-file verification matrix (P4 slice).
+"""Gnar Mega form: the Rage Gene game-file verification matrix.
 
 Pins the five hardcoded Rage Gene constants in ``gnar.py`` against the
 game-file authority (Community Dragon ``gnarbig.bin.json`` CharacterRecords
