@@ -635,7 +635,7 @@ def _support_target_ids(
     effect: Mapping[str, Any],
     all_actors: Iterable[Combatant],
 ) -> tuple[list[str], str]:
-    """Resolve a sourced support packet to selected teammates.
+    """Resolve a sourced support packet to selected allies.
 
     Target selection is intentionally explicit.  The packet supplies whether
     an effect is self-cast, area-wide, or one-teammate; for the latter the
@@ -663,13 +663,13 @@ def _support_target_ids(
     # side in the fight.  Comparing the raw labels would make a main Lulu
     # unable to target an ally (and an ally unable to target the main).
     attacker_side = "main" if attacker.team in {"main", "ally"} else attacker.team
-    teammates = [
+    allies = [
         actor
         for actor in all_actors
         if ("main" if actor.team in {"main", "ally"} else actor.team) == attacker_side
         and actor.participant_id != attacker.participant_id
     ]
-    if not teammates:
+    if not allies:
         if target_scope in {"self_and_all_teammates", "self_and_one_teammate"}:
             return [attacker.participant_id], "self_only_no_selected_teammate"
         if effect.get("target_self"):
@@ -678,16 +678,16 @@ def _support_target_ids(
     if target_scope == "self_and_all_teammates":
         return [
             attacker.participant_id,
-            *(actor.participant_id for actor in teammates),
+            *(actor.participant_id for actor in allies),
         ], "self_and_all_selected_teammates"
     if target_scope == "self_and_one_teammate":
         selected_index, selected_explicit = _support_selection(attacker, effect)
         if not selected_explicit:
             return [
                 attacker.participant_id,
-                teammates[0].participant_id,
+                allies[0].participant_id,
             ], "self_and_first_selected_teammate"
-        if selected_index >= len(teammates):
+        if selected_index >= len(allies):
             raise ValueError(
                 f"Support target index {selected_index} is outside the teammate "
                 f"roster for {attacker.participant_id} from "
@@ -700,24 +700,24 @@ def _support_target_ids(
         )
         return [
             attacker.participant_id,
-            teammates[selected_index].participant_id,
+            allies[selected_index].participant_id,
         ], policy
     if target_scope == "all_teammates":
-        return [actor.participant_id for actor in teammates], "all_selected_teammates"
+        return [actor.participant_id for actor in allies], "all_selected_teammates"
     if target_scope == "one_teammate":
         # The one-teammate scope (Karma E, Orianna E, Yuumi E, Lulu E, the
         # self-or-target default) is an explicit branch, which is what lets
         # the terminal default be an unreachable exhaustiveness guard.
         selected_index, selected_explicit = _support_selection(attacker, effect)
         if not selected_explicit:
-            return [teammates[0].participant_id], "first_selected_teammate"
-        if selected_index >= len(teammates):
+            return [allies[0].participant_id], "first_selected_teammate"
+        if selected_index >= len(allies):
             raise ValueError(
                 f"Support target index {selected_index} is outside the teammate "
                 f"roster for {attacker.participant_id} from "
                 f"{effect.get('source', '')!r}"
             )
-        return [teammates[selected_index].participant_id], "selected_teammate"
+        return [allies[selected_index].participant_id], "selected_teammate"
     raise AssertionError(
         f"unhandled support target_scope {target_scope!r} — the closed "
         "resolution vocabulary and this branch list have drifted"
@@ -760,13 +760,13 @@ def _apply_item_support_selection(
     if not selected_explicit:
         return dict(template)
     attacker_side = "main" if attacker.team in {"main", "ally"} else attacker.team
-    teammates = [
+    allies = [
         actor
         for actor in all_actors
         if ("main" if actor.team in {"main", "ally"} else actor.team) == attacker_side
         and actor.participant_id != attacker.participant_id
     ]
-    if selected_index >= len(teammates):
+    if selected_index >= len(allies):
         raise ValueError(
             f"Support target index {selected_index} is outside the teammate "
             f"roster for {attacker.participant_id} from "
@@ -775,10 +775,10 @@ def _apply_item_support_selection(
     return repriced_for_recipient(
         {
             **template,
-            "target": teammates[selected_index].participant_id,
+            "target": allies[selected_index].participant_id,
             "target_policy": "selected_teammate",
         },
-        teammates[selected_index],
+        allies[selected_index],
     )
 
 
@@ -791,23 +791,23 @@ def _guardian_target(
     ):
         return None
     holder_side = "main" if holder.team in {"main", "ally"} else holder.team
-    teammates = [
+    allies = [
         actor
         for actor in all_actors
         if ("main" if actor.team in {"main", "ally"} else actor.team) == holder_side
         and actor.participant_id != holder.participant_id
     ]
-    if not teammates:
+    if not allies:
         return None
     selection = _guardian_selection_template()
     selected_index, selected_explicit = _support_selection(holder, selection)
-    if selected_index >= len(teammates):
+    if selected_index >= len(allies):
         raise ValueError(
             f"Support target index {selected_index} is outside the teammate "
             f"roster for {holder.participant_id} from 'Guardian'"
         )
     policy = "selected_teammate" if selected_explicit else "first_selected_teammate"
-    return teammates[selected_index], policy
+    return allies[selected_index], policy
 
 
 def _guardian_selection_template() -> dict[str, Any]:
@@ -1639,7 +1639,7 @@ def _support_effect_templates(
             templates.append(resolved_template)
     # Fan out champion-owned heal events (authored by the E1 self-heal rule
     # for slots in ``_MODULE_AUTHORED_HEAL_SLOTS``, Taric Q today) to the
-    # attacker's selected teammates.  The self copy stays in the attacker's
+    # attacker's selected allies.  The self copy stays in the attacker's
     # healing ledger at its original event id; each ally copy is one support
     # heal template with the same time/amount/source/kind,
     # ``_event_id = f"{self_id}:ally:{i}"`` and ``_source_event_id`` = the

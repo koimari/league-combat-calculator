@@ -36,7 +36,7 @@ def _same_side(attacker: Any, actor: Any) -> bool:
     return left == right
 
 
-def _teammates(attacker: Combatant, all_actors: Iterable[Combatant]) -> list[Combatant]:
+def _allies(attacker: Combatant, all_actors: Iterable[Combatant]) -> list[Combatant]:
     attacker_id = getattr(attacker, "participant_id", None)
     return [
         actor

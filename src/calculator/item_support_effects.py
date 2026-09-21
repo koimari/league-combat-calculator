@@ -33,7 +33,7 @@ from .ally_packet_shape import (
     _producer,
     _same_side,
     _shred_ramp,
-    _teammates,
+    _allies,
 )
 
 # The closed support-scope vocabulary and the kernel's typed trigger,
@@ -223,7 +223,7 @@ def derive_item_support_effects(
         return []
     names = _item_names(attacker)
     require_event_view(result, names)
-    teammates = _teammates(attacker, all_actors)
+    allies = _allies(attacker, all_actors)
     packets: list[dict[str, Any]] = []
     triggers = _support_triggers(trigger_effects, attacker)
     cc_events, damage_events, takedown_events = _bus_streams(result, names)
@@ -934,7 +934,7 @@ def derive_item_support_effects(
                     trigger="explicit_takedown_within_damage_window",
                     cooldown=nova.value("life_from_death_cooldown"),
                 )
-                for recipient in (attacker, *teammates)
+                for recipient in (attacker, *allies)
             )
 
     # Triggered enchanter passives.  The target is carried by the authored
@@ -981,7 +981,7 @@ def derive_item_support_effects(
         if starlit_grace is not None:
             candidates = [
                 actor
-                for actor in teammates
+                for actor in allies
                 if actor.participant_id != target.participant_id
             ]
             chain_target = candidates[0] if candidates else target
@@ -1150,11 +1150,11 @@ def derive_item_support_effects(
                     bonus_attack_speed_percent=fanfare.value(as_key),
                     trigger="authored_immobilize_or_slow",
                 )
-                for recipient in (attacker, *teammates)
+                for recipient in (attacker, *allies)
             )
-        if going_sledding is not None and teammates:
+        if going_sledding is not None and allies:
             going_sledding.declared(PacketKind.TEMPORARY_HEALTH)
-            target = teammates[0]
+            target = allies[0]
             packets.extend(
                 _packet(
                     attacker=attacker,
@@ -1248,13 +1248,13 @@ def derive_item_support_effects(
                 duration=devotion.value("shield_duration"),
                 target_scope="all_selected_teammates",
             )
-            for target in (attacker, *teammates)
+            for target in (attacker, *allies)
         )
     purify = _producer(slots, AllyProducer.PURIFY)
     active_time = _active_seconds(attacker, purify)
-    if purify is not None and active_time > 0.0 and teammates:
+    if purify is not None and active_time > 0.0 and allies:
         purify.declared(PacketKind.HEAL)
-        target = teammates[0]
+        target = allies[0]
         packets.append(
             _packet(
                 attacker=attacker,
@@ -1335,7 +1335,7 @@ def derive_item_support_effects(
                 beam_delay=beam_delay,
                 range_assumption=f"within_{range_units:g}_units",
             )
-            for target in (attacker, *teammates)
+            for target in (attacker, *allies)
         )
         # Intervention is also an area true-damage packet.  The calculator has
         # no map coordinates, so every selected enemy is an explicit roster
@@ -1416,7 +1416,7 @@ def derive_item_support_effects(
                 ),
                 target_scope="all_selected_teammates",
             )
-            for target in (attacker, *teammates)
+            for target in (attacker, *allies)
         )
     shockwave = _producer(slots, AllyProducer.BREAKING_SHOCKWAVE)
     active_time = _active_seconds(attacker, shockwave)
@@ -1479,7 +1479,7 @@ def schedule_knights_vow(
         # The declaration guard, stated here rather than left to the shared
         # resolver: this is the impl a Knight's Vow capability names, and
         # ``resolve_knights_vow_tether`` answers ``None`` for three different
-        # reasons — no producer, no eligible teammate, no authored selection
+        # reasons — no producer, no eligible ally, no authored selection
         # — so folding them would hide which one a build tripped.
         if (
             _producer(resolve_slots(_item_names(holder)), AllyProducer.SACRIFICE)

@@ -9,7 +9,7 @@ from collections.abc import Collection, Iterable, Iterator, Mapping
 from dataclasses import replace
 from typing import Any
 
-from .ally_packet_shape import _MISSING, _item_names, _option, _producer, _teammates
+from .ally_packet_shape import _MISSING, _item_names, _option, _producer, _allies
 from .interpreters.ally_packet import resolve_slots
 from .item_behavior import AllyProducer, PacketKind
 from .program import route as program_route
@@ -209,18 +209,18 @@ def _cc_mark_subjects(
     return tuple(all_actors[int(subject)] for subject in marked)
 
 
-def _selected_teammate(attacker: Any, teammates: list[Any], owner: str) -> Any | None:
-    """The teammate the holder's scenario tethered, under *owner*'s options."""
-    if not teammates:
+def _selected_ally(attacker: Any, allies: list[Any], owner: str) -> Any | None:
+    """The ally the holder's scenario tethered, under *owner*'s options."""
+    if not allies:
         return None
     raw_index = _option(attacker, owner, "worthy_target_index", -1.0)
     if float(raw_index) < 0.0:
         # Pledge is unit-targeted: a MISSING authored index means no
         # designation - fail closed instead of inventing the first
-        # teammate as Worthy (P3 package 3S).
+        # ally as Worthy (P3 package 3S).
         return None
-    index = max(0, min(len(teammates) - 1, int(raw_index)))
-    return teammates[index]
+    index = max(0, min(len(allies) - 1, int(raw_index)))
+    return allies[index]
 
 
 def resolve_knights_vow_tether(
@@ -230,7 +230,7 @@ def resolve_knights_vow_tether(
 
     Returns the authored target, the option gates, and the typed Sacrifice
     values, or ``None`` when the holder declares no Sacrifice producer, has
-    no eligible teammate, or the authored Worthy index is the no-selection
+    no eligible ally, or the authored Worthy index is the no-selection
     sentinel.  Both the receipt scheduler and the compiled score staging
     consume this one resolution so the walks cannot disagree about the
     tether; every number comes back through the declaration's own
@@ -240,9 +240,7 @@ def resolve_knights_vow_tether(
     if sacrifice is None:
         return None
     sacrifice.declared(PacketKind.HEAL)
-    target = _selected_teammate(
-        holder, _teammates(holder, list(all_actors)), sacrifice.owner
-    )
+    target = _selected_ally(holder, _allies(holder, list(all_actors)), sacrifice.owner)
     if target is None:
         return None
     return {

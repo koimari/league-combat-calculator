@@ -16,7 +16,7 @@ CTX = route.RouteContext(
     author=0,
     holder=0,
     pair_defender=3,
-    teammates=(1, 2),
+    allies=(1, 2),
     opponents=(3, 4),
     trigger_subjects=(3, 4),
 )
@@ -35,7 +35,7 @@ class TestResolutionIsTotal:
         """No member falls through to a default — the failure mode being closed."""
         policy = (
             policy_type(1)
-            if policy_type in (route.OneTeammate, route.SelfAndOneTeammate)
+            if policy_type in (route.OneAlly, route.SelfAndOneAlly)
             else (
                 policy_type((1, 2))
                 if policy_type is route.ExplicitTargets
@@ -59,10 +59,10 @@ class TestEachPolicyDeliversWhatItNames:
             (route.Holder(), (0,)),
             (route.PairDefender(), (3,)),
             (route.AllOpponents(), (3, 4)),
-            (route.AllTeammates(), (1, 2)),
-            (route.SelfAndAllTeammates(), (0, 1, 2)),
-            (route.OneTeammate(2), (2,)),
-            (route.SelfAndOneTeammate(2), (0, 2)),
+            (route.AllAllies(), (1, 2)),
+            (route.SelfAndAllAllies(), (0, 1, 2)),
+            (route.OneAlly(2), (2,)),
+            (route.SelfAndOneAlly(2), (0, 2)),
             (route.ExplicitTargets((4,)), (4,)),
             (route.TriggerTarget(), (3, 4)),
         ],

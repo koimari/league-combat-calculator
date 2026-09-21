@@ -13,9 +13,9 @@ policy with no branch raises rather than returning an empty tuple — and an
 unresolvable context raises through :func:`unroutable_event` instead of
 quietly delivering to nobody: a context is assembled by the builder from the
 roster it already has, so a missing trigger subject or an out-of-range
-teammate is the builder and the author disagreeing, never a data condition.
+ally is the builder and the author disagreeing, never a data condition.
 An empty result is legal only where a policy's own docstring says the empty
-roster is the answer (no teammates, no opponents); everywhere else emptiness
+roster is the answer (no allies, no opponents); everywhere else emptiness
 means the context was wrong.
 
 :class:`RouteAnnotation` is the other half.  Twelve labels in the live
@@ -69,27 +69,27 @@ class AllOpponents:
 
 
 @dataclass(frozen=True, slots=True)
-class AllTeammates:
+class AllAllies:
     """Every ally except the author."""
 
 
 @dataclass(frozen=True, slots=True)
-class SelfAndAllTeammates:
+class SelfAndAllAllies:
     """The author and every ally — the ordinary team-wide support shape."""
 
 
 @dataclass(frozen=True, slots=True)
-class OneTeammate:
+class OneAlly:
     """A single named ally, by roster slot."""
 
-    teammate: PIdx
+    ally: PIdx
 
 
 @dataclass(frozen=True, slots=True)
-class SelfAndOneTeammate:
+class SelfAndOneAlly:
     """The author and one named ally — Knight's Vow and its shape-mates."""
 
-    teammate: PIdx
+    ally: PIdx
 
 
 @dataclass(frozen=True, slots=True)
@@ -120,10 +120,10 @@ RoutePolicy = (
     | Holder
     | PairDefender
     | AllOpponents
-    | AllTeammates
-    | SelfAndAllTeammates
-    | OneTeammate
-    | SelfAndOneTeammate
+    | AllAllies
+    | SelfAndAllAllies
+    | OneAlly
+    | SelfAndOneAlly
     | ExplicitTargets
     | TriggerTarget
 )
@@ -133,10 +133,10 @@ ROUTE_POLICIES: tuple[type, ...] = (
     Holder,
     PairDefender,
     AllOpponents,
-    AllTeammates,
-    SelfAndAllTeammates,
-    OneTeammate,
-    SelfAndOneTeammate,
+    AllAllies,
+    SelfAndAllAllies,
+    OneAlly,
+    SelfAndOneAlly,
     ExplicitTargets,
     TriggerTarget,
 )
@@ -193,7 +193,7 @@ class RouteContext:
     author: PIdx
     holder: PIdx
     pair_defender: PIdx | None = None
-    teammates: tuple[PIdx, ...] = ()
+    allies: tuple[PIdx, ...] = ()
     opponents: tuple[PIdx, ...] = ()
     trigger_subjects: tuple[PIdx, ...] = ()
     annotations: tuple[RouteAnnotation, ...] = field(default=())
@@ -236,14 +236,14 @@ def resolve_route(  # pylint: disable=too-many-return-statements
             return _checked(policy, (ctx.pair_defender,), roster_size)
         case AllOpponents():
             return _checked(policy, ctx.opponents, roster_size)
-        case AllTeammates():
-            return _checked(policy, ctx.teammates, roster_size)
-        case SelfAndAllTeammates():
-            return _checked(policy, (ctx.author, *ctx.teammates), roster_size)
-        case OneTeammate():
-            return _checked(policy, (policy.teammate,), roster_size)
-        case SelfAndOneTeammate():
-            return _checked(policy, (ctx.author, policy.teammate), roster_size)
+        case AllAllies():
+            return _checked(policy, ctx.allies, roster_size)
+        case SelfAndAllAllies():
+            return _checked(policy, (ctx.author, *ctx.allies), roster_size)
+        case OneAlly():
+            return _checked(policy, (policy.ally,), roster_size)
+        case SelfAndOneAlly():
+            return _checked(policy, (ctx.author, policy.ally), roster_size)
         case ExplicitTargets():
             return _checked(policy, policy.targets, roster_size)
         case TriggerTarget():
@@ -272,18 +272,18 @@ def resolve(
 
 __all__ = [
     "ROUTE_POLICIES",
+    "AllAllies",
     "AllOpponents",
-    "AllTeammates",
     "ExplicitTargets",
     "Holder",
-    "OneTeammate",
+    "OneAlly",
     "PairDefender",
     "ResolvedRoute",
     "RouteAnnotation",
     "RouteContext",
     "RoutePolicy",
-    "SelfAndAllTeammates",
-    "SelfAndOneTeammate",
+    "SelfAndAllAllies",
+    "SelfAndOneAlly",
     "SelfOnly",
     "TriggerTarget",
     "resolve",

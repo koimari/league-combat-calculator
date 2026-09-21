@@ -163,12 +163,12 @@ def test_self_and_all_teammates_no_teammate_falls_back_to_self():
 
 
 def test_no_catch_all_teammate_fallback():
-    """The terminal catch-all is gone: the only ``teammates[0]`` return is
+    """The terminal catch-all is gone: the only ``allies[0]`` return is
     inside the explicit ``one_teammate`` branch, and the function body ends
     with the unreachable exhaustiveness guard (repo precedent:
     tests/test_participant_timeline.py:4686)."""
     source = inspect.getsource(_support_target_ids)
-    assert 'return [teammates[0].participant_id], "first_selected_teammate"' in source
+    assert 'return [allies[0].participant_id], "first_selected_teammate"' in source
     one_teammate_branch = (
         'if target_scope == "one_teammate":'
         + source.split('if target_scope == "one_teammate":', 1)[1]
