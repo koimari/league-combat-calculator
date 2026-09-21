@@ -16,7 +16,7 @@ class SourceReceipt:
     ``revision_id`` is a MediaWiki revision id, or ``0`` — the explicit
     marker for a value read from the patch-stamped cached item source, which
     exposes no revision id.  Zero is spelled rather than omitted for the same
-    reason the campaign spells ``STRUCTURAL_ZERO``: an absent id and an id
+    reason a structural zero is spelled and not omitted: an absent id and an id
     that does not exist must not look alike.  ``revision_timestamp`` is the
     human-checkable stamp for that revision; when the id is ``0`` it names
     the cache instead (the precedent already in ``defensive_effects``).

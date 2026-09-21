@@ -291,7 +291,7 @@ class ChampionLoadout:
             raise ValueError(f"{field} practice dummies have no cast order")
         # Champion-agnostic shape only, exactly as the main attacker's path
         # checks it; which slots this roster member may be told to cast is
-        # decided against its parsed kit in ``validate_for_champion`` (D-11).
+        # decided against its parsed kit in ``validate_for_champion``.
         validate_cast_order_shape(cast_order, field=f"{field}.cast_order")
 
         raw_current_health = value.get("current_health")

@@ -330,9 +330,8 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
     if stable is None and declarations:
         # A declaring champion's cycle is a disagreement between a module
         # and the interpreter that a human must settle — falling back
-        # would serve an order no rule derived (D-85 gates the raise on
-        # the declaration, so the 170 non-declaring champions keep the
-        # silent fallback below).
+        # would serve an order no rule derived.  The raise is gated on the
+        # declaration, so a non-declaring champion keeps the fallback below.
         raise ResolvedCycleError(
             f"{champion_name}: the declared and inferred edges form a cycle "
             "in this parse — "

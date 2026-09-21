@@ -40,7 +40,7 @@ class DependencyReceipt:
             derived — the two surfaces agreed.
         conflicts: Oppositions between a declaration and an inference,
             each naming the suppression that covered it.  An *uncovered*
-            opposition never reaches a receipt: it raises (D-82).
+            opposition never reaches a receipt: it raises.
 
     Every ledger is empty for a champion that declares nothing.
     """
@@ -66,7 +66,7 @@ def _matching_suppression(
 ) -> SuppressedInference | None:
     """The nested suppression covering *edge*, or ``None``.
 
-    Scope is structural (D-81): a suppression is its parent's exact
+    Scope is structural: a suppression is its parent's exact
     reverse pair, so only the inferred *kind* is left to match.
     """
     for suppression in dep.suppresses:
@@ -102,7 +102,7 @@ def merge_declared_edges(
         ConflictingInferenceError: An inferred edge opposes an active
             declaration and no suppression covers it.  "Declared always
             wins" would settle a real modelling disagreement silently in
-            the module's favour (D-82).
+            the module's favour.
         CastDependencyError: A suppression matched nothing and says
             nothing about why — a claim about an inference nobody can
             see.

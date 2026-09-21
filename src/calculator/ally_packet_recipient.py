@@ -14,7 +14,7 @@ from .roster_composition import Combatant
 
 # Which declared packet a chained enchanter effect emits, keyed by the kind
 # of the packet that triggered it, and which sourced fraction that packet
-# carries.  Two tables rather than one runtime-computed kind (D-50): the kind
+# carries.  Two tables rather than one runtime-computed kind: the kind
 # a producer emits has to be readable from the declaration, and the fraction
 # it uses has to be readable from the kind.
 _CHAIN_KINDS: Mapping[str, PacketKind] = MappingProxyType(

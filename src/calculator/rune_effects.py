@@ -410,8 +410,8 @@ class RuneWindowAmpEffect:
 
     **The window and the ratio are not here.** They are the amp chain's
     ``OPENING_WINDOW`` slot, declared as a ``BehaviorRule`` over
-    ``RUNE_EFFECTS`` references, and one number with two homes is the drift
-    this campaign exists to remove. What is left is the gold accounting and
+    ``RUNE_EFFECTS`` references, and one number with two homes drifts.
+    What is left here is the gold accounting and
     the receipt strings, which no amp declaration models: gold is not damage
     and never joins the total.
     """

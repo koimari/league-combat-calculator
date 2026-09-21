@@ -181,11 +181,10 @@ def _packet(  # pylint: disable=too-many-arguments
     cross-participant producers pass through — and it is deliberately *not*
     written into the returned dict: the declaration's homes are this call
     site and the mechanic's ``trigger_stream`` capability, and a packet
-    payload that grew a key would move receipts inside a semantic commit
-    (R-17).
+    payload that grew a key would move receipts inside a semantic commit.
 
     ``damage_classes`` and ``attack_classes`` are how a ``damage_modifier``
-    packet says *what it applies to* — the two axes of D-04, both required
+    packet says *what it applies to* — two axes, both required
     of those packets, both banned from being empty, and both checked here.
     Unlike ``authority`` they are written into the returned dict, because
     the walk reads them per packet; they reach no receipt, because the
@@ -275,7 +274,7 @@ def _check_cross_participant_authority(
     The rule keys on the declared :class:`Authority`, never on a flag: three
     of the six producers set no ``all_sources``, so an ``all_sources``-keyed
     check passes Dream Maker, Black Cleaver and Bloodletter's Curse by
-    construction (D-07).  ``owner`` is the walk's skip handshake — the
+    construction.  ``owner`` is the walk's skip handshake — the
     holder's own contribution is priced pair-side — so it is meaningful
     exactly when the two halves are disjoint, which is what ``SPLIT`` says.
 
@@ -313,7 +312,7 @@ def _check_declared_classes(
     damage_classes: frozenset[DamageClass] | None,
     attack_classes: frozenset[AttackClass] | None,
 ) -> None:
-    """Every ``damage_modifier`` packet says which damage it applies to (D-04).
+    """Every ``damage_modifier`` packet says which damage it applies to.
 
     Both axes are required with no default and neither may be empty:
     "empty means all" is a silent default, and the walk that consumed these

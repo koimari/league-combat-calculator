@@ -135,8 +135,8 @@ _validate_override_reasons()
 #
 # Two surfaces make ordering claims: a champion module DECLARES what its
 # own kit requires, and the detector above INFERS ordering from the
-# markers it parses.  This is where the two meet, under Phase 5's
-# precedence table:
+# markers it parses.  This is where the two meet, under this precedence
+# table:
 #
 #   declared A→B  inferred A→B  inferred B→A  suppression B→A  outcome
 #   ───────────────────────────────────────────────────────────────────
@@ -150,8 +150,8 @@ _validate_override_reasons()
 #                                               nothing        latent (reason required)
 #
 # A champion that declares nothing takes the first row for every edge and
-# reaches none of this code (D-85) — which is what makes the migration
-# provably diff-free for the 170 non-declaring modules.
+# reaches none of this code, so a non-declaring module keeps the inferred
+# order it always had.
 # ─────────────────────────────────────────────────────────────────────
 
 
@@ -166,7 +166,7 @@ _validate_override_reasons()
 
 
 # Both rotation memos hold values derived from data/, so both key on
-# data_registry.data_version() (D-49): a patch-day refresh bumps the
+# data_registry.data_version(): a patch-day refresh bumps the
 # counter and the next read misses, instead of serving a cast order
 # derived from the numbers the refresh just replaced.
 

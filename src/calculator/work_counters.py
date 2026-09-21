@@ -4,9 +4,9 @@ An optimizer request does three kinds of work — it *proposes* candidate
 builds, it *scores* the ones its memo does not already know, and each score
 drives some number of one-pair fights.  Wall time mixes all three with the
 machine it ran on; these counters separate them, and the difference between
-the pair-fight count and ``evaluations x enemies`` (the campaign runbook's
-*residual*, R-25) moves the moment a cache stops hitting or a candidate stops
-compiling — long before wall time leaves the noise.
+the pair-fight count and ``evaluations x enemies`` — the *residual* — moves
+the moment a cache stops hitting or a candidate stops compiling, long before
+wall time leaves the noise.
 
 Nothing here counts anything.  This module declares only *what* a counter
 sink looks like and *which rung* priced an evaluation; the optimizer and the
@@ -65,8 +65,8 @@ class WorkCounterSink(Protocol):  # pylint: disable=too-few-public-methods
     counting site in ``src/`` can disagree with it.
 
     ``rung_receipts`` is the *cause* the four-state histogram cannot carry.
-    ``rungs`` is keyed by published label, and D-69's whole argument is that
-    a histogram must name why a fallback happened — but a label is a closed
+    ``rungs`` is keyed by published label, and a histogram has to name why
+    a fallback happened — but a label is a closed
     vocabulary of four strings and a reason is a sentence, so they cannot be
     the same key.  A ``ReceiptWalk`` or a ``SearchPoisoned`` reaches a reader
     with *which declaration refused* only because this field exists; without
@@ -76,8 +76,8 @@ class WorkCounterSink(Protocol):  # pylint: disable=too-few-public-methods
     a widening of ``rungs``: its total is the fallback count and its keys are
     the declarations that caused them.
 
-    ``walk_invocations`` is the structural half of Phase 4's one-walk
-    property.  Source counting says there is one ``run_survival_walk`` call
+    ``walk_invocations`` is the runtime half of the one-walk property.
+    Source counting says there is one ``run_survival_walk`` call
     expression in the tree; only a runtime counter says a composition
     entered it once **per pass** rather than twice per pass under two names,
     which is the failure "one call site" cannot see.  It is not one of the

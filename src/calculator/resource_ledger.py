@@ -1,4 +1,4 @@
-"""Typed mana resource ledger (roadmap P3 slice 1).
+"""Typed mana resource ledger.
 
 One account per participant and resource kind owns every mana transition:
 current mana, maximum mana, maximum-mana growth, gain/restore, spend,
@@ -25,7 +25,7 @@ Design rules:
 - Deterministic ordering: :meth:`ResourceLedger.run` sorts events by
   ``(time, tier, sequence, insertion order)``; at one timestamp a lower
   tier applies first (restores/regen before casts), matching the engine's
-  phase convention (restore phase 0, cast phase 1).
+  phase convention: restores and regen resolve before casts.
 - Fail closed: unknown resource kind or operation, an event whose owner
   does not match the account, non-finite or negative authored amounts, and
   invalid clamp amounts all raise, naming the offending field.  Unclear

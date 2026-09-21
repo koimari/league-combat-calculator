@@ -1,5 +1,4 @@
-"""Typed item-cleanse eligibility and action-downtime truncation kernel
-(roadmap P2 Slice 4).
+"""Typed item-cleanse eligibility and action-downtime truncation kernel.
 
 One dependency-light leaf owns the typed contracts for item actives that
 remove crowd-control debuffs — Mikael's Blessing (Purify), Quicksilver Sash
@@ -226,7 +225,7 @@ class CleanseEligibility:
                     event_key=event_key,
                 )
         elif scope == "self_and_all_teammates":
-            # P2 Slice 7 (Milio R): the walk authors one packet per
+            # Milio R: the walk authors one packet per
             # recipient (the E8d fan-out roster — Milio + every selected
             # teammate), so any authored target is valid; an empty target
             # fails closed (identity missing).  The caster-CC gate is the

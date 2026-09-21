@@ -31,7 +31,7 @@ from .item_behavior import UtilityDimension
 #
 # The *vocabulary* is not declared here — it is
 # :class:`~.item_behavior.UtilityDimension`, the single home both this payload
-# and Phase 1's claim table read.  What is declared here is the per-item
+# and the claim table read.  What is declared here is the per-item
 # assignment, which no rule can derive: twenty of these items compile to no
 # ``BehaviorRule`` at all (a revive, a stasis, a spell shield), so their
 # outcome is a reviewed product fact rather than a consequence of a
@@ -80,7 +80,7 @@ UTILITY_OUTCOMES: Mapping[str, tuple[UtilityDimension, ...]] = {
     "Banshee's Veil": (UtilityDimension.SPELL_PROTECTION,),
     "Edge of Night": (UtilityDimension.SPELL_PROTECTION,),
     # The third Annul item, and the same published dimension as its two
-    # siblings above; its absence here was an omission, not a ruling.
+    # siblings above.
     "Verdant Barrier": (UtilityDimension.SPELL_PROTECTION,),
     "Zhonya's Hourglass": (UtilityDimension.STASIS,),
     "Guardian Angel": (UtilityDimension.REVIVE,),

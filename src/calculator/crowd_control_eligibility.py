@@ -1,4 +1,4 @@
-"""Typed crowd-control classification and immunity-eligibility kernel (roadmap P2 Slice 3).
+"""Typed crowd-control classification and immunity-eligibility kernel.
 
 One dependency-light leaf owns the typed contracts for crowd-control
 classification and Black-Shield-style immunity, orthogonal to delivery

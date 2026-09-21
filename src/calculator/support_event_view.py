@@ -300,8 +300,8 @@ def _bus_streams(
 
     The compiler reads each stream once and the bus builds only the streams
     the held holders declare, so a holder reading none pays nothing — that
-    laziness is the whole reason the migration is performance-neutral
-    (D-30).  ``tuple_incapable_items()`` is exactly the set of holders that
+    laziness is the whole reason the bus is performance-neutral.
+    ``tuple_incapable_items()`` is exactly the set of holders that
     read a raw stream, so intersecting first also bounds the projection's
     cache key to those names rather than to every build the optimizer
     explores.

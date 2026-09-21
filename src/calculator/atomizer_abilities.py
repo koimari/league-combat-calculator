@@ -16,8 +16,8 @@ from .ability_prose import (
 from .atom_spelling import _snake
 from .atomizer import Atomizer
 
-# P1 Slice 11: Ashe Q — effects[0] is the Focus stack window (4s,
-# mislabeled "active duration" before), effects[1] is the real 6s active
+# Ashe Q: effects[0] is the Focus stack window (4s, which an effect-0-only
+# scan reads as the active duration), effects[1] is the real 6s active
 # window ("Active: For 6 seconds...").  An explicit map, NOT a keyword
 # rule (61 genuine actives mention stacks) — every other champion's
 # atoms stay byte-identical.
@@ -56,7 +56,7 @@ def atomize_abilities(
                             units=["s"] * len(values),
                             evidence=[f"cooldown.modifiers[{mod_index}]"],
                         )
-            # P1 Slice 11: the effect-0-only scan mislabels multi-effect
+            # The effect-0-only scan mislabels multi-effect
             # entries whose effects[0] is a passive — the explicit map
             # (below) relabels Ashe Q's Focus window + extracts the real
             # 6s active duration.
@@ -76,7 +76,7 @@ def atomize_abilities(
                     if effect_index == 0
                     else None
                 )
-                # P1 Slice 11: the effect-0-only scan mislabels multi-effect
+                # The effect-0-only scan mislabels multi-effect
                 # entries whose effects[0] is a PASSIVE (Ashe Q: the 4s Focus
                 # stack window was claimed as the Q's active duration).  The
                 # explicit map relabels Ashe Q's effects[0] to the Focus

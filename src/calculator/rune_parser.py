@@ -1960,8 +1960,8 @@ def _certify_roster_agreement(
 
 # The Rune page's Trees table names the five paths in the order the game
 # shows them, which is the order the roster is cached in.  Data Dragon
-# carries no such order, and a hand list of five path names is exactly the
-# kind of second copy this campaign removes.
+# carries no such order, and a hand list of five path names would be a
+# second copy of it.
 _RUNE_TABLE_ROW = re.compile(r"\{\{Rune table row\|(\w+)\}\}")
 
 

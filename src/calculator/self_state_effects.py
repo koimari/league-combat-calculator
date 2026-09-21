@@ -155,7 +155,7 @@ def derive_self_state_effects(
                     "owner",
                     "source_participant",
                     "resistance_type",
-                    # D-04: a damage_modifier names its classes on the
+                    # A damage_modifier names its classes on the
                     # module entry; the kernel refuses an empty declaration.
                     "damage_classes",
                     "attack_classes",

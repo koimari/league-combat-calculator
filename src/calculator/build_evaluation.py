@@ -37,8 +37,9 @@ def evaluate_build(
     replays the recorded score and its ordering-audit contribution instead of
     re-simulating the roster.  The public receipts are byte-identical.
 
-    This is also the campaign's proposal counter (runbook R-24): every
-    candidate any regime proposes arrives here.  The memo *misses* are
+    This is also the proposal counter ``scripts/bench_coupled_optimizer.py``
+    reads: every candidate any regime proposes arrives here.  The memo
+    *misses* are
     counted one layer down, in the function that pays for them.
     """
     if work_counters is not None:

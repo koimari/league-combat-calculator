@@ -6,11 +6,11 @@ the parser moves — the exact failure CLAUDE.md rule 5 exists to prevent, one
 layer up — so every number a :class:`~.item_behavior.BehaviorRule` reads is a
 reference resolved at call time against the registry that owns it.
 
-Three registries own runtime numbers and this module can reach all three
-(D-46): ``ITEM_EFFECTS`` and ``ALLY_ITEM_EFFECTS`` in ``item_effects``, and
+Three registries own runtime numbers and this module can reach all
+three: ``ITEM_EFFECTS`` and ``ALLY_ITEM_EFFECTS`` in ``item_effects``, and
 ``RUNE_EFFECTS`` in ``rune_effects`` — keystones are runtime damage
 producers, so an items-only union would leave two amp producers outside the
-no-literals rule.  This union is deliberately **not** Phase 1's
+no-literals rule.  This union is deliberately **not**
 ``coverage_evidence.EvidenceRegistry``, which carries a fourth member
 (``ITEM_INPUT_OPTIONS``) holding scenario controls rather than sourced
 numbers: an evidence member may name an option control's key and a value
@@ -21,8 +21,8 @@ Reads route through the registries' own fail-loud accessors
 rather than re-implementing them, so a missing key raises naming the owner
 and the key instead of silently borrowing a default.  The modules are
 imported, never the registry objects, because ``refresh_item_effects()``
-rebuilds a registry in place and a name bound at import would be the thing
-D-48's refresh proof cannot distinguish from a live reference.
+rebuilds a registry in place and a name bound at import is indistinguishable
+from a live reference once it has.
 
 :func:`receipt_for` lives here too, beside the accessors it reads: a receipt is
 a *citation of the registry entry a declaration was read from*, so it belongs

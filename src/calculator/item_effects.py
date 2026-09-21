@@ -377,7 +377,7 @@ ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
     # Lost Chapter's Enlighten restores 20% max mana over 3 seconds on
     # level-up.  The fight model has a fixed level, so the level-up moment
     # is authored state: the smallest explicit choice is ONE timing (seconds
-    # into the fight).  A missing/zero choice creates NO trigger (P3 slice 1).
+    # into the fight).  A missing or zero choice creates NO trigger.
     "Lost Chapter": {
         "options": {
             "enlighten_level_up_seconds": {

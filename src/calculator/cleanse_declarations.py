@@ -75,7 +75,7 @@ MIKAELS_HEAL_ATOM: dict[str, Any] = {
 #: Rule 5: Quicksilver's percent and window live in ITEM_EFFECTS, and both
 #: the atom receipt's ``values`` and the declaration below are that one read
 #: — read at import, like Purify's pair, because the entry is code-owned and
-#: refresh-inert (D-47).
+#: refresh-inert.
 MERCURIAL_MOVEMENT = mercurial_quicksilver_movement()
 
 
@@ -121,7 +121,7 @@ ITEM_CLEANSE_DECLARATIONS: dict[str, dict[str, Any]] = {
             # read through the typed accessor, which raises naming the item
             # and the key if the registry ever loses one — never a literal
             # here that could outlive the source.  Read at import because
-            # that registry is hand-authored and refresh-inert (D-47), so
+            # that registry is hand-authored and refresh-inert, so
             # there is no generation for a re-read to catch.
             "amount_min": ally_item_effect_value("Mikael's Blessing", "heal_min"),
             "amount_max": ally_item_effect_value("Mikael's Blessing", "heal_max"),

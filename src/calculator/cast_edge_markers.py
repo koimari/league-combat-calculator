@@ -144,7 +144,7 @@ class _Edge:
             ``"inferred"``, of ``DEPENDENCY_KINDS`` when it is
             ``"declared"``.  The two vocabularies are asserted disjoint,
             so the kind alone identifies the surface — ``origin`` says it
-            out loud rather than leaving the reader to look it up (D-80).
+            out loud rather than leaving the reader to look it up.
         cite: The rationale sentence for the receipt.
         origin: Which surface produced the constraint — the detector
             reading markers, or the champion module asserting it.

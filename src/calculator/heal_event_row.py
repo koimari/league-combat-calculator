@@ -17,9 +17,9 @@ per-stream table for a caller that knows which one it has.
 
 The accessors below are spelled ``healed_*`` on purpose: ``heal_time`` and
 ``heal_amount`` are already local names in the modules that read these rows,
-and an import that shadows a local is how two earlier slices of this
-campaign broke. ``tests/test_heal_event_row.py`` re-derives the split from
-the baseline, so neither half of the claim can rot.
+and an import that shadows a local silently changes what a module reads.
+``tests/test_heal_event_row.py`` re-derives the split from the baseline, so
+neither half of the claim can rot.
 """
 
 from __future__ import annotations

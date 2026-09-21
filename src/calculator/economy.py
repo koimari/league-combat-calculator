@@ -39,7 +39,7 @@ def _item_by_id() -> dict[int, dict[str, Any]]:
     mapping per call dominated enumeration.  The memo is valid while both
     the cache object and ``data_version()`` are unchanged: the identity
     check catches a replaced cache, and the version catches a cache
-    refreshed in place, which identity alone cannot see (D-49).
+    refreshed in place, which identity alone cannot see.
     """
     global _ITEM_BY_ID_SOURCE, _ITEM_BY_ID_MEMO  # pylint: disable=global-statement
     global _ITEM_BY_ID_VERSION  # pylint: disable=global-statement

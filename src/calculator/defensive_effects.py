@@ -110,8 +110,8 @@ def _apply_everlasting(ledger: _DefenseLedger, names: frozenset[str]) -> None:
     of its own, because it already has one: the ally packet that grants the
     shield.  What the opening resolver has to say about it is a *refusal* —
     the trigger needs authored crowd-control metadata this model will not
-    infer — and saying that twice, once as a second declaration, is the
-    duplicated authority this campaign exists to remove.
+    infer — and saying that twice, once as a second declaration, would give
+    one fact two homes.
     """
     for owner in ITEM_EFFECTS:
         if owner not in names:

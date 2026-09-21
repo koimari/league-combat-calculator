@@ -91,9 +91,9 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
 
     # recast adjacency: a recast rides its parent's casts on the timeline.
     # ``recast_of`` on the parsed entry is the ONLY authority for that link
-    # (D-11) — the name-based "Q plus Q2 means a recast" fallback that used
-    # to sit here masked every unstamped recast slot, so the fail-closed
-    # half of the rule could never fire.
+    # — a name-based "Q plus Q2 means a recast" fallback would mask every
+    # unstamped recast slot, so the fail-closed half of the rule could
+    # never fire.
     for s in slots:
         parent = infos.get(s, {}).get("recast_of")
         if parent and parent in corpora:

@@ -310,9 +310,8 @@ _MODULE_AUTHORED_HEAL_SLOTS = frozenset(
         # gets Rejuvenation through Astral Infusion, whose own heal is a
         # separate row.
         ("Soraka", "Q"),
-        # Phase 3 (the W3 scan): three more self-heal double-grants the
-        # recipient rule alone would have kept, each already paid by the
-        # ledger's own owner.
+        # Three more self-heal double-grants the recipient rule alone would
+        # keep, each already paid by the ledger's own owner.
         # - Vladimir R: "heal Vladimir for each infected champion" is the
         #   healing rule's Hemoplague receipt (full amount, reduced copy
         #   attached for later roster targets).
@@ -370,7 +369,7 @@ def _has_support_attributes(champion_data: dict[str, Any]) -> bool:
 # The attribute names and target-scope markers below are pure cached-JSON
 # facts per ability, so they are derived once per ability object and cache
 # generation — ``(data_version(), id(ability))``, identity-verified on every
-# hit (D-49) — instead of per optimizer candidate.  The write goes through
+# hit — instead of per optimizer candidate.  The write goes through
 # ``store_for_generation``, which also drops the superseded generation that an
 # unbounded version-prefixed memo would otherwise retain along with every
 # cached dict it references.
