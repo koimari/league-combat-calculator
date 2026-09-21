@@ -22,10 +22,19 @@ from src.calculator import quantity
 #: either table fails here rather than at the next merge.
 DRIFTED = '''"""A catalogue of things."""
 
+from math import prod as teammate_total
+
 
 def price(teammate, wearer):
     unavailable = teammate or wearer
     return unavailable
+
+
+def caught():
+    try:
+        return price(1, 2)
+    except ValueError as teammate_error:
+        return teammate_total(teammate_error.args)
 '''
 
 
@@ -43,6 +52,8 @@ def test_a_second_spelling_of_either_kind_fails(tmp_path):
     assert {"catalogue -> catalog", "wearer -> holder"} <= reported
     assert {
         "teammate holds teammate -> ally",
+        "teammate_total holds teammate -> ally",
+        "teammate_error holds teammate -> ally",
         "unavailable holds unavailab -> withheld / refusal",
     } <= reported
 

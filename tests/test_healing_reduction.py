@@ -108,8 +108,8 @@ def test_outgoing_anti_heal_text_produces_a_profile() -> None:
 
 
 def test_reactive_when_struck_text_is_not_an_outgoing_profile() -> None:
-    """Bramble Vest's Thorns anti-heals whoever strikes the wearer, not the
-    wearer's own targets — its text must fail closed here."""
+    """Bramble Vest's Thorns anti-heals whoever strikes the holder, not the
+    holder's own targets — its text must fail closed here."""
     profiles = healing_reduction_profiles(
         [
             _item(

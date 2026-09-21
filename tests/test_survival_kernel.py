@@ -1075,7 +1075,7 @@ def test_a_second_producer_on_a_covered_item_fails_the_coverage_check(monkeypatc
 class _PricingHolder:
     """A participant as the strike-back pricer reads one: a stat block.
 
-    `thorns_return_damage` takes the wearer and the striker and reads exactly
+    `thorns_return_damage` takes the holder and the striker and reads exactly
     `.stats` off each, so this is the whole of the interface — a full
     `Combatant` would hide which fields the price actually depends on.
     """
@@ -1203,13 +1203,13 @@ def test_the_strike_back_prices_through_the_shared_arithmetic():
     the two agree on a real Thornmail profile is what makes `pricing` the one
     home rather than a successor sitting beside a precedent.
     """
-    wearer = _PricingHolder({"bonus_armor": 80.0})
+    holder = _PricingHolder({"bonus_armor": 80.0})
     striker = _PricingHolder({"magic_resistance": 67.0})
     profile = thorns_effects([_item("Thornmail")])[0]
 
     expected_resistance = apply_magic_penetration(67.0, 0.0, 0.0)
     expected_raw = profile.damage + profile.bonus_armor_ratio * 80.0
-    assert thorns_return_damage(profile, wearer, striker) == mitigate_declared(
+    assert thorns_return_damage(profile, holder, striker) == mitigate_declared(
         expected_raw, "magic", expected_resistance
     )
 

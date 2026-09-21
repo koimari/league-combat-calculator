@@ -87,7 +87,11 @@ def defined_names(tree: ast.Module) -> Iterable[tuple[int, str]]:
     """Every name this module binds, with the line that binds it.
 
     A keyword argument counts, because the engine's receipt keys are written
-    as one (``ledger.write(action, declared_price_unavailable=...)``).
+    as one (``ledger.write(action, declared_price_unavailable=...)``).  So do
+    the three binding forms that invent a name without a statement of their
+    own: an import that renames, an ``except ... as`` and a ``case ... as``.
+    A plain import is not one of them, since the gate reads that name where
+    the module defining it spells it.
     """
     for node in ast.walk(tree):
         if isinstance(node, NAMED_NODES):
@@ -98,6 +102,10 @@ def defined_names(tree: ast.Module) -> Iterable[tuple[int, str]]:
             yield node.lineno, node.arg
         elif isinstance(node, ast.Attribute) and isinstance(node.ctx, ast.Store):
             yield node.lineno, node.attr
+        elif isinstance(node, ast.alias) and node.asname:
+            yield node.lineno, node.asname
+        elif isinstance(node, (ast.ExceptHandler, ast.MatchAs)) and node.name:
+            yield node.lineno, node.name
 
 
 def _file_findings(where: str, source: str) -> list[str]:

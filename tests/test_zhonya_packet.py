@@ -346,7 +346,7 @@ def test_item_presence_alone_never_activates_stasis():
     # The gate sentence is the ATTACKER lane's receipt: it is the answer to
     # "can the pair engine price this?", and the gate is why the answer does
     # not depend on holding the item.  The target lane answers a different
-    # question (what the wearer survives) and names the mechanic instead.
+    # question (what the holder survives) and names the mechanic instead.
     assert "Time Stop" in target_item_model_coverage(get_item_by_name(ZHONYA))["reason"]
     for coverage in (item_probe.attacker_coverage(get_item_by_name(ZHONYA)),):
         assert (

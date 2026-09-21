@@ -3292,10 +3292,10 @@ def _auto_strike(target_id, attacker_id, *, time, damage, event_id):
 
 
 def test_thorns_strikes_back_and_wounds_the_attacker_from_incoming_autos():
-    """A Bramble wearer returns mitigated magic damage per basic attack and
+    """A Bramble holder returns mitigated magic damage per basic attack and
     Grievous-Wounds the striker's later healing."""
     striker = _thorns_combatant("source", "main", magic_resistance=100.0)
-    wearer = _thorns_combatant(
+    holder = _thorns_combatant(
         "target",
         "enemy",
         health=200.0,
@@ -3307,7 +3307,7 @@ def test_thorns_strikes_back_and_wounds_the_attacker_from_incoming_autos():
         ],
     }
     outgoing = {"source": list(incoming["target"]), "target": []}
-    _schedule_thorns_events(TimelineScene([striker, wearer], incoming, outgoing, {}))
+    _schedule_thorns_events(TimelineScene([striker, holder], incoming, outgoing, {}))
 
     thorns_events = [
         event
@@ -3321,7 +3321,7 @@ def test_thorns_strikes_back_and_wounds_the_attacker_from_incoming_autos():
     assert thorns_events[0] in outgoing["target"]
 
     result = _simulated_rows(
-        [striker, wearer],
+        [striker, holder],
         incoming,
         {
             "source": [
@@ -3349,9 +3349,9 @@ def test_thorns_strikes_back_and_wounds_the_attacker_from_incoming_autos():
     assert result["target"]["damage_taken"] == 50.0
 
 
-def test_thornmail_thorns_scales_from_wearer_bonus_armor():
+def test_thornmail_thorns_scales_from_holder_bonus_armor():
     striker = _thorns_combatant("source", "main", magic_resistance=0.0)
-    wearer = _thorns_combatant(
+    holder = _thorns_combatant(
         "target",
         "enemy",
         health=200.0,
@@ -3364,7 +3364,7 @@ def test_thornmail_thorns_scales_from_wearer_bonus_armor():
         ],
     }
     outgoing = {"source": list(incoming["target"]), "target": []}
-    _schedule_thorns_events(TimelineScene([striker, wearer], incoming, outgoing, {}))
+    _schedule_thorns_events(TimelineScene([striker, holder], incoming, outgoing, {}))
     thorns_events = [
         event
         for event in incoming["source"]
@@ -3375,11 +3375,11 @@ def test_thornmail_thorns_scales_from_wearer_bonus_armor():
 
 
 def test_thorns_from_a_skipped_strike_never_fires():
-    """A strike that lands after the wearer died is skipped, and its thorns
+    """A strike that lands after the holder died is skipped, and its thorns
     must not survive as an unconnected retaliation tick; the killing blow's
-    thorns still fires (the wearer was alive when struck)."""
+    thorns still fires (the holder was alive when struck)."""
     striker = _thorns_combatant("source", "main", magic_resistance=100.0)
-    wearer = _thorns_combatant(
+    holder = _thorns_combatant(
         "target",
         "enemy",
         health=50.0,
@@ -3394,9 +3394,9 @@ def test_thorns_from_a_skipped_strike_never_fires():
         ],
     }
     outgoing = {"source": list(incoming["target"]), "target": []}
-    _schedule_thorns_events(TimelineScene([striker, wearer], incoming, outgoing, {}))
+    _schedule_thorns_events(TimelineScene([striker, holder], incoming, outgoing, {}))
 
-    result = _simulated_rows([striker, wearer], incoming, {}, {}, 10.0)
+    result = _simulated_rows([striker, holder], incoming, {}, {}, 10.0)
     assert result["target"]["survived_window"] is False
     # Only the killing blow's thorns lands: 10 magic vs 100 MR = 5.
     assert result["source"]["damage_taken"] == 5.0
@@ -3843,7 +3843,7 @@ def test_knights_vow_cancels_redirect_when_holder_falls_below_health_gate():
 
 def test_thorns_does_not_fire_for_missed_or_blocked_basic_attack_receipts():
     striker = _thorns_combatant("source", "main")
-    wearer = _thorns_combatant(
+    holder = _thorns_combatant(
         "target", "enemy", items=(get_item_by_name("Bramble Vest"),)
     )
     incoming = {
@@ -3863,7 +3863,7 @@ def test_thorns_does_not_fire_for_missed_or_blocked_basic_attack_receipts():
         ]
     }
     outgoing = {"source": list(incoming["target"]), "target": []}
-    _schedule_thorns_events(TimelineScene([striker, wearer], incoming, outgoing, {}))
+    _schedule_thorns_events(TimelineScene([striker, holder], incoming, outgoing, {}))
     assert not any(
         event.get("source_key") == "thorns_Bramble Vest"
         for event in incoming.get("source", [])
@@ -4344,14 +4344,14 @@ def test_threshold_shield_trigger_is_preserved_on_damage_receipt():
 
 def test_authored_reactive_packet_requires_trigger_and_wounds_striker():
     incoming = {
-        "wearer": [
+        "holder": [
             {
                 "time": 0.0,
                 "damage": 20.0,
                 "damage_type": "physical",
                 "source_key": "auto_attacks",
                 "attacker": "striker",
-                "target": "wearer",
+                "target": "holder",
                 "trigger_kind": "basic_attack",
                 "sequence": 0,
                 "_event_id": "swing",
@@ -4370,7 +4370,7 @@ def test_authored_reactive_packet_requires_trigger_and_wounds_striker():
         ],
         "striker": [],
     }
-    outgoing = {"wearer": list(incoming["wearer"]), "striker": []}
+    outgoing = {"holder": list(incoming["holder"]), "striker": []}
     _schedule_authored_reactive_events(incoming, outgoing)
     [packet] = [
         event
@@ -4380,17 +4380,17 @@ def test_authored_reactive_packet_requires_trigger_and_wounds_striker():
     assert packet["_reactive"] is True
     assert packet["_trigger_event_id"] == "swing"
     assert packet["grievous_duration"] == 3.0
-    assert packet in outgoing["wearer"]
+    assert packet in outgoing["holder"]
 
 
 def test_authored_reactive_packet_with_wrong_trigger_is_ignored():
     incoming = {
-        "wearer": [
+        "holder": [
             {
                 "time": 0.0,
                 "damage": 20.0,
                 "attacker": "striker",
-                "target": "wearer",
+                "target": "holder",
                 "trigger_kind": "ability",
                 "_event_id": "spell",
                 "reactive_packets": [
@@ -4405,7 +4405,7 @@ def test_authored_reactive_packet_with_wrong_trigger_is_ignored():
         ],
         "striker": [],
     }
-    outgoing = {"wearer": list(incoming["wearer"]), "striker": []}
+    outgoing = {"holder": list(incoming["holder"]), "striker": []}
     _schedule_authored_reactive_events(incoming, outgoing)
     assert incoming["striker"] == []
 
