@@ -36,6 +36,7 @@ from ..item_behavior import (
     flat_fields,
 )
 from ..value_ref import AnyValueRef, resolve
+from .interpretation_error import InterpretationError
 from .rule_selection import rules_of
 
 # The field names a crit-profile rule compiles to.  One per declared number,
@@ -74,10 +75,6 @@ FORCED_CRIT_HEAL_REFERENCES: tuple[tuple[str, str], ...] = (
 )
 
 
-class CritProfileInterpretationError(ValueError):
-    """A crit declaration was asked something its payload does not answer."""
-
-
 def crit_references(rule: BehaviorRule) -> tuple[tuple[str, AnyValueRef], ...]:
     """Every field one crit declaration carries, and the reference behind it.
 
@@ -88,9 +85,7 @@ def crit_references(rule: BehaviorRule) -> tuple[tuple[str, AnyValueRef], ...]:
     payload = rule.payload
     names = CRIT_PAYLOAD_REFERENCES.get(type(payload))
     if names is None:
-        raise CritProfileInterpretationError(
-            f"{rule.mechanic_id} is not a crit-profile rule"
-        )
+        raise InterpretationError(f"{rule.mechanic_id} is not a crit-profile rule")
     references = [(name, getattr(payload, attribute)) for name, attribute in names]
     if isinstance(payload, ForcedCritRule) and payload.heal is not None:
         references.extend(
@@ -126,7 +121,7 @@ def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...
         rule,
         crit_references(rule),
         lane,
-        CritProfileInterpretationError,
+        InterpretationError,
         reader="declared_crit_profile",
     )
 
@@ -180,7 +175,7 @@ def _field(fields: tuple[KernelField, ...], name: str) -> float:
     return compiled_value(
         fields,
         name,
-        CritProfileInterpretationError,
+        InterpretationError,
         f"no crit-profile field named {name!r} was compiled; the engine asked "
         "a declaration a question it does not answer",
     )
@@ -190,9 +185,7 @@ def _forced_crit(rule: BehaviorRule, fields: tuple[KernelField, ...]) -> ForcedC
     """One forced-crit declaration, resolved into the record engines read."""
     payload = rule.payload
     if not isinstance(payload, ForcedCritRule):
-        raise CritProfileInterpretationError(
-            f"{rule.mechanic_id} is not a forced-crit rule"
-        )
+        raise InterpretationError(f"{rule.mechanic_id} is not a forced-crit rule")
     heals = payload.heal is not None
     return ForcedCrit(
         owner=rule.owner,
@@ -243,7 +236,7 @@ def _fold(
             damage_bonus += _field(fields, CRIT_DAMAGE_BONUS_FIELD)
         elif isinstance(payload, AttackCooldownRefundRule):
             if refund is not None:
-                raise CritProfileInterpretationError(
+                raise InterpretationError(
                     f"{refund.owner!r} and {rule.owner!r} both declare an "
                     "attack cooldown refund and no rule declares how two "
                     "refunds compose; the slice that declares a second one "
@@ -254,7 +247,7 @@ def _fold(
             )
         else:
             if forced is not None:
-                raise CritProfileInterpretationError(
+                raise InterpretationError(
                     f"{forced.owner!r} and {rule.owner!r} both force a critical "
                     "strike and no rule declares which one the strike pays; the "
                     "slice that declares a second one owns the fold"
@@ -278,7 +271,6 @@ __all__ = [
     "FORCED_CRIT_TEMP_HEALTH_DURATION_FIELD",
     "CooldownRefund",
     "CritProfile",
-    "CritProfileInterpretationError",
     "ForcedCrit",
     "crit_fields",
     "crit_references",

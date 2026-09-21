@@ -26,7 +26,8 @@ from ..item_behavior import (
     DefenseOutcome,
     DefenseSubject,
 )
-from .defense_state import DefenseInterpretationError, DefenseSlot
+from .defense_state import DefenseSlot
+from .interpretation_error import InterpretationError
 
 NOTES: Mapping[DefenseMechanic, str] = {
     DefenseMechanic.ANNUL: (
@@ -111,7 +112,7 @@ def resolve_combat_state(rule: BehaviorRule, subject: DefenseSubject) -> Defense
         return _time_stop(slot, subject)
     if mechanic in _STACK_SCHEDULE:
         return _stack_schedule(slot)
-    raise DefenseInterpretationError(
+    raise InterpretationError(
         f"{rule.mechanic_id} declares combat_state and this family has no "
         "branch for it; a state with no arithmetic is a mechanic that would "
         "silently do nothing"

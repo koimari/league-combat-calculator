@@ -35,6 +35,7 @@ from ..item_behavior import (
 )
 from ..item_behavior_catalog import behavior_rules
 from ..value_ref import DeclaredNumbers, LateLevelValueRef, LevelValueRef
+from .interpretation_error import InterpretationError
 
 # What a defence compiles to for inspection at build time: how many sourced
 # numbers its declaration carries.  A defence's *value* is not a build-time
@@ -44,16 +45,12 @@ from ..value_ref import DeclaredNumbers, LateLevelValueRef, LevelValueRef
 DEFENSE_VALUE_COUNT_FIELD = "defense_values"
 
 
-class DefenseInterpretationError(ValueError):
-    """A defence was asked something its declaration does not answer."""
-
-
 def payload(rule: BehaviorRule) -> DefensePayload:
     """*rule*'s defence payload, or a stop."""
     candidate = rule.payload
     if isinstance(candidate, DEFENSE_PAYLOAD_TYPES):
         return candidate
-    raise DefenseInterpretationError(f"{rule.mechanic_id} is not a defence rule")
+    raise InterpretationError(f"{rule.mechanic_id} is not a defence rule")
 
 
 class DefenseSlot:
@@ -72,7 +69,7 @@ class DefenseSlot:
         self._numbers = DeclaredNumbers(
             payload(rule).values,
             rule.mechanic_id,
-            DefenseInterpretationError,
+            InterpretationError,
             "a defence",
         )
         self.rule = rule
@@ -111,7 +108,7 @@ class DefenseSlot:
         """One of the payload's own declared references, read now."""
         reference = getattr(payload(self.rule), name, None)
         if reference is None:
-            raise DefenseInterpretationError(
+            raise InterpretationError(
                 f"{self.rule.mechanic_id} declares no {name}; it is a defence "
                 "of a different shape than the one asking"
             )
@@ -125,7 +122,7 @@ class DefenseSlot:
         doing something no reader of the declaration could see.
         """
         if field not in payload(self.rule).writes:
-            raise DefenseInterpretationError(
+            raise InterpretationError(
                 f"{self.rule.mechanic_id} does not declare that it writes "
                 f"{field.value}; a defence writes the state its declaration "
                 "names and no other"
@@ -196,7 +193,6 @@ def compiled_shape(
 
 __all__ = [
     "DEFENSE_VALUE_COUNT_FIELD",
-    "DefenseInterpretationError",
     "DefenseSlot",
     "compiled_shape",
     "declared_defenses",

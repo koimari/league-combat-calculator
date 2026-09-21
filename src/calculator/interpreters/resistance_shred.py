@@ -50,6 +50,7 @@ from ..item_behavior import (
 )
 from ..item_behavior_catalog import build_context
 from ..value_ref import resolve
+from .interpretation_error import InterpretationError
 from .rule_selection import rules_of
 
 # The field names a shred rule compiles to.  ``per_stack`` is a fraction of
@@ -72,10 +73,6 @@ MIXED_DAMAGE_TYPE = "mixed"
 # in a registry — and it is reproduced here exactly as the pair engine has
 # always computed it (docs/math-foundations.md §2.3).
 _CESARO_SATURATED_STACK_FRACTION = 0.8
-
-
-class ResistanceShredInterpretationError(ValueError):
-    """A shred was asked a question its declared model does not answer."""
 
 
 def event_damage_classes(damage_type: str) -> frozenset[DamageClass]:
@@ -111,9 +108,7 @@ def ramp_fields(
     """
     payload = rule.payload
     if not isinstance(payload, ResistanceShredRule):
-        raise ResistanceShredInterpretationError(
-            f"{rule.mechanic_id} is not a resistance-shred rule"
-        )
+        raise InterpretationError(f"{rule.mechanic_id} is not a resistance-shred rule")
 
     field = partial(KernelField, lane=lane, rule_id=rule.mechanic_id)
 
@@ -138,7 +133,7 @@ class ShredSlot(CompiledSlot):
     resistance: Resistance
     rule: BehaviorRule
     fields: tuple[KernelField, ...]
-    stop = ResistanceShredInterpretationError
+    stop = InterpretationError
     missing = (
         "{mechanic_id} compiles no {name!r} field; the engine asked its "
         "declaration a question it does not answer"
@@ -149,7 +144,7 @@ class ShredSlot(CompiledSlot):
         """The rule's payload, narrowed once for the accessors below."""
         payload = self.rule.payload
         if not isinstance(payload, ResistanceShredRule):
-            raise ResistanceShredInterpretationError(
+            raise InterpretationError(
                 f"{self.rule.mechanic_id} is not a resistance-shred rule"
             )
         return payload
@@ -180,7 +175,7 @@ class ShredSlot(CompiledSlot):
         """
         ramp = self._payload.ramp
         if ramp.model is not RampModel.CESARO_APPROX:
-            raise ResistanceShredInterpretationError(
+            raise InterpretationError(
                 f"{self.rule.mechanic_id} declares the {ramp.model.value} "
                 "summation, which counts its stacks exactly and has no averaged "
                 "form; ask it for the cut at a stack count instead"
@@ -201,7 +196,7 @@ class ShredSlot(CompiledSlot):
         """
         ramp = self._payload.ramp
         if ramp.model is not RampModel.EXACT:
-            raise ResistanceShredInterpretationError(
+            raise InterpretationError(
                 f"{self.rule.mechanic_id} declares the {ramp.model.value} "
                 "summation, which averages over a stream and has no per-stack "
                 "reading; ask it for the average over a hit count instead"
@@ -242,7 +237,7 @@ def _resolve_slot(  # pylint: disable=too-many-arguments
     if not rules:
         return None
     if len(rules) > 1:
-        raise ResistanceShredInterpretationError(
+        raise InterpretationError(
             f"{[rule.owner for rule in rules]} all declare a {resistance.value} "
             "shred and no rule declares how two stacking reductions of one "
             "resistance combine; the slice that declares a second one owns the "
@@ -285,7 +280,6 @@ __all__ = [
     "SHRED_LEADING_STACKS_FIELD",
     "SHRED_MAX_STACKS_FIELD",
     "SHRED_PER_STACK_FIELD",
-    "ResistanceShredInterpretationError",
     "ShredSlot",
     "event_damage_classes",
     "ramp_fields",

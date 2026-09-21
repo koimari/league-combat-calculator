@@ -45,6 +45,7 @@ from ..item_effects import (
 )
 from ..value_ref import AnyValueRef, resolve
 from . import damage_formula
+from .interpretation_error import InterpretationError
 from .rule_selection import rules_of
 
 # The field a cast proc compiles to: the seconds before it can arm again.
@@ -67,10 +68,6 @@ NO_SIBLING = 0.0
 # and the repeated target.  The engine's own neutral element, named.
 NO_CHARGES = 0
 UNSPLIT_MULTIPLIER = 1.0
-
-
-class CastProcInterpretationError(ValueError):
-    """A rule reached this interpreter that is not a cast-triggered proc."""
 
 
 def _sibling(reference: AnyValueRef | None, level: int) -> float:
@@ -99,7 +96,7 @@ def proc_fields(
     elif isinstance(payload, CooldownProcRule):
         clock = payload.cooldown
     else:
-        raise CastProcInterpretationError(
+        raise InterpretationError(
             f"{rule.mechanic_id} is not a cast-triggered proc rule"
         )
     damage_formula.compile_formula(payload.formula, ctx)
@@ -148,9 +145,7 @@ def cooldown_proc_effect(rule: BehaviorRule, ctx: BuildContext) -> CooldownProcE
     """One declared cooldown proc as the record the fight engine consumes."""
     payload = rule.payload
     if not isinstance(payload, CooldownProcRule):
-        raise CastProcInterpretationError(
-            f"{rule.mechanic_id} is not a cooldown proc rule"
-        )
+        raise InterpretationError(f"{rule.mechanic_id} is not a cooldown proc rule")
     charged = payload.charged
     charges = NO_CHARGES
     single_target = UNSPLIT_MULTIPLIER
@@ -219,9 +214,7 @@ def ultimate_proc_effect(rule: BehaviorRule, ctx: BuildContext) -> UltimateProcE
     """One declared ultimate proc as the record the fight engine consumes."""
     payload = rule.payload
     if not isinstance(payload, UltimateProcRule):
-        raise CastProcInterpretationError(
-            f"{rule.mechanic_id} is not an ultimate proc rule"
-        )
+        raise InterpretationError(f"{rule.mechanic_id} is not an ultimate proc rule")
     return UltimateProcEffect(
         _row(
             rule,
@@ -294,7 +287,6 @@ __all__ = [
     "ULTIMATE_PROC_BREAKDOWN_PREFIX",
     "ULTIMATE_PROC_SUFFIX",
     "UNSPLIT_MULTIPLIER",
-    "CastProcInterpretationError",
     "CastProcSlots",
     "cooldown_proc_effect",
     "proc_fields",

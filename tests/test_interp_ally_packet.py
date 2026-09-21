@@ -17,11 +17,11 @@ from src.calculator import item_behavior_catalog as catalog
 from src.calculator import trigger_stream as ts
 from src.calculator.interpreters import INTERPRETERS
 from src.calculator.interpreters.ally_packet import (
-    AllyPacketInterpretationError,
     AllyPacketSlot,
     packet_fields,
     resolve_slots,
 )
+from src.calculator.interpreters.interpretation_error import InterpretationError
 from src.calculator.item_behavior import (
     AllyPacketRule,
     AllyProducer,
@@ -130,7 +130,7 @@ class TestASlotRefusesWhatItsDeclarationDoesNotCarry:
         )
 
     def test_an_undeclared_value_is_a_stop(self) -> None:
-        with pytest.raises(AllyPacketInterpretationError, match="declares no"):
+        with pytest.raises(InterpretationError, match="declares no"):
             _slot(AllyProducer.CONSONANCE).value("harmony_bonus_mana_ratio")
 
     def test_a_level_ramp_rises_with_the_level_it_is_read_at(self) -> None:
@@ -151,12 +151,12 @@ class TestASlotRefusesWhatItsDeclarationDoesNotCarry:
         )
 
     def test_an_undeclared_ramp_has_no_subject_to_read(self) -> None:
-        with pytest.raises(AllyPacketInterpretationError, match="declares no"):
+        with pytest.raises(InterpretationError, match="declares no"):
             _slot(AllyProducer.SOUL_SIPHON).level_subject("charge_damage_ratio")
 
     def test_an_undeclared_packet_kind_is_a_stop(self) -> None:
         """The emitter cannot build a packet the producer never declared."""
-        with pytest.raises(AllyPacketInterpretationError, match="declares no"):
+        with pytest.raises(InterpretationError, match="declares no"):
             _slot(AllyProducer.CONSONANCE).declared(PacketKind.SHIELD)
 
     def test_two_holders_of_one_producer_are_a_stop(self) -> None:
@@ -228,7 +228,7 @@ class TestTheEmissionShapeIsAskableWithoutNamingAnItem:
 
     def test_a_producer_nothing_arms_is_a_stop(self) -> None:
         """Fanfare rides the same trigger and no rule says which control."""
-        with pytest.raises(AllyPacketInterpretationError, match="names no"):
+        with pytest.raises(InterpretationError, match="names no"):
             _ = _slot(AllyProducer.FANFARE).control_arming
 
 

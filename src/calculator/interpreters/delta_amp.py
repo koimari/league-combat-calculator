@@ -66,10 +66,10 @@ from .amp_magnitude import (
     WINDOW_DURATION_FIELD,
     WINDOW_END_FIELD,
     WINDOW_START_FIELD,
-    DeltaAmpInterpretationError,
     _declared_field,
     amp_fields,
 )
+from .interpretation_error import InterpretationError
 from .rule_selection import rules_of
 
 
@@ -130,7 +130,7 @@ class AmpSlot:
         """
         activation = self.rules[index].payload.activation
         if not isinstance(activation, AfterTrigger):
-            raise DeltaAmpInterpretationError(
+            raise InterpretationError(
                 f"{self.rules[index].mechanic_id} declares no after-trigger "
                 "activation, so it has no answer for an event's position "
                 "relative to one"
@@ -143,7 +143,7 @@ class AmpSlot:
         """The trigger-window activation this holder declares, or a stop."""
         activation = self.rules[index].payload.activation
         if not isinstance(activation, TriggerWindow):
-            raise DeltaAmpInterpretationError(
+            raise InterpretationError(
                 f"{self.rules[index].mechanic_id} declares no trigger window, so "
                 "it has no answer for when a trigger opens one"
             )
@@ -170,7 +170,7 @@ class AmpSlot:
         """
         activation = self._trigger_activation(index)
         if activation.merge is not WindowMerge.REFRESH:
-            raise DeltaAmpInterpretationError(
+            raise InterpretationError(
                 f"{self.rules[index].mechanic_id} declares the "
                 f"{activation.merge.value} window merge and no rule this "
                 "interpreter serves does; the slice that declares one owns "
@@ -202,7 +202,7 @@ class AmpSlot:
         """
         boundary = self._trigger_activation(index).boundary
         if boundary is not WindowBoundary.OPEN_CLOSED:
-            raise DeltaAmpInterpretationError(
+            raise InterpretationError(
                 f"{self.rules[index].mechanic_id} declares the "
                 f"{boundary.value} expiry boundary and no rule this "
                 "interpreter serves does; the slice that declares one owns "
@@ -220,7 +220,7 @@ class AmpSlot:
         """
         activation = self.rules[index].payload.activation
         if not isinstance(activation, ExcludeTrigger):
-            raise DeltaAmpInterpretationError(
+            raise InterpretationError(
                 f"{self.rules[index].mechanic_id} declares no exclusion, so it "
                 "has no answer for what an amp leaves out"
             )
@@ -235,7 +235,7 @@ class AmpSlot:
         """
         activation = self.rules[index].payload.activation
         if not isinstance(activation, LivePredicate):
-            raise DeltaAmpInterpretationError(
+            raise InterpretationError(
                 f"{self.rules[index].mechanic_id} declares no live predicate, "
                 "so it has no side of a threshold to arm on"
             )
@@ -267,17 +267,17 @@ class AmpSlot:
         """
         activation = self.rules[index].payload.activation
         if not isinstance(activation, LivePredicate):
-            raise DeltaAmpInterpretationError(
+            raise InterpretationError(
                 f"{self.rules[index].mechanic_id} declares no live predicate, "
                 "so it has no answer for a pool reading"
             )
         if activation.probe is not probe:
-            raise DeltaAmpInterpretationError(
+            raise InterpretationError(
                 f"{self.rules[index].mechanic_id} reads {activation.probe.value} "
                 f"and the engine offered {probe.value}"
             )
         if activation.cmp not in (Comparison.LT, Comparison.GT):
-            raise DeltaAmpInterpretationError(
+            raise InterpretationError(
                 f"{self.rules[index].mechanic_id} declares the "
                 f"{activation.cmp.value} comparison and no rule this "
                 "interpreter serves does; the slice that declares one owns "
@@ -305,7 +305,7 @@ class AmpSlot:
         """
         typing = self.rules[index].payload.bonus_typing
         if typing is BonusTyping.SAME_AS_SOURCE:
-            raise DeltaAmpInterpretationError(
+            raise InterpretationError(
                 f"{self.rules[index].mechanic_id} declares a bonus that follows "
                 "its source, so it has no single aggregate damage type"
             )

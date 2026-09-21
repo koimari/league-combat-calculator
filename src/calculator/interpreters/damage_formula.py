@@ -52,6 +52,7 @@ from ..item_behavior import (
 )
 from ..item_effects import DamageInputs
 from ..value_ref import resolve
+from .interpretation_error import InterpretationError
 
 # What each basis reads, keyed by the enum member.  Every entry is a
 # ``DamageInputs`` reading, which is what makes the union closed: a basis
@@ -66,10 +67,6 @@ _STAT_BASES: Mapping[Basis, str] = {
     Basis.HOLDER_MAX_MANA: "max_mana",
     Basis.HOLDER_BONUS_HEALTH: "bonus_health",
 }
-
-
-class DamageFormulaError(ValueError):
-    """A formula reached this evaluator with no arithmetic for one of its bases."""
 
 
 def basis_value(basis: Basis, inputs: DamageInputs) -> float:
@@ -98,7 +95,7 @@ def basis_value(basis: Basis, inputs: DamageInputs) -> float:
         return float(inputs.target_current_health)
     if basis is Basis.TARGET_MISSING_HEALTH:
         return max(0.0, float(inputs.target_max_health - inputs.target_current_health))
-    raise DamageFormulaError(
+    raise InterpretationError(
         f"{basis.value} has no reading in DamageInputs; a new basis is a new "
         "branch here, never a silent zero"
     )
@@ -170,7 +167,7 @@ def compile_formula(
     floor = formula.floor
     minimum = resolve(floor.value, ctx.level) if isinstance(floor, AtLeast) else None
     if minimum is None and not isinstance(floor, NoFloor):
-        raise DamageFormulaError(
+        raise InterpretationError(
             f"{ctx.owner}: {type(floor).__name__} is not a declared floor shape"
         )
     factor = _scaling_factor(formula, ctx)
@@ -215,7 +212,7 @@ def _scaling_factor(formula: DamageFormula, ctx: BuildContext) -> float | None:
         return None
     if isinstance(scaling, TimesValue):
         return resolve(scaling.factor, ctx.level)
-    raise DamageFormulaError(
+    raise InterpretationError(
         f"{ctx.owner}: {type(scaling).__name__} is not a declared scaling shape; "
         "a new member is a new branch here, never a silently unscaled sum"
     )
@@ -286,7 +283,6 @@ def field_reading(
 
 
 __all__ = [
-    "DamageFormulaError",
     "basis_value",
     "compile_formula",
     "compiled_field",

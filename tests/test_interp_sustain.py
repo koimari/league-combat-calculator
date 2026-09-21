@@ -28,8 +28,8 @@ from src.calculator.interpreters import (
     sustain,
 )
 from src.calculator.interpreters.defense_state import compiled_shape
+from src.calculator.interpreters.interpretation_error import InterpretationError
 from src.calculator.interpreters.sustain import (
-    SustainInterpretationError,
     declared_sustain,
     received_healing_multiplier,
     resolve_received_healing,
@@ -173,7 +173,7 @@ def test_a_field_the_declaration_does_not_carry_is_a_stop() -> None:
     """A sustain rule answers the questions it declared and refuses the rest."""
     slot = _slot(DRAIN_HOLDER, ResourceDrainRule)
     assert slot is not None
-    with pytest.raises(SustainInterpretationError, match="declares no"):
+    with pytest.raises(InterpretationError, match="declares no"):
         slot.value("heal_ratio")
 
 
@@ -202,7 +202,7 @@ def test_stat_grants_sum_across_holders() -> None:
 
 def test_two_drains_stop_rather_than_compose_silently() -> None:
     """Nothing declares how two drains compose, so a second holder is a stop."""
-    with pytest.raises(SustainInterpretationError, match="compose"):
+    with pytest.raises(InterpretationError, match="compose"):
         declared_sustain([DRAIN_HOLDER, DRAIN_HOLDER], ResourceDrainRule)
 
 
@@ -276,7 +276,7 @@ def test_the_published_share_is_interpolated_from_the_declared_number() -> None:
 def test_the_pair_interpreter_refuses_the_received_multiplier() -> None:
     """The multiplier is the resolver's; asking the pair lane is a stop."""
     rule = _rule(MULTIPLIER_HOLDER, ReceivedHealingRule)
-    with pytest.raises(SustainInterpretationError, match="defensive"):
+    with pytest.raises(InterpretationError, match="defensive"):
         sustain_fields(
             rule,
             catalog.build_context(
@@ -363,7 +363,7 @@ def test_a_context_dependent_shape_is_refused_rather_than_guessed(
     monkeypatch.setattr(
         sustain, "rules_of", lambda owners, family, kind=None: (ramped,)
     )
-    with pytest.raises(SustainInterpretationError, match="fight fact"):
+    with pytest.raises(InterpretationError, match="fight fact"):
         declared_sustain([rule.owner], PostMitigationHealRule)
 
 

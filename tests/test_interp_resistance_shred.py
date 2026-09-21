@@ -19,6 +19,7 @@ import pytest
 
 from src.calculator.ability_spec import DamageClass
 from src.calculator.interpreters import INTERPRETERS, resistance_shred
+from src.calculator.interpreters.interpretation_error import InterpretationError
 from src.calculator.item_behavior import (
     EngineLane,
     FightFacts,
@@ -123,9 +124,9 @@ def test_the_exact_model_counts_stacks_one_at_a_time() -> None:
 
 def test_each_model_refuses_the_other_models_question() -> None:
     """A model that answered both would be inventing one of the two answers."""
-    with pytest.raises(resistance_shred.ResistanceShredInterpretationError):
+    with pytest.raises(InterpretationError, match="has no per-stack"):
         _armor().reduction_percent(3)
-    with pytest.raises(resistance_shred.ResistanceShredInterpretationError):
+    with pytest.raises(InterpretationError, match="has no averaged"):
         _magic().average_reduction(10)
 
 
@@ -161,13 +162,13 @@ def test_a_build_with_no_shred_resolves_to_none_not_to_zero() -> None:
 
 def test_two_shreds_of_one_resistance_stop_rather_than_pick_a_winner() -> None:
     """Nothing declares how two stacking reductions combine, so nothing guesses."""
-    with pytest.raises(resistance_shred.ResistanceShredInterpretationError):
+    with pytest.raises(InterpretationError, match="how two stacking reductions"):
         _slot(CARVE_HOLDER, CARVE_HOLDER, resistance=Resistance.ARMOR)
 
 
 def test_a_question_the_declaration_does_not_answer_raises() -> None:
     """A missing compiled field is a programming error, never a zero."""
-    with pytest.raises(resistance_shred.ResistanceShredInterpretationError):
+    with pytest.raises(InterpretationError, match="window_end"):
         _armor().value("window_end")
 
 

@@ -46,11 +46,7 @@ from ..item_behavior_catalog import behavior_rules
 from ..item_effects import ITEM_INPUT_OPTIONS
 from ..state_timeline import CcTriggerRule, SourceReceipt
 from ..value_ref import DeclaredNumbers, LevelValueRef, ValueRef
-
-
-class AllyPacketInterpretationError(ValueError):
-    """A producer was asked something its declaration does not answer."""
-
+from .interpretation_error import InterpretationError
 
 # Which authored control arms each control-triggered producer, as the
 # kernel states it (state_lifecycle.CcTriggerRule).  Everlasting is an
@@ -86,7 +82,7 @@ def packet_fields(
         elif isinstance(reference, LevelValueRef):
             name, value = reference.min_key, reference.get(ctx.level)
         else:
-            raise AllyPacketInterpretationError(
+            raise InterpretationError(
                 f"{rule.mechanic_id} declares {reference!r}, which names no "
                 "registry key for the walk to read it back by"
             )
@@ -118,7 +114,7 @@ class AllyPacketSlot:
             DeclaredNumbers(
                 self.rule.payload.values,
                 self.rule.mechanic_id,
-                AllyPacketInterpretationError,
+                InterpretationError,
                 "a producer",
             ),
         )
@@ -161,7 +157,7 @@ class AllyPacketSlot:
         for ramp in self.rule.payload.ramps:
             if ramp.min_key == key:
                 return ramp.subject
-        raise AllyPacketInterpretationError(
+        raise InterpretationError(
             f"{self.rule.mechanic_id} declares no {key!r} level ramp, so "
             "nothing states whose level would read it"
         )
@@ -178,7 +174,7 @@ class AllyPacketSlot:
         """
         arming = _CONTROL_ARMING.get(self.producer)
         if arming is None:
-            raise AllyPacketInterpretationError(
+            raise InterpretationError(
                 f"{self.rule.mechanic_id} names no CcTriggerRule, so which "
                 "control arms it is undeclared"
             )
@@ -199,7 +195,7 @@ class AllyPacketSlot:
         for spec in self.rule.payload.packets:
             if spec.kind is kind:
                 return spec
-        raise AllyPacketInterpretationError(
+        raise InterpretationError(
             f"{self.rule.mechanic_id} declares no {kind.value} packet; the "
             "emitter built one its declaration does not carry"
         )
@@ -227,7 +223,6 @@ def resolve_slots(
 
 
 __all__ = [
-    "AllyPacketInterpretationError",
     "AllyPacketSlot",
     "packet_fields",
     "resolve_slots",

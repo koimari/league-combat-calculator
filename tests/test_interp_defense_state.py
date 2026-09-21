@@ -15,10 +15,10 @@ import pytest
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator.interpreters.defense_state import (
     DEFENSE_VALUE_COUNT_FIELD,
-    DefenseInterpretationError,
     DefenseSlot,
     compiled_shape,
 )
+from src.calculator.interpreters.interpretation_error import InterpretationError
 from src.calculator.item_behavior import (
     BehaviorRule,
     DefenseField,
@@ -42,7 +42,7 @@ def test_a_slot_reads_only_the_numbers_its_declaration_names() -> None:
     slot = DefenseSlot(_rule("Kaenic Rookern", DefenseMechanic.MAGEBANE))
 
     assert slot.value("magic_shield_max_health_ratio") == pytest.approx(0.15)
-    with pytest.raises(DefenseInterpretationError, match="declares no"):
+    with pytest.raises(InterpretationError, match="declares no"):
         slot.value("shield_received_multiplier")
 
 
@@ -51,9 +51,9 @@ def test_a_ramp_is_one_number_with_two_ends() -> None:
     slot = DefenseSlot(_rule("Immortal Shieldbow", DefenseMechanic.LIFELINE_SHIELDBOW))
 
     assert slot.late_ramp("shield_base", 18) == pytest.approx(700.0)
-    with pytest.raises(DefenseInterpretationError, match="declares no"):
+    with pytest.raises(InterpretationError, match="declares no"):
         slot.value("shield_base")
-    with pytest.raises(DefenseInterpretationError, match="level ramp"):
+    with pytest.raises(InterpretationError, match="level ramp"):
         slot.ramp("shield_base", 18)
 
 
@@ -65,7 +65,7 @@ def test_a_defence_may_not_write_a_field_it_never_declared() -> None:
     assert granted.name == "basic_damage_multiplier"
     assert granted.lane is EngineLane.DEFENSE_RESOLVER
     assert granted.rule_id == "plated_steelcaps.plating"
-    with pytest.raises(DefenseInterpretationError, match="does not declare"):
+    with pytest.raises(InterpretationError, match="does not declare"):
         slot.grant(DefenseField.MAGIC_SHIELD, 100.0)
 
 
@@ -73,7 +73,7 @@ def test_a_policy_reference_a_mechanic_has_none_of_is_a_stop() -> None:
     """Rebirth arms on lethal damage, which is not a fraction of health."""
     slot = DefenseSlot(_rule("Guardian Angel", DefenseMechanic.REBIRTH))
 
-    with pytest.raises(DefenseInterpretationError, match="declares no threshold"):
+    with pytest.raises(InterpretationError, match="declares no threshold"):
         slot.threshold()
 
 
@@ -107,5 +107,5 @@ def test_a_rule_of_another_family_is_refused() -> None:
         for rule in catalog.behavior_rules("Horizon Focus")
         if rule.family is RuleFamily.DELTA_AMP
     ]
-    with pytest.raises(DefenseInterpretationError, match="not a defence rule"):
+    with pytest.raises(InterpretationError, match="not a defence rule"):
         DefenseSlot(amp)

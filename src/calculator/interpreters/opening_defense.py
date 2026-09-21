@@ -24,7 +24,8 @@ from ..item_behavior import (
     DefenseOutcome,
     DefenseSubject,
 )
-from .defense_state import DefenseInterpretationError, DefenseSlot
+from .defense_state import DefenseSlot
+from .interpretation_error import InterpretationError
 
 # One published sentence per mechanic, formatted with the owner the
 # declaration named.  Two are fixed text because the wiki's own wording does
@@ -99,7 +100,7 @@ def resolve_opening_defense(
         return _undaunted(slot)
     if mechanic is DefenseMechanic.RESILIENCE:
         return _one_multiplier(slot, DefenseField.CRITICAL_STRIKE_DAMAGE_MULTIPLIER)
-    raise DefenseInterpretationError(
+    raise InterpretationError(
         f"{rule.mechanic_id} declares opening_defense and this family has no "
         "branch for it; a defence with no arithmetic is a mechanic that would "
         "silently grant nothing"

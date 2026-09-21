@@ -4,7 +4,7 @@ import math
 from collections.abc import Mapping
 from typing import Any
 
-from ...interpreters import amp_magnitude
+from ...interpreters.interpretation_error import InterpretationError
 from ...item_behavior import AmpChainSlot, Isolation
 from ...trigger_stream import is_immobilizing_event
 from ..cast_slots import _damaging_cast_times
@@ -81,7 +81,7 @@ def _add_expose_weakness(
     if slot is None:
         return
     if slot.exclusion() is not Isolation.TRIGGER_SEQUENCE:
-        raise amp_magnitude.DeltaAmpInterpretationError(
+        raise InterpretationError(
             f"{slot.owner} declares the {slot.exclusion().value} exclusion and "
             "this engine only knows how to subtract a whole arming sequence"
         )

@@ -25,10 +25,10 @@ from .amp_magnitude import (
     AMP_BASE_FRACTION_FIELD,
     AMP_FRACTION_FIELD,
     AMP_PER_HUNDRED_STAT_FIELD,
-    DeltaAmpInterpretationError,
     _declared_field,
     amp_fields,
 )
+from .interpretation_error import InterpretationError
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,7 +68,7 @@ class PartAmp:
         if not isinstance(magnitude, StatScaled):
             return (declared(AMP_FRACTION_FIELD),)
         if magnitude.stat.value not in holder_stats:
-            raise DeltaAmpInterpretationError(
+            raise InterpretationError(
                 f"{self.rules[index].mechanic_id} scales with the holder's "
                 f"{magnitude.stat.value}, which the caller did not supply; a "
                 "missing stat is an unanswered question, not a zero"
@@ -167,7 +167,7 @@ def _flat_fraction(rule: BehaviorRule) -> float:
     """One per-part amp's share, resolved with no fight context to resolve at."""
     magnitude = rule.payload.magnitude
     if not isinstance(magnitude, Fixed):
-        raise DeltaAmpInterpretationError(
+        raise InterpretationError(
             f"{rule.mechanic_id} declares a {type(magnitude).__name__} magnitude "
             "and this accessor has no fight to resolve one against; read it "
             "through resolve_part_amp, which is handed a build context"
@@ -175,7 +175,7 @@ def _flat_fraction(rule: BehaviorRule) -> float:
     try:
         (fraction,) = resolve_flat((magnitude.value,))
     except ValueRefError as exc:
-        raise DeltaAmpInterpretationError(
+        raise InterpretationError(
             f"{rule.mechanic_id} declares a reference that needs a level or a "
             "fight fact, and this accessor has neither"
         ) from exc

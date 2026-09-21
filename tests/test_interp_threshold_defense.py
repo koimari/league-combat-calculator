@@ -17,11 +17,11 @@ import pytest
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator.interpreters import INTERPRETERS, RESOLVERS, resolve_defense
 from src.calculator.interpreters.defense_state import (
-    DefenseInterpretationError,
     DefenseSlot,
     compiled_shape,
     declared_defenses,
 )
+from src.calculator.interpreters.interpretation_error import InterpretationError
 from src.calculator.interpreters.threshold_defense import (
     THRESHOLD_HEALTH_MECHANIC,
     TICK_INTERVAL_KEY,
@@ -287,7 +287,7 @@ def test_a_declaration_without_the_cadence_key_stops_rather_than_guesses(
 
     monkeypatch.setattr(threshold_defense, "behavior_rules", stripped)
     cold_memo(threshold_defense, "_THRESHOLD_HEALTH_TICK_MEMO")
-    with pytest.raises(DefenseInterpretationError) as excinfo:
+    with pytest.raises(InterpretationError) as excinfo:
         threshold_defense.threshold_health_tick_interval()
 
     assert TICK_INTERVAL_KEY in str(excinfo.value)
@@ -320,5 +320,5 @@ def test_two_declared_temporary_health_lifelines_stop_rather_than_guess(
     # verdict reachable by whatever runs next.
     monkeypatch.setattr(threshold_defense, "_THRESHOLD_HEALTH_OWNER_MEMO", {})
 
-    with pytest.raises(DefenseInterpretationError, match="carry no owner"):
+    with pytest.raises(InterpretationError, match="carry no owner"):
         threshold_health_owner()

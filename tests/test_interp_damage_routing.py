@@ -23,12 +23,12 @@ from src.calculator.interpreters import INTERPRETERS, RESOLVERS
 from src.calculator.interpreters.damage_deferral import resolve_deferral
 from src.calculator.interpreters.damage_routing import (
     EXECUTE_THRESHOLD_FIELD,
-    DamageRoutingInterpretationError,
     declared_execution,
     pair_fields,
     resolve_shield_bypass,
 )
 from src.calculator.interpreters.defense_state import compiled_shape
+from src.calculator.interpreters.interpretation_error import InterpretationError
 from src.calculator.item_behavior import (
     DamageDeferralRule,
     DefenseMechanic,
@@ -182,7 +182,7 @@ def test_the_two_pair_rules_act_on_the_target() -> None:
 def test_the_pair_interpreter_refuses_the_deferral() -> None:
     """The deferral is built by the resolver; asking the pair lane is a stop."""
     rule = _rule(DEFERRAL_HOLDER, DamageDeferralRule)
-    with pytest.raises(DamageRoutingInterpretationError, match="defensive resolver"):
+    with pytest.raises(InterpretationError, match="defensive resolver"):
         pair_fields(
             rule,
             catalog.build_context(

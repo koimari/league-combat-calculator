@@ -27,7 +27,8 @@ from ..item_behavior import (
 )
 from ..item_behavior_catalog import behavior_rules, declared_owners
 from . import defense_state
-from .defense_state import DefenseInterpretationError, DefenseSlot
+from .defense_state import DefenseSlot
+from .interpretation_error import InterpretationError
 
 # The Lifeline sentence, in the two spellings the wiki's own damage typing
 # produces: a magic-only Lifeline says so and a general one does not.
@@ -97,7 +98,7 @@ def _threshold_health_rule() -> BehaviorRule:
         key=lambda rule: rule.owner,
     )
     if len(rules) != 1:
-        raise DefenseInterpretationError(
+        raise InterpretationError(
             f"{[rule.owner for rule in rules]} declare "
             f"{THRESHOLD_HEALTH_MECHANIC.value} and the resolved pools the "
             "fight arms it from carry no owner, so nothing on that path can "
@@ -157,7 +158,7 @@ def resolve_threshold_defense(
         return _rebirth(slot, subject)
     if mechanic in _LIFELINE_SHIELDS:
         return _lifeline_shield(slot, subject)
-    raise DefenseInterpretationError(
+    raise InterpretationError(
         f"{rule.mechanic_id} declares threshold_defense and this family has "
         "no branch for it; a defence with no arithmetic is a mechanic that "
         "would silently grant nothing"

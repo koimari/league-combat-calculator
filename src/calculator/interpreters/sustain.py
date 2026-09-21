@@ -50,12 +50,9 @@ from ..item_behavior import (
 )
 from ..reference_vocabulary import ValueRefError
 from ..value_ref import resolve, resolve_flat
-from .defense_state import DefenseInterpretationError, DefenseSlot
+from .defense_state import DefenseSlot
+from .interpretation_error import InterpretationError
 from .rule_selection import rules_of
-
-
-class SustainInterpretationError(ValueError):
-    """A sustain rule was asked something its payload does not answer."""
 
 
 def sustain_fields(
@@ -71,7 +68,7 @@ def sustain_fields(
     """
     payload = rule.payload
     if not isinstance(payload, SUSTAIN_VALUE_PAYLOADS):
-        raise SustainInterpretationError(
+        raise InterpretationError(
             f"{rule.mechanic_id} is not a holder-side sustain rule; the "
             "received-healing multiplier is built by the defensive "
             "resolver, not here"
@@ -109,7 +106,7 @@ def resolve_received_healing(
     del subject
     slot = DefenseSlot(rule)
     if slot.mechanic is not DefenseMechanic.BOUNDLESS_VITALITY:
-        raise DefenseInterpretationError(
+        raise InterpretationError(
             f"{rule.mechanic_id} declares sustain at the resolver and this "
             "family has no branch for it; a multiplier with no arithmetic is "
             "a mechanic that would silently do nothing"
@@ -129,9 +126,7 @@ def received_healing_multiplier(rule: BehaviorRule) -> float:
     """The sourced multiplier one received-healing declaration carries."""
     payload = rule.payload
     if not isinstance(payload, ReceivedHealingRule):
-        raise SustainInterpretationError(
-            f"{rule.mechanic_id} is not a received-healing rule"
-        )
+        raise InterpretationError(f"{rule.mechanic_id} is not a received-healing rule")
     return DefenseSlot(rule).value("shield_received_multiplier")
 
 
@@ -147,7 +142,7 @@ class SustainSlot(CompiledSlot):
 
     rule: BehaviorRule
     fields: tuple[KernelField, ...]
-    stop = SustainInterpretationError
+    stop = InterpretationError
     missing = (
         "{mechanic_id} declares no {name!r} value; a sustain rule reads the "
         "numbers its declaration names and no others"
@@ -189,7 +184,7 @@ def _sole_rule(owners: Sequence[str], payload_type: type) -> BehaviorRule | None
         lambda held, kind: rules_of(held, RuleFamily.SUSTAIN, kind),
         owners,
         payload_type,
-        SustainInterpretationError,
+        InterpretationError,
     )
 
 
@@ -205,14 +200,14 @@ def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...
     payload = rule.payload
     names = SUSTAIN_PAYLOAD_REFERENCES.get(type(payload))
     if names is None:
-        raise SustainInterpretationError(
+        raise InterpretationError(
             f"{rule.mechanic_id} is a {rule.family.value} rule and this "
             "accessor reads holder-side sustain declarations only"
         )
     try:
         values = resolve_flat([getattr(payload, name) for name in names])
     except ValueRefError as exc:
-        raise SustainInterpretationError(
+        raise InterpretationError(
             f"{rule.mechanic_id} declares a reference that needs a level or a "
             "fight fact, and this accessor has neither; the interpreter "
             "registry is handed the context it resolves against"
@@ -284,7 +279,6 @@ def _split_share(percent: object, holder_is_melee: bool) -> float:
 
 
 __all__ = [
-    "SustainInterpretationError",
     "SustainSlot",
     "declared_sustain",
     "received_healing_multiplier",

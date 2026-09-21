@@ -33,14 +33,13 @@ from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.interpreters import crit_profile, damage_routing, part_amp
 from src.calculator.interpreters.crit_profile import (
     CRIT_PAYLOAD_REFERENCES,
-    CritProfileInterpretationError,
     declared_crit_profile,
 )
 from src.calculator.interpreters.damage_routing import (
     FLAT_ROUTING_REFERENCES,
-    DamageRoutingInterpretationError,
     declared_execution,
 )
+from src.calculator.interpreters.interpretation_error import InterpretationError
 from src.calculator.interpreters.rule_selection import rules_of
 from src.calculator.interpreters.stat_derivation import (
     declared_stat_derivations,
@@ -250,12 +249,12 @@ def test_every_declared_routing_payload_has_a_reference_row():
 
 def test_a_flat_reader_stops_rather_than_defaulting_a_shape_it_cannot_read():
     """Both refusals are raised, not returned as a zero."""
-    with pytest.raises(DamageRoutingInterpretationError):
+    with pytest.raises(InterpretationError, match="melee/ranged share"):
         damage_routing._flat_fields(  # pylint: disable=protected-access
             rules_of([_sole("shield_reduction")], RuleFamily.DAMAGE_ROUTING)[0],
             EngineLane.PAIR_ENGINE,
         )
-    with pytest.raises(CritProfileInterpretationError):
+    with pytest.raises(InterpretationError, match="not a crit-profile rule"):
         crit_profile.crit_references(
             rules_of([_sole("execute")], RuleFamily.DAMAGE_ROUTING)[0]
         )

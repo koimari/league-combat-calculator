@@ -12,6 +12,7 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator.interpreters import damage_formula
+from src.calculator.interpreters.interpretation_error import InterpretationError
 from src.calculator.item_behavior import (
     AtLeast,
     Basis,
@@ -149,7 +150,7 @@ def test_a_basis_with_no_reading_stops_the_build_not_the_fight() -> None:
     class _Unknown:  # pylint: disable=too-few-public-methods
         value = "unknown_basis"
 
-    with pytest.raises(damage_formula.DamageFormulaError):
+    with pytest.raises(InterpretationError, match="no reading in DamageInputs"):
         damage_formula.basis_value(_Unknown(), INPUTS)  # type: ignore[arg-type]
 
 

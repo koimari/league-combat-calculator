@@ -17,9 +17,9 @@ from src.calculator import item_behavior_catalog as catalog
 from src.calculator.defensive_effects import option_reader
 from src.calculator.interpreters import INTERPRETERS, RESOLVERS, resolve_defense
 from src.calculator.interpreters.defense_state import (
-    DefenseInterpretationError,
     compiled_shape,
 )
+from src.calculator.interpreters.interpretation_error import InterpretationError
 from src.calculator.interpreters.opening_defense import resolve_opening_defense
 from src.calculator.item_behavior import (
     BehaviorRule,
@@ -181,7 +181,7 @@ def test_deleting_the_interpreter_withholds_rather_than_granting_nothing(
 
 def test_a_defence_of_another_family_is_refused() -> None:
     """A resolver answers for its own family and says so."""
-    with pytest.raises(DefenseInterpretationError, match="no branch for it"):
+    with pytest.raises(InterpretationError, match="no branch for it"):
         resolve_opening_defense(
             _rule("Force of Nature", DefenseMechanic.STEADFAST), _subject()
         )

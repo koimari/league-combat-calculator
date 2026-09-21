@@ -32,13 +32,10 @@ from ..item_behavior import (
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..value_ref import resolve
+from .interpretation_error import InterpretationError
 
 MAX_TARGETS_FIELD = "secondary_max_targets"
 DAMAGE_SHARE_FIELD = "secondary_damage_share"
-
-
-class SecondaryTargetInterpretationError(ValueError):
-    """A rule reached this interpreter that is not a secondary-target rule."""
 
 
 def routing_fields(
@@ -47,20 +44,14 @@ def routing_fields(
     """This rule's two routing facts, stamped with *lane*.
 
     A cardinality and a share, and **no magnitude**: this is a *routing*
-    family, so the packets it re-delivers are priced from the declarations of
-    the families that own them and what is compiled here is only how far the
-    routing reaches and what share of the swing rides it.  A third field would
-    be a second producer of a number a source family already declares.
-
-    Registered for both the pair engine and the receipt walk, with the lane
-    the only difference, so "the walk reads the declaration the pair engine
-    reads" is a property of the tree rather than two bodies' claim.
+    family, so a third field would be a second producer of a number a source
+    family already declares.  Registered for both the pair engine and the
+    receipt walk, the lane their only difference, so "the walk reads the
+    declaration the pair engine reads" is a property of the tree.
     """
     payload = rule.payload
     if not isinstance(payload, SecondaryTargetRule):
-        raise SecondaryTargetInterpretationError(
-            f"{rule.mechanic_id} is not a secondary-target rule"
-        )
+        raise InterpretationError(f"{rule.mechanic_id} is not a secondary-target rule")
 
     field = partial(KernelField, lane=lane, rule_id=rule.mechanic_id)
 
@@ -76,7 +67,7 @@ class SecondaryTargetSlot(CompiledSlot):
 
     rule: BehaviorRule
     fields: tuple[KernelField, ...]
-    stop = SecondaryTargetInterpretationError
+    stop = InterpretationError
     missing = (
         "{mechanic_id} compiles no {name!r} field; the engine asked its "
         "declaration a question it does not answer"
@@ -149,7 +140,7 @@ def resolve_slot(
     if not rules:
         return None
     if len(rules) > 1:
-        raise SecondaryTargetInterpretationError(
+        raise InterpretationError(
             f"{[rule.owner for rule in rules]} all declare secondary targets and "
             "no rule declares how two bolt sets combine; the slice that "
             "declares a second one owns the fold"
@@ -168,7 +159,6 @@ def resolve_slot(
 __all__ = [
     "DAMAGE_SHARE_FIELD",
     "MAX_TARGETS_FIELD",
-    "SecondaryTargetInterpretationError",
     "SecondaryTargetSlot",
     "resolve_slot",
     "routing_fields",

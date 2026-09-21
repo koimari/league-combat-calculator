@@ -45,6 +45,7 @@ from ..item_effects import (
 )
 from ..value_ref import AnyValueRef, resolve
 from . import damage_formula
+from .interpretation_error import InterpretationError
 from .rearmed_swings import SwingSchedule, _merged_schedule
 from .rule_selection import rules_of
 
@@ -60,10 +61,6 @@ SHAPED_CHARGE_BREAKDOWN_PREFIX = "shaped_charge_"
 # What a charged strike with no sibling of a given kind hands the engine.
 NO_SIBLING = 0.0
 NO_SIBLING_COUNT = 0
-
-
-class ChargedStrikeInterpretationError(ValueError):
-    """A rule reached this interpreter that is not a charged strike."""
 
 
 def _sibling(reference: AnyValueRef | None, level: int) -> float:
@@ -107,9 +104,7 @@ def strike_fields(
         stacks = payload.decaying_stacks
         count = None if stacks is None else stacks.max_stacks
     else:
-        raise ChargedStrikeInterpretationError(
-            f"{rule.mechanic_id} is not a charged strike rule"
-        )
+        raise InterpretationError(f"{rule.mechanic_id} is not a charged strike rule")
     if isinstance(payload, (EmpoweredHitRule, RepeatingStrikeRule, ShapedChargeRule)):
         damage_formula.compile_formula(payload.formula, ctx)
     return (
@@ -141,7 +136,7 @@ def strike_mechanic_id(owner: str) -> str:
         if not isinstance(rule.payload, SwingScheduleRule)
     ]
     if not rules:
-        raise ChargedStrikeInterpretationError(
+        raise InterpretationError(
             f"{owner} authors a charged strike and declares no damaging "
             "charged_strike rule, so its pair row has no mechanic to be a "
             "preview of"
@@ -150,15 +145,9 @@ def strike_mechanic_id(owner: str) -> str:
 
 
 def _payload_of(rule: BehaviorRule, shape: type) -> object:
-    """*rule*'s payload if it is of *shape*, or a stop.
-
-    The dispatch above has already chosen the branch; this keeps that choice
-    checkable, and it raises under ``-O`` where an assertion would vanish.
-    """
+    """*rule*'s payload if it is of *shape*, or a stop that survives ``-O``."""
     if not isinstance(rule.payload, shape):
-        raise ChargedStrikeInterpretationError(
-            f"{rule.mechanic_id} is not a {shape.__name__}"
-        )
+        raise InterpretationError(f"{rule.mechanic_id} is not a {shape.__name__}")
     return rule.payload
 
 
@@ -178,7 +167,7 @@ def _row(
     payload = rule.payload
     declared = row_presentation(rule.owner)
     if declared is None and derived is None:
-        raise ChargedStrikeInterpretationError(
+        raise InterpretationError(
             f"{rule.mechanic_id} names no breakdown row and its shape derives "
             "none; a row the engine publishes has to be somebody's statement"
         )
@@ -328,7 +317,7 @@ def resolve_slots(
         elif isinstance(payload, SwingScheduleRule):
             schedules.append(payload)
         else:
-            raise ChargedStrikeInterpretationError(
+            raise InterpretationError(
                 f"{rule.mechanic_id} declares charged_strike and no shape this "
                 "interpreter can read; a charged strike with no shape is a "
                 "declaration nothing prices"
@@ -348,7 +337,6 @@ __all__ = [
     "NO_SIBLING_COUNT",
     "SHAPED_CHARGE_BREAKDOWN_PREFIX",
     "SHAPED_CHARGE_SUFFIX",
-    "ChargedStrikeInterpretationError",
     "ChargedStrikeSlots",
     "resolve_slots",
     "strike_fields",

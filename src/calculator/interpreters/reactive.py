@@ -31,7 +31,8 @@ from ..item_behavior import (
 from ..item_behavior_catalog import behavior_rules
 from ..item_effects import ThornsEffect
 from . import defense_state
-from .defense_state import DefenseInterpretationError, DefenseSlot
+from .defense_state import DefenseSlot
+from .interpretation_error import InterpretationError
 
 # The published sentence and state-source label of a typed reactive shield.
 # Both name the boots that granted them, which is why both interpolate the
@@ -65,7 +66,7 @@ def resolve_reactive(rule: BehaviorRule, subject: DefenseSubject) -> DefenseOutc
         return _reactive_shield(slot, subject)
     if slot.mechanic is DefenseMechanic.THORNS:
         return DefenseOutcome(fields=(), notes=())
-    raise DefenseInterpretationError(
+    raise InterpretationError(
         f"{rule.mechanic_id} declares reactive and this family has no branch "
         "for it; a defence with no arithmetic is a mechanic that would "
         "silently do nothing"
@@ -91,7 +92,7 @@ def _thorns_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, .
     """
     slot = DefenseSlot(rule)
     if slot.mechanic is not DefenseMechanic.THORNS:
-        raise DefenseInterpretationError(
+        raise InterpretationError(
             f"{rule.mechanic_id} declares reactive and is not a strike-back; "
             "the walk stages a reactive shield as the resolved state the "
             "defensive resolver granted, and compiling one here would price it "

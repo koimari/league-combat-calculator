@@ -20,10 +20,10 @@ from src.calculator.interpreters import INTERPRETERS
 from src.calculator.interpreters.crit_profile import (
     COOLDOWN_REFUND_FIELD,
     CRIT_DAMAGE_BONUS_FIELD,
-    CritProfileInterpretationError,
     crit_fields,
     declared_crit_profile,
 )
+from src.calculator.interpreters.interpretation_error import InterpretationError
 from src.calculator.item_behavior import (
     AttackCooldownRefundRule,
     CritDamageBonusRule,
@@ -127,13 +127,13 @@ def test_the_three_mechanics_compose_in_one_build() -> None:
 
 def test_two_forced_crits_stop_rather_than_pick_a_winner() -> None:
     """No rule declares which forced crit a strike pays, so two is a stop."""
-    with pytest.raises(CritProfileInterpretationError, match="both force"):
+    with pytest.raises(InterpretationError, match="both force"):
         _profile(FORCED_HOLDER, FORCED_HOLDER)
 
 
 def test_two_refunds_stop_rather_than_compose_silently() -> None:
     """Two refunds have no declared fold, so the build is refused."""
-    with pytest.raises(CritProfileInterpretationError, match="both declare"):
+    with pytest.raises(InterpretationError, match="both declare"):
         _profile(REFUND_HOLDER, REFUND_HOLDER)
 
 

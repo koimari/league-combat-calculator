@@ -22,9 +22,9 @@ from src.calculator import item_behavior_catalog as catalog
 from src.calculator import item_effects
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.interpreters import INTERPRETERS, stat_derivation
+from src.calculator.interpreters.interpretation_error import InterpretationError
 from src.calculator.interpreters.rule_selection import rules_of
 from src.calculator.interpreters.stat_derivation import (
-    StatDerivationInterpretationError,
     declared_stat_derivations,
     reference_fields,
 )
@@ -151,7 +151,7 @@ def test_a_declared_absence_publishes_no_field_at_all() -> None:
     assert transforming.value("transform_bonus_mana") > 0.0
     assert transforming.value("max_charges") > 0.0
     assert plain.rule.payload.transform_bonus_mana is None
-    with pytest.raises(StatDerivationInterpretationError, match="declares no"):
+    with pytest.raises(InterpretationError, match="declares no"):
         plain.value("transform_bonus_mana")
 
 
@@ -324,7 +324,7 @@ def test_two_holders_of_a_non_composing_shape_are_a_stop(
         "rules_of",
         lambda owners, family, kind=None: (rule, replace(rule, owner="Second Holder")),
     )
-    with pytest.raises(StatDerivationInterpretationError, match="how two of them"):
+    with pytest.raises(InterpretationError, match="how two of them"):
         stat_derivation.sole_declared_derivation(
             [CAST_ECONOMY_HOLDER], ActiveWindowCastEconomyRule
         )
@@ -393,7 +393,7 @@ def test_both_lanes_are_registered_and_stamp_their_own_lane() -> None:
 def test_the_interpreter_refuses_a_payload_of_another_family() -> None:
     """Asking the stat reading for a sustain rule is a stop, not a zero."""
     rule = catalog.behavior_rules("Vampiric Scepter")[0]
-    with pytest.raises(StatDerivationInterpretationError, match="not a stat"):
+    with pytest.raises(InterpretationError, match="not a stat"):
         reference_fields(
             rule,
             catalog.build_context(
@@ -487,7 +487,7 @@ def test_a_level_ramped_derivation_is_refused_rather_than_guessed(
     monkeypatch.setattr(
         stat_derivation, "rules_of", lambda owners, family, kind=None: (ramped,)
     )
-    with pytest.raises(StatDerivationInterpretationError, match="fight fact"):
+    with pytest.raises(InterpretationError, match="fight fact"):
         declared_stat_derivations(["Warmog's Armor"], ThresholdRegenRule)
 
 
@@ -543,7 +543,7 @@ def test_an_undeclared_channel_is_a_named_stop_rather_than_the_ordinary_one() ->
     exercises it, because a fail-closed refusal nothing can trip is
     indistinguishable from one that does not work.
     """
-    with pytest.raises(StatDerivationInterpretationError, match="declares no channel"):
+    with pytest.raises(InterpretationError, match="declares no channel"):
         stat_derivation.armor_penetration_split("a synthetic holder", 30.0)
 
 

@@ -52,6 +52,7 @@ from .damage_deferral import (
     Deferral,
 )
 from .defense_state import DefenseSlot
+from .interpretation_error import InterpretationError
 from .rule_selection import rules_of
 
 # The field names a routing rule compiles to on the pair lane.
@@ -80,10 +81,6 @@ FLAT_ROUTING_REFERENCES: Mapping[type, tuple[tuple[str, str], ...]] = {
 }
 
 
-class DamageRoutingInterpretationError(ValueError):
-    """A routing rule was asked something its payload does not answer."""
-
-
 def pair_fields(
     rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
 ) -> tuple[KernelField, ...]:
@@ -100,7 +97,7 @@ def pair_fields(
     if isinstance(payload, ExecuteRule):
         return (field(EXECUTE_THRESHOLD_FIELD, resolve(payload.threshold, ctx.level)),)
     if not isinstance(payload, ShieldBypassRule):
-        raise DamageRoutingInterpretationError(
+        raise InterpretationError(
             f"{rule.mechanic_id} is priced on the pair lane and is neither "
             "an execution nor a shield bypass; the deferral is built by the "
             "defensive resolver, not here"
@@ -151,7 +148,7 @@ def walk_fields(
             field(VENOM_DURATION_FIELD, resolve(payload.duration, ctx.level)),
         )
     if not isinstance(payload, DamageDeferralRule):
-        raise DamageRoutingInterpretationError(
+        raise InterpretationError(
             f"{rule.mechanic_id} declares damage_routing and this family has "
             "no walk branch for it; a routing rule the walk cannot stage would "
             "silently do nothing"
@@ -189,7 +186,7 @@ def _field(fields: tuple[KernelField, ...], name: str) -> float:
     return compiled_value(
         fields,
         name,
-        DamageRoutingInterpretationError,
+        InterpretationError,
         f"no routing field named {name!r} was compiled; the engine asked "
         "a declaration a question it does not answer",
     )
@@ -206,7 +203,7 @@ def _sole_rule(owners: Sequence[str], payload_type: type) -> BehaviorRule | None
     if not found:
         return None
     if len(found) > 1:
-        raise DamageRoutingInterpretationError(
+        raise InterpretationError(
             f"{[rule.owner for rule in found]} all declare "
             f"{payload_type.__name__} and no rule declares how two of them "
             "compose; the slice that declares a second one owns the fold"
@@ -219,11 +216,9 @@ def _flat_references(rule: BehaviorRule) -> tuple[tuple[str, AnyValueRef], ...]:
     payload = rule.payload
     names = FLAT_ROUTING_REFERENCES.get(type(payload))
     if names is None:
-        raise DamageRoutingInterpretationError(
-            f"{rule.mechanic_id} is not a damage-routing rule"
-        )
+        raise InterpretationError(f"{rule.mechanic_id} is not a damage-routing rule")
     if not names:
-        raise DamageRoutingInterpretationError(
+        raise InterpretationError(
             f"{rule.mechanic_id} carries a melee/ranged share its subject's "
             "range class picks, and this accessor has no fight to pick one "
             "from; read it through the lane accessor handed a build context"
@@ -242,7 +237,7 @@ def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...
         rule,
         _flat_references(rule),
         lane,
-        DamageRoutingInterpretationError,
+        InterpretationError,
         reader="declared_execution",
     )
 
@@ -398,7 +393,6 @@ __all__ = [
     "SHIELD_BYPASS_FRACTION_FIELD",
     "VENOM_DURATION_FIELD",
     "VENOM_KEEP_FIELD",
-    "DamageRoutingInterpretationError",
     "Execution",
     "ShieldBypass",
     "Venom",

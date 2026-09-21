@@ -26,6 +26,7 @@ from ..item_behavior import (
     compiled_value,
 )
 from ..value_ref import resolve
+from .interpretation_error import InterpretationError
 
 # The field names a delta-amp rule compiles to.  A slot's magnitude is a
 # fraction of the pool it prices, never a multiplier: the multiplier is the
@@ -52,10 +53,6 @@ WINDOW_DURATION_FIELD = "window_duration"
 LIVE_THRESHOLD_FIELD = "live_threshold"
 
 
-class DeltaAmpInterpretationError(ValueError):
-    """A magnitude shape reached this interpreter with no arithmetic for it."""
-
-
 def magnitude_fraction(magnitude: Magnitude, ctx: BuildContext) -> float:
     """The fraction *magnitude* is worth for the fight *ctx* describes.
 
@@ -76,7 +73,7 @@ def magnitude_fraction(magnitude: Magnitude, ctx: BuildContext) -> float:
         case MeleeRangedSplit():
             return _melee_ranged_split(magnitude, ctx)
         case StatScaled():
-            raise DeltaAmpInterpretationError(
+            raise InterpretationError(
                 f"{ctx.owner} scales with the holder's {magnitude.stat.value}, "
                 "which is not a build fact this context carries; its base and "
                 f"rate compile to the {AMP_BASE_FRACTION_FIELD!r} and "
@@ -84,7 +81,7 @@ def magnitude_fraction(magnitude: Magnitude, ctx: BuildContext) -> float:
                 "takes the reading"
             )
         case _:
-            raise DeltaAmpInterpretationError(
+            raise InterpretationError(
                 f"{type(magnitude).__name__} has no delta-amp arithmetic yet; the "
                 "slice that declares a rule with it owns the branch"
             )
@@ -119,7 +116,7 @@ def _target_bonus_health_scaled(
     maximum = resolve(magnitude.maximum, ctx.level)
     cap = resolve(magnitude.bonus_health_cap, ctx.level)
     if cap <= 0.0:
-        raise DeltaAmpInterpretationError(
+        raise InterpretationError(
             f"{ctx.owner}: a target-bonus-health cap must be positive; a "
             "non-positive one is a registry defect, not a full-strength amp"
         )
@@ -137,7 +134,7 @@ def _ramp_per_stack(magnitude: RampPerStack, ctx: BuildContext) -> float:
     reaches would be exactly the orphan branch D-51 forbids.
     """
     if magnitude.model is not RampModel.EXACT:
-        raise DeltaAmpInterpretationError(
+        raise InterpretationError(
             f"{ctx.owner}: no delta-amp rule declares the "
             f"{magnitude.model.value} ramp model, so this interpreter has no "
             "arithmetic for it; the slice that declares one owns the branch"
@@ -194,7 +191,7 @@ def amp_fields(
     """
     payload = rule.payload
     if not isinstance(payload, (DeltaAmpRule, PartAmpRule)):
-        raise DeltaAmpInterpretationError(f"{rule.mechanic_id} is not a delta-amp rule")
+        raise InterpretationError(f"{rule.mechanic_id} is not a delta-amp rule")
 
     field = partial(KernelField, lane=lane, rule_id=rule.mechanic_id)
 
@@ -237,4 +234,4 @@ def _declared_field(
         f"{rule.mechanic_id} compiles no {name!r} field; the "
         "engine asked its declaration a question it does not answer"
     )
-    return compiled_value(fields, name, DeltaAmpInterpretationError, missing)
+    return compiled_value(fields, name, InterpretationError, missing)

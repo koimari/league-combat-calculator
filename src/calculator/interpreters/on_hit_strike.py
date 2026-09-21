@@ -35,6 +35,7 @@ from ..item_behavior_catalog import behavior_rules, built_per_rule
 from ..item_effects import PerHitEffect, damage_source
 from ..value_ref import resolve
 from . import damage_formula
+from .interpretation_error import InterpretationError
 from .rule_selection import rules_of
 
 # The field a strike rule compiles to for inspection: its term count.  A
@@ -56,10 +57,6 @@ CLASS_RESTRICTED_BREAKDOWN_KEY = "{prefix}{target_class}_{owner}"
 CLASS_RESTRICTED_SUFFIX = "{mechanic} vs {target_class}s"
 
 
-class OnHitStrikeInterpretationError(ValueError):
-    """A rule reached this interpreter that is not an on-hit strike."""
-
-
 def strike_fields(
     rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
 ) -> tuple[KernelField, ...]:
@@ -77,9 +74,7 @@ def strike_fields(
     """
     payload = rule.payload
     if not isinstance(payload, OnHitStrikeRule):
-        raise OnHitStrikeInterpretationError(
-            f"{rule.mechanic_id} is not an on-hit strike rule"
-        )
+        raise InterpretationError(f"{rule.mechanic_id} is not an on-hit strike rule")
     damage_formula.compile_formula(payload.formula, ctx)
     return (
         KernelField(
@@ -166,7 +161,7 @@ def class_restricted_per_hit_effects(
             continue
         amount = resolve(rule.payload.amount)
         if amount <= 0.0:
-            raise OnHitStrikeInterpretationError(
+            raise InterpretationError(
                 f"{rule.mechanic_id} resolved a non-positive class-restricted "
                 f"on-hit value {amount!r}"
             )
@@ -198,9 +193,7 @@ def per_hit_effect(rule: BehaviorRule, ctx: BuildContext) -> PerHitEffect:
     """One declared strike as the record the fight engine consumes."""
     payload = rule.payload
     if not isinstance(payload, OnHitStrikeRule):
-        raise OnHitStrikeInterpretationError(
-            f"{rule.mechanic_id} is not an on-hit strike rule"
-        )
+        raise InterpretationError(f"{rule.mechanic_id} is not an on-hit strike rule")
     return PerHitEffect(
         damage_source(
             rule.owner,
@@ -236,7 +229,6 @@ __all__ = [
     "ON_HIT_BREAKDOWN_PREFIX",
     "ON_HIT_SUFFIX",
     "STRIKE_TERM_COUNT_FIELD",
-    "OnHitStrikeInterpretationError",
     "adjudicated_target_class_mechanics",
     "class_restricted_packets",
     "class_restricted_per_hit_effects",

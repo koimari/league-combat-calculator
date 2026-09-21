@@ -19,9 +19,9 @@ import pytest
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator.interpreters import INTERPRETERS, RESOLVERS, resolve_defense
 from src.calculator.interpreters.defense_state import (
-    DefenseInterpretationError,
     compiled_shape,
 )
+from src.calculator.interpreters.interpretation_error import InterpretationError
 from src.calculator.interpreters.reactive import (
     THORNS_FIELDS,
     resolve_reactive,
@@ -241,5 +241,5 @@ def test_the_accessor_and_the_interpreter_share_one_arithmetic_home() -> None:
 def test_the_walk_lane_refuses_a_reactive_shield_rather_than_pricing_it_twice() -> None:
     """The shields reach the walk as resolved state; asking here is a stop."""
     rule = _rule("Armored Advance", DefenseMechanic.NOXIAN_ENDURANCE)
-    with pytest.raises(DefenseInterpretationError, match="price it twice"):
+    with pytest.raises(InterpretationError, match="price it twice"):
         thorns_fields(rule, _ctx(rule.owner), EngineLane.RECEIPT_WALK)

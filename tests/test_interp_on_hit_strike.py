@@ -13,6 +13,7 @@ import pytest
 
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.interpreters import on_hit_strike
+from src.calculator.interpreters.interpretation_error import InterpretationError
 from src.calculator.item_behavior import FightFacts, OnHitStrikeRule, RuleFamily
 from src.calculator.item_behavior_catalog import (
     ON_HIT_FORMULA_TERMS,
@@ -182,7 +183,7 @@ def test_a_rule_from_another_family_is_refused() -> None:
             holder_is_melee=True,
         ),
     )
-    with pytest.raises(on_hit_strike.OnHitStrikeInterpretationError):
+    with pytest.raises(InterpretationError, match="not an on-hit strike rule"):
         on_hit_strike.per_hit_effect(amp, ctx)
 
 

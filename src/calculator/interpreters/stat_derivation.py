@@ -41,11 +41,8 @@ from ..item_behavior import (
 )
 from ..reference_vocabulary import ValueRefError
 from ..value_ref import resolve, resolve_flat
+from .interpretation_error import InterpretationError
 from .rule_selection import rules_of
-
-
-class StatDerivationInterpretationError(ValueError):
-    """A stat-derivation rule was asked something its payload does not answer."""
 
 
 def reference_fields(
@@ -64,9 +61,7 @@ def reference_fields(
     """
     payload = rule.payload
     if not isinstance(payload, STAT_DERIVATION_PAYLOADS):
-        raise StatDerivationInterpretationError(
-            f"{rule.mechanic_id} is not a stat-derivation rule"
-        )
+        raise InterpretationError(f"{rule.mechanic_id} is not a stat-derivation rule")
     names = (
         STAT_DERIVATION_REQUIRED_REFERENCES[type(payload)]
         + STAT_DERIVATION_OPTIONAL_REFERENCES[type(payload)]
@@ -99,7 +94,7 @@ def granted_stat(payload: object) -> DerivedStat | None:
     if isinstance(payload, STAT_DERIVATION_UNGRANTED_PAYLOADS):
         return None
     if not isinstance(payload, STAT_DERIVATION_PAYLOADS):
-        raise StatDerivationInterpretationError(
+        raise InterpretationError(
             f"{type(payload).__name__} is not a stat-derivation payload"
         )
     return payload.granted
@@ -117,7 +112,7 @@ class StatSlot(CompiledSlot):
 
     rule: BehaviorRule
     fields: tuple[KernelField, ...]
-    stop = StatDerivationInterpretationError
+    stop = InterpretationError
     missing = (
         "{mechanic_id} declares no {name!r} value; a stat derivation reads "
         "the numbers its declaration names and no others"
@@ -147,7 +142,7 @@ def sole_declared_derivation(
         declared_stat_derivations,
         owners,
         payload_type,
-        StatDerivationInterpretationError,
+        InterpretationError,
     )
 
 
@@ -180,7 +175,7 @@ def declared_stat_derivations(
         try:
             values = resolve_flat([getattr(payload, name) for name in names])
         except ValueRefError as exc:
-            raise StatDerivationInterpretationError(
+            raise InterpretationError(
                 f"{rule.mechanic_id} declares a reference that needs a level "
                 "or a fight fact, and this accessor has neither; resolve it "
                 "through the family's interpreter with a build context"
@@ -223,14 +218,14 @@ def armor_penetration_split(owner: str, percent: float) -> tuple[float, float]:
         return 0.0, 0.0
     slots = declared_stat_derivations([owner], PenetrationChannelRule)
     if not slots:
-        raise StatDerivationInterpretationError(
+        raise InterpretationError(
             f"{owner} carries {percent}% armour penetration and declares no "
             "channel for it; which armour a percentage penetration reaches is "
             "a sourced property of the item, so an undeclared one is withheld "
             "rather than routed to the ordinary channel by default"
         )
     if len(slots) > 1:
-        raise StatDerivationInterpretationError(
+        raise InterpretationError(
             f"{owner} declares {len(slots)} armour-penetration channels and "
             "nothing declares which of them one percentage lands in"
         )
@@ -241,7 +236,6 @@ def armor_penetration_split(owner: str, percent: float) -> tuple[float, float]:
 
 
 __all__ = [
-    "StatDerivationInterpretationError",
     "StatSlot",
     "armor_penetration_split",
     "declared_stat_derivations",

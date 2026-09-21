@@ -11,6 +11,7 @@ answer rather than a zero.
 import pytest
 
 from src.calculator.interpreters import secondary_target
+from src.calculator.interpreters.interpretation_error import InterpretationError
 from src.calculator.item_behavior import FightFacts, RuleFamily, SecondaryTargetRule
 from src.calculator.item_behavior_catalog import behavior_rules
 from src.calculator.item_effects import ITEM_EFFECTS
@@ -86,7 +87,7 @@ def test_a_missing_share_fails_loud_naming_the_item_and_key(
 
 def test_two_bolt_sets_stop_rather_than_pick_a_winner() -> None:
     """Nothing declares how two secondary-target strikes combine."""
-    with pytest.raises(secondary_target.SecondaryTargetInterpretationError):
+    with pytest.raises(InterpretationError, match="how two bolt sets combine"):
         _slot(HOLDER, HOLDER)
 
 
@@ -94,5 +95,5 @@ def test_a_question_the_declaration_does_not_answer_raises() -> None:
     """A missing compiled field is a programming error, never a zero."""
     slot = _slot(HOLDER)
     assert slot is not None
-    with pytest.raises(secondary_target.SecondaryTargetInterpretationError):
+    with pytest.raises(InterpretationError, match="amp_fraction"):
         slot.value("amp_fraction")

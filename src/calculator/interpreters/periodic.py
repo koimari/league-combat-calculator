@@ -33,6 +33,7 @@ from ..item_behavior_catalog import build_context
 from ..item_effects import BurnEffect, DamageSource, PeriodicEffect, damage_source
 from ..value_ref import resolve
 from . import damage_formula
+from .interpretation_error import InterpretationError
 from .rule_selection import rules_of
 
 # The field a periodic strike compiles to: the seconds between its packets.
@@ -52,10 +53,6 @@ CADENCE_PRESENTATION: dict[PeriodicCadence, tuple[str, str]] = {
 # engine's own spelling for "no self-heal packet"; written here so the
 # declaration can say *nothing* rather than say zero.
 NO_SELF_HEAL_SHARE = 0.0
-
-
-class PeriodicInterpretationError(ValueError):
-    """A rule reached this interpreter that is not a periodic strike."""
 
 
 cadence_fields = damage_formula.field_reading("interval", PERIODIC_INTERVAL_FIELD)
@@ -140,7 +137,7 @@ def resolve_slots(
         interval = resolve(payload.interval, ctx.level)
         if payload.cadence is PeriodicCadence.REFRESHED_BURN:
             if payload.duration is None:
-                raise PeriodicInterpretationError(
+                raise InterpretationError(
                     f"{rule.mechanic_id} is a burn with no declared window; "
                     "validate_rule refuses one, so reaching here means a rule "
                     "was built past its own validation"
@@ -179,7 +176,6 @@ __all__ = [
     "CADENCE_PRESENTATION",
     "NO_SELF_HEAL_SHARE",
     "PERIODIC_INTERVAL_FIELD",
-    "PeriodicInterpretationError",
     "PeriodicSlots",
     "cadence_fields",
     "declares_self_heal",

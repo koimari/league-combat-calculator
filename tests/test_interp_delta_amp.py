@@ -18,6 +18,7 @@ from src.calculator import interpreters
 from src.calculator import item_effects as item_effects_module
 from src.calculator.ability_spec import AttackClass
 from src.calculator.interpreters import amp_magnitude, delta_amp, part_amp
+from src.calculator.interpreters.interpretation_error import InterpretationError
 from src.calculator.item_behavior import (
     AMP_CHAIN_ORDER,
     AmpChainSlot,
@@ -153,7 +154,7 @@ def test_the_multiplier_is_one_plus_the_holders_sum() -> None:
 
 def test_asking_a_rule_for_a_field_it_does_not_compile_is_a_stop() -> None:
     """A window's end from a rule with no window is a bug, never a zero."""
-    with pytest.raises(amp_magnitude.DeltaAmpInterpretationError, match="window_start"):
+    with pytest.raises(InterpretationError, match="window_start"):
         _fixed_slot(0.1).window()
 
 
@@ -161,7 +162,7 @@ def test_a_bonus_that_follows_its_source_has_no_aggregate_type() -> None:
     """An aggregate row needs one type; a source-following amp has none."""
     slot = _fixed_slot(0.1)
     assert slot.bonus_damage_type("magic") == "magic"
-    with pytest.raises(amp_magnitude.DeltaAmpInterpretationError, match="single"):
+    with pytest.raises(InterpretationError, match="single"):
         slot.uniform_bonus_damage_type()
 
 
@@ -247,9 +248,7 @@ def test_a_magnitude_with_no_arithmetic_raises_rather_than_pricing_zero() -> Non
     class _NotInTheUnion:  # pylint: disable=too-few-public-methods
         """A magnitude shape somebody added and nobody interpreted."""
 
-    with pytest.raises(
-        amp_magnitude.DeltaAmpInterpretationError, match="_NotInTheUnion"
-    ):
+    with pytest.raises(InterpretationError, match="_NotInTheUnion"):
         amp_magnitude.magnitude_fraction(_NotInTheUnion(), _ctx())
 
 
@@ -261,16 +260,14 @@ def test_a_ramp_model_no_declaration_uses_has_no_branch() -> None:
         Const(2.0, "unit_scale"),
         RampModel.CESARO_APPROX,
     )
-    with pytest.raises(
-        amp_magnitude.DeltaAmpInterpretationError, match="cesaro_approx"
-    ):
+    with pytest.raises(InterpretationError, match="cesaro_approx"):
         amp_magnitude.magnitude_fraction(cesaro, _ctx())
 
 
 def test_a_non_positive_bonus_health_cap_is_a_registry_defect() -> None:
     """A zero cap would divide, and a full-strength amp would be the silent answer."""
     broken = TargetBonusHealthScaled(Const(0.15, "unit_scale"), Const(0.0, "cap"))
-    with pytest.raises(amp_magnitude.DeltaAmpInterpretationError, match="positive"):
+    with pytest.raises(InterpretationError, match="positive"):
         amp_magnitude.magnitude_fraction(broken, _ctx(bonus_health=750.0))
 
 
@@ -453,13 +450,9 @@ def test_a_rule_with_no_trigger_window_refuses_the_question() -> None:
     """Asking a windowless rule where its window is, is a programming error."""
     slot = _slot("Horizon Focus")
     assert slot is not None
-    with pytest.raises(
-        amp_magnitude.DeltaAmpInterpretationError, match="trigger window"
-    ):
+    with pytest.raises(InterpretationError, match="trigger window"):
         slot.trigger_windows([0.0])
-    with pytest.raises(
-        amp_magnitude.DeltaAmpInterpretationError, match="trigger window"
-    ):
+    with pytest.raises(InterpretationError, match="trigger window"):
         slot.window_holds(((0.0, 1.0),), 0.5)
 
 
@@ -481,16 +474,12 @@ def test_an_undeclared_merge_or_boundary_has_no_arithmetic() -> None:
         dataclasses.replace(declared, merge=WindowMerge.INDEPENDENT),
     ):
         mutated = _with_activation(slot, replacement)
-        with pytest.raises(
-            amp_magnitude.DeltaAmpInterpretationError, match="window merge"
-        ):
+        with pytest.raises(InterpretationError, match="window merge"):
             mutated.trigger_windows([0.0])
     closed = _with_activation(
         slot, dataclasses.replace(declared, boundary=WindowBoundary.CLOSED_CLOSED)
     )
-    with pytest.raises(
-        amp_magnitude.DeltaAmpInterpretationError, match="expiry boundary"
-    ):
+    with pytest.raises(InterpretationError, match="expiry boundary"):
         closed.window_holds(((0.0, 4.0),), 2.0)
 
 
@@ -561,9 +550,7 @@ def test_offering_the_wrong_pool_to_a_live_predicate_is_a_stop() -> None:
     """A rule that reads the target's health may not be handed the holder's."""
     slot = _cinderbloom_slot("Shadowflame")
     assert slot is not None
-    with pytest.raises(
-        amp_magnitude.DeltaAmpInterpretationError, match="the engine offered"
-    ):
+    with pytest.raises(InterpretationError, match="the engine offered"):
         slot.live_predicate_holds(Probe.HOLDER_HEALTH_FRACTION, 1.0, 1000.0)
 
 
@@ -580,9 +567,7 @@ def test_a_comparison_no_declaration_uses_has_no_branch() -> None:
     declared = slot.rules[0].payload.activation
     for cmp_member in (Comparison.LE, Comparison.GE):
         mutated = _with_activation(slot, dataclasses.replace(declared, cmp=cmp_member))
-        with pytest.raises(
-            amp_magnitude.DeltaAmpInterpretationError, match="comparison"
-        ):
+        with pytest.raises(InterpretationError, match="comparison"):
             mutated.live_predicate_holds(Probe.TARGET_HEALTH_FRACTION, 1.0, 1000.0)
 
 
@@ -817,7 +802,7 @@ def test_the_ability_amp_refuses_a_stat_reading_nobody_supplied() -> None:
     """
     amp = _part_amp("Actualizer", melee=True, attack_class=AttackClass.ABILITY)
     assert amp is not None
-    with pytest.raises(amp_magnitude.DeltaAmpInterpretationError, match="bonus_mana"):
+    with pytest.raises(InterpretationError, match="bonus_mana"):
         amp.multiplier({})
 
 
@@ -833,7 +818,7 @@ def test_a_stat_scaled_magnitude_has_no_build_time_fraction() -> None:
             holder_is_melee=True,
         ),
     )
-    with pytest.raises(amp_magnitude.DeltaAmpInterpretationError, match="bonus_mana"):
+    with pytest.raises(InterpretationError, match="bonus_mana"):
         amp_magnitude.magnitude_fraction(rule.payload.magnitude, ctx)
     names = {
         field.name

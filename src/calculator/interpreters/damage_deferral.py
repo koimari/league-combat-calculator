@@ -11,7 +11,8 @@ from ..item_behavior import (
     DefenseOutcome,
     DefenseSubject,
 )
-from .defense_state import DefenseInterpretationError, DefenseSlot
+from .defense_state import DefenseSlot
+from .interpretation_error import InterpretationError
 
 DEFER_FRACTION_FIELD = "defer_fraction"
 
@@ -56,7 +57,7 @@ def resolve_deferral(rule: BehaviorRule, subject: DefenseSubject) -> DefenseOutc
     """The deferral schedule, against the subject that will pay it."""
     slot = DefenseSlot(rule)
     if slot.mechanic is not DefenseMechanic.IGNORE_PAIN:
-        raise DefenseInterpretationError(
+        raise InterpretationError(
             f"{rule.mechanic_id} declares damage_routing at the resolver and "
             "this family has no branch for it; a schedule with no arithmetic "
             "is a mechanic that would silently do nothing"
