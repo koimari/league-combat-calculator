@@ -77,7 +77,7 @@ def _slot(*owners: str) -> "delta_amp.AmpSlot | None":
 def test_amp_chain_order_is_declared() -> None:
     """The eight slots, frozen: a refactor that reorders them fails here.
 
-    These chain slots are **not** Phase 4's seven authority moves; the two
+    These chain slots are **not** the authority moves; the two
     sets overlap and neither contains the other.
     """
     assert AMP_CHAIN_ORDER == (
@@ -256,7 +256,7 @@ def test_a_magnitude_with_no_arithmetic_raises_rather_than_pricing_zero() -> Non
 
 
 def test_a_ramp_model_no_declaration_uses_has_no_branch() -> None:
-    """D-51: arithmetic for a shape nothing reaches would be an orphan branch."""
+    """Arithmetic for a shape nothing reaches would be an orphan branch."""
     cesaro = RampPerStack(
         Const(0.03, "unit_scale"),
         Const(4.0, "count"),
@@ -312,7 +312,7 @@ def test_a_second_mechanic_on_one_entry_is_declared_rather_than_missed() -> None
 
 
 # ---------------------------------------------------------------------------
-# Command — one declaration, both engines (D-12, D-13)
+# Command — one declaration, both engines
 # ---------------------------------------------------------------------------
 
 
@@ -363,7 +363,7 @@ def test_a_missing_command_key_names_the_item_and_the_key(
 
 
 def test_a_second_immobilize_refreshes_the_window_rather_than_stacking() -> None:
-    """D-12's policy, as the declaration now states it.
+    """The merge policy, as the declaration states it.
 
     The merged window's expiry is the *last* trigger plus one duration, and
     nothing about the first trigger survives in it except its start.  That is
@@ -439,7 +439,7 @@ def test_refresh_takes_the_last_trigger_and_not_the_running_total() -> None:
 
 
 def test_the_expiry_boundary_is_open_closed() -> None:
-    """D-13: the trigger instant is outside the window and the expiry is in."""
+    """The trigger instant is outside the window and the expiry is in."""
     slot = _command_slot("Imperial Mandate")
     assert slot is not None
     duration = slot.value(amp_magnitude.WINDOW_DURATION_FIELD)
@@ -460,11 +460,11 @@ def test_a_rule_with_no_trigger_window_refuses_the_question() -> None:
 
 
 def test_an_undeclared_merge_or_boundary_has_no_arithmetic() -> None:
-    """R-05/D-51: the two unreached members raise rather than guessing.
+    """The two unreached members raise rather than guessing.
 
     ``EXTEND``/``INDEPENDENT`` and ``CLOSED_CLOSED`` are legal spellings no
     rule declares; writing arithmetic for a shape nothing reaches is the
-    orphan branch D-51 forbids, so the interpreter stops instead.  ``EXTEND``
+    orphan branch the registry forbids, so the interpreter stops.  ``EXTEND``
     is unreached *and* live as a question — it is the additive reading the
     Wiki's wording admits — so its refusal here is what keeps the additive
     answer from arriving as a silent default.
@@ -526,7 +526,7 @@ def test_cinderbloom_prices_the_multiplier_the_page_states_as_a_fraction() -> No
 
 
 def test_cinderbloom_crits_only_magic_and_true() -> None:
-    """D-04: the excluded class is something the declaration says."""
+    """The excluded class is something the declaration says."""
     slot = _cinderbloom_slot("Shadowflame")
     assert slot is not None
     assert slot.prices_damage_type("magic")
@@ -558,7 +558,7 @@ def test_offering_the_wrong_pool_to_a_live_predicate_is_a_stop() -> None:
 
 
 def test_a_comparison_no_declaration_uses_has_no_branch() -> None:
-    """D-51: the two boundary comparisons are unreached and raise.
+    """The two boundary comparisons are unreached and raise.
 
     ``LT`` and ``GT`` are both declared — Cinderbloom and Coup de Grace arm
     under a share of the target's health, Cut Down over one — and no rule
@@ -617,7 +617,7 @@ def test_no_interpreter_precomputes_a_live_predicate_pool() -> None:
 
 
 def test_every_amp_declares_the_one_compiled_kernel_answer() -> None:
-    """Phase 3 criterion 16, discharged by the declaration and never by absence.
+    """Discharged by the declaration and never by absence.
 
     Every ``delta_amp`` rule — item and keystone alike — carries
     ``AMP_COMPILABILITY`` itself, so the assertion is identity against that
@@ -644,7 +644,7 @@ def test_every_amp_declares_the_one_compiled_kernel_answer() -> None:
         ), f"{rule.mechanic_id} does not carry the one compiled-kernel answer"
 
 
-# ── D-98: the derivation beside the legacy set, and the asserted delta ────
+# ── the derivation beside the legacy set, and the asserted delta ───────
 
 # Every mechanic the H5 flip moves, enumerated before it moves them.  This is
 # the delta R-31 requires an asserted set for: the flip is one symbol, so
@@ -682,8 +682,8 @@ AMP_FLIP_POPULATION = frozenset(
 def test_the_amp_flip_population_is_the_declared_one() -> None:
     """Which mechanics the one-symbol flip moves, asserted rather than found.
 
-    D-98/R-31: a derivation lands beside the legacy declaration with an
-    asserted delta, and only then does the flip land as its own revert unit.
+    A derivation lands beside the legacy declaration with an asserted
+    delta, and only then does the flip land as its own revert unit.
     ``AMP_COMPILABILITY`` is that indirection; this is the delta.  A
     seventeenth amp declared without a line here fails on the commit that adds
     it, which is what stops the flip from silently taking a mechanic nobody
@@ -874,7 +874,7 @@ def test_the_registry_no_longer_holds_a_per_part_amp_of_its_own() -> None:
     """Counter 3's two survivors are declarations now, not registry effects.
 
     The migration is only real if the old compiled effects are *gone*: a
-    second producer of one multiplier is the shape this campaign exists to
+    second producer of one multiplier is the shape the registry exists to
     kill, and an accessor left behind is a second producer waiting for a
     caller.
     """

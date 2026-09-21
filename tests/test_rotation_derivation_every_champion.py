@@ -342,7 +342,7 @@ class TestEdgeInvariants:
 
         The vocabulary is read from ``cast_dependency``, never retyped: a
         second copy here would keep passing after the leaf's set changed,
-        which is the whole failure this campaign audits for.  Set equality
+        which is the whole failure the audit exists for.  Set equality
         against what the detector *can* emit is asserted at its source in
         ``tests/test_cast_dependency.py``; this walk asserts the roster
         stays inside it.
@@ -634,7 +634,7 @@ class TestOrderStructure:
 
         The floors are re-measured whenever a retirement changes the counted
         population — the walk skips seeded champions, so retiring a seed adds
-        that champion to it — and they move UP only.  D-89's four retirements
+        that champion to it — and they move UP only.  The four retirements
         added Syndra and Aatrox to both counts (Jhin and Aphelios derive by
         the flat-kit path, so they enter the population without raising
         either floor), taking 25 -> 32 and 15 -> 21.  A floor lowered to make
@@ -706,7 +706,7 @@ def _declaration(**overrides) -> CastDependency:
 
 
 def _reverse_suppression(**overrides) -> SuppressedInference:
-    """The exact reverse pair of ``_declaration()``, as D-81 requires."""
+    """The exact reverse pair of ``_declaration()``, which is what scope means."""
     fields = {
         "setup": "E",
         "consume": "Q",
@@ -721,7 +721,7 @@ _LIVE = {"Q", "W", "E", "R"}
 
 
 class TestPrecedenceTable:
-    """Every row of Phase 5's explicit-vs-inferred precedence table."""
+    """Every row of the explicit-versus-inferred precedence table."""
 
     def test_no_declaration_keeps_the_inference_untouched(self) -> None:
         """Row 1 — today's behaviour, byte-identical."""
@@ -768,7 +768,7 @@ class TestPrecedenceTable:
         assert len(receipt.conflicts) == 1
 
     def test_an_uncovered_opposition_raises(self) -> None:
-        """Row 5 — D-82: declared-always-wins would settle it silently."""
+        """Row 5: declared-always-wins would settle it silently."""
         with pytest.raises(ConflictingInferenceError) as caught:
             merge_declared_edges(
                 "Synthetic", [_inferred("E", "Q")], [_declaration()], _LIVE
@@ -884,7 +884,7 @@ class TestResolvedEdgesIsTheOneSurface:
     def test_a_non_declaring_champion_gets_the_detectors_edges_verbatim(
         self, champion_by_name, items_by_name
     ) -> None:
-        """D-85 behaviourally: 170 modules reach the merge and pass through."""
+        """Behaviourally: 170 modules reach the merge and pass through."""
         for name in ("Ahri", "Cassiopeia", "Ezreal", "Pantheon", "Riven"):
             data = champion_by_name[name]
             parsed = _parse(data, 11, (), items_by_name)
@@ -955,7 +955,7 @@ class TestSyndrasSuppressionsAreLoadBearing:
     "either" could not be honoured as written.  ``E requires Q`` is
     **matched**: the detector's ``cc_setup`` fan-out really does emit
     ``E -> Q``, so removing the suppression is a direct red.  ``E requires
-    Q2`` is **latent** by D-84 — ``_castable()`` wants ``cooldown > 0``
+    Q2`` is **latent** — ``_castable()`` wants ``cooldown > 0``
     and Q2 carries the ``0.0`` cast-exactly-once cooldown, so no
     ``E -> Q2`` edge can exist and no removal can ever raise here.  Its
     evidence is the other half of that same fact, and it is stricter than
@@ -986,7 +986,7 @@ class TestSyndrasSuppressionsAreLoadBearing:
     def test_removing_the_matched_suppression_raises(
         self, champion_by_name, level, splinters
     ) -> None:
-        """D-82 on the live surface: the two surfaces disagree, loudly."""
+        """On the live surface: the two surfaces disagree, loudly."""
         declarations = _syndra_declarations(Q={"suppresses": ()})
         with pytest.raises(ConflictingInferenceError) as caught:
             _syndra_merge(champion_by_name["Syndra"], level, splinters, declarations)
@@ -1014,7 +1014,7 @@ class TestSyndrasSuppressionsAreLoadBearing:
     def test_no_inference_opposes_the_recast_declaration_anywhere(
         self, champion_by_name, level, splinters
     ) -> None:
-        """D-84 measured, not quoted: the E -> Q2 edge exists in no state."""
+        """Measured, not quoted: the E -> Q2 edge exists in no state."""
         data = champion_by_name["Syndra"]
         parsed = _parse(data, level, (), {}, champion_options={"splinters": splinters})
         inferred = detect_setup_consume_edges(
@@ -1030,7 +1030,7 @@ class TestSyndrasSuppressionsAreLoadBearing:
 
         This is what removal cannot test.  The suppression is live and
         active — its parent declaration is active wherever Q2 is — and
-        the merge still finds it matched no inferred edge, which is D-84's
+        the merge still finds it matched no inferred edge, which is the
         claim proven by the merge rather than asserted by the module.
         """
         suppression = _syndra_declarations()[1].suppresses[0]
@@ -1156,7 +1156,7 @@ class TestTheDerivationReadsDeclarations:
     def test_the_same_cycle_without_a_declaration_still_falls_back(
         self, champion_by_name
     ) -> None:
-        """The 170 keep the silent fallback — that is what D-85 buys."""
+        """The 170 keep the silent fallback, which gating on a declaration buys."""
         data = champion_by_name["Ahri"]
         parsed = _parse(data, 11, (), {})
         rule = derive_champion_rule(
@@ -1319,7 +1319,7 @@ class TestTheDeclarationProbeStaysOutOfTheMemo:
 
 
 class TestTheRotationMemosInvalidateOnData:
-    """D-49: both rotation caches key on ``data_version()``.
+    """Both rotation caches key on ``data_version()``.
 
     Every value in them is derived from ``data/``, so a mid-process
     refresh must make them miss.  Without the component a patch-day

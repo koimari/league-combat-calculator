@@ -179,7 +179,7 @@ def _verdict(ref: TestRef, ctx: ResolverContext, *, full_session: bool):
 def test_the_resolver_is_not_a_collectable_module(pytestconfig) -> None:
     """It matches none of pytest's ``python_files`` patterns, so it is a helper.
 
-    The ruling is that the resolver is uncollected: a ``-k`` expression aimed
+    The resolver is uncollected: a ``-k`` expression aimed
     at something else must not be able to remove the machinery the resolution
     tier runs on.
     """
@@ -643,8 +643,8 @@ def test_the_full_session_predicate_reads_all_three_filters(
 def test_a_filtered_session_deselects_the_full_session_tier_and_skips_nothing() -> None:
     """Deselected, never skipped — proved by running one, not by saying so.
 
-    ``pytest.skip`` reports green for work it did not do, which is this
-    campaign's own failure shape.  A path argument is a filter, so this run
+    ``pytest.skip`` reports green for work it did not do.  A path argument
+    is a filter, so this run
     must not collect the marked node at all.
     """
     completed = subprocess.run(
@@ -682,7 +682,7 @@ def test_the_full_session_tier_sees_its_own_node() -> None:
 
 @pytest.mark.full_session
 def test_the_resolver_contributes_no_collected_node() -> None:
-    """The uncollected ruling, checked against what a whole session collected."""
+    """Uncollected, checked against what a whole session collected."""
     collected = coverage_resolver.collected_nodes()
     assert not [
         node for node in collected if node.startswith("tests/coverage_resolver")
@@ -871,9 +871,9 @@ def test_packet_sites_read_every_source_argument_with_its_keywords() -> None:
     """The measurement is the contract, and ``owner=`` is what it is for.
 
     The count is read off the module rather than pinned, and the distinct
-    source set is what Phase 3 derives its producer count from.  What is
-    asserted here is the property the campaign turns on: exactly the packets
-    whose mechanic Phase 2 declares ``SPLIT`` carry ``owner=``.
+    source set is what the producer count is derived from.  What is
+    asserted here is the property that matters: exactly the packets whose
+    mechanic the capability registry declares ``SPLIT`` carry ``owner=``.
     """
     text = _support_packet_text()
     sites = coverage_resolver.packet_sites(text)
@@ -1351,9 +1351,9 @@ def test_the_live_survey_reports_only_real_and_unimported_modules() -> None:
 CLASSIFICATION_RECEIPT = (
     ROOT / "docs" / "receipts" / "item-coverage-classification.json"
 )
-# Every slice's allowlist, not one slice's: R-36 makes the file per slice, so
-# the gate reads the union of the live permission blocks.  Found by glob and
-# never listed, so a slice that adds a receipt without touching this file is
+# Every allowlist, not one: the file is per change, so the gate reads the
+# union of the live permission blocks.  Found by glob and never listed, so a
+# change that adds a receipt without touching this file is
 # still gated, and a re-capture that empties a block tightens the gate on the
 # commit that lands it.
 EXPECTED_COVERAGE_DIFFS = sorted(
@@ -1399,8 +1399,8 @@ def test_every_reviewed_absence_is_the_reason_the_ladder_publishes() -> None:
 # ── the numeric gate ──────────────────────────────────────────────────────
 #
 # Golden is near-vacuous for coverage: ``pipeline.py`` does not import
-# ``item_coverage``, so per D-93 this phase has to name a non-golden numeric
-# gate, and the committed classification receipt is it.  These two tests are
+# ``item_coverage``, so the numeric gate here is a non-golden one, and the
+# committed classification receipt is it.  These two tests are
 # that gate's live half — the receipt's shape, and a fresh capture against
 # it — which is what turns "evidence added, nothing moved" from a sentence in
 # a commit body into something a run either reproduces or does not.
@@ -1447,7 +1447,7 @@ def test_a_fresh_classification_capture_on_the_tip_diffs_to_zero() -> None:
 
     # 3.8's coverage flip moves records against the committed receipt, and
     # lands against it plus an allowlist rather than re-capturing inside a
-    # semantic commit (R-32, R-36, D-97).  Every moved leaf must be in the
+    # semantic commit.  Every moved leaf must be in the
     # allowlist and the allowlist must hold no leaf that did not move: an
     # entry for a key that stopped moving is a stale permission, so the
     # spent ones are retired and the set is legitimately empty between
@@ -1483,7 +1483,7 @@ def test_a_fresh_classification_capture_on_the_tip_diffs_to_zero() -> None:
     moved_paths = {leaf for leaf, _, _ in moved}
 
     # A subset and not an equality, deliberately: the allowlist stands while
-    # the slice's commits are un-re-captured and empties the moment the
+    # the moving commits are un-re-captured and empties the moment the
     # receipt is re-captured, exactly as the coupled-golden allowlist does.
     # Equality here would make the re-capture commit red by construction.
     assert moved_paths - permitted == set(), "a coverage record moved unlisted"
@@ -1497,8 +1497,7 @@ def test_the_capture_gate_names_the_record_that_moved() -> None:
     A comparison's negative is a comparison, so the fixture is the committed
     receipt with one published reason perturbed in memory — nothing is
     written and the receipt on disk is not touched.  A gate whose red was
-    demonstrated once during development is the unverifiable claim about the
-    past this campaign outlaws.
+    demonstrated once during development is a claim nobody can re-check.
     """
     text = CLASSIFICATION_RECEIPT.read_text(encoding="utf-8")
     baseline = json.loads(text)
@@ -1520,8 +1519,8 @@ CACHE = cached_items()
 
 # The effect tags a live handler branches on, read off the dispatch sites
 # rather than listed.  Their complement is what the frontier has to name.
-# There are now two homes: ``item_effects``' effect-type ladder, and Phase 3's
-# behaviour catalog for every tag whose behaviour has become a declaration.
+# Two homes: ``item_effects``' effect-type ladder, and the behaviour
+# catalog for every tag whose behaviour is a declaration.
 # Reading only the ladder would report a migrated tag as undispatched on the
 # commit that gave it a real home.
 DISPATCHED_TAGS: frozenset[str] = (
@@ -1597,8 +1596,7 @@ def test_a_stateful_item_supplies_its_state_from_a_named_home(item: str) -> None
     Three routes, and the claim names which: a bounded scenario control, a
     packet the participant ledger schedules, or a sourced registry value.  An
     item that reached ``modeled_state`` with no home would be state the model
-    *assumed*, which is the disposition this campaign refuses to let look like
-    a computed one.
+    *assumed*, which must never look like a computed one.
     """
     CACHE[item]
     assert _attacker(item).optimizer_eligible
@@ -1694,9 +1692,8 @@ def test_an_unreviewed_cached_record_is_blocked_with_issue_refs(item: str) -> No
 
     The population is selected by the premise — a described passive or active
     that no rule and no registry entry declares — never by the ladder's answer,
-    so the property runs forward: the campaign's own invariant at item scale is
-    that such a record gets a named refusal carrying the issue that tracks it,
-    never a number.  The two reviewed registries that may still admit one are
+    so the property runs forward: such a record gets a named refusal
+    carrying the issue that tracks it, never a number.  The two reviewed registries that may still admit one are
     each asserted by their own membership: a bounded scenario control prices as
     ``modeled_state`` and a reviewed absence as ``stats_only``.
     """
@@ -1982,7 +1979,7 @@ def test_no_src_module_reads_the_corpus_or_a_claims_status() -> None:
 
 
 def test_every_split_mechanic_is_claimed_with_both_sides() -> None:
-    """Criterion 9: dual-sided evidence resolves against Phase 2, not a name list.
+    """Dual-sided evidence resolves against the registry, not a name list.
 
     The pairing-exception set is asserted **empty**: the next divergence
     has to be a typed entry pointing at a receipt, never a silent omission.
@@ -2056,8 +2053,8 @@ def test_the_frontier_holds_no_damage_or_durability_lane_and_every_entry_is_trac
 
 MANDATE_SPLIT_CLAIM = COVERAGE_EVIDENCE[("item", "Imperial Mandate", "support_packet")]
 COMMAND_PACKET = "Imperial Mandate — Command"
-# The accessor Command's numbers now arrive through.  Phase 3's amp slice
-# deleted the bespoke ``item_effects.command_amp_effect`` compiler: the rule
+# The accessor Command's numbers arrive through.  There is no bespoke
+# ``item_effects.command_amp_effect`` compiler any more: the rule
 # is declared once for both engines and its ``ValueRef``s read the same
 # ``ALLY_ITEM_EFFECTS`` record through this accessor.  M1's question is
 # unchanged — rename the thing the pair-engine half reads its number through
