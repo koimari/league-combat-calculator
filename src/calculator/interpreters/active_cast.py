@@ -52,7 +52,9 @@ ACTIVE_BREAKDOWN_PREFIX = "active_"
 NO_INHERITED_LIFESTEAL = 0.0
 
 
-active_fields = damage_formula.field_reading("cooldown", ACTIVE_COOLDOWN_FIELD)
+active_fields = damage_formula.field_reading(
+    ActiveCastRule, "cooldown", ACTIVE_COOLDOWN_FIELD
+)
 
 
 def active_source(rule: BehaviorRule, ctx: BuildContext) -> DamageSource:

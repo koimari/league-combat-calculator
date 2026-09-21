@@ -197,7 +197,9 @@ class TestFieldReading:
         )
 
     def test_the_bound_reading_names_the_field_and_stamps_the_lane(self) -> None:
-        read = damage_formula.field_reading("cooldown", "active_cooldown")
+        read = damage_formula.field_reading(
+            SimpleNamespace, "cooldown", "active_cooldown"
+        )
         rule = self._rule(cooldown=Const(9.0, "count"))
         (field,) = read(rule, CTX, EngineLane.PAIR_ENGINE)
         assert (field.name, field.value) == ("active_cooldown", 9.0)
@@ -206,7 +208,9 @@ class TestFieldReading:
 
     def test_both_lanes_read_the_same_declaration(self) -> None:
         """The pair engine and the walk cannot drift over which field they read."""
-        read = damage_formula.field_reading("interval", "periodic_interval")
+        read = damage_formula.field_reading(
+            SimpleNamespace, "interval", "periodic_interval"
+        )
         rule = self._rule(interval=Const(2.0, "count"))
         pair = read(rule, CTX, EngineLane.PAIR_ENGINE)
         walk = read(rule, CTX, EngineLane.RECEIPT_WALK)
@@ -215,8 +219,23 @@ class TestFieldReading:
 
     def test_an_attribute_the_payload_does_not_carry_is_a_stop(self) -> None:
         """A misspelled field name fails at build time, not mid-fight."""
-        read = damage_formula.field_reading("clock", "active_cooldown")
+        read = damage_formula.field_reading(SimpleNamespace, "clock", "active_cooldown")
         with pytest.raises(AttributeError):
+            read(
+                self._rule(cooldown=Const(9.0, "count")),
+                CTX,
+                EngineLane.PAIR_ENGINE,
+            )
+
+    def test_a_payload_of_another_family_is_a_refusal(self) -> None:
+        """The registry key says whose payload this is; anything else stops.
+
+        Reading the field off a foreign payload raises ``AttributeError``
+        instead, which is the shape ``tests/test_interpreter_refusals.py``
+        caught across four families.
+        """
+        read = damage_formula.field_reading(DamageFormula, "clock", "active_cooldown")
+        with pytest.raises(InterpretationError, match="is not a DamageFormula"):
             read(
                 self._rule(cooldown=Const(9.0, "count")),
                 CTX,

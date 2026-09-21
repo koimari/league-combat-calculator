@@ -74,7 +74,9 @@ def packet_fields(
     ramp is a fact the source states per item and not a property of the
     packet's direction.
     """
-    payload: AllyPacketRule = rule.payload
+    payload = rule.payload
+    if not isinstance(payload, AllyPacketRule):
+        raise InterpretationError(f"{rule.mechanic_id} is not an ally-packet rule")
     fields: list[KernelField] = []
     for reference in payload.values:
         if isinstance(reference, ValueRef):

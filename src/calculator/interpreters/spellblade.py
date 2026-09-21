@@ -54,7 +54,9 @@ def _sibling(reference: AnyValueRef | None, level: int) -> float:
     return NO_SIBLING if reference is None else resolve(reference, level)
 
 
-spellblade_fields = damage_formula.field_reading("cooldown", SPELLBLADE_COOLDOWN_FIELD)
+spellblade_fields = damage_formula.field_reading(
+    SpellbladeRule, "cooldown", SPELLBLADE_COOLDOWN_FIELD
+)
 
 
 def declares_self_heal(owners: Sequence[str]) -> bool:

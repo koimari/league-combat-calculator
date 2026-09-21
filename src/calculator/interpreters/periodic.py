@@ -55,7 +55,9 @@ CADENCE_PRESENTATION: dict[PeriodicCadence, tuple[str, str]] = {
 NO_SELF_HEAL_SHARE = 0.0
 
 
-cadence_fields = damage_formula.field_reading("interval", PERIODIC_INTERVAL_FIELD)
+cadence_fields = damage_formula.field_reading(
+    PeriodicRule, "interval", PERIODIC_INTERVAL_FIELD
+)
 
 
 def _row(

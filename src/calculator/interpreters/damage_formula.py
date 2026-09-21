@@ -264,20 +264,28 @@ def compiled_field(
 
 
 def field_reading(
+    payload_type: type,
     attribute: str,
     name: str,
 ) -> Callable[[BehaviorRule, BuildContext, EngineLane], tuple[KernelField, ...]]:
-    """A ``(rule, ctx, lane)`` reading of one compiled field of a family's payload.
+    """A ``(rule, ctx, lane)`` reading of one compiled field of *payload_type*.
 
     A family whose whole compiled form is one clock (a cooldown, a cadence)
-    binds the field's name once here, so the pair engine and the receipt walk
-    cannot drift over which they read.
+    binds the payload it reads and the field's name once here, so the pair
+    engine and the receipt walk cannot drift over which they read.  A rule of
+    another family is the package's own stop, because reading *attribute* off
+    a foreign payload is an ``AttributeError`` nobody authored.
     """
 
     def read(
         rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
     ) -> tuple[KernelField, ...]:
-        return compiled_field(rule.payload, attribute, name, rule, ctx=ctx, lane=lane)
+        payload = rule.payload
+        if not isinstance(payload, payload_type):
+            raise InterpretationError(
+                f"{rule.mechanic_id} is not a {payload_type.__name__}"
+            )
+        return compiled_field(payload, attribute, name, rule, ctx=ctx, lane=lane)
 
     return read
 
