@@ -154,7 +154,7 @@ MANDATE_CLAIM = Claim(
     status="modeled_effect",
     evidence=(
         Symbol(
-            path="item_support_effects.derive_item_support_effects",
+            path="item_support_triggered._command_packets",
             role="walk_packet_builder",
         ),
         PacketSource(source="Imperial Mandate — Command"),
@@ -758,7 +758,7 @@ MANDATE_SUPPORT_CLAIM = Claim(
     status="modeled_effect",
     evidence=(
         Symbol(
-            path="item_support_effects.derive_item_support_effects",
+            path="item_support_triggered._command_packets",
             role="walk_packet_builder",
         ),
         PacketSource(source="Imperial Mandate — Command"),
@@ -846,6 +846,26 @@ def test_a_symbol_naming_nothing_is_unresolved(path: str, message: str) -> None:
 
 # ── PacketSource ──────────────────────────────────────────────────────────
 
+# The five modules `item_support_effects` dispatches its walk packets to, read
+# off the capability registry so a sixth cannot be forgotten here.
+SUPPORT_BLOCK_MODULES: tuple[str, ...] = tuple(
+    sorted(
+        {
+            coverage_resolver.module_path_of(capability.impl.rsplit(".", 1)[0])
+            for capability in CAPABILITIES.values()
+            if capability.impl.startswith("item_support_")
+            and capability.impl != "item_support_effects.schedule_knights_vow"
+        }
+    )
+)
+
+
+def _support_packet_text() -> str:
+    """Every block module's source, as one text to scan for packet sites."""
+    return "\n".join(
+        coverage_resolver.read_repo_file(path) for path in SUPPORT_BLOCK_MODULES
+    )
+
 
 def test_packet_sites_read_every_source_argument_with_its_keywords() -> None:
     """The measurement is the contract, and ``owner=`` is what it is for.
@@ -855,7 +875,7 @@ def test_packet_sites_read_every_source_argument_with_its_keywords() -> None:
     asserted here is the property the campaign turns on: exactly the packets
     whose mechanic Phase 2 declares ``SPLIT`` carry ``owner=``.
     """
-    text = coverage_resolver.read_repo_file("src/calculator/item_support_effects.py")
+    text = _support_packet_text()
     sites = coverage_resolver.packet_sites(text)
     assert len(sites) >= len({site.source for site in sites}) >= 1
     owning = {site.source for site in sites if "owner" in site.keywords}
@@ -876,7 +896,7 @@ def test_every_walk_packet_literal_is_quoted_by_a_claim_or_withheld() -> None:
     already-claimed item would enter the walk unremarked — the shape this
     phase exists to kill, one level inside its own evidence union.
     """
-    text = coverage_resolver.read_repo_file("src/calculator/item_support_effects.py")
+    text = _support_packet_text()
     assert (
         coverage_resolver.unquoted_packet_sources(COVERAGE_EVIDENCE, FRONTIER, text)
         == ()
@@ -891,7 +911,7 @@ def test_a_packet_added_to_an_already_claimed_item_is_reported() -> None:
     could never have covered the other one and a third growing it would not
     be noticed by the item lane at all.
     """
-    text = coverage_resolver.read_repo_file("src/calculator/item_support_effects.py")
+    text = _support_packet_text()
     grown = f'{text}\n_ = _packet(source="Dream Maker — Green Dream Bubble")\n'
     assert coverage_resolver.unquoted_packet_sources(
         COVERAGE_EVIDENCE, FRONTIER, grown
@@ -914,7 +934,7 @@ def test_a_withheld_holder_covers_its_own_packets_and_no_others() -> None:
     the key reports exactly that holder's packet and nothing else, which is
     what says the exemption is doing work rather than passing everything.
     """
-    text = coverage_resolver.read_repo_file("src/calculator/item_support_effects.py")
+    text = _support_packet_text()
     without = {
         key: reason
         for key, reason in FRONTIER.items()
@@ -997,8 +1017,24 @@ def test_every_split_capability_resolves_as_a_paired_mechanic() -> None:
     ]
     assert walk_halves
     for capability in walk_halves:
+        # Each half's own builder, because the owner keyword is read off the
+        # block that emits the packet and the blocks live in five modules.
+        claim = dataclasses.replace(
+            MANDATE_SUPPORT_CLAIM,
+            evidence=(
+                Symbol(path=capability.impl, role="walk_packet_builder"),
+                *(
+                    member
+                    for member in MANDATE_SUPPORT_CLAIM.evidence
+                    if not isinstance(member, Symbol)
+                ),
+            ),
+        )
         _resolve_live(
-            PairedSides(mechanic=capability.mechanic, owner_policy="owner_skips_holder")
+            PairedSides(
+                mechanic=capability.mechanic, owner_policy="owner_skips_holder"
+            ),
+            claim,
         )
 
 
@@ -2027,7 +2063,8 @@ COMMAND_PACKET = "Imperial Mandate — Command"
 # unchanged — rename the thing the pair-engine half reads its number through
 # and every sentence about Command stays true while the number goes.
 COMMAND_ACCESSOR = "item_effects.ally_item_effect_value"
-SUPPORT_MODULE = "src/calculator/item_support_effects.py"
+# The module Command's block lives in, which is the one these mutations edit.
+SUPPORT_MODULE = "src/calculator/item_support_triggered.py"
 EFFECTS_MODULE = "src/calculator/item_effects.py"
 CATALOG_MODULE = "src/calculator/item_behavior_catalog.py"
 

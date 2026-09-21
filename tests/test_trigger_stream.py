@@ -1023,7 +1023,7 @@ CC_KIND_READERS = {
     # kinds the immobilize predicate drops) and names the denial; the
     # dedupe key copies the token without branching on it.
     "src/calculator/support_event_view.py": frozenset({"_cc_event_stream"}),
-    "src/calculator/item_support_effects.py": frozenset({"_denial"}),
+    "src/calculator/item_support_everlasting.py": frozenset({"_denial"}),
 }
 
 
@@ -1122,9 +1122,15 @@ def name_guarded_impls(
 def test_a3_every_packet_emitting_impl_guards_exactly_what_it_declares():
     """A3 — an unregistered ``in names`` guard is a hole, and this is it."""
     folds = name_guarded_impls()
-    assert set(folds) == {
-        "item_support_effects.derive_item_support_effects",
-        "item_support_effects.schedule_knights_vow",
+    # One block per declared producer since the dispatch split, plus the
+    # Knight's Vow tether the residue still schedules.
+    assert {impl.split(".", 1)[0] for impl in folds} == {
+        "item_support_actives",
+        "item_support_effects",
+        "item_support_everlasting",
+        "item_support_quests",
+        "item_support_shred",
+        "item_support_triggered",
     }
     for impl, (guarded, declared) in folds.items():
         assert guarded == declared, impl
@@ -1132,21 +1138,21 @@ def test_a3_every_packet_emitting_impl_guards_exactly_what_it_declares():
 
 def test_a3_has_a_permanent_injection_seam():
     """R-05: add an unregistered ``in names`` guard and A3 goes red."""
-    path = "src/calculator/item_support_effects.py"
+    path = "src/calculator/item_support_quests.py"
     sources = live_sources()
     injected = _with(
         sources,
         path,
         sources[path].replace(
-            "    triggers = _support_triggers(trigger_effects, attacker)",
+            "    reap = ctx.producer(AllyProducer.REAP)",
             '    if "Zhonya\'s Hourglass" in names:\n        pass\n'
-            "    triggers = _support_triggers(trigger_effects, attacker)",
+            "    reap = ctx.producer(AllyProducer.REAP)",
             1,
         ),
     )
     assert injected[path] != sources[path], "the injection did not apply"
     guarded, declared = name_guarded_impls(sources=injected)[
-        "item_support_effects.derive_item_support_effects"
+        "item_support_quests._reap_packets"
     ]
     assert guarded != declared
 

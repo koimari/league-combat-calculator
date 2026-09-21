@@ -58,10 +58,15 @@ SPLIT_LEAVES = {
     "champion_opening_defenses": "defensive_effects",
     "fight_receipts": "pipeline",
     "interaction_atoms": "interaction_effects",
+    "item_support_actives": "item_support_effects",
+    "item_support_quests": "item_support_effects",
+    "item_support_shred": "item_support_effects",
+    "item_support_triggered": "item_support_effects",
     "program.views.survival_blocks": "program.views.survival",
     "rune_sustain_events": "pipeline",
     "support_bailout": "support_effects",
     "support_champion_packets": "support_effects",
+    "support_context": "item_support_effects",
     "survival.defense_contracts": "survival.receipt_state",
 }
 

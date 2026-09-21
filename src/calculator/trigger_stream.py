@@ -639,7 +639,6 @@ def cross_participant_packet_source(capability: MechanicCapability) -> str | Non
     return packet_source_literal(capability)
 
 
-_SUPPORT_IMPL = "item_support_effects.derive_item_support_effects"
 _KNIGHTS_VOW_IMPL = "item_support_effects.schedule_knights_vow"
 # Where a ``RetiredFamilyMechanic``'s walk half turns its declaration into a
 # number: one pricing site for every such half, so a family's numbers reach
@@ -658,7 +657,7 @@ def _walk_item(  # pylint: disable=too-many-arguments
     authority: Authority = Authority.COUPLED_AUTHORITATIVE,
     pairing: Pairing = Pairing.SOLO,
     pair_of: str | None = None,
-    impl: str = _SUPPORT_IMPL,
+    impl: str,
 ) -> MechanicCapability:
     """One item-granted mechanic the participant walk implements.
 
@@ -672,8 +671,8 @@ def _walk_item(  # pylint: disable=too-many-arguments
     Shadowflame's Cinderbloom rides the damage event it amplifies.  Only a
     packet can modify another participant's damage.
 
-    ``holder_stacking`` has no default: whether a second holder arms a
-    second modifier has a per-mechanic answer, so every row states it.
+    ``holder_stacking`` and ``impl`` have no default: whether a second holder
+    arms a second modifier, and which block builds the packet, are per-row.
     """
     return MechanicCapability(
         mechanic=mechanic,
@@ -1045,7 +1044,13 @@ _SECONDARY_TARGET_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = (
 
 _DECLARATIONS: tuple[MechanicCapability, ...] = (
     # -- walk packets compiled by ``derive_item_support_effects`` ------------
-    _walk_item("cull.reap", "Cull", "Cull — Reap", holder_stacking=None),
+    _walk_item(
+        "cull.reap",
+        "Cull",
+        "Cull — Reap",
+        holder_stacking=None,
+        impl="item_support_quests._reap_packets",
+    ),
     _walk_item(
         "phage.rage",
         "Phage",
@@ -1053,27 +1058,35 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         holder_stacking=None,
         reads=frozenset({Stream.DAMAGE}),
         needs=frozenset({Field.TIME, Field.SOURCE_KEY, Field.BASIC_ATTACK}),
+        impl="item_support_quests._rage_packets",
     ),
     _walk_item(
         "world_atlas.shared_riches",
         "World Atlas",
         "World Atlas — Shared Riches",
         holder_stacking=None,
+        impl="item_support_quests._quest_packets",
     ),
     _walk_item(
-        "world_atlas.ward", "World Atlas", "World Atlas — Ward", holder_stacking=None
+        "world_atlas.ward",
+        "World Atlas",
+        "World Atlas — Ward",
+        holder_stacking=None,
+        impl="item_support_quests._quest_packets",
     ),
     _walk_item(
         "runic_compass.shared_riches",
         "Runic Compass",
         "Runic Compass — Shared Riches",
         holder_stacking=None,
+        impl="item_support_quests._quest_packets",
     ),
     _walk_item(
         "runic_compass.ward",
         "Runic Compass",
         "Runic Compass — Ward",
         holder_stacking=None,
+        impl="item_support_quests._quest_packets",
     ),
     _walk_item(
         "fimbulwinter.everlasting",
@@ -1090,6 +1103,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
                 Field.CC,
             }
         ),
+        impl="item_support_everlasting._everlasting_packets",
     ),
     _walk_item(
         "abyssal_mask.unmake",
@@ -1099,6 +1113,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         authority=Authority.SPLIT,
         pairing=Pairing.PAIRED,
         pair_of="abyssal_mask.magic_amp",
+        impl="item_support_shred._unmake_packets",
     ),
     # The amplified pool is every attacker's damage inside a live window,
     # which is a roster input, so the walk owns the mechanic outright and
@@ -1118,6 +1133,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         authority=Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
         pairing=Pairing.PAIRED,
         pair_of="bloodsong.expose_weakness_preview",
+        impl="item_support_shred._expose_weakness_packets",
     ),
     # Phase 4 S7's fourth authority move, and the last of the four that land.
     # Cinderbloom's predicate reads the target's health *at the instant of
@@ -1177,6 +1193,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         authority=Authority.SPLIT,
         pairing=Pairing.PAIRED,
         pair_of="black_cleaver.armor_reduction",
+        impl="item_support_shred._resistance_shred_packets",
     ),
     # H1 — Vile Decay is Carve's shape, magic- and ability-gated, and is
     # blocked by the same unanswered human decision.
@@ -1199,6 +1216,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         authority=Authority.SPLIT,
         pairing=Pairing.PAIRED,
         pair_of="bloodletters_curse.mr_reduction",
+        impl="item_support_shred._resistance_shred_packets",
     ),
     _walk_item(
         "cryptbloom.life_from_death",
@@ -1207,6 +1225,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         holder_stacking=None,
         reads=frozenset({Stream.TAKEDOWN}),
         needs=frozenset({Field.TIME, Field.TARGET_ID}),
+        impl="item_support_triggered._life_from_death_packets",
     ),
     _walk_item(
         "ardent_censer.sanctify",
@@ -1214,6 +1233,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         "Ardent Censer — Sanctify",
         holder_stacking=None,
         reads=frozenset({Stream.SUPPORT_TRIGGER}),
+        impl="item_support_triggered._sanctify_packets",
     ),
     _walk_item(
         "staff_of_flowing_water.rapids",
@@ -1221,6 +1241,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         "Staff of Flowing Water — Rapids",
         holder_stacking=None,
         reads=frozenset({Stream.SUPPORT_TRIGGER}),
+        impl="item_support_triggered._rapids_packets",
     ),
     _walk_item(
         "moonstone_renewer.starlit_grace",
@@ -1228,6 +1249,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         "Moonstone Renewer — Starlit Grace",
         holder_stacking=None,
         reads=frozenset({Stream.SUPPORT_TRIGGER}),
+        impl="item_support_triggered._starlit_grace_packets",
     ),
     # The sixth cross-participant producer, and the one with no pair-side
     # pricer at all: Blue Dream Bubble shields an *ally* against the next hit
@@ -1240,6 +1262,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         holder_stacking=None,
         reads=frozenset({Stream.SUPPORT_TRIGGER}),
         authority=Authority.COUPLED_ONLY,
+        impl="item_support_triggered._dream_bubble_packets",
     ),
     _walk_item(
         "dream_maker.purple_bubble",
@@ -1247,6 +1270,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         "Dream Maker — Purple Dream Bubble",
         holder_stacking=None,
         reads=frozenset({Stream.SUPPORT_TRIGGER}),
+        impl="item_support_triggered._dream_bubble_packets",
     ),
     _walk_item(
         "echoes_of_helia.soul_siphon",
@@ -1255,6 +1279,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         holder_stacking=None,
         reads=frozenset({Stream.SUPPORT_TRIGGER, Stream.DAMAGE}),
         needs=frozenset({Field.DAMAGE, Field.RAW_DAMAGE}),
+        impl="item_support_triggered._soul_siphon_packets",
     ),
     _walk_item(
         "diadem_of_songs.consonance",
@@ -1262,6 +1287,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         "Diadem of Songs — Consonance",
         holder_stacking=None,
         reads=frozenset({Stream.SUPPORT_TRIGGER}),
+        impl="item_support_triggered._consonance_packets",
     ),
     _walk_item(
         "bandlepipes.fanfare",
@@ -1270,6 +1296,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         holder_stacking=None,
         reads=frozenset({Stream.CC}),
         needs=frozenset({Field.TIME}),
+        impl="item_support_triggered._fanfare_packets",
     ),
     # Solstice Sleigh is tuple-incapable by declaration (D-02): its branch is
     # nested inside the cc loop, and its only protection today is a cached
@@ -1281,6 +1308,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         holder_stacking=None,
         reads=frozenset({Stream.CC}),
         needs=frozenset({Field.TIME}),
+        impl="item_support_triggered._going_sledding_packets",
     ),
     # H2 — Command's authority move waits on a sourced ``CcScope`` reading for
     # Syndra E, and the umbrella records the disposition as *deferred, default
@@ -1299,36 +1327,42 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         authority=Authority.SPLIT,
         pairing=Pairing.PAIRED,
         pair_of="imperial_mandate.command_preview",
+        impl="item_support_triggered._command_packets",
     ),
     _walk_item(
         "locket_of_the_iron_solari.devotion",
         "Locket of the Iron Solari",
         "Locket of the Iron Solari — Devotion",
         holder_stacking=None,
+        impl="item_support_actives._devotion_packets",
     ),
     _walk_item(
         "mikaels_blessing.purify",
         "Mikael's Blessing",
         "Mikael's Blessing — Purify",
         holder_stacking=None,
+        impl="item_support_actives._purify_packets",
     ),
     _walk_item(
         "redemption.intervention",
         "Redemption",
         "Redemption — Intervention",
         holder_stacking=None,
+        impl="item_support_actives._intervention_packets",
     ),
     _walk_item(
         "shurelyas_battlesong.inspiring_speech",
         "Shurelya's Battlesong",
         "Shurelya's Battlesong — Inspiring Speech",
         holder_stacking=None,
+        impl="item_support_actives._inspiring_speech_packets",
     ),
     _walk_item(
         "stridebreaker.breaking_shockwave",
         "Stridebreaker",
         "Stridebreaker — Breaking Shockwave",
         holder_stacking=None,
+        impl="item_support_actives._shockwave_packets",
     ),
     # A vision receipt rather than a heal or a shield: Blackout's ward-denial
     # window has no champion-facing target in the fighter model, so the walk
@@ -1341,6 +1375,7 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         "Umbral Glaive",
         "Umbral Glaive — Blackout",
         holder_stacking=None,
+        impl="item_support_quests._nightstalker_packets",
     ),
     # -- the second walk packet compiler ------------------------------------
     _walk_item(

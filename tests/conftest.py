@@ -109,7 +109,7 @@ def authorized_fimbulwinter_mana_gate(monkeypatch):
     shield formula, trigger rule, cadence, or cooldown must opt into this
     explicit declaration.
     """
-    from src.calculator import item_effects, item_support_effects
+    from src.calculator import item_effects, item_support_everlasting
 
     declaration = {
         "status": "script_authorized",
@@ -133,7 +133,7 @@ def authorized_fimbulwinter_mana_gate(monkeypatch):
         lambda: dict(declaration),
     )
     monkeypatch.setattr(
-        item_support_effects,
+        item_support_everlasting,
         "fimbulwinter_mana_gate_authority",
         lambda: dict(declaration),
     )

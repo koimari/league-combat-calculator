@@ -1229,7 +1229,7 @@ _ATTACKER_STATE_HOMES: Mapping[str, tuple[str, str]] = {
         "option:manaflow_bonus_mana",
     ),
     "Ardent Censer": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_triggered._sanctify_packets",
         "packet:Ardent Censer — Sanctify",
     ),
     "Axiom Arc": (
@@ -1237,7 +1237,7 @@ _ATTACKER_STATE_HOMES: Mapping[str, tuple[str, str]] = {
         "key:ultimate_refund_base_ratio",
     ),
     "Bandlepipes": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_triggered._fanfare_packets",
         "packet:Bandlepipes — Fanfare",
     ),
     "Cull": ("item_effects.item_state_receipts", "option:reap_minion_kills"),
@@ -1260,18 +1260,18 @@ _ATTACKER_STATE_HOMES: Mapping[str, tuple[str, str]] = {
         "option:feast_active_seconds",
     ),
     "Fimbulwinter": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_everlasting._everlasting_packets",
         "packet:Fimbulwinter — Everlasting",
     ),
     "Hubris": ("item_effects.item_state_receipts", "option:eminence_stacks"),
     "Immortal Path": ("item_effects.item_state_receipts", "option:slay_stacks"),
     "Imperial Mandate": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_triggered._command_packets",
         "packet:Imperial Mandate — Command",
     ),
     "Manamune": ("item_effects.item_state_receipts", "option:manaflow_bonus_mana"),
     "Phage": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_quests._rage_packets",
         "packet:Phage — Rage",
     ),
     "Runic Compass": ("item_effects.item_state_receipts", "option:shared_riches_gold"),
@@ -1370,13 +1370,13 @@ _UTILITY_HOMES: Mapping[str, tuple[str, str]] = {
         "key:ultimate_refund_base_ratio",
     ),
     "Bandlepipes": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_triggered._fanfare_packets",
         "packet:Bandlepipes — Fanfare",
     ),
     "Banshee's Veil": ("defensive_effects.resolve_starting_defenses", "effects"),
     "Boots of Swiftness": ("", "source"),
     "Cosmic Drive": ("", "source"),
-    "Cull": ("item_support_effects.derive_item_support_effects", "packet:Cull — Reap"),
+    "Cull": ("item_support_quests._reap_packets", "packet:Cull — Reap"),
     "Edge of Night": ("defensive_effects.resolve_starting_defenses", "effects"),
     "Verdant Barrier": ("defensive_effects.resolve_starting_defenses", "effects"),
     "Force of Nature": ("survival.transitions.update_combat_state", "effects"),
@@ -1387,17 +1387,17 @@ _UTILITY_HOMES: Mapping[str, tuple[str, str]] = {
     "Horizon Focus": ("item_effects._resolve_damage_effects_uncached", "effects"),
     "Hubris": ("item_effects.item_state_receipts", "option:eminence_stacks"),
     "Locket of the Iron Solari": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_actives._devotion_packets",
         "packet:Locket of the Iron Solari — Devotion",
     ),
     "Mejai's Soulstealer": ("item_effects.item_state_receipts", "option:glory_stacks"),
     "Mercurial Scimitar": ("", "source"),
     "Mikael's Blessing": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_actives._purify_packets",
         "packet:Mikael's Blessing — Purify",
     ),
     "Phage": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_quests._rage_packets",
         "packet:Phage — Rage",
     ),
     "Phantom Dancer": ("", "source"),
@@ -1406,29 +1406,29 @@ _UTILITY_HOMES: Mapping[str, tuple[str, str]] = {
     "Rapid Firecannon": ("item_effects._resolve_damage_effects_uncached", "effects"),
     "Ravenous Hydra": ("item_effects._resolve_damage_effects_uncached", "effects"),
     "Redemption": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_actives._intervention_packets",
         "packet:Redemption — Intervention",
     ),
     "Rod of Ages": ("item_effects.item_state_receipts", "option:timeless_stacks"),
     "Runaan's Hurricane": ("item_effects._resolve_damage_effects_uncached", "effects"),
     "Runic Compass": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_quests._quest_packets",
         "packet:{} — Shared Riches",
     ),
     "Rylai's Crystal Scepter": ("", "source"),
     "Serylda's Grudge": ("", "source"),
     "Shurelya's Battlesong": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_actives._inspiring_speech_packets",
         "packet:Shurelya's Battlesong — Inspiring Speech",
     ),
     "Solstice Sleigh": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_triggered._going_sledding_packets",
         "packet:Solstice Sleigh — Going Sledding",
     ),
     "Statikk Shiv": ("item_effects._resolve_damage_effects_uncached", "effects"),
     "Stormrazor": ("item_effects._resolve_damage_effects_uncached", "effects"),
     "Stridebreaker": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_actives._shockwave_packets",
         "packet:Stridebreaker — Breaking Shockwave",
     ),
     "Swiftmarch": ("item_effects.swiftmarch_adaptive_force", "effects"),
@@ -1440,7 +1440,7 @@ _UTILITY_HOMES: Mapping[str, tuple[str, str]] = {
     "Titanic Hydra": ("item_effects._resolve_damage_effects_uncached", "effects"),
     "Umbral Glaive": ("", "source"),
     "World Atlas": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_quests._quest_packets",
         "packet:{} — Shared Riches",
     ),
     "Youmuu's Ghostblade": ("", "source"),
@@ -1456,74 +1456,74 @@ _UTILITY_HOMES: Mapping[str, tuple[str, str]] = {
 # mentions this string" is the prose this corpus replaces.
 _SUPPORT_PACKET_CLAIMS: Mapping[str, tuple[str, tuple[str, ...], str]] = {
     "Abyssal Mask": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_shred._unmake_packets",
         ("Abyssal Mask — Unmake",),
         "tests/test_item_support_effects.py::TestAbyssalMaskOwnerHandshake"
         "::test_unmake_declares_split",
     ),
     "Ardent Censer": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_triggered._sanctify_packets",
         ("Ardent Censer — Sanctify",),
         "tests/test_item_support_effects.py"
         "::test_ardent_and_moonstone_use_the_authored_heal_or_shield_target",
     ),
     "Bandlepipes": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_triggered._fanfare_packets",
         ("Bandlepipes — Fanfare",),
         "tests/test_item_support_effects.py"
         "::test_cc_only_packets_require_an_authored_immobilize_marker",
     ),
     "Black Cleaver": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_shred._resistance_shred_packets",
         ("Black Cleaver — Carve",),
         "tests/test_item_support_effects.py"
         "::test_cross_participant_debuffs_are_typed_and_triggered_by_holder_packets",
     ),
     "Bloodletter's Curse": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_shred._resistance_shred_packets",
         ("Bloodletter's Curse — Vile Decay",),
         "tests/test_item_support_effects.py"
         "::test_cross_participant_debuffs_are_typed_and_triggered_by_holder_packets",
     ),
     "Bloodsong": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_shred._expose_weakness_packets",
         ("Bloodsong — Expose Weakness",),
         "tests/test_item_support_effects.py"
         "::test_cross_participant_debuffs_are_typed_and_triggered_by_holder_packets",
     ),
     "Cryptbloom": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_triggered._life_from_death_packets",
         ("Cryptbloom — Life From Death",),
         "tests/test_item_support_effects.py"
         "::test_cryptbloom_requires_an_explicit_takedown_receipt",
     ),
     "Cull": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_quests._reap_packets",
         ("Cull — Reap",),
         "tests/test_item_support_effects.py"
         "::test_cp20_progression_items_emit_typed_economy_vision_and_movement_receipts",
     ),
     "Dream Maker": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_triggered._dream_bubble_packets",
         ("Dream Maker — Blue Dream Bubble",),
         "tests/test_item_support_effects.py::TestCrossParticipantAuthorities"
         "::test_dream_maker_is_a_producer",
     ),
     "Echoes of Helia": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_triggered._soul_siphon_packets",
         ("Echoes of Helia — Soul Siphon",),
         "tests/test_coupled_ally_item_packets.py"
         "::TestSoulSiphonPricesTheHoldersCharges"
         "::test_the_heal_is_thirty_percent_of_the_holders_pre_mitigation_damage",
     ),
     "Fimbulwinter": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_everlasting._everlasting_packets",
         ("Fimbulwinter — Everlasting",),
         "tests/test_item_support_effects.py"
         "::test_fimbulwinter_does_not_trigger_at_or_below_the_mana_gate",
     ),
     "Imperial Mandate": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_triggered._command_packets",
         ("Imperial Mandate — Command",),
         "tests/test_item_support_effects.py"
         "::test_command_requires_an_immobilize_not_a_slow",
@@ -1535,37 +1535,37 @@ _SUPPORT_PACKET_CLAIMS: Mapping[str, tuple[str, tuple[str, ...], str]] = {
         "::test_knights_vow_attaches_typed_redirect_and_holder_heal_receipts",
     ),
     "Moonstone Renewer": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_triggered._starlit_grace_packets",
         ("Moonstone Renewer — Starlit Grace",),
         "tests/test_item_support_effects.py"
         "::test_ardent_and_moonstone_use_the_authored_heal_or_shield_target",
     ),
     "Phage": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_quests._rage_packets",
         ("Phage — Rage",),
         "tests/test_item_support_effects.py"
         "::test_cp20_progression_items_emit_typed_economy_vision_and_movement_receipts",
     ),
     "Redemption": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_actives._intervention_packets",
         ("Redemption — Intervention",),
         "tests/test_participant_timeline.py"
         "::test_redemption_active_emits_sourced_area_true_damage_and_heal_packets",
     ),
     "Solstice Sleigh": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_triggered._going_sledding_packets",
         ("Solstice Sleigh — Going Sledding",),
         "tests/test_item_support_effects.py"
         "::test_sourced_cc_packets_include_holder_movement_and_solstice_both_recipients",
     ),
     "Staff of Flowing Water": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_triggered._rapids_packets",
         ("Staff of Flowing Water — Rapids",),
         "tests/test_app.py"
         "::test_enabled_ally_staff_buff_changes_attacker_stats_and_damage",
     ),
     "World Atlas": (
-        "item_support_effects.derive_item_support_effects",
+        "item_support_quests._quest_packets",
         ("{} — Shared Riches", "{} — Ward"),
         "tests/test_item_support_effects.py"
         "::test_cp20_progression_items_emit_typed_economy_vision_and_movement_receipts",

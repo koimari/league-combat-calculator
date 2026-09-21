@@ -164,6 +164,7 @@ root|starting_defenses.py
 root|stat_conversion.py
 root|stat_formulas.py
 root|stats.py
+root|support_context.py
 root|survival/__init__.py
 root|survival/accumulate.py
 root|survival/defense_contracts.py
@@ -198,7 +199,7 @@ payload-receiver|state.ability_damages
 payload-receiver|storage.
 payload-receiver|target_debuff.
 
-er5-tail-ceiling|89
+er5-tail-ceiling|93
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1

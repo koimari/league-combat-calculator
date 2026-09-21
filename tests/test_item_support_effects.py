@@ -19,6 +19,7 @@ from src.calculator import (
     ally_packet_shape,
     item_behavior,
     item_support_effects,
+    item_support_everlasting,
     ledger_adequacy,
     pipeline,
     support_event_view,
@@ -636,7 +637,7 @@ class TestProducerTablesAreTotal:
         """Umbral Glaive shipped a branch no declaration reached; this is the gate."""
         keyed = Counter(
             key
-            for table in item_support_effects._PRODUCER_TABLES
+            for table in item_support_effects.PRODUCER_TABLES
             for key in table
             if isinstance(key, item_behavior.AllyProducer)
         )
@@ -654,7 +655,7 @@ class TestProducerTablesAreTotal:
         }
         with pytest.raises(ValueError, match="'reap': 0"):
             item_support_effects._validate_producer_tables(
-                (dropped, *item_support_effects._PRODUCER_TABLES[1:])
+                (dropped, *item_support_effects.PRODUCER_TABLES[1:])
             )
 
 
@@ -663,7 +664,10 @@ class TestCrossParticipantAuthorities:
 
     def test_every_damage_modifier_packet_is_a_row(self):
         """One row per ``kind=PacketKind.DAMAGE_MODIFIER`` construction site."""
-        body = Path(item_support_effects.__file__).read_text(encoding="utf-8")
+        body = "\n".join(
+            Path(module.__file__).read_text(encoding="utf-8")
+            for module in packet_declarations.block_modules()
+        )
         call_sites = len(
             re.findall(
                 r"^\s*kind=PacketKind\.DAMAGE_MODIFIER\.value,$",
@@ -980,7 +984,7 @@ class TestDreamMakerIsCoupledOnly:
         assert readers == {
             "item_behavior_catalog.py",
             "item_effects.py",
-            "item_support_effects.py",
+            "item_support_triggered.py",
         }
 
 
@@ -1136,7 +1140,7 @@ class TestEventViewTupleGate:
     def test_fimbulwinter_is_an_event_view_member_that_reads_event_id(self):
         """D-03: dropping it disarms a fail-closed raise downstream."""
         assert "Fimbulwinter" in trigger_stream.enriched_view_items()
-        everlasting = inspect.getsource(item_support_effects._everlasting_packets)
+        everlasting = inspect.getsource(item_support_everlasting._everlasting_packets)
         # The shield carries its trigger's event id, and an unenriched shield
         # carries an absent link rather than an empty one.  The read is off
         # the raw row: the kernel trigger rule this block uses also receipts

@@ -57,6 +57,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 import literal_defaults
 
+from tests.test_architecture import SPLIT_LEAVES
 from tests.test_row_stream_census import CENSUS
 
 RECEIPT = REPO_ROOT / "docs" / "receipts" / "er5-tail-triage.json"
@@ -157,16 +158,35 @@ def _censused_keys() -> set[str]:
     return keys
 
 
+def _module_file(dotted: str) -> str:
+    """One package-relative module name as its path under ``src/calculator``."""
+    return dotted.replace(".", "/") + ".py"
+
+
 def _tolerance_modules() -> set[str]:
-    """Modules whose own suite pins them tolerating input they did not build."""
+    """Modules whose own suite pins them tolerating input they did not build.
+
+    Both import forms are read, the dotted one and the grouped
+    ``from src.calculator import (a, b)``.  A leaf a module split lifted out
+    is credited to its source, because ``test_architecture.SPLIT_LEAVES`` is
+    where the tree already records that the source's suite drives it.
+    """
     found: set[str] = set()
     for path in TESTS.rglob("test_*.py"):
         source = path.read_text(encoding="utf-8")
         if not any(word in source.lower() for word in TOLERANCE_WORDS):
             continue
         for match in re.finditer(r"src\.calculator\.([a-z_.]+) import", source):
-            found.add(match.group(1).replace(".", "/") + ".py")
-    return found
+            found.add(_module_file(match.group(1)))
+        for match in re.finditer(r"from src\.calculator import \(([^)]*)\)", source):
+            found.update(
+                _module_file(name) for name in match.group(1).replace(",", " ").split()
+            )
+    return found | {
+        _module_file(leaf)
+        for leaf, source in SPLIT_LEAVES.items()
+        if _module_file(source) in found
+    }
 
 
 def _receiver(expression: str) -> str | None:

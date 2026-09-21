@@ -47,7 +47,12 @@ ROOT = Path(__file__).parents[1]
 SURVIVAL = ROOT / "src" / "calculator" / "survival"
 PROGRAM = ROOT / "src" / "calculator" / "program"
 TIMELINE = ROOT / "src" / "calculator" / "participant_timeline.py"
-ITEM_SUPPORT = ROOT / "src" / "calculator" / "item_support_effects.py"
+# The ally-packet blocks that name a rank, one file each since the dispatch
+# split: the quest receipts, Fimbulwinter's shield and the shred modifiers.
+ITEM_SUPPORT = tuple(
+    ROOT / "src" / "calculator" / f"item_support_{name}.py"
+    for name in ("quests", "everlasting", "shred", "triggered", "actives")
+)
 
 
 def _population() -> tuple[Path, ...]:
@@ -636,15 +641,17 @@ def test_every_packet_author_declares_a_named_rank() -> None:
     reordering somebody must argue for, and a rank that appears here without
     one is the argument going missing.
     """
-    declared = _declared_ranks(ITEM_SUPPORT) + _declared_ranks(TIMELINE)
+    declared = [
+        row for path in (*ITEM_SUPPORT, TIMELINE) for row in _declared_ranks(path)
+    ]
     assert sorted(declared) == [
         # Abyssal Mask's Unmake aura, Tear's Manaflow grant, Fimbulwinter's
-        # denial receipt and its late self shield.
-        ("item_support_effects.py", "AURA_ARM"),
-        ("item_support_effects.py", "BARRIER_GRANT"),
-        ("item_support_effects.py", "DAMAGE"),
-        ("item_support_effects.py", "DAMAGE"),
-        ("item_support_effects.py", "LATE_BARRIER"),
+        # denial receipt and its late self shield, Redemption's true damage.
+        ("item_support_actives.py", "DAMAGE"),
+        ("item_support_everlasting.py", "DAMAGE"),
+        ("item_support_everlasting.py", "LATE_BARRIER"),
+        ("item_support_quests.py", "BARRIER_GRANT"),
+        ("item_support_shred.py", "AURA_ARM"),
         # Guardian's reactive shield and Glacial Augment's ally reduction;
         # Glacial's icy zone and Stormraider's surge; Aftershock's
         # resistances; Grasp's permanent health; Eclipse's self shield and
