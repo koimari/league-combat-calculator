@@ -40,7 +40,7 @@ class UnrankableNumber(TypeError):
     the failure has no symptom because a preview is a perfectly ordinary
     ``MEASURED`` float.
 
-    A ``TypeError`` for two reasons.  :class:`~..build.MixedViewFold`'s: the
+    A ``TypeError`` for two reasons.  ``tagged.mixed_view_fold``'s: the
     operand is not the right *kind* of number, so its sum is not a wrong
     total but not a total.  And an operational one — ``bis`` wraps each
     candidate in ``except (KeyError, ValueError)`` and turns what it catches
