@@ -352,11 +352,9 @@ ACTION_KIND_FAMILY: Mapping[ActionKind, RuleFamily] = {
 #
 # The population is ``DefenseMechanic``, a closed enum, so the closure below
 # fails *collection* on an unmapped mechanic instead of depending on a scrape
-# of the resolver's source text for the hand-written provenance records this
-# replaced.  The rulings are unchanged, mechanic for mechanic — two of them
-# deliberately point outside the four defence families, because Ignore Pain
-# reroutes damage over time and Boundless Vitality is sustain, and both ride
-# their own family's slice.
+# of the resolver's source text.  Two entries deliberately point outside the
+# four defence families, because Ignore Pain reroutes damage over time and
+# Boundless Vitality is sustain; each is priced by the family it names.
 
 DEFENSE_SOURCE_FAMILY: Mapping[DefenseMechanic, RuleFamily] = {
     DefenseMechanic.SHIELD_OF_DURAND: RuleFamily.OPENING_DEFENSE,
@@ -1271,7 +1269,7 @@ COMPILED_KERNEL_CANNOT_SELF_SHIELD = ReceiptOnly(
 )
 
 
-# ── the compiled-kernel refusal every amp carries (D-101) ─────────────────
+# ── the compiled-kernel refusal every amp carries ─────────────────────────
 
 # The refusal ``AMP_COMPILABILITY`` is pointed back at to revert the compiled
 # amp lane in one symbol.  It carries no live rule today; it is declared
@@ -1283,8 +1281,7 @@ COMPILED_KERNEL_CANNOT_SELF_SHIELD = ReceiptOnly(
 COMPILED_KERNEL_CANNOT_AMP = ReceiptOnly(
     "the compiled score kernel cannot represent a timed, typed damage "
     "modifier: unrepresentable_template_receipt returns support_kind=<kind> "
-    "for anything but shield/heal and add_support_templates raises on it "
-    "(D-101)",
+    "for anything but shield/heal and add_support_templates raises on it",
     scope=ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER,
 )
 
@@ -1309,14 +1306,14 @@ COMPILED_KERNEL_CAN_AMP = Compilable()
 AMP_COMPILABILITY: Compilability = COMPILED_KERNEL_CAN_AMP
 
 
-# ── compilers (D-52's ruled exception to "no callables in declarations") ──
+# ── compilers, the one exception to "no callables in declarations" ────────
 
 Compiler = Callable[
     [RuleFamily, ValueSource, Mapping[str, Any]], tuple[BehaviorRule, ...]
 ]
 
-# Which registry tags the delta-amp compiler below turns into declarations,
-# and — for the rest — which slice retires each refusal.
+# Which registry tags the delta-amp compiler below turns into declarations.
+# A tag outside this set is refused by name.
 MIGRATED_DELTA_AMP_TAGS: frozenset[str] = frozenset(
     {
         "ability_damage_amp",
@@ -1350,7 +1347,7 @@ MAGIC_AMP_KEY = "magic_amp"
 # keyed by an effect Riot declares and the Wiki cache lacks, and its
 # staleness gate rejects an entry whose effect both sources carry.
 # ``trigger_stream.DIVERGENCES`` records a *pair-versus-walk* disagreement
-# and is asserted empty (D-92); the entry below is one both engines agree
+# and is asserted empty; the entry below is one both engines agree
 # on, so it has no second reading to put in ``walk_reading``.
 #
 # No measured figure is restated here.  Every exposure this note grades moves
@@ -1510,7 +1507,7 @@ SECONDARY_KEY_FAMILY: Mapping[ValueRegistry, Mapping[str, RuleFamily]] = {
 # carries no effect tag — the shape *is* the rune — so this is the closed key
 # set that makes the name dispatch total, exactly as
 # ``rune_effects._compilers()`` is for the runes themselves.  Rule 5 reaches
-# runes (D-46), so their numbers are references like any other.  Keystones
+# runes, so their numbers are references like any other.  Keystones
 # and minor runes are both here: a rune's row decides where the page puts it,
 # not whether the chain can hold its amplifier.
 #
@@ -2268,19 +2265,19 @@ def _post_immobilize_rule(source: ValueSource) -> BehaviorRule:
     into two readings of it.  Three facts, all of them declared:
 
     * ``TriggerWindow(IMMOBILIZE, …)`` — the trigger is an immobilize and
-      nothing wider; the bus's ``CC`` stream is where that lands (D-08).
+      nothing wider; the bus's ``CC`` stream is where that lands.
     * ``merge=REFRESH`` — a second immobilize moves the mark's expiry to its
       own time plus the duration, rather than opening a second window or
-      adding a second amp (D-12).  This is what both engines compute, and the
+      adding a second amp.  This is what both engines compute, and the
       name is now the one they compute: ``EXTEND``'s additive reading is a
       third answer neither of them has ever given.  The Wiki's wording admits
       that third answer and is filed as a divergence
       (:data:`ACKNOWLEDGED_READING_DIVERGENCES`).
     * ``boundary=OPEN_CLOSED`` — the trigger itself is outside the window and
-      an event exactly on the expiry is inside (D-13).
+      an event exactly on the expiry is inside.
 
-    The authority move to ``COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW`` is
-    Phase 4's and is blocked on H2; this slice does not move it.
+    The authority stays ``SPLIT`` until Syndra E has a sourced ``CcScope``
+    reading, which is what a move to coupled-with-preview waits on.
     """
     return BehaviorRule(
         family=RuleFamily.DELTA_AMP,
@@ -2327,12 +2324,10 @@ def _expose_weakness_rule(source: ValueSource) -> BehaviorRule:
     roster attacker's packets inside it.  Those are two different numbers
     for one item.
 
-    Freezing the pair reading here — with
-    ``DIVERGENCES["bloodsong.expose_weakness"]`` naming both readings, their
-    source and the phase that reconciles them — is what keeps the
-    disagreement a *declared* one.  Unifying it inside a slice labelled a
-    pure refactor would land a semantic correction under a zero-diff claim,
-    which is the shape this campaign exists to end.  Phase 4 corrects it.
+    The pair reading is frozen here and the walk is authoritative, so the
+    pair number is a declared ``THEORETICAL`` preview rather than a rival
+    answer.  Unifying the two inside a change labelled a pure refactor would
+    land a semantic correction under a zero-diff claim.
     """
     return BehaviorRule(
         family=RuleFamily.DELTA_AMP,
@@ -2388,8 +2383,7 @@ def _cinderbloom_rule(source: ValueSource) -> BehaviorRule:
     Subject is the holder: the cached text reads "**Your** magic damage and
     true damage will critically strike".  The authority is nevertheless
     coupled-with-preview, because the *predicate* reads a roster fact — how
-    much health the target has left under everyone's fire — and that move is
-    Phase 4's, last of seven.
+    much health the target has left under everyone's fire.
     """
     return BehaviorRule(
         family=RuleFamily.DELTA_AMP,
@@ -3444,12 +3438,10 @@ def _carve_rule(source: ValueSource) -> BehaviorRule:
     ``accrual=BASIC_ATTACK_HIT`` is the stream it counts and
     ``leading_stacks`` is what it believes preceded it.
 
-    ``CESARO_APPROX`` is declared, **not changed**.  ``docs/math-foundations.md``
-    §2.3 calls re-tuning the closed-form average a balance change, so this
-    slice's whole intervention is making the model visible: a reader can now
-    see which summation a number came from instead of inferring it from a
-    constant inside an arithmetic helper.  The authority move to
-    coupled-with-preview is H1's and is not taken here.
+    ``CESARO_APPROX`` is declared rather than hidden: ``docs/math-foundations.md``
+    §2.3 calls re-tuning the closed-form average a balance change, so the
+    declaration names which summation a number came from instead of leaving
+    a reader to infer it from a constant inside an arithmetic helper.
     """
     return BehaviorRule(
         family=RuleFamily.RESISTANCE_SHRED,
@@ -4188,7 +4180,7 @@ class EntryShape:
 
     Matching differs by registry, and the difference is a property of the
     registries rather than a convenience.  ``ALLY_ITEM_EFFECTS`` is
-    hand-authored and refresh-**inert** (D-47), so its records do not grow
+    hand-authored and refresh-**inert**, so its records do not grow
     keys on patch day and the match can be exact — an entry whose key set
     stops equalling its shape is a defect somebody must look at.
     ``ITEM_EFFECTS`` is parsed from the wiki on every refresh, so a match that
@@ -4892,7 +4884,7 @@ def _ally_compilability(declaration: AllyPacketDeclaration) -> Compilability:
 
     Derived from three declared axes rather than judged per item, because a
     per-item judgement is exactly how sixteen conservatism notes ended up
-    indistinguishable from sixteen representability facts (D-43).  Each
+    indistinguishable from sixteen representability facts.  Each
     refusal names the kernel clause that produces it.
 
     The order is the order the kernel would meet them, not a preference: the
@@ -5891,8 +5883,8 @@ def _compile_stat_derivation(
 
 
 # One module-level ``def`` per key, keyed by a closed enum, totality asserted
-# — D-52's three conditions, which is what makes a callable registry a ruled
-# exception rather than a hole in "no callables in declarations".  The four
+# — the three conditions that make a callable registry an exception rather
+# than a hole in "no callables in declarations".  The four
 # defence keys share one compiler: the family is what tells their readings
 # apart, and ``RuleFamily`` is where each of the four says what it is.
 _COMPILERS: Mapping[RuleFamily, Compiler] = {
@@ -5947,7 +5939,7 @@ def registry_entries(
 
 
 # One owner's compiled rules, keyed by cache generation and owner, holding
-# the registry entries they were compiled from (D-49).  Never memoized
+# the registry entries they were compiled from.  Never memoized
 # *across* a generation, which is the property the catalog owes: the key
 # carries ``data_version()`` and the value carries the entry objects, so a
 # refresh that rebuilds the registry without bumping the counter still misses
@@ -6278,8 +6270,7 @@ def _validate_event_certification(
     would be a refusal filed against nothing.  The second is the one that can
     go red on demand and the one worth having — a mechanic certified with no
     stated reason withholds a whole calculation on the strength of a blank
-    string, which is the unexplained refusal this campaign removes rather than
-    a new one it adds.
+    string.
     """
     claimed = EVENT_CERTIFIED_MECHANICS if certified is None else certified
     known = frozenset(DEFENSE_DECLARATIONS) | frozenset(UNDECLARED_DEFENSE_MECHANICS)
@@ -6395,7 +6386,7 @@ def _validate_defense_receipts() -> None:
 
 
 def _validate_compilers() -> None:
-    """One compiler per family, and every stub names the slice that retires it."""
+    """One compiler per family, over the closed family set."""
     families = frozenset(RuleFamily)
     if len(families) != RULE_FAMILY_COUNT:
         raise RuntimeError(
@@ -6410,10 +6401,10 @@ def _validate_compilers() -> None:
 
 
 def _validate_delta_amp_migration() -> None:
-    """Every delta-amp tag is either compiled here or named with its slice.
+    """Every delta-amp tag either compiles here or books its refusal.
 
-    The record of what a partly migrated family still refuses, closed: the
-    two sets partition the family's tags exactly.
+    The two sets partition the family's tags exactly, so a tag with no
+    compiler and no booked refusal fails collection.
     """
     declared = frozenset(
         tag for tag, family in TAG_FAMILY.items() if family is RuleFamily.DELTA_AMP

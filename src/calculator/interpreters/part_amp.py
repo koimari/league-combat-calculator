@@ -249,7 +249,7 @@ class StaticHolderAmps:
     attack class they price; ``magic`` is Abyssal Mask's Unmake, selected by
     the damage class it restricts and applied by ``fight.resists._mitigate`` on the
     defender's side.  Both readings meet here, once, because dropping either
-    term is the exact deletion Amendment M, Ruling 1 forbids.
+    term silently deletes a holder's amplifier.
 
     "Static" and "pair-local" are the scope: these are the amplifiers the
     holder's own build brings to its own damage, resolved at build time and
@@ -290,8 +290,7 @@ def resolve_static_holder_amps(
 
     The reading the **coupled walk** makes so it can deliver the holder's amps
     itself rather than receiving them pre-multiplied inside another engine's
-    rows — Amendment M, Ruling 1's retiring act for this family, in one
-    function.
+    rows.
 
     ``facts`` is :func:`resolve_part_amp`'s own fight facts, forwarded as one
     record rather than re-listed.

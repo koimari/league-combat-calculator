@@ -196,8 +196,8 @@ def _sole_rule(owners: Sequence[str], payload_type: type) -> BehaviorRule | None
     """The one rule of *payload_type* this build declares, or ``None``.
 
     Two holders of one shape is a stop rather than a fold — how two of them
-    compose is a declaration somebody owes, and guessing it here is the silent
-    default this campaign exists to remove.
+    compose is a declaration somebody owes, and guessing it here would be a
+    silent default.
     """
     found = list(rules_of(owners, RuleFamily.DAMAGE_ROUTING, payload_type))
     if not found:

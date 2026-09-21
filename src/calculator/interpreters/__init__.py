@@ -33,10 +33,10 @@ derived front-door check is what would notice.
 """
 
 # This module's length is one row per ``(family, lane)`` and one dated receipt
-# per gap, and both sets are the campaign's own vocabulary: splitting the
-# registry from the reasons would put the count in one file and the excuse in
-# another, which is exactly the prose-outruns-code shape counter 4 exists to
-# measure.  Same trade, same idiom, as ``trigger_stream``'s own table.
+# per gap: splitting the registry from the reasons would put the count in one
+# file and the excuse in another, which is the prose-outruns-code shape the
+# whole table exists to refuse.  Same trade, same idiom, as
+# ``trigger_stream``'s own table.
 # pylint: disable=too-many-lines
 
 from __future__ import annotations
@@ -171,23 +171,20 @@ _FAMILY_LANES: Mapping[RuleFamily, frozenset[EngineLane]] = {
             EngineLane.COMPILED_SCORE_WALK,
         }
     ),
-    # The crit profile owes the receipt walk NOTHING, and that is a ruling
-    # rather than an omission: umbrella Amendment O, Ruling 1 (2026-08-16)
-    # reclassifies it under this campaign's own semantic-authority rule.  Every
-    # one of its three declarations names ``Subject.HOLDER`` and none of them
-    # authors a pair-engine row a total holds -- the crit bonus is a multiplier
-    # folded into the champion's own ``auto_attacks`` row, the cooldown refund
-    # authors no damage at all, and the forced crit authors one row stamped
-    # ``informational`` that is summed into nothing.  All-pair-local inputs =>
-    # PAIR_ONLY, so the pair engine is this family's authoritative home and no
-    # second engine prices it.  The compiled score walk is
-    # NOT reclassified with it: that lane has its own blocker (H5) and its own
-    # row below.  What makes this legal where D-40 forbids editing a lane table
-    # from inside the counter it moves is that the emptiness is measured
-    # first and stays measured: ``scripts/receipt_walk_schedule.py`` re-runs
-    # the pair engine over this family's covering population and over a probe
-    # per owner on every check, and the day a mechanic of it authors a row the
-    # gate goes red and this lane comes back.
+    # The crit profile owes the receipt walk NOTHING, and that is a decision
+    # rather than an omission.  Every one of its three declarations names
+    # ``Subject.HOLDER`` and none of them authors a pair-engine row a total
+    # holds -- the crit bonus is a multiplier folded into the champion's own
+    # ``auto_attacks`` row, the cooldown refund authors no damage at all, and
+    # the forced crit authors one row stamped ``informational`` that is summed
+    # into nothing.  All-pair-local inputs => PAIR_ONLY, so the pair engine is
+    # this family's authoritative home and no second engine prices it.  The
+    # compiled score walk is listed separately below because that lane's
+    # answer is its own.  The emptiness is measured rather than asserted:
+    # ``scripts/receipt_walk_schedule.py`` re-runs the pair engine over this
+    # family's covering population and over a probe per owner on every check,
+    # and the day a mechanic of it authors a row the gate goes red and this
+    # lane comes back.
     RuleFamily.CRIT_PROFILE: frozenset(
         {
             EngineLane.PAIR_ENGINE,
@@ -209,23 +206,18 @@ _FAMILY_LANES: Mapping[RuleFamily, frozenset[EngineLane]] = {
     # survive the compiled walk; the pair engine reads the resolver's output
     # rather than the rule.
     #
-    # Three of them owe the RECEIPT WALK nothing, and that is a ruling rather
-    # than an omission: umbrella Amendment Q (2026-08-16) corrects the
-    # declaration for the three families the defence resolver feeds.  Their
-    # walk-side need is satisfied THROUGH the lane they declare -- an
-    # interpreter answers for ``defense_resolver``, and what the receipt walk
-    # consumes is the state that interpreter built (``update_combat_state``
-    # reads Steadfast's stack schedule; the ledger's pools read the lifeline
-    # shields; the opening state carries the annuls and the stasis) -- so a
-    # receipt-walk interpreter beside it would be a second producer of one
-    # number, which D-60 and criterion 8 forbid.  One producer is what the
-    # one-engine thesis demands, so the receipt-walk lane was a declaration
-    # these families never owed.  The compiled score walk is NOT corrected
-    # with them: that lane has its own blocker (H5) and its own rows below.
+    # Three of them owe the RECEIPT WALK nothing, and that is a decision
+    # rather than an omission.  Their walk-side need is satisfied THROUGH the
+    # lane they declare -- an interpreter answers for ``defense_resolver``,
+    # and what the receipt walk consumes is the state that interpreter built
+    # (``update_combat_state`` reads Steadfast's stack schedule; the ledger's
+    # pools read the lifeline shields; the opening state carries the annuls
+    # and the stasis) -- so a receipt-walk interpreter beside it would be a
+    # second producer of one number.  One producer per number is the rule, so
+    # the receipt-walk lane is a declaration these families never owed.  The
+    # compiled score walk is listed separately below.
     #
-    # What makes this legal where D-40 forbids editing a lane table from
-    # inside the counter it moves is that the ground is measured before the
-    # table moves and stays measured after it, in both directions:
+    # The ground is measured rather than asserted, in both directions:
     # ``scripts/receipt_walk_schedule.py`` joins what each family's resolver
     # interpreter writes to every read of those fields off a resolved
     # defences value in the source outside the resolver, and removes the
@@ -377,25 +369,24 @@ class UnservedLane:
     number arrives by another route, and the row says which route; the
     registrations gate below refuses any unserved lane that has neither a row
     here nor a per-rule ``ReceiptOnly`` on the compiled lane, and equally
-    refuses a row here that no declaration reaches (D-92 — a set pinned at a
-    state the tree has left is born stale).
+    refuses a row here that no declaration reaches, because a set pinned at a
+    state the tree has left is born stale.
 
     ``via`` is that route as a **declaration** rather than as a sentence.
     ``reason`` says in prose which interpreter the number comes from instead;
     ``via`` names the same lanes as data, and the gate below checks them
     against the registry.  Without it the route is unverified prose beside a
     verified count — coverage claimed and nothing checking the claim against
-    code, which is failure four of the incident this campaign exists to end.
+    code.
 
     **What a row does not carry is when it retires.**  Both fields above are
-    facts about this tree, checkable here at import.  The stage that retires a
-    row is neither: it is campaign bookkeeping, ruled and re-dated by
-    amendment (K, 2026-08-15), read by no runtime caller.  It lives once, in
+    facts about this tree, checkable here at import.  When a row retires is
+    neither, and no runtime caller reads it.  It lives once, in
     ``docs/receipts/campaign-stages.json``, where exactly one stage record may
     declare itself the ``creditor_of`` a lane's debt; ``behavior_frontier``
-    resolves each row's stage from that claim.  Declared here as well it was
-    declared twice — a ruling had to edit a runtime module to land, and the
-    copies could disagree with only a gate clause between them.
+    resolves each row's stage from that claim.  Declared here as well it
+    would be declared twice, and the copies could disagree with only a gate
+    clause between them.
     """
 
     reason: str
@@ -490,8 +481,8 @@ UNSERVED_LANE_RECEIPTS: Mapping[tuple[RuleFamily, EngineLane], UnservedLane] = {
     # defers for them, and it says so in its own words rather than inheriting
     # a sentence about both walks.  Two of the eight hand the
     # walk no price and for two different reasons.  ``damage_routing``'s
-    # delivery is the rider and kernel-state paths umbrella Amendment P names,
-    # already in the tree.  ``resistance_shred``'s is the cross-participant
+    # delivery is the rider and kernel-state paths, already in the tree.
+    # ``resistance_shred``'s is the cross-participant
     # packet its owners' ``SPLIT`` partners already emit: a shred is not
     # damage — it moves the target's resistance before penetration — so what
     # retires that row is the walk reading the family's own ramp instead of
@@ -832,7 +823,7 @@ def survival_ledger_certifications() -> Mapping[str, str]:
 
 @dataclass(frozen=True, slots=True)
 class ReachabilityReport:
-    """D-51's two directions as data.
+    """Reachability in both directions, as data.
 
     ``unreached_declarations`` are rules whose (family, lane) no interpreter
     serves; ``orphan_branches`` are registered interpreters no declaration
@@ -921,14 +912,14 @@ def _validate_unserved_lanes(owners: frozenset[str]) -> tuple[str, ...]:
     has no interpreter is priced by nobody; the only honest states are
 
     * the compiled lane, refused by that rule's own ``ReceiptOnly`` — the
-      per-rule form, which is what every ``delta_amp`` carries (D-101); or
+      per-rule form, which is what every ``delta_amp`` carries; or
     * a dated row in :data:`UNSERVED_LANE_RECEIPTS` naming the route the
       number arrives by instead.
 
     Anything else raises rather than reaching a payload as a zero.  The
     reverse direction is checked with it: a row no declaration reaches is
     stale and fails, so the table cannot become the graveyard that a
-    hand-maintained exception list turns into (D-92).
+    hand-maintained exception list turns into.
     """
     failures: list[str] = []
     reached: set[tuple[RuleFamily, EngineLane]] = set()

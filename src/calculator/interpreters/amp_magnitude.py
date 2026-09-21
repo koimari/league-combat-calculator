@@ -131,7 +131,7 @@ def _ramp_per_stack(magnitude: RampPerStack, ctx: BuildContext) -> float:
     and capped by the declared maximum.  ``model`` says how the stacks are
     summed, and only ``EXACT`` has an implementation here: no delta-amp rule
     declares ``CESARO_APPROX``, and writing arithmetic for a shape nothing
-    reaches would be exactly the orphan branch D-51 forbids.
+    reaches would be an orphan branch the reachability gate refuses.
     """
     if magnitude.model is not RampModel.EXACT:
         raise InterpretationError(

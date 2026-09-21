@@ -1,9 +1,9 @@
 """The amp chain, interpreted: a declared magnitude becomes one number.
 
-Amplification is the campaign's named diagnosis.  Seven ordered chain slots
-multiply a fight's total, their order is load-bearing, and until this module
-each slot's magnitude lived as a closure compiled inside the number registry
-— a callable a declaration cannot hold and a reader cannot diff.  Here the
+Seven ordered chain slots multiply a fight's total and their order is
+load-bearing.  A slot's magnitude as a closure compiled inside the number
+registry is a callable a declaration cannot hold and a reader cannot
+diff.  Here the
 shape is a :class:`~..item_behavior.DeltaAmpRule`, the numbers are live
 references into the registries, and the arithmetic that turns one into the
 other lives in exactly one function per magnitude shape.
@@ -12,15 +12,13 @@ The pair engine reads a slot through :func:`resolve_slot`, which folds every
 holder's contribution the way the engine folded it before: ``1.0`` plus the
 holders' sum, never ``math.fsum`` and never a running ``+=``.  That is not an
 accident of style — the three spellings land on different floats once a slot
-has two occupants, and the whole point of shipping Hypershot first is that a
-moved number means the kernel is wrong rather than the mechanic.
+has two occupants, so a moved number means the kernel is wrong rather than
+the mechanic.
 
-Nothing here is a compiled-kernel lane.  The umbrella records H5 as SCOPED —
-the kernel *is* to be taught timed, typed damage modifiers — but that lands
-as its own stage after Phase 4's S7, and scoping it adds that stage rather
-than relaxing this one: until its flip, every amp rule carries
-``ReceiptOnly`` and the compiled lane is a named refusal.  The receipt-walk
-half of the family arrives with the amps the coupled walk actually owns.
+The compiled-kernel answer is one symbol, ``AMP_COMPILABILITY`` in
+``item_behavior_catalog``: the kernel stages a timed, typed damage modifier
+today, and pointing that symbol at ``COMPILED_KERNEL_CANNOT_AMP`` reverts the
+whole lane to a named refusal in one line.
 
 Three registry schemas amplify each part they price rather than the running
 total, so they are not in the chain at all: :class:`PartAmp` is the resolved
@@ -125,7 +123,7 @@ class AmpSlot:
 
         The boundary is the declaration's ``strict`` flag, not the engine's
         comparison operator: whether the event that armed a buff is itself
-        amplified is a modelling ruling, and it belongs where a reader can
+        amplified is a modelling decision, and it belongs where a reader can
         find it.
         """
         activation = self.rules[index].payload.activation
@@ -214,9 +212,9 @@ class AmpSlot:
         """What this holder's exclusion rule excludes, or a stop.
 
         The engine subtracts a pool from the total it amps, and *which* pool is a
-        modelling ruling: Hypershot drops one event, Expose Weakness drops the whole
-        chain that armed it.  Reading it off the declaration keeps that ruling where
-        a reader can find it.
+        modelling decision: Hypershot drops one event, Expose Weakness drops the
+        whole chain that armed it.  Reading it off the declaration keeps that
+        decision where a reader can find it.
         """
         activation = self.rules[index].payload.activation
         if not isinstance(activation, ExcludeTrigger):

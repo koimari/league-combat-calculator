@@ -1,8 +1,8 @@
 """Item and keystone behaviour as a closed union of frozen declarations.
 
-The campaign's diagnosis was that behaviour lived as code scattered across
-engines, and coverage lived as prose describing that code.  Neither can be
-checked against the other.  This module is the replacement vocabulary: a
+Behaviour as code scattered across engines and coverage as prose describing
+that code cannot be checked against each other.  This module is the one
+vocabulary both are written in: a
 :class:`BehaviorRule` is one mechanic, declared once, in a closed family, with
 its numbers held as references (``value_ref``), its provenance held as a
 receipt, and its legal-zero story declared rather than assumed.  What a
@@ -129,7 +129,7 @@ class UtilityDimension(Enum):
 
     The single home of the outcome vocabulary.  Two surfaces read it and
     neither owns it: ``item_coverage`` publishes an item's dimensions in the
-    coverage payload, and Phase 1's ``coverage_evidence.UTILITY_DIMENSIONS``
+    coverage payload, and ``coverage_evidence.UTILITY_DIMENSIONS``
     is a projection of these values, so a claim and a payload cannot disagree
     about what a dimension is called.  It lives here rather than beside
     either reader because a vocabulary with two homes is two vocabularies.
@@ -139,11 +139,9 @@ class UtilityDimension(Enum):
     member arrives with the claim that names the packet or the option
     producing it.
 
-    Not to be confused with ``ActionKind``, and deliberately not a revival of
-    the write-only survival field D-09 deleted in 0A — the deletion frontier
-    still asserts that name absent from ``src/``, so this docstring does not
-    spell it.  These are the *product-facing* outcome labels of a serialized
-    coverage record, a different thing that happens to share a word.
+    Not to be confused with ``ActionKind``.  These are the *product-facing*
+    outcome labels of a serialized coverage record, a different thing that
+    happens to share a word.
     """
 
     ALLY_SUPPORT = "ally_support"
@@ -177,7 +175,7 @@ class UtilityDimension(Enum):
     VISION = "vision"
 
 
-# ── compilability (D-43) ──────────────────────────────────────────────────
+# ── compilability ─────────────────────────────────────────────────────────
 
 
 class ReceiptScope(Enum):
@@ -205,8 +203,8 @@ class ReceiptScope(Enum):
         heals and refuses every other kind and every duration.
 
     ``SCORE_KERNEL_DAMAGE_MODIFIER``
-        D-101 — a timed, typed damage modifier.  The kernel stages these
-        now, so no live refusal carries this scope; it survives as the
+        A timed, typed damage modifier.  The kernel stages these, so no
+        live refusal carries this scope; it survives as the
         scope of ``item_behavior_catalog.COMPILED_KERNEL_CANNOT_AMP``, the
         one-symbol revert target for the compiled amp lane.
     """
@@ -270,7 +268,7 @@ class WindowMerge(Enum):
 
 
 class WindowBoundary(Enum):
-    """Whether an event exactly on a window's end is inside it (D-13)."""
+    """Whether an event exactly on a window's end is inside it."""
 
     OPEN_CLOSED = "open_closed"
     CLOSED_CLOSED = "closed_closed"
@@ -601,22 +599,22 @@ SUBJECT_AUTHORITY: dict[Subject, frozenset[Authority]] = {
 
 @dataclass(frozen=True, slots=True)
 class Typing:
-    """The damage restriction a rule applies under (D-04).
+    """The damage restriction a rule applies under.
 
     Both sets are required and neither may be empty: "empty means all" is a
-    silent default in a campaign whose thesis is that silent defaults kill,
-    and ``attack_classes`` is the only place "from all sources" becomes
-    something a declaration *says* rather than something it omits.
+    silent default, and ``attack_classes`` is the only place "from all
+    sources" becomes something a declaration *says* rather than something it
+    omits.
 
-    It is a record rather than an enum for exactly that reason — the ruling
-    fixes two frozensets, and no single enum member can carry both.
+    It is a record rather than an enum for exactly that reason — the
+    restriction is two frozensets, and no single enum member carries both.
     """
 
     damage_classes: frozenset[DamageClass]
     attack_classes: frozenset[AttackClass]
 
     def __post_init__(self) -> None:
-        """Reject the empty-means-all spelling D-04 bans."""
+        """Reject the empty-means-all spelling."""
         if not self.damage_classes:
             raise ValueError(
                 "Typing.damage_classes must name every class the rule applies "
@@ -631,7 +629,7 @@ class Typing:
 
 # ``ZeroPolicy`` is re-exported from ``ability_spec``: the champion entry
 # builders declare one too, and they cannot import this module without
-# inverting the vocabulary leaf's dependency direction (D-24).
+# inverting the vocabulary leaf's dependency direction.
 
 
 # ── payloads ──────────────────────────────────────────────────────────────
@@ -652,8 +650,7 @@ class AmpChainSlot(Enum):
     ``WHOLE_TOTAL``, which is the one slot whose occupants are additive among
     themselves before the chain multiplies, and ``TARGET_HEALTH_GATE`` holds
     the rune page's two target-health amplifiers, of which a legal page can
-    select at most one.  These are also **not** Phase 4's seven authority
-    moves — the two sets overlap and neither contains the other.
+    select at most one.
     """
 
     CINDERBLOOM = "cinderbloom"
@@ -1254,8 +1251,7 @@ class ActiveCastRule:
     ``lifesteal_effectiveness`` is ``None`` — a declared absence — for every
     active that does not inherit life steal.  A zero would say the sibling
     exists and pays nothing, which is a different claim about the item, and
-    exactly the claim this campaign exists to stop a declaration making by
-    accident.
+    not one a declaration should make by accident.
     """
 
     formula: DamageFormula
@@ -1770,8 +1766,8 @@ class StatAvailability(Enum):
     making: three of these grants are conditional buffs that the stat
     resolver folds in **whole**, because it has no event to arm them from —
     ``item_effects.passive_attack_speed_bonus`` calls them "assumed-active"
-    in a docstring, and a docstring is exactly the kind of claim this
-    campaign converts into a field.  Two more exist only when the request's
+    in a docstring, and this field is where that claim is checkable
+    instead.  Two more exist only when the request's
     item options say the window is open, which is a different thing again
     from an unconditional grant.
     """
@@ -2407,7 +2403,7 @@ class AllyProducer(Enum):
     enum is the first of those four.
 
     It is deliberately **not** an item name.  A member's value is the *effect*
-    half of the mechanic id Phase 2's capability registry already uses, and
+    half of the mechanic id ``trigger_stream.CAPABILITIES`` uses, and
     which registry entry carries it is decided by that entry's own value keys
     (``item_behavior_catalog``'s shape table), never by a literal.  That is
     what lets the whole ally-packet compiler be name-free while still
@@ -2609,7 +2605,7 @@ class LevelRamp:
 class AllyPacketRule:
     """One cross-participant producer, declared.
 
-    ``secondary_target`` is D-50's: a producer that reaches a *second* roster
+    ``secondary_target``: a producer that reaches a *second* roster
     class carries the class it reaches.  Redemption's Intervention is the
     motivating case — one active, one ``source=`` literal, and two packets,
     one healing every ally in the radius and one dealing true damage to every
@@ -2689,9 +2685,8 @@ RulePayload = (
     | ReactiveRule
 )
 
-# Which family each payload type belongs to.  One entry per payload; each
-# migration slice adds its family's payload here, so a rule can never carry
-# a payload its family does not name.
+# Which family each payload type belongs to.  One entry per payload, so a
+# rule can never carry a payload its family does not name.
 PAYLOAD_FAMILY: dict[type, RuleFamily] = {
     ActiveCastRule: RuleFamily.ACTIVE_CAST,
     EmpoweredAutoBuffRule: RuleFamily.CHARGED_STRIKE,
@@ -3094,7 +3089,7 @@ def _validate_defense(rule: BehaviorRule, payload: RulePayload) -> None:
 def _validate_ally_packet(rule: BehaviorRule, payload: AllyPacketRule) -> None:
     """A producer names its packets, their recipients and its numbers.
 
-    The ``secondary_target`` clause is the load-bearing one (D-50): a producer
+    The ``secondary_target`` clause is the load-bearing one: a producer
     reaching two roster classes must *say so*, and a producer reaching one may
     not claim it does.  Both halves are checked, because a field that is only
     ever checked in one direction is a field a second producer can quietly
@@ -3723,7 +3718,7 @@ class BuildContext:
     """What an interpreter may read at build time.
 
     Level, the owner whose registry entry is being compiled, the
-    ``data_registry.data_version()`` its memo keys on (D-49), and the two
+    ``data_registry.data_version()`` its memo keys on, and the two
     fight facts a magnitude may scale with.  No walk state and no
     ``SurvivalAction``: an interpreter that could see those would be running
     inside the walk, which is the cycle this contract prevents.
@@ -3733,9 +3728,8 @@ class BuildContext:
     fixed before the first event — and they are here because a ramping,
     health-scaled or range-split magnitude cannot become a number without
     them.  Every field is required: a magnitude that silently read a
-    defaulted zero duration is the campaign's own failure shape, and a
-    defaulted ``holder_is_melee`` would silently pay every champion the
-    ranged rate.
+    defaulted zero duration prices nothing, and a defaulted
+    ``holder_is_melee`` would silently pay every champion the ranged rate.
     """
 
     level: int
