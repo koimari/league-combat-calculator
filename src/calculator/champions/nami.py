@@ -54,8 +54,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "W (Ebb and Flow) emits two ally heal packets per cast on the selected "
         "teammate.",
         "The first is the sourced 55 to 155 + 40% AP Heal row.",
-        "The bounce is 60% + 30% per 100 AP of the original, never below the sourced "
-        "Minimum Heal row.",
+        "The bounce is 60% + 30% per 100 AP of the original, never below Minimum "
+        "Heal (93 + 24% AP at rank 5).",
         "Cached prose cuts each bounce by 20% + 15% per 100 AP, and Minimum is 60% of "
         "Heal at every rank.",
         "The enemy bounce keeps the full Magic Damage row: the first-bounce cut is "

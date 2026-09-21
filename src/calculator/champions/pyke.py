@@ -120,18 +120,19 @@ ASSUMPTIONS = [
     "damage taken.",
     "With 2 or more visible enemies it is 40% + 0.4% per Lethality, capped at 80 + "
     "800% bonus AD and 55% health.",
-    "P's out-of-vision consume heals the whole pool, a vision boundary the 1v1 ledger "
-    "does not model.",
+    "P's out-of-vision consume heals 100% of the pool, a vision boundary the 1v1 "
+    "ledger does not model.",
     "P denies every point of bonus health and returns 1 bonus AD per 14 "
     "(MODULE_STAT_CONVERSION).",
     "The conversion runs in calculate_total_stats on completed bonus health, after "
     "items and runes.",
     "An item passive reading bonus health resolves first, so Riftmaker and Bloodmail "
     "price health he loses.",
+    "His displayed bonus health is 0 in game, and those two read it as such.",
     "R (Death from Below) prices the non-execute row: 125 to 275 by level + 40% bonus "
     "AD + 0.75 per Lethality.",
-    "That is the 50%-of-threshold amount dealt above the execute threshold (cached R "
-    "Per-Level row).",
+    "That is the 50%-of-threshold amount dealt above the execute threshold "
+    "(data/champions.json R Per-Level [1]).",
     "R's execute row, 250 to 550 + 80% bonus AD + 1.5 per Lethality, is a kill "
     "boundary, documented not priced.",
     "P (Gift of the Drowned Ones) deals no enemy damage.",

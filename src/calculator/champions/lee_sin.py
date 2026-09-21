@@ -127,7 +127,7 @@ ASSUMPTIONS = [
     *list(REVIEWED_MODULE_ASSUMPTIONS),
     "Q is two stages: Sonic Wave's Physical Damage row plus the Resonating Strike "
     "recast.",
-    "The recast reads Q[1]'s Minimum and Maximum rows, interpolated by target missing "
+    "The recast reads Q[1]'s Minimum and Maximum rows, 0% : 100% by target missing "
     "health at each cast.",
     "Its 0.5s recast cadence is authored from the sourced 3s recast window.",
     "With q_recast off only Sonic Wave is priced; the recast's mark and dash are "

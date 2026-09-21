@@ -136,11 +136,12 @@ ASSUMPTIONS = [
     "AD, at 0% crit.",
     "The cached Maximum row, 0 to 76.4 + 191% AD, is exactly 1.91x the Minimum at "
     "every rank.",
+    "The cached increase is '0% : 70% (+ 0% : 21%) based on critical strike chance'.",
     "Q scales linearly with the fight's crit chance, exact at both sourced endpoints.",
     "KNOWN CACHE LAG: E (Slipstream)'s cached cost row is flat 30, and the game files "
     "say 40 at every rank.",
-    "Bin NilahE 'mana' [40 x6] and ddragon costBurn '40' both confirm 40, verified on "
-    "16.16.1.",
+    "Bin NilahEAbility/NilahE 'mana' [40 x6] and ddragon costBurn '40' confirm 40, "
+    "verified on 16.16.1.",
     "Nilah's resource is mana per the CharacterRecord arType.",
     "This module does not model E's resource cost; engine.py stamps it from "
     "data/champions.json.",

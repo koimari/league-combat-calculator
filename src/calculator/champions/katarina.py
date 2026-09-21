@@ -172,8 +172,8 @@ ASSUMPTIONS = [
     "level band.",
     "The bands (1-5, 6-10, 11-15, 16+) are wiki prose constants: the JSON AP-modifier "
     "unit is garbled.",
-    "The dagger-retrieval count is p_daggers (default 1); dagger lifetime and pickup "
-    "are not simulated.",
+    "The dagger-retrieval count is p_daggers (default 1); the 4s dagger lifetime and "
+    "pickup are not simulated.",
     "Q's dagger landing, W's toss, and E-onto-dagger pickups are all "
     "counted as the same spin proc",
     "Death Lotus applies Grievous Wounds for 3s on every dagger hit (wiki prose).",

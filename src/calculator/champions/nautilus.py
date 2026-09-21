@@ -132,8 +132,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Staggering Blow) adds 14 to 128 by level physical on an empowered basic "
-    "attack (Per-Level row).",
+    "P (Staggering Blow) adds 14 to 128 by level physical on an empowered attack "
+    "(data/champions.json Per-Level row).",
     "The packet's 0.75 to 1.5 Bonus Damage values are the root duration, a control "
     "state, not damage.",
     "W (Titan's Wrath) prices Pain of Wrath's Total Magic Damage, 30 to 70 by rank + "

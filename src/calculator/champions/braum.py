@@ -346,8 +346,9 @@ ASSUMPTIONS = [
     "attacks are not modeled.",
     "Passive trigger damage extrapolates linearly past 18 (16 + 10 x level, 216 at "
     "20), as the JSON array does.",
-    "The passive prices in timed fights only: the stack cycle walks the auto and Q "
-    "timeline, Q assumed on cooldown.",
+    "The passive prices in timed fights only: the stack cycle assumes Q cast on "
+    "cooldown from t=0.",
+    "The cycle walks the fight's auto and Q timeline.",
     "One rotation never reaches 4 stacks from a single Q, so it shows no passive "
     "damage.",
     "An autos-only fight casts no Q, so only the ambient swings stack "

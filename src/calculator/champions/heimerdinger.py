@@ -369,8 +369,8 @@ ASSUMPTIONS = [
     "being the 1s inter-cast timer.",
     "One deploy is priced per 20s window, with q_turrets and q_turret_attacks setting "
     "turrets and shots.",
-    "The R upgrade is q_variant: Apex Turret rows scale by R rank, shots 80-120 +35% "
-    "AP, beams 100-180 +70% AP.",
+    "The R upgrade is q_variant: H-28Q Apex Turret rows scale by R rank, shots 80-120 "
+    "+35% AP, beams 100-180 +70% AP.",
     "Rocket multi-hit reduction uses the explicit first/subsequent rows.",
     "Only one champion hit is counted for the upgraded grenade.",
     "UPGRADE!!!, stuns, slows, turret targeting and vision are state/utility, not "

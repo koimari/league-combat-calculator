@@ -162,10 +162,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Q (Blooming Burst) prices Initial + 2 x Subsequent Magic Damage, the cached "
-    "Total Maximum row.",
+    "Q (Blooming Burst) prices Initial + 2 x Subsequent Magic Damage, the Total "
+    "Maximum row in data/champions.json Q.",
     "Each re-bloom fires because the burst hits a champion, 0.75s apart.",
-    "R (Pop Blossom)'s shield comes from the game file: 75/125/175 + 75% AP over 2s.",
+    "R (Pop Blossom)'s shield comes from neeko.bin.json NeekoR: 75/125/175 + 75% AP "
+    "over 2s.",
     "It adds 40/60/80 + 40% AP per nearby enemy champion; the cached wiki page omits "
     "the shield row.",
     "The 1v1 fight's own target is that one nearby enemy champion.",

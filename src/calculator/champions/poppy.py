@@ -130,8 +130,9 @@ OPTIONS = [
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
     "P (Iron Ambassador) adds 20 to 198.82 by level magic on the empowered buckler "
-    "attack (cached row).",
-    "P's %max-health row is the retrieval shield, not damage, and is not priced.",
+    "attack (data/champions.json).",
+    "P's Max Health Damage row, 0.11 to 0.2106%, is the retrieval shield, not damage, "
+    "and is not priced.",
     "R (Keeper's Verdict) defaults to the uncharged Physical Damage row, 100 to 200 + "
     "45% bonus AD.",
     "r_charged gates the fully-charged 200 to 400 + 90% bonus AD, exactly 2x; the 1s "

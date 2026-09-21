@@ -255,15 +255,15 @@ ASSUMPTIONS = [
     "W (Indestructible) deals no enemy damage in any channel.",
     "The cached entry lists only the Potential Shield store, the shield active and "
     "the recast heal.",
-    "The binary's MordekaiserW has no damage field and the atoms tag it heal and "
+    "The binary's MordekaiserW has no damage field and the v2 atoms tag it heal and "
     "shield only.",
     "Its shield and recast heal are priced by the grey-health primitive, so the slot "
     "is no_damage.",
     "R (Realm of Death) heals 10% of the banished champion's maximum health at the "
     "cast (cached R prose).",
     "Only the primary defender's pair fight authors it: one banishment, one heal.",
-    "R itself deals no enemy damage; the binary carries only duration, radius and "
-    "ratio values.",
+    "R itself deals no enemy damage; its binary carries SpiritRealmDuration, "
+    "ZoneRadius, GhostAPRatio and the steal scalar.",
     "The 7s stat theft of 10% of the target's stats and the Death Realm are not "
     "modeled.",
     "The attacker-only stat_buff channel has no defender input, so pricing the steal "

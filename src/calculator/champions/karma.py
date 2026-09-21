@@ -145,7 +145,8 @@ ASSUMPTIONS = [
     "E (Inspire) shields Karma or the selected teammate for 80 to 280 + 60% AP over "
     "2.5s, the sourced row.",
     "Its scope is self-or-target with a self fallback in a solo fight; the 40% move "
-    "speed is utility.",
+    "speed for 2s is utility.",
+    "The shield's selection key is shield:E:<cast>.",
     "Mantra-empowered Inspire (Defiance) is documented only: the cached R data "
     "carries no shield numbers.",
     "The Mantra text names the effect alone, so the ally spread fails closed rather "

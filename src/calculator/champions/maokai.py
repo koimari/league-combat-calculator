@@ -116,8 +116,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     assumption_overrides=(
         "Sapling Toss defaults to the brush-empowered branch, its explosion 66.7% on "
         "a non-minion target.",
-        "It attaches two Saplings burning every 0.75s over 1.5s, the sourced Total "
-        "Attached Sapling row.",
+        "It attaches two Saplings burning every 0.75s over 1.5s (2 ticks), the "
+        "sourced Total Attached Sapling row.",
         "The sapling's 30s sit, 2.5s chase, 45% slow, reveal and 300 non-champion cap "
         "are state, not modeled.",
         "P (Sap Magic) heals 4% to 12.8% of maximum health by level on the first "

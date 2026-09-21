@@ -435,8 +435,8 @@ ASSUMPTIONS = [
     "damage, applies no stack) is a misplay and is not modeled",
     "R is cast once by default; r_execute_recast assumes the cast executes and fires "
     "the sourced free recast.",
-    "Both casts price at base + N x per-stack, the recast parts offset past the 0.15s "
-    "kill check.",
+    "Both casts price at 2 x (base + N x per-stack), the recast parts offset past the "
+    "0.15s kill check.",
     "The recast is free within 20 seconds (cached R prose), so its mana cost is not "
     "separately zeroed.",
     "Every bleed stack applied in the fight counts its full 5s of ticks, including "

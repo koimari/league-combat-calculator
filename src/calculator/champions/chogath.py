@@ -224,7 +224,7 @@ ASSUMPTIONS = [
     "P (Carnivore) heals 18 to 52 by level per kill, the cached P Heal row, on the "
     "first damaging hits.",
     "A duel simulates no wave, so p_carnivore_kills (default 0) sets the count; the "
-    "mana restore is not modeled.",
+    "4.72 : 9.48 mana restore is not modeled.",
     "Feast stacks default to 6, the minion cap; champion and epic-monster stacks are "
     "uncapped, so raise the option.",
     "Feast bonus health is retroactive to the current R rank (stacks x 80/120/160); R "

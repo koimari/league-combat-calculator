@@ -204,8 +204,8 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Q (Siphoning Strike) bonus damage is the rank flat 40 to 120 plus the q_stacks "
-    "option total.",
+    "Q (Siphoning Strike) bonus damage is the rank flat 40 to 120 plus 100% of the "
+    "q_stacks option total.",
     "Q's permanent gain, +3 per kill and +12 for champions, is not modeled: the "
     "option is the stack state.",
     "Q empowers the next basic attack, so its casts cap at the fight's auto count.",

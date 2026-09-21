@@ -98,8 +98,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Harrier) prices the cached Bonus Physical Damage row: 15 : 132.35 (based on "
-    "level) (+ 40% bonus AD).",
+    "P (Harrier) prices data/champions.json P 'Bonus Physical Damage': 15 : 132.35 by "
+    "level + 40% bonus AD.",
     "It fires when a basic attack consumes the Harrier mark, like the Nautilus and "
     "Poppy passives.",
     "The Harrier mark needs Quinn's Q, E or R or Valor; the on-hit is priced per auto "
@@ -112,8 +112,8 @@ ASSUMPTIONS = [
     "stat_buff has no key.",
     "CRIT BOUNDARY, named fail-closed: the Harrier bonus is priced non-crit, with no "
     "pinned source for a crit.",
-    "The pinned cache and the live wiki carry no crit sentence, and the binary has no "
-    "crit coefficient.",
+    "The pinned cache rev 4009372 and the live wiki carry no crit sentence, and the "
+    "binary has no crit coefficient.",
     "The wiki's general rule is that on-hit damage does not crit unless stated.",
     "A sourced statement would flip the engine's pre-wired on_hit crit_effectiveness.",
     "The degraded P cooldown row, units '7 : 2.56 (based on critical strike chance)', "
@@ -125,7 +125,7 @@ ASSUMPTIONS = [
     "Harrier's monster bonus is not priced: the 1v1 model has no monster target, a "
     "named boundary.",
     "Behind Enemy Lines (R-active) disables Harrier and removes all marks (cached "
-    "effects).",
+    "effects[3]).",
     "R's Behind Enemy Lines is not gated in the model, a named boundary: the on-hit "
     "is unconditional.",
 ]

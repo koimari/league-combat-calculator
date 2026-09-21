@@ -268,6 +268,8 @@ ASSUMPTIONS = [
     "ManaReturn; no atom exists.",
     "The 4s mark window is modeled and target spell shields are not modeled; a late "
     "detonation is mark_expired.",
+    "The window is the binary DetonationTimeout 4.0 and the atom "
+    "timing.active_duration b32849b968950b8e.",
     "The mark is always detonated inside its window, since every cast is assumed to "
     "hit.",
     "An undetonated mark at the fight's end is receipted, never guessed.",

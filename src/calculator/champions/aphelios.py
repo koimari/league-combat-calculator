@@ -319,6 +319,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "cone's secondaries stay unpriced.",
         "Severum prices as healing, Gravitum damages nothing, Crescendum's Chakram "
         "bonus is prose over empty leveling.",
+        "That prose is '0% : 138.5% (based on number of Chakrams) AD additional "
+        "physical damage'.",
         "Phase (W) is a weapon swap, not a damage cast: cached 0.8s cooldown, cached "
         "0.25s swap.",
         "One main weapon holds for the whole fight, with no mid-fight swap.",
@@ -328,14 +330,16 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Moonlight Vigil (R) prices the sourced initial blast.",
         "Each r_followup_targets (default 0) champion takes one 100% AD sky attack "
         "applying on-hit at 100% (cached R prose).",
-        "Its sourced 100% to 130% crit is an expected-value multiplier 1 + 0.39 x "
-        "crit^2, weaker than a 200% attack.",
+        "Its sourced crit row is '100% : 130% (+ 0% : 9%) based on critical strike "
+        "chance'.",
+        "It is baked in as an expected-value multiplier 1 + 0.39 x crit^2, weaker "
+        "than a 200% attack.",
         "Severum overheal becomes a shield capped at the cached Heal row (10 to 160 "
         "by level + 6% maximum health) for 30s.",
         "aphelios_overheal_shield (default True) stamps each Severum heal, and the "
         "timeline converts the excess at its time.",
         "E (Weapon Queue System) has damageType None and empty leveling rows in "
-        "cache, so its packet slot is no_damage.",
+        "data/champions.json, so its slot is no_damage.",
     ),
     slot_parsers={
         "P": _weapon_master,

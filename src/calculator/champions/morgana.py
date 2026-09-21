@@ -168,8 +168,8 @@ ASSUMPTIONS = [
     "They land at 0.5s intervals over the 5s desecrated area, the first tick on cast.",
     "R (Soul Shackles) prices the initial hit plus the same magic again at the 3s "
     "tether break.",
-    "That is 400 to 700 + 160% AP total; R's slow, root and reveal are utility, not "
-    "priced.",
+    "That is Magic Damage x2 == 400 to 700 + 160% AP; R's slow, root and reveal are "
+    "utility, not priced.",
     "P (Soul Siphon) heals Morgana 18% of the post-mitigation damage her abilities "
     "deal to champions.",
     "The passive deals no enemy damage itself.",

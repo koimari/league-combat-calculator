@@ -353,8 +353,8 @@ ASSUMPTIONS = [
     *list(ASSUMPTIONS),
     "Q (Darkin Daggers) prices the initial hit and 10 sourced 0.5s bleed ticks, "
     "per-tick x 10.",
-    "Q's recast bonus interpolates the Minimum and Maximum rows by missing health, "
-    "q_recast (default on).",
+    "Q's recast bonus interpolates Minimum to Maximum, 0% : 100% by target missing "
+    "health, q_recast (default on).",
     "The recast's remaining bleed is already in those ticks and is not "
     "double-counted.",
     "Q's recast on a champion heals Naafiri the cached 45 to 105 + 40% bonus AD, one "
@@ -383,6 +383,8 @@ ASSUMPTIONS = [
     "levels 9, 12 and 15.",
     "While w_hunt is on it is the raised 4/5/6/7 (wiki W note); the wiki R table "
     "confirms both columns.",
+    "At levels 16-18 that table reads 5 x 27.5 = 137.5 + 50% bonus AD and "
+    "7 x 27.5 = 192.5 + 70% bonus AD.",
     "The whole pack lands at the end of R's 0.75s channel as proc_count = Packmate "
     "with one hit per part.",
     "The engine prices sum(part.amount x count) x proc_count, so carrying the size "
@@ -393,8 +395,8 @@ ASSUMPTIONS = [
     "the game binary.",
     "NaafiriP's PackmateTotalDamage is 10 to 20 + 4% bonus AD by level at "
     "PackmateBaseAS 0.688.",
-    "The wiki Pets entry is outside the local cache: cached P says only 'See Pets for "
-    "full details'.",
+    "The wiki Pets entry is outside the local cache: data/champions.json P says only "
+    "'See Pets for full details'.",
     "P's pack uptime, leap range, frenzy stacking and taunt are unmodeled state on "
     "top.",
     "The summon precedent requires a cached wiki row for a pet's per-attack damage.",

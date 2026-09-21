@@ -361,8 +361,8 @@ ASSUMPTIONS = [
     "the detonation following.",
     "W's charge total is per-tick x 12, not the cached 16-tick Total Magic Damage "
     "row.",
-    "E's bonus damage maxes at 70% missing health, not 100%: game files, undocumented "
-    "on the wiki.",
+    "E's bonus damage maxes at 70% missing health, not 100%: game files V25.23, "
+    "undocumented on the wiki.",
     "E's empowered attack applies once per cast, not on every auto.",
     "e_reset_throughput makes each accepted E cast's empowered auto an extra swing "
     "(binary Trait_AttackReset).",
@@ -381,8 +381,8 @@ ASSUMPTIONS = [
     "damage.",
     "The passive resists the next hostile immobilizing control for 4% current health "
     "plus a canister drop.",
-    "It rides the coupled survival walk; the canister pickup and its destruction are "
-    "unsupported timings.",
+    "It rides the coupled survival walk; the canister pickup (4% max health, 15s "
+    "refund) and its destruction are unsupported.",
     "P (Goes Where He Pleases) regenerates 0.04% to 0.23% by level of maximum health "
     "every 0.5 seconds.",
     "That is the cached P second row, ten ticks of which equal its first row's "

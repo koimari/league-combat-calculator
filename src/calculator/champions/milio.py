@@ -155,8 +155,8 @@ ASSUMPTIONS = [
     "This engine models one attacker, so the ally-carried case has no AD to source "
     "the term.",
     "P's proc count is a selectable option, not a derived arming window.",
-    "The hearth applies Fired Up! every 3 seconds over W's 6s duration (atom "
-    "HealFrequencySeconds 3.0).",
+    "The hearth applies Fired Up! every 3s over W's 6s (ddragon "
+    "healfrequencyseconds, atom HealFrequencySeconds 3.0).",
     "_empower_window_procs resolves armed_by slots to cast times only, so arming on W "
     "would undercount.",
     "Cozy Campfire (W) heals each selected teammate the sourced 70 to 150 + 15% AP as "

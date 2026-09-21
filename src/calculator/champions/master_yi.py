@@ -184,7 +184,7 @@ ASSUMPTIONS = [
     "Double Strike procs every 3rd basic attack for 50% AD physical, a wiki-prose "
     "module constant.",
     "The second strike is affected by crit modifiers and rolls its own crit (cached P "
-    "effect and notes).",
+    "effect 1 and notes).",
     "Its on-hit row declares crit_effectiveness 1.0, priced at the fight's crit "
     "chance and multiplier.",
     "Only basic attacks generate stacks (Alpha Strike explicitly does "

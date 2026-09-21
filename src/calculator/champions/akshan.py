@@ -384,6 +384,7 @@ ASSUMPTIONS = [
     "Double shot applies on-hit effects and can crit",
     "Dirty Fighting detonates on the third stack (15/40/80/150 by level + 60% AP, "
     "wiki); one passive_procs entry per burst.",
+    "It caps at 3 stacks on the target and the detonation consumes all three.",
     "Each detonation grants the proc shield (40 to 280 by level + 35% bonus AD, 2s, "
     "cached Bonus Damage row).",
     "One shield per burst: the 16/12/8/4s PassiveCooldown (game file) cannot elapse "

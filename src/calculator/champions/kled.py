@@ -195,18 +195,18 @@ ASSUMPTIONS = [
     "no Skaarl heal is authored.",
     "The wiki cache carries no Grievous Wounds on either Q entry, so the module "
     "declares no wound source.",
-    "Base move speed and attack range are form-attributed: the cache has 305 / 250, "
-    "dismounted.",
+    "Base move speed and attack range are form-attributed: data/champions.json has "
+    "305 / 250, dismounted.",
     "The 16.16 game file Root carries 345 / 125, mounted, and every other cached stat "
     "matches leaf for leaf.",
-    "The cached P text reconciles them: dismounting reduces move speed 'by 40 to 305' "
-    "and grants '125 total'.",
+    "The cached P[1] text reconciles them: dismounting reduces move speed 'by 40 to "
+    "305' and grants '125 total attack range'.",
     "patch_regression therefore reports a permanent stat_drift on those two fields, "
     "and no value is overridden.",
     "stats.is_melee reads attackType MELEE, never attackRange, so the classification "
     "is unaffected.",
-    "Base move speed feeds Swiftmarch's adaptive force, so a Swiftmarch build "
-    "understates it by 2.0.",
+    "Base move speed feeds Swiftmarch's adaptive_force_per_total_move_speed (5%), so "
+    "a build understates it by 2.0.",
     "The modeled E and R are mounted-only; reconciling the cached row's form is "
     "escalated, not patched here.",
 ]
