@@ -188,8 +188,8 @@ def test_the_payload_union_names_every_payload_a_family_claims() -> None:
 def test_every_payload_a_family_claims_has_a_structural_reading() -> None:
     """``PAYLOAD_VALIDATORS`` is keyed by exactly ``PAYLOAD_FAMILY``'s types.
 
-    A payload in the family table and not this one used to fall off the end
-    of an ``isinstance`` ladder, structurally unchecked and silently valid.
+    A payload in the family table and not this one is structurally unchecked,
+    so the declaration the validator accepts is one nobody has read.
     """
     assert set(PAYLOAD_VALIDATORS) == set(PAYLOAD_FAMILY)
 
