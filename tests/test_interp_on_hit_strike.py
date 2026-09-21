@@ -99,24 +99,28 @@ def test_every_registry_schema_is_reached_by_some_owner() -> None:
     ["Recurve Bow", "Nashor's Tooth", "Terminus", "Muramana", "Titanic Hydra"],
 )
 def test_each_schema_reproduces_the_registrys_own_arithmetic(owner: str) -> None:
-    """Recomputed by hand from the entry, so a drifted term shows up here."""
-    entry = ITEM_EFFECTS[owner]
-    expected = {
-        "Recurve Bow": entry.get("base", 0.0),
-        "Nashor's Tooth": entry.get("base", 0.0)
-        + entry.get("ap_ratio", 0.0) * STATS["ability_power"],
-        "Terminus": entry.get("base", 0.0)
-        + entry.get("bonus_ad_ratio", 0.0) * STATS["bonus_attack_damage"]
-        + entry.get("ap_ratio", 0.0) * STATS["ability_power"],
-        "Muramana": entry.get("max_mana_ratio_on_hit", 0.0) * STATS["max_mana"],
-        "Titanic Hydra": entry.get("max_hp_ratio_melee", 0.0) * STATS["health"],
+    """Recomputed by hand from the entry, so a drifted term shows up here.
+
+    Each schema is its ``(key, multiplicand)`` terms, so every number comes
+    through the typed accessor and a key an owner has lost raises here.
+    """
+    terms = {
+        "Recurve Bow": (("base", 1.0),),
+        "Nashor's Tooth": (("base", 1.0), ("ap_ratio", STATS["ability_power"])),
+        "Terminus": (
+            ("base", 1.0),
+            ("bonus_ad_ratio", STATS["bonus_attack_damage"]),
+            ("ap_ratio", STATS["ability_power"]),
+        ),
+        "Muramana": (("max_mana_ratio_on_hit", STATS["max_mana"]),),
+        "Titanic Hydra": (("max_hp_ratio_melee", STATS["health"]),),
     }[owner]
+    expected = sum(sustain_effect_value(owner, key) * by for key, by in terms)
     assert _strike(owner).source.raw_damage(_inputs()) == pytest.approx(expected)
 
 
 def test_the_minimum_is_a_floor_on_the_sum() -> None:
     """Blade of the Ruined King never pays less than its sourced minimum."""
-    entry = ITEM_EFFECTS["Blade of the Ruined King"]
     strike = _strike("Blade of the Ruined King")
     healthy = strike.source.raw_damage(_inputs())
     assert healthy == pytest.approx(
@@ -124,7 +128,9 @@ def test_the_minimum_is_a_floor_on_the_sum() -> None:
         * 1000.0
     )
     drained = dataclasses.replace(_inputs(), target_current_health=0.0)
-    assert strike.source.raw_damage(drained) == pytest.approx(entry["min_damage"])
+    assert strike.source.raw_damage(drained) == pytest.approx(
+        sustain_effect_value("Blade of the Ruined King", "min_damage")
+    )
 
 
 def test_the_range_split_is_paid_from_the_swings_own_range_class() -> None:

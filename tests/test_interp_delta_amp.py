@@ -518,10 +518,10 @@ def test_cinderbloom_prices_the_multiplier_the_page_states_as_a_fraction() -> No
     """The registry keeps 120%; the chain gets 0.2, by a declared subtraction."""
     slot = _cinderbloom_slot("Shadowflame")
     assert slot is not None
-    multiplier = ITEM_EFFECTS["Shadowflame"]["crit_multiplier"]
+    multiplier = sustain_effect_value("Shadowflame", "crit_multiplier")
     assert slot.bonus_fraction == multiplier - 1.0
     assert slot.value(amp_magnitude.LIVE_THRESHOLD_FIELD) == pytest.approx(
-        ITEM_EFFECTS["Shadowflame"]["health_threshold"]
+        sustain_effect_value("Shadowflame", "health_threshold")
     )
 
 
@@ -837,7 +837,6 @@ def test_a_stat_scaled_magnitude_has_no_build_time_fraction() -> None:
 
 def test_the_basic_amp_declares_its_range_assumption_as_a_derivation() -> None:
     """Hexoptics C44's melee share is the sourced distance ratio, not a literal."""
-    entry = ITEM_EFFECTS["Hexoptics C44"]
     ranged = _part_amp(
         "Hexoptics C44", melee=False, attack_class=AttackClass.BASIC_ATTACK
     )
@@ -846,16 +845,12 @@ def test_the_basic_amp_declares_its_range_assumption_as_a_derivation() -> None:
     )
     assert ranged is not None
     assert melee is not None
-    assert ranged.multiplier({}) == pytest.approx(
-        1.0 + sustain_effect_value("Hexoptics C44", "max_amp")
-    )
+    max_amp = sustain_effect_value("Hexoptics C44", "max_amp")
+    assumed = sustain_effect_value("Hexoptics C44", "melee_assumed_distance")
+    reach = sustain_effect_value("Hexoptics C44", "max_distance")
+    assert ranged.multiplier({}) == pytest.approx(1.0 + max_amp)
     assert melee.multiplier({}) == pytest.approx(
-        1.0
-        + sustain_effect_value("Hexoptics C44", "max_amp")
-        * (
-            min(entry["melee_assumed_distance"], entry["max_distance"])
-            / sustain_effect_value("Hexoptics C44", "max_distance")
-        )
+        1.0 + max_amp * (min(assumed, reach) / reach)
     )
 
 
