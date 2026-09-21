@@ -2413,7 +2413,7 @@ def _named_like_the_real_timeline(payload):
     """A fake timeline payload, carrying the map the real one publishes.
 
     ``build_participant_timeline`` names every number it publishes, and the
-    BIS objective refuses to rank a number no entry names (D-62): a payload
+    BIS objective refuses to rank a number no entry names: a payload
     with bare numbers is a payload nobody can ask what its numbers mean.  So
     a fake that returned one would be a fake of a shape the tree does not
     have.  The map is built through the same writer the views use rather than
@@ -4194,7 +4194,7 @@ def test_survival_walk_applies_collector_execute_as_terminal_state():
 def test_the_walk_executes_off_the_declaration_and_not_off_the_pair_stamp():
     """The equivalence fixture for The Collector, and the mutation behind it.
 
-    ``damage_routing`` retired off the pair engine (umbrella Amendment P), so
+    ``damage_routing`` retired off the pair engine, so
     the walk reads the Execute rider from the attacker's own declaration
     rather than from the ratio ``damage.py`` stamped on its own events.  The
     same packet, carrying the same stamp, against an attacker whose build

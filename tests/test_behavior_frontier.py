@@ -306,7 +306,7 @@ def test_the_ten_h4_tags_ride_the_frontier() -> None:
 
 
 # ---------------------------------------------------------------------------
-# The zero-policy frontier — the guard the ruled exception ships with (D-24)
+# The zero-policy frontier — the guard the ruled exception ships with
 # ---------------------------------------------------------------------------
 
 
@@ -446,7 +446,7 @@ def test_the_scan_finds_a_planted_fallback_and_a_planted_entry(tmp_path) -> None
 
 
 def test_the_committed_refusal_set_is_what_the_fold_measures() -> None:
-    """The compiled walk's refusals, gated by set equality (D-40).
+    """The compiled walk's refusals, gated by set equality.
 
     What the derivation-beside-legacy block became once the flip deleted the
     legacy.  The receipt records which owners the compiled score walk refuses

@@ -376,7 +376,7 @@ class TestRotationOrder:
     """E's stun exists only by scattering a Dark Sphere, so Q is E's setup —
     the reverse of the generic cc-setup-first ordering.  The hand seed in
     CAST_ORDER_OVERRIDES pinned that order until the module declared it;
-    the order is now DERIVED from ``CAST_DEPENDENCIES`` (D-89) and cites
+    the order is now DERIVED from ``CAST_DEPENDENCIES`` and cites
     the wiki revision the declaration was read from, which is the whole
     point of retiring a seed rather than deleting one."""
 
@@ -679,7 +679,7 @@ def _command_slot():
     """Command's declared chain slot, resolved for a Mandate holder.
 
     The window arithmetic lives in the rule's ``TriggerWindow(IMMOBILIZE,
-    merge=EXTEND, boundary=OPEN_CLOSED)`` and its interpreter (Phase 3), not
+    merge=EXTEND, boundary=OPEN_CLOSED)`` and its interpreter, not
     in ``damage.py`` helpers taking a duration nobody sourced at the call
     site.  These tests follow, so they keep pinning the behaviour rather
     than a deleted spelling.

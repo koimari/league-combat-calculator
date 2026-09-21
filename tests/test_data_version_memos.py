@@ -1,4 +1,4 @@
-"""Test front door for ``data_registry``'s memo tables (D-49).
+"""Test front door for ``data_registry``'s memo tables.
 
 Most memos in this tree hold values derived from cached ``data/`` files; one
 is cleared wholesale by the refresh it follows and one caches imported Python

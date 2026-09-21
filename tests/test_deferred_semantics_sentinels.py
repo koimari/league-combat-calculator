@@ -6,7 +6,7 @@ so in a test instead: the sentinel pins today's answer, names the decision
 that deferred it, and goes red on the commit that changes the answer without
 re-reading this file.  Each sentinel also pins the size of its own
 population, because a sentinel that is green over an empty set proves
-nothing (D-26).
+nothing.
 
 Seven sentinels, one class each:
 
@@ -111,7 +111,7 @@ UNIT_MIXED_SUPPORT_UNITS = 2
 # The fields ``_apply_damage_modifier`` writes onto an armed modifier.
 # Pinned because this sentinel's claim is about what is *absent*: there is no
 # position, no radius and no holder-liveness key, so neither Unmake's range
-# nor its holder's death can gate it (D-66).
+# nor its holder's death can gate it.
 ARMED_MODIFIER_FIELDS = frozenset(
     {
         "source",
@@ -364,7 +364,7 @@ class _LedgerCtx:
 
 
 class TestCommandWindowsMergeByRefresh:
-    """Repeat-Command has a reachable fixture now, and this is its census (D-12).
+    """Repeat-Command has a reachable fixture now, and this is its census.
 
     Command's rule merges overlapping immobilizes by moving the mark's expiry
     to the last one plus its duration — ``merge=REFRESH``, which is what both
@@ -534,7 +534,7 @@ class TestCommandDoesNotAmpItsOwnTimestamp:
 
 
 class TestCommandExpiryBoundaryDiverges:
-    """The two engines answer the closing instant differently (D-13).
+    """The two engines answer the closing instant differently.
 
     The pair engine's window test is ``start < t <= end``: a packet
     landing at exactly the window's closing instant is amped.  The walk keeps
@@ -546,7 +546,7 @@ class TestCommandExpiryBoundaryDiverges:
     Reachable only on exact float equality, which no committed scenario
     produces, so Phase 0 characterised the divergence rather than unifying
     it: unifying it would be an unfixtured change to both engines at once.
-    Phase 3 declared the boundary ``OPEN_CLOSED`` (D-13), and this sentinel
+    Phase 3 declared the boundary ``OPEN_CLOSED``, and this sentinel
     is what that declaration has to satisfy — it now reads the pair half
     through the declaration itself, so the divergence is pinned between a
     declared policy and the walk rather than between two spellings.
@@ -603,7 +603,7 @@ class TestCommandExpiryBoundaryDiverges:
 
 class TestIsAttackOrSpellVersusFromAllSources:
     """C3 expresses "from all sources" as ``attack_classes``; the walk's gate
-    still prices only attacks and spells (D-04).
+    still prices only attacks and spells.
 
     Abyssal Mask's Unmake, Bloodsong's Expose Weakness and Imperial
     Mandate's Command all read "from all sources" on the Wiki, and Carve and
@@ -722,7 +722,7 @@ class TestCommandMarksOnlyTheFirstPairDefender:
 
 
 class TestAbyssalAuraHasNoRangeOrDeathCondition:
-    """Unmake declares a radius it never checks and outlives its holder (D-66).
+    """Unmake declares a radius it never checks and outlives its holder.
 
     The packet carries ``range_assumption="within_700_units"`` — an honest
     declaration that positioning is assumed rather than modelled — and arms

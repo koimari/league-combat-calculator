@@ -1,4 +1,4 @@
-"""The precision registry: one home for every published digit count (D-71).
+"""The precision registry: one home for every published digit count.
 
 What is asserted here is not that ``round`` works.  It is that the registry
 is the *only* place ``program/`` decides a precision, and that an undeclared
@@ -82,7 +82,7 @@ def test_the_registry_is_the_only_module_in_program_that_rounds() -> None:
     assert offenders == {}
 
 
-# --- SumPlan: what a total sums, and in what order (D-65) --------------------
+# --- SumPlan: what a total sums, and in what order --------------------
 
 
 class TestTheSumPlanCountsEachEventOnce:

@@ -1398,7 +1398,7 @@ def _q2_row_was_absent_before_c6(scenario):
 
 
 class TestSyndraPinScenarios:
-    """The cast-order pin C6 is measured against (Phase 0, slice 0A.2)."""
+    """The cast-order pin C6 is measured against."""
 
     def test_both_orders_are_captured_at_every_splinter_count(self):
         names = {scenario.name for scenario in gs.COUPLED_SCENARIOS}

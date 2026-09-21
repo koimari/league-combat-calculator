@@ -160,7 +160,7 @@ def test_the_ledger_answers_the_whole_kernel_adapter_protocol() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Where a leaf is born: ledger reads wrapped as Quantity (D-72)
+# Where a leaf is born: ledger reads wrapped as Quantity
 # ---------------------------------------------------------------------------
 
 
@@ -199,7 +199,7 @@ def test_a_field_with_no_write_and_no_refusal_reads_as_starved() -> None:
 
 
 def test_the_starved_read_is_lazy() -> None:
-    """Holding one costs nothing; reading one is the error (D-25)."""
+    """Holding one costs nothing; reading one is the error."""
     ledger = outcome_state.OutcomeLedger()
     held = [ledger.quantity(slot, "overkill") for slot in range(5)]
     assert all(item.disposition is Disposition.STARVED for item in held)

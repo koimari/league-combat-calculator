@@ -33,7 +33,7 @@ from src.calculator.survival.phases import TransitionRank
 # The literal C5 retired: the five kinds the walk itself decided were
 # immobilizing.  Pinned here, not read from the tree, because it is the
 # thing the tree does not hold — and because the widening's size is what
-# makes these tests green over something (D-26).
+# makes these tests green over something.
 RETIRED_WALK_LITERAL = frozenset(
     {"immobilize", "stun", "root", "knockup", "suppression"}
 )

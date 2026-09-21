@@ -5,7 +5,7 @@ cannot be backed by anything.  This module is the tier that asks the harder
 question — does the thing a claim's evidence names actually exist in *this*
 tree — and it answers it on **every** ``pytest`` run, including under ``-k``
 and inside a ``git bisect``, because the drift window this campaign closes is
-one commit wide (D-21).
+one commit wide.
 
 Four properties of this file are ruled, and every one of them is load-bearing.
 
@@ -1573,7 +1573,7 @@ def imported_package_modules(module_text: str) -> frozenset[str]:
 
 
 def front_door_report(src_root: Path, test_root: Path) -> tuple[MissingFrontDoor, ...]:
-    """Modules outside ``champions/`` that no test module imports (D-95).
+    """Modules outside ``champions/`` that no test module imports.
 
     A front door is *a test module importing the production module's dotted
     path*.  Two rules decide the answer, and they live here rather than in a

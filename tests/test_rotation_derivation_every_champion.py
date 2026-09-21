@@ -70,7 +70,7 @@ from src.calculator.rotation_resolver import resolve_cast_order
 #   - Varus: R applies Blight stacks, so the data says R→Q, but the seed
 #     puts the Blight DETONATOR Q first (the auto-applied stacks ride Q;
 #     R's own stacks land later in the burst).
-# Syndra's two entries are gone (D-84): E's authored stun made the generic
+# Syndra's two entries are gone: E's authored stun made the generic
 # cc-setup fan-out say E→Q, and the seed's judgment was written down here
 # where nothing could check it. Her module now DECLARES that E requires the
 # sphere and nests the suppression that says the inference reads the
@@ -100,17 +100,17 @@ _MATRIX_BUILDS = (
 # derivation against silent regressions back to the default order).
 _EXPECTED_DERIVED_ORDERS = {
     "Ahri": ["E", "Q", "W", "R"],  # charm cc setup opens the burst
-    # Retired seed (D-89): R's bonus-AD stat_buff is a detected edge to Q
+    # Retired seed: R's bonus-AD stat_buff is a detected edge to Q
     # and W, so the derivation puts World Ender first on its own.
     # Session-4 no_damage slots ride the derived order last (Umbral Dash,
     # Aphelios' weapon swap): the derivation orders only damage edges.
     "Aatrox": ["R", "Q", "W", "E"],
-    # Retired seed (D-89): no edge is detected at all, so the certified
+    # Retired seed: no edge is detected at all, so the certified
     # order survives untouched — the flat-kit path, honestly labelled.
     "Jhin": ["Q", "W", "E", "R"],
-    # Retired seed (D-89): same flat-kit path as Jhin's.
+    # Retired seed: same flat-kit path as Jhin's.
     "Aphelios": ["Q", "W", "E", "R"],
-    # Syndra's retired seed (D-89): E requires Q and E requires Q2, declared
+    # Syndra's retired seed: E requires Q and E requires Q2, declared
     # by her module, derive this order without a hand seed.
     "Syndra": ["Q", "Q2", "E", "W", "R"],
     "Ambessa": ["R", "Q", "Q2", "W", "E"],  # R armor pen buff first
@@ -683,7 +683,7 @@ class TestOrderStructure:
 
 
 # ---------------------------------------------------------------------------
-# (e) declared dependencies merged over the inferred edges (Phase 5)
+# (e) declared dependencies merged over the inferred edges
 # ---------------------------------------------------------------------------
 
 
@@ -724,7 +724,7 @@ class TestPrecedenceTable:
     """Every row of Phase 5's explicit-vs-inferred precedence table."""
 
     def test_no_declaration_keeps_the_inference_untouched(self) -> None:
-        """Row 1 — today's behaviour, byte-identical (D-85)."""
+        """Row 1 — today's behaviour, byte-identical."""
         inferred = [_inferred("E", "Q"), _inferred("E", "W")]
         edges, receipt = merge_declared_edges("Synthetic", inferred, (), _LIVE)
         assert edges == inferred
@@ -1073,7 +1073,7 @@ class TestTheDerivationReadsDeclarations:
         """Q, Q2, E, W, R — the order her hand seed pins, now derived.
 
         Without the declaration the cc-setup fan-out opens with a
-        sphere-less E; this is the retirement candidate's proof (D-89),
+        sphere-less E; this is the retirement candidate's proof,
         asserted while the seed is still live (P5-e).
         """
         data = champion_by_name["Syndra"]
@@ -1117,7 +1117,7 @@ class TestTheDerivationReadsDeclarations:
     def test_a_declared_cycle_in_a_live_parse_raises(
         self, champion_by_name, monkeypatch, cold_memo
     ) -> None:
-        """A declaring champion never falls back from a cycle (D-85).
+        """A declaring champion never falls back from a cycle.
 
         Ahri declares nothing; with two declarations that oppose each
         other in a parse where both slots are live, no order satisfies
@@ -1391,7 +1391,7 @@ class TestTheRotationMemosInvalidateOnData:
 #   confirmed_by_inference an inferred edge agrees with it and the merge
 #                          receipt says so
 #   custom_order_refusal   removing it makes a request order that is
-#                          currently refused legal again (D-86)
+#                          currently refused legal again
 _DECLARING_CHAMPIONS = ("Syndra", "Zed", "Brand")
 
 
@@ -1497,7 +1497,7 @@ class TestEveryDeclarationIsLoadBearing:
     any certified state and no inferred edge agrees with them, so their
     weight is carried entirely by ``custom_order_refusal``: without
     ``Q requires W``, the request order that skips the Shadow placement
-    stops being refused (D-86), and an engine that accepts it authors
+    stops being refused, and an engine that accepts it authors
     damage for a kit Zed cannot cast.  That route is not a softening —
     a declaration on none of the three still fails here and fails the
     audit — and it is recorded per declaration in the committed receipt,

@@ -442,7 +442,7 @@ class TestOptionsMeta:
         # Breath of Light's secondary-beam target count is a declared row:
         # the formula reads it, so it belongs among the rows the frontend
         # renders rather than being a parse-only key with a call-site
-        # default (D-24).
+        # default.
         assert set(keys) == {
             "stardust_stacks",
             "w_active",

@@ -89,7 +89,7 @@ def test_every_on_hit_entry_compiles_to_exactly_one_declared_rule() -> None:
 
 
 def test_every_registry_schema_is_reached_by_some_owner() -> None:
-    """A schema no entry uses is a branch nothing reaches (D-51)."""
+    """A schema no entry uses is a branch nothing reaches."""
     used = {str(ITEM_EFFECTS[owner]["formula"]) for owner in _on_hit_owners()}
     assert used == set(ON_HIT_FORMULA_TERMS)
 

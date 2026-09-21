@@ -24,7 +24,7 @@ same reason the payload-schema check excludes it.
 
 *The match.*  Bit-identical to a haystack value, **or** bit-identical to one
 rounded at one of the digit counts ``program/precision`` declares.  The
-second clause is there because rounding is presentation (D-71) and every
+second clause is there because rounding is presentation and every
 published digit count comes from that registry -- a rule this check reads
 rather than restates.
 

@@ -27,7 +27,7 @@ move together, and each has its own test below:
 1. ``unrepresentable_template_receipt`` rejected the *kind* categorically;
 2. the one ``SurvivalAction`` constructor had no armed-modifier branch;
 3. the compiled damage rows carried neither delivery flag nor either
-   resistance baseline, so a modifier restricted by attack class (D-04)
+   resistance baseline, so a modifier restricted by attack class
    reached only the rows whose ``source_key`` happened to be
    ``auto_attacks``, and a resistance reduction re-priced nothing.
 

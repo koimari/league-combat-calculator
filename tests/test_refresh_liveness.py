@@ -1,4 +1,4 @@
-"""The refresh proof: a declaration holds a reference, not a number (D-48).
+"""The refresh proof: a declaration holds a reference, not a number.
 
 A declaration that stored the number it read would be right on the day it
 was written and stale on every day after.  Proving it does not is harder

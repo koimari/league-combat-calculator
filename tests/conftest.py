@@ -406,7 +406,7 @@ def fight():
 
 
 # ---------------------------------------------------------------------------
-# Coverage-evidence tiers (Phase 1)
+# Coverage-evidence tiers
 # ---------------------------------------------------------------------------
 
 
@@ -478,7 +478,7 @@ def pytest_collection_modifyitems(
 ) -> None:
     """Stash the collected node set, and drop what this run cannot answer.
 
-    Deselection rather than ``pytest.skip`` is the ruling (D-22): a skipped
+    Deselection rather than ``pytest.skip`` is the ruling: a skipped
     check takes the green path and reports success for work it did not do,
     which is this campaign's own failure shape inside its own gate.  A
     deselected node is absent from the report entirely, and the resolution

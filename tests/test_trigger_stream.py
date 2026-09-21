@@ -302,7 +302,7 @@ def test_control_that_is_neither_immobilize_nor_slow_is_reviewed_and_arms_nothin
 
 
 def test_a_bare_crowd_control_row_is_unclassified_control():
-    """The live stream admits rows carrying only the bare marker (D-33)."""
+    """The live stream admits rows carrying only the bare marker."""
     cc_class, cc_kind, _ = ts._classify_cc(_row(crowd_control=True))
     assert cc_class is ts.CcClass.UNCLASSIFIED_CONTROL
     # Fimbulwinter's branch reads the token, and a bare marker does not
@@ -512,7 +512,7 @@ def test_authored_triggers_skips_rows_that_are_not_mappings():
 
 
 def test_a_tuple_ledger_starves_a_declared_stream():
-    """The campaign's ``STARVED`` leaf, as a control-flow signal (D-25)."""
+    """The campaign's ``STARVED`` leaf, as a control-flow signal."""
     with pytest.raises(ProjectionStarvation) as excinfo:
         ts.authored_triggers(
             {"damage_events_tuple": [(0.0, "main", 1.0)]},
@@ -745,7 +745,7 @@ def test_every_item_owner_resolves_against_the_cached_item_data():
 
 
 def test_importing_the_bus_performs_no_filesystem_read():
-    """A leaf that touches ``data/`` is neither a leaf nor cached (D-35).
+    """A leaf that touches ``data/`` is neither a leaf nor cached.
 
     Executed as a *fresh* module object rather than a reload, so the live
     ``trigger_stream`` enums keep their identity for every other test in the
@@ -1074,7 +1074,7 @@ def test_a1_has_a_permanent_injection_seam():
 
 
 # ---------------------------------------------------------------------------
-# A3 — guarded == declared, folded per ``impl`` (D-37)
+# A3 — guarded == declared, folded per ``impl``
 # ---------------------------------------------------------------------------
 
 
@@ -1095,7 +1095,7 @@ def name_guarded_impls(
     walk half builds nothing — it prices the declaration riding a packet the
     pair engine already authored — so it dispatches on no name and has none
     to guard.  Including it would ask a name-guard question of the one shape
-    that exists precisely so the engine stops asking item names (D-42).
+    that exists precisely so the engine stops asking item names.
     """
     capabilities = capabilities or ts.CAPABILITIES
     sources = sources or live_sources()
@@ -1205,7 +1205,7 @@ def test_a5_has_a_permanent_injection_seam():
 
 
 # ---------------------------------------------------------------------------
-# A6 — the takedown stream stays bounded (D-31)
+# A6 — the takedown stream stays bounded
 # ---------------------------------------------------------------------------
 
 
@@ -1701,7 +1701,7 @@ def test_the_coupled_producer_source_reads_the_capability_registry():
     """R-12 — the instrument and the packet compiler read one table.
 
     P2a landed the instrument's reading beside the ``ast``-derived table it
-    replaces and asserted the two equal (D-98); P2c deleted that table, so
+    replaces and asserted the two equal; P2c deleted that table, so
     what this now pins is that the two *readings* of ``CAPABILITIES`` — the
     baseline instrument's producer set and the packet compiler's
     owner-iff-``SPLIT`` table — still name the same producers.
@@ -1733,7 +1733,7 @@ def test_a_seventh_producer_with_no_scenario_fails_capture(monkeypatch):
 #: Every spelling that catches a member of the ``STARVED`` class.  The base
 #: and its members are listed together because D-25's rule is about *where* a
 #: named refusal is converted, so catching a subclass somewhere else evades it
-#: exactly as catching the base would (umbrella Amendment G).
+#: exactly as catching the base would.
 _STARVED_CLASS_NAMES = frozenset(
     {
         "StarvedSignal",
@@ -1745,7 +1745,7 @@ _STARVED_CLASS_NAMES = frozenset(
 def except_starved_signal_sites(
     sources: Mapping[str, str] | None = None,
 ) -> tuple[str, ...]:
-    """Every clause in ``src/`` catching a ``STARVED`` signal (D-25)."""
+    """Every clause in ``src/`` catching a ``STARVED`` signal."""
     sites = []
     for path, text in sorted((sources or live_sources()).items()):
         for node in ast.walk(ast.parse(text)):
@@ -2697,7 +2697,7 @@ def test_the_three_held_authority_moves_name_their_blocking_human_decision():
 def test_every_compiled_rune_declares_exactly_one_capability():
     """The rune half of D-36's non-item owners, joined to its own table.
 
-    ``trigger_stream`` is a data-free leaf (D-35) and ``rune_effects`` reads
+    ``trigger_stream`` is a data-free leaf and ``rune_effects`` reads
     ``data/runes.json`` at import, so the names are spelled in the
     declaration rather than derived from the compiler table.  The join that
     keeps the two spellings equal therefore lives here — the same place the

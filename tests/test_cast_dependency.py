@@ -245,7 +245,7 @@ class TestVocabularies:
         assert len(INFERRED_EDGE_KINDS) == 12
 
     def test_the_two_vocabularies_are_disjoint(self) -> None:
-        """One vocabulary would blur which surface owns a claim (D-80)."""
+        """One vocabulary would blur which surface owns a claim."""
         assert not DEPENDENCY_KINDS & INFERRED_EDGE_KINDS
 
     def test_it_equals_what_the_detector_can_emit(self) -> None:
@@ -321,7 +321,7 @@ class TestImportGate:
         _validate([_dep(suppresses=(_suppression(),))])
 
     def test_no_declarations_passes(self) -> None:
-        """The 170 non-declaring champions must reach no new failure (D-85)."""
+        """The 170 non-declaring champions must reach no new failure."""
         _validate([])
 
     def test_an_unknown_slot_raises(self) -> None:
@@ -416,7 +416,7 @@ class TestSuppressionCannotBroaden:
     def test_anything_but_the_reverse_pair_raises(
         self, setup: str, consume: str
     ) -> None:
-        """From E-requires-Q it must be impossible to express E->W (D-81)."""
+        """From E-requires-Q it must be impossible to express E->W."""
         with pytest.raises(CastDependencyError, match="exact reverse pair"):
             _validate([_dep(suppresses=(_suppression(setup=setup, consume=consume),))])
 
@@ -527,7 +527,7 @@ class TestOrderableSlots:
         assert orderable_slots({"R": {}, "E": {}, "Q": {}}) == ("Q", "E", "R")
 
     def test_an_unstamped_synthetic_slot_raises(self) -> None:
-        """No hand parent-slot table: the stamp is the one authority (D-11)."""
+        """No hand parent-slot table: the stamp is the one authority."""
         with pytest.raises(CastDependencyError, match="recast_of"):
             orderable_slots({"Q": {}, "Q2": {}})
 
@@ -537,7 +537,7 @@ class TestOrderableSlots:
 
 
 class TestRecastParentageHasOneAuthority:
-    """The resolver reads ``recast_of``; no table restates it (D-11).
+    """The resolver reads ``recast_of``; no table restates it.
 
     The retired ``_PARENT_SLOT`` map answered "whose rows describe this
     slot?" from the slot's *name*, which linked three synthetic slots
@@ -631,7 +631,7 @@ class TestCheckOrderSatisfiesDependencies:
             )
 
     def test_the_refusal_quotes_the_declaration_reason_and_source(self) -> None:
-        """The refusal names the mechanic, not the rule that caught it (D-86)."""
+        """The refusal names the mechanic, not the rule that caught it."""
         dep = _dep()
         with pytest.raises(CustomOrderViolatesDependencyError) as caught:
             check_order_satisfies_dependencies(["E", "Q"], [dep], {"Q", "E"})
@@ -1033,7 +1033,7 @@ def _parsed_syndra(splinters: int = 120) -> dict:
 
 
 class TestSyndraDeclaresHerStun:
-    """The conversion candidate: both declarations ship (D-83)."""
+    """The conversion candidate: both declarations ship."""
 
     def test_she_declares_exactly_the_two_documented_pairs(self) -> None:
         declared = get_champion_cast_dependencies("Syndra")
@@ -1116,7 +1116,7 @@ class TestSyndraDeclaresHerStun:
 
 
 class TestHeadOnlyDeclarations:
-    """Zed and Brand declare their heads and keep their seeds (D-89)."""
+    """Zed and Brand declare their heads and keep their seeds."""
 
     def test_zed_declares_the_shadow_placement_and_nothing_else(self) -> None:
         declared = get_champion_cast_dependencies("Zed")

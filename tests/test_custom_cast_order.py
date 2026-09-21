@@ -1,4 +1,4 @@
-"""C6 — a custom ``cast_order`` never deletes a recast slot (D-11).
+"""C6 — a custom ``cast_order`` never deletes a recast slot.
 
 The defect: both request paths validated a requested order against the
 literal ``sorted(order) == ["E", "Q", "R", "W"]``, so the only orders a
@@ -242,7 +242,7 @@ class TestOrderableSlotsAnswerTheChampionQuestion:
             params.validate_for_champion("Syndra", 18, kit=_syndra_kit(120))
 
     def test_an_unstamped_synthetic_cast_slot_raises(self):
-        """Neither a base slot nor a declared recast — nothing may guess (D-11)."""
+        """Neither a base slot nor a declared recast — nothing may guess."""
         kit = dict(_syndra_kit(120))
         kit["W2"] = {"name": "Invented recast", "cooldown": 4.0, "total_raw": 10.0}
         with pytest.raises(CastDependencyError, match="W2"):

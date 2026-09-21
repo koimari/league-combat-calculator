@@ -114,7 +114,7 @@ UNRESOLVED_ALLOWED = frozenset(
         "ValueError",
         # ``precision.sum_plan``'s fail-closed refusal of an undeclared
         # panel, reached since S10 gave the receipt's three panels a
-        # ``SumPlan`` (D-65).  A raise over panel *names*, not arithmetic.
+        # ``SumPlan``.  A raise over panel *names*, not arithmetic.
         "KeyError",
         "_set",  # a bound ``dict.__setitem__``, not a method this package has
         # ``Withheld.__post_init__``'s receipt check, reached since S10 made

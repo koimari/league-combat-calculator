@@ -1,7 +1,7 @@
 """The load tier — one negative per forbidden claim shape.
 
 ``coverage_evidence`` catches structural impossibility and nothing else
-(D-20): a claim whose shape cannot be backed by *anything*, whatever the
+: a claim whose shape cannot be backed by *anything*, whatever the
 codebase happens to contain.  Every rule it enforces therefore owes a test
 that reaches it, because a validator whose branch no test can trigger is
 indistinguishable from a validator that returns ``None`` — which is the
@@ -628,7 +628,7 @@ def _code_only(text: str) -> str:
 def test_the_load_gate_imports_nothing_and_reads_nothing() -> None:
     """No package import, no filesystem, no ``data/`` — asserted over source.
 
-    The tier boundary is the ruling (D-20), and a load gate that quietly
+    The tier boundary is the ruling, and a load gate that quietly
     grew an import would be a startup cost on every request plus a bypass of
     the caching layer.  Checking it over the AST rather than by reading is
     what keeps it true on the commit that breaks it.

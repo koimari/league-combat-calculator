@@ -676,7 +676,7 @@ class TestOptionsMeta:
             "w_traps",
             # Piltover Peacemaker's pass-through count: the formula reads
             # it, so it is a declared row the frontend renders rather than
-            # a parse-only key with a call-site default (D-24).
+            # a parse-only key with a call-site default.
             "q_secondary_targets",
         ]
         assert meta["options"][0]["min"] == 0

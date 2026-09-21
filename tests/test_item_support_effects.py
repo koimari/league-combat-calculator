@@ -824,7 +824,7 @@ class TestOwnerIsPresentIffSplit:
 
 
 class TestDeclaredDamageAndAttackClasses:
-    """C3's half of the same construction site: what a modifier applies to (D-04)."""
+    """C3's half of the same construction site: what a modifier applies to."""
 
     def _modifier(self, **overrides):
         holder = _actor("main", "main", ())
@@ -1065,7 +1065,7 @@ class TestAbyssalMaskOwnerHandshake:
 
 
 class TestEventViewTupleGate:
-    """One predicate answers the tuple question on both paths (D-01)."""
+    """One predicate answers the tuple question on both paths."""
 
     def test_the_pipeline_tuple_gate_consults_the_event_view_predicate(self):
         """The score-only gate and the enriched-view gate name one predicate.

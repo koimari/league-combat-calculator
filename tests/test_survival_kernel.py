@@ -1059,7 +1059,7 @@ def test_a_second_producer_on_a_covered_item_fails_the_coverage_check(monkeypatc
 
 
 # ---------------------------------------------------------------------------
-# From-declaration pricing — the arithmetic (umbrella Amendment L, Ruling 3)
+# From-declaration pricing — the arithmetic
 # ---------------------------------------------------------------------------
 #
 # The walk consumes the pair engine's post-mitigation rows and, where the
@@ -1497,7 +1497,7 @@ class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
         swings and author no packet at all, so there is nothing for a walk to
         price and nothing for a preview to double-count.  An undeclared rule
         of a re-priced family fails here, which is what keeps the exclusion
-        from being an omission (D-40).
+        from being an omission.
         """
         repriced = walk_repriced_mechanics()
         for family in _repriced_families():
@@ -2629,7 +2629,7 @@ def test_a_retired_family_is_declared_by_the_pair_engine_and_priced_by_the_walk(
                         # A ROUTING family's row re-delivers other families'
                         # packets, so the row previews the ROUTER and each
                         # declaration under it names the mechanic that owns
-                        # its magnitude (umbrella Amendment R, Ruling 3).
+                        # its magnitude.
                         assert routing.router_rule_id == stamp, key
                         assert authored.rule_id != stamp, key
                         assert 0.0 < routing.damage_share <= 1.0, key
@@ -2905,13 +2905,13 @@ def test_every_periodic_owner_prices_from_its_declaration_to_the_pair_engines_nu
 ):
     """One owner, every tick: the walk's price is the pair engine's.
 
-    The equivalence this family's retirement rests on, stated per owner
-    because the committed coupled set reaches two of the seven and misses a
-    whole cadence.  For every tick the pair engine authored under this owner's
-    row, the declaration riding it, composed with the holder's own amps and
-    mitigated once, equals the number the pair engine put on that tick -- which
-    is what makes the retirement a re-spelling before it is a re-pricing
-    (umbrella Amendment L, Ruling 3).
+        The equivalence this family's retirement rests on, stated per owner
+        because the committed coupled set reaches two of the seven and misses a
+        whole cadence.  For every tick the pair engine authored under this owner's
+        row, the declaration riding it, composed with the holder's own amps and
+        mitigated once, equals the number the pair engine put on that tick -- which
+        is what makes the retirement a re-spelling before it is a re-pricing
+    .
     """
     result, amps = _periodic_probe(owner)
     row = next(

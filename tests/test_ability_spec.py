@@ -406,7 +406,7 @@ class TestEvaluateCastParts:
 
 
 # ---------------------------------------------------------------------------
-# The Quantity algebra (D-72) — criterion 19's full member x member matrix
+# The Quantity algebra — criterion 19's full member x member matrix
 # ---------------------------------------------------------------------------
 
 

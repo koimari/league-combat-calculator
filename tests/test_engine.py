@@ -638,7 +638,7 @@ class TestStatBuff:
 
         Its zero is ``STRUCTURAL_ZERO``: a steroid with no damage attribute
         deals none by declaration, which is a different fact from a formula
-        that ran and produced nothing (D-24).
+        that ran and produced nothing.
         """
         parse = build_parser(
             {"R": stat_buff("Bonus Attack Damage", "bonus_attack_damage")},

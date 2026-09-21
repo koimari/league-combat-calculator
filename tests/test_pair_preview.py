@@ -1,4 +1,4 @@
-"""A pair-engine preview is published, and never summed (D-62).
+"""A pair-engine preview is published, and never summed.
 
 Bloodsong's Expose Weakness was the campaign's one frozen
 ``DivergenceReceipt``: the pair engine amplified one coarse row once for the

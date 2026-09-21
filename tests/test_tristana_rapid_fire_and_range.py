@@ -100,7 +100,7 @@ class TestRapidFireIsAModeledWindowedSteroid:
 
     def test_the_zero_is_declared_rather_than_merely_absent(self, abilities):
         """The steroid row is built by ``damage_entry``, so its zero has a
-        disposition (D-24).  A bare ``parts == ()`` would say only that no
+        disposition.  A bare ``parts == ()`` would say only that no
         damage was published; ``STEROID_ZERO`` says the zero is the ANSWER
         — a steroid slot with no damage attribute — which is the stronger
         statement and the one the zero-policy frontier counts.

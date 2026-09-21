@@ -344,7 +344,7 @@ def test_a_context_dependent_shape_is_refused_rather_than_guessed(
     the shape and points at the interpreter registry, which is handed a
     context.  The
     shape is fabricated because no live rule has one — which is exactly why
-    the branch would otherwise never be exercised (D-26).
+    the branch would otherwise never be exercised.
     """
     rule = _rule("Doran's Blade", PostMitigationHealRule)
     ramped = replace(

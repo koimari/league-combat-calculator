@@ -350,7 +350,7 @@ def test_roster_rejects_unknown_champion_options():
 def test_roster_rejects_malformed_cast_order():
     # The roster path's shape check is champion-agnostic after C6: a repeated
     # slot is malformed for every champion, while *which* slots exist is
-    # answered against the parsed kit in ``validate_for_champion`` (D-11).
+    # answered against the parsed kit in ``validate_for_champion``.
     with pytest.raises(ValueError, match="cast_order must not repeat an ability slot"):
         ChampionLoadout.from_request(
             {

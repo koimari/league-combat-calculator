@@ -19,7 +19,7 @@ These tests are the authority on the known-good scenarios. A previous
 companion file, tests/Known_Good.txt, described a DIFFERENT scenario (8s
 fight including auto attacks; totals 663/1402/3083) from the original
 in-game validation session and had silently diverged from what this module
-runs -- it was deleted in the July 2026 refactor campaign (Phase 5) rather
+runs -- it was deleted in the July 2026 refactor campaign rather
 than left as misleading documentation.
 
 Champion/item data fixtures (ahri_data, liandrys, malignance, rylais,

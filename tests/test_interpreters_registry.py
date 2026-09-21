@@ -4,7 +4,7 @@ Three claims live here.  The lane table says which engines owe each family an
 answer, so "every family is interpreted" cannot be true of an empty registry.
 The ``compilability_for`` fold gives a per-item question a per-item answer,
 which is what lets it replace a per-item legacy set.  And reachability is
-checked in **both** directions (D-51), because both failures are real: a
+checked in **both** directions, because both failures are real: a
 declaration no interpreter serves, and an interpreter branch no declaration
 reaches.
 """
@@ -105,18 +105,18 @@ def test_an_owner_whose_behaviour_is_still_engine_code_is_not_compilable(
 ) -> None:
     """The fold fails closed: an absence never becomes a compiled-lane promise.
 
-    Counter 3 reached zero at 3.7-r2, so no real owner takes this branch any
-    more and the frontier cannot supply a subject.  The branch is
-    still live and still load-bearing — the next registry tag anybody adds
-    lands in it before its declaration does — so it is driven synthetically
-    (D-26): an owner the registries know, with its rule set emptied.  A test
-    that retired itself the moment the population emptied would leave the
-    fail-closed branch unproven exactly when nothing else covers it.
+        Counter 3 reached zero at 3.7-r2, so no real owner takes this branch any
+        more and the frontier cannot supply a subject.  The branch is
+        still live and still load-bearing — the next registry tag anybody adds
+        lands in it before its declaration does — so it is driven synthetically
+    : an owner the registries know, with its rule set emptied.  A test
+        that retired itself the moment the population emptied would leave the
+        fail-closed branch unproven exactly when nothing else covers it.
 
-    ``UNDECLARED_ON_ARRIVAL`` is the exact live population and it is now
-    empty: the four ``ITEM_EFFECTS`` entries the merge brought in from
-    ``main`` are declared.  Pinned as a set rather than as a count so the
-    next registry tag that lands before its declaration fails here.
+        ``UNDECLARED_ON_ARRIVAL`` is the exact live population and it is now
+        empty: the four ``ITEM_EFFECTS`` entries the merge brought in from
+        ``main`` are declared.  Pinned as a set rather than as a count so the
+        next registry tag that lands before its declaration fails here.
     """
     owner = "Actualizer"
     assert catalog.registry_entries(owner), "the subject must have a registry entry"
@@ -430,7 +430,7 @@ def test_an_unserved_lane_with_no_receipt_is_refused(
 def test_a_dated_gap_receipt_no_declaration_reaches_is_refused(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The reverse direction: a receipt for a lane that is served (D-92).
+    """The reverse direction: a receipt for a lane that is served.
 
     A gap table nobody prunes is the hand-maintained exception list this
     campaign deletes everywhere else, so a row for a pair some interpreter
@@ -465,7 +465,7 @@ def test_a_dated_gap_receipt_no_declaration_reaches_is_refused(
 def test_a_compiled_gap_is_excused_by_the_rules_own_receipt(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The per-rule form, which is the one every amp carries (D-101).
+    """The per-rule form, which is the one every amp carries.
 
     Both halves are asserted on one stub: the same family and lane passes with
     a ``ReceiptOnly`` compilability and raises with a ``Compilable`` one, so

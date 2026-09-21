@@ -74,7 +74,7 @@ _RATIONALE_FRAGMENTS = {
 # The engine's ``DEFAULT_CAST_ORDER`` still names ``Q2`` positionally, which
 # is the resolver's own fallback and not something a caller may request: a
 # requested order may name only slots the champion's parse offers, and
-# neither Cassiopeia nor Zed has a recast row (D-11).  The Q2 element was
+# neither Cassiopeia nor Zed has a recast row.  The Q2 element was
 # always inert for them, so dropping it is what "the fixed order" meant here.
 FIXED_ORDER = [slot for slot in DEFAULT_CAST_ORDER if slot != "Q2"]
 

@@ -1833,7 +1833,7 @@ def test_every_cached_item_is_backed_by_a_claim_a_node_or_the_frontier() -> None
 
 
 def test_every_status_the_ladder_can_yield_is_reached_by_a_cached_item() -> None:
-    """Emptiness is a pinned fact, not an absence nobody looked at (D-26).
+    """Emptiness is a pinned fact, not an absence nobody looked at.
 
     ``review_pending`` is reserved for a record the shop does not hold, so no
     cached item reaches it on either lane; every other status is reached.
@@ -1984,7 +1984,7 @@ def test_no_src_module_reads_the_corpus_or_a_claims_status() -> None:
 def test_every_split_mechanic_is_claimed_with_both_sides() -> None:
     """Criterion 9: dual-sided evidence resolves against Phase 2, not a name list.
 
-    The pairing-exception set is asserted **empty** (D-92): the next divergence
+    The pairing-exception set is asserted **empty**: the next divergence
     has to be a typed entry pointing at a receipt, never a silent omission.
     """
     split_owners = {

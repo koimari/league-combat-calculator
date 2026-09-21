@@ -213,7 +213,7 @@ class TestInferredKindCoverage:
         """The gate can reproduce its own red on demand (R-05).
 
         The acknowledged-gap list lives in the committed receipt rather
-        than inside the tool (D-40), and this is the seam that proves the
+        than inside the tool, and this is the seam that proves the
         list is load-bearing: with no gaps, the unfilled kind fails.
         """
         ungapped = run_audit(acknowledged_gaps=())
