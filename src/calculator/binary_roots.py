@@ -30,6 +30,31 @@ def champion_key(name: str) -> str:
     return _NONALNUM.sub("", str(name).lower())
 
 
+def dig(obj: object, *keys: str, want: type | tuple[type, ...]) -> Any:
+    """Walk one JSON hop chain, naming the whole path when it does not land.
+
+    Every hop but the last must be a mapping and the last must be an instance
+    of ``want``; nothing here substitutes a default for a hop that is missing.
+    """
+    node: object = obj
+    for key in keys:
+        node = node.get(key) if isinstance(node, Mapping) else None
+    if not isinstance(node, want):
+        raise RuntimeError(f"binary path {'.'.join(keys)} not found or unusable")
+    return node
+
+
+def _snapped(value: Any, label: str) -> float:
+    """One binary number, finite and snapped to six significant digits."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError) as exc:
+        raise RuntimeError(f"{label}: unusable value {value!r}") from exc
+    if not math.isfinite(number):
+        raise RuntimeError(f"{label}: non-finite")
+    return float(f"{number:.6g}")
+
+
 @cache
 def character_bin(champion_name: str) -> dict[str, Any]:
     """One champion's full parsed binary dump, keyed by object path."""
@@ -83,21 +108,9 @@ def character_record_root(champion_name: str) -> dict[str, Any]:
 def record_value(root: Mapping[str, Any], field: str) -> float:
     """One ModifiableFloat-style record field's ``baseValue``, snapped the
     same way :func:`data_value` snaps spell DataValues."""
-    value = root.get(field)
-    if isinstance(value, dict) and "baseValue" in value:
-        try:
-            number = float(value["baseValue"])
-        except (TypeError, ValueError) as exc:
-            raise RuntimeError(
-                f"record field {field!r}: unusable baseValue {value['baseValue']!r}"
-            ) from exc
-        if not math.isfinite(number):
-            raise RuntimeError(f"record field {field!r}: non-finite")
-        snapped = float(f"{number:.6g}")
-        if not math.isfinite(snapped):  # pragma: no cover - defensive
-            raise RuntimeError(f"record field {field!r}: non-finite")
-        return snapped
-    raise RuntimeError(f"record field {field!r} not found")
+    return _snapped(
+        dig(root, field, "baseValue", want=(int, float)), f"record field {field!r}"
+    )
 
 
 def _breakpoint_level(step: Any) -> float:
@@ -120,15 +133,7 @@ def calculation_breakpoints(
     champion modules index by level band.  Snap and fail-closed rules match
     :func:`data_value`.
     """
-    spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
-    calcs = spell.get("mSpellCalculations") if isinstance(spell, dict) else None
-    node = calcs.get(calculation_name) if isinstance(calcs, dict) else None
-    parts = node.get("mFormulaParts") if isinstance(node, dict) else None
-    if not isinstance(parts, list):
-        raise RuntimeError(
-            f"calculation {calculation_name!r} not found or has no formula parts"
-        )
-    for part in parts:
+    for part in _formula_parts(spell_obj, calculation_name):
         if isinstance(part, dict) and "mLevel1Value" in part:
             try:
                 current = float(part["mLevel1Value"])
@@ -152,25 +157,25 @@ def calculation_breakpoints(
                         f"calculation {calculation_name!r}: unusable breakpoint row"
                     ) from exc
                 tiers.append(current)
-            snapped = tuple(float(f"{tier:.6g}") for tier in tiers)
-            if not all(math.isfinite(tier) for tier in snapped):  # pragma: no cover
-                raise RuntimeError(f"calculation {calculation_name!r}: non-finite")
-            return snapped
+            label = f"calculation {calculation_name!r}"
+            return tuple(_snapped(tier, label) for tier in tiers)
     raise RuntimeError(
         f"calculation {calculation_name!r}: no level-breakpoint formula part"
     )
 
 
 def _formula_parts(spell_obj: dict[str, Any], calculation_name: str) -> list:
-    """A calculation's non-empty ``mFormulaParts``, or raise naming it."""
-    spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
-    calcs = spell.get("mSpellCalculations") if isinstance(spell, dict) else None
-    node = calcs.get(calculation_name) if isinstance(calcs, dict) else None
-    parts = node.get("mFormulaParts") if isinstance(node, dict) else None
-    if not isinstance(parts, list) or not parts:
-        raise RuntimeError(
-            f"calculation {calculation_name!r} not found or has no formula parts"
-        )
+    """A calculation's non-empty ``mFormulaParts``, or raise naming its path."""
+    parts = dig(
+        spell_obj,
+        "mSpell",
+        "mSpellCalculations",
+        calculation_name,
+        "mFormulaParts",
+        want=list,
+    )
+    if not parts:
+        raise RuntimeError(f"calculation {calculation_name!r} has no formula parts")
     return parts
 
 
@@ -189,17 +194,11 @@ def calculation_interpolation(
             f"calculation {calculation_name!r}: expected one interpolation part, "
             f"found {len(matches)}"
         )
-    try:
-        start = float(matches[0]["mStartValue"])
-        end = float(matches[0]["mEndValue"])
-    except (TypeError, ValueError) as exc:
-        raise RuntimeError(
-            f"calculation {calculation_name!r}: unusable interpolation endpoints"
-        ) from exc
-    snapped = (float(f"{start:.6g}"), float(f"{end:.6g}"))
-    if not all(math.isfinite(value) for value in snapped):
-        raise RuntimeError(f"calculation {calculation_name!r}: non-finite endpoints")
-    return snapped
+    label = f"calculation {calculation_name!r} interpolation"
+    return (
+        _snapped(matches[0]["mStartValue"], f"{label} start"),
+        _snapped(matches[0]["mEndValue"], f"{label} end"),
+    )
 
 
 def _calculation_scalar(
@@ -213,16 +212,7 @@ def _calculation_scalar(
             f"calculation {calculation_name!r}: expected one {label} part, "
             f"found {len(matches)}"
         )
-    try:
-        value = float(matches[0][field])
-    except (TypeError, ValueError) as exc:
-        raise RuntimeError(
-            f"calculation {calculation_name!r}: unusable {label}"
-        ) from exc
-    snapped = float(f"{value:.6g}")
-    if not math.isfinite(snapped):
-        raise RuntimeError(f"calculation {calculation_name!r}: non-finite {label}")
-    return snapped
+    return _snapped(matches[0][field], f"calculation {calculation_name!r} {label}")
 
 
 def calculation_coefficient(spell_obj: dict[str, Any], calculation_name: str) -> float:
@@ -254,18 +244,10 @@ def calculation_stat_coefficient(
             f"calculation {calculation_name!r}: expected one coefficient for "
             f"mStat {stat}, found {len(matches)}"
         )
-    try:
-        value = float(matches[0]["mCoefficient"])
-    except (TypeError, ValueError) as exc:
-        raise RuntimeError(
-            f"calculation {calculation_name!r}: unusable mStat {stat} coefficient"
-        ) from exc
-    snapped = float(f"{value:.6g}")
-    if not math.isfinite(snapped):
-        raise RuntimeError(
-            f"calculation {calculation_name!r}: mStat {stat} coefficient is non-finite"
-        )
-    return snapped
+    return _snapped(
+        matches[0]["mCoefficient"],
+        f"calculation {calculation_name!r} mStat {stat} coefficient",
+    )
 
 
 def calculation_coefficients(
@@ -278,27 +260,12 @@ def calculation_coefficients(
     coefficient; missing or malformed coefficients fail closed instead of
     silently dropping a component.
     """
-    parts = _formula_parts(spell_obj, calculation_name)
     coefficients = []
-    for index, part in enumerate(parts):
-        if not isinstance(part, dict) or "mCoefficient" not in part:
-            raise RuntimeError(
-                f"calculation {calculation_name!r}: formula part {index} "
-                "has no coefficient"
-            )
-        try:
-            value = float(part["mCoefficient"])
-        except (TypeError, ValueError) as exc:
-            raise RuntimeError(
-                f"calculation {calculation_name!r}: formula part {index} "
-                "has an unusable coefficient"
-            ) from exc
-        if not math.isfinite(value):
-            raise RuntimeError(
-                f"calculation {calculation_name!r}: formula part {index} "
-                "has a non-finite coefficient"
-            )
-        coefficients.append(float(f"{value:.6g}"))
+    for index, part in enumerate(_formula_parts(spell_obj, calculation_name)):
+        label = f"calculation {calculation_name!r} formula part {index} coefficient"
+        if not isinstance(part, Mapping) or "mCoefficient" not in part:
+            raise RuntimeError(f"{label}: missing")
+        coefficients.append(_snapped(part["mCoefficient"], label))
     return tuple(coefficients)
 
 
@@ -306,35 +273,20 @@ def _data_value_at_index(
     spell_obj: dict[str, Any], value_name: str, value_index: int, index_label: str
 ) -> float:
     """Read one finite, snapped entry from a named DataValue row."""
-    spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
-    rows = spell.get("DataValues") if isinstance(spell, dict) else None
-    if isinstance(rows, list):
-        for row in rows:
-            if not isinstance(row, dict) or row.get("name") != value_name:
-                continue
-            values = row.get("values")
-            if isinstance(values, list) and values:
-                if value_index >= len(values):
-                    raise RuntimeError(
-                        f"DataValue {value_name!r}: {index_label} unavailable "
-                        f"in {len(values)}-entry row"
-                    )
-                try:
-                    value = float(values[value_index])
-                except (TypeError, ValueError) as exc:
-                    raise RuntimeError(
-                        f"DataValue {value_name!r}: unusable {index_label} "
-                        f"{values[value_index]!r}"
-                    ) from exc
-                if not math.isfinite(value):
-                    raise RuntimeError(f"DataValue {value_name!r}: non-finite")
-                snapped = float(f"{value:.6g}")
-                if not math.isfinite(snapped):  # pragma: no cover - defensive
-                    raise RuntimeError(f"DataValue {value_name!r}: non-finite")
-                return snapped
+    for row in dig(spell_obj, "mSpell", "DataValues", want=list):
+        if not isinstance(row, Mapping) or row.get("name") != value_name:
+            continue
+        values = row.get("values")
+        if not isinstance(values, list) or not values:
             raise RuntimeError(
                 f"DataValue {value_name!r}: present but carries no values row"
             )
+        if value_index >= len(values):
+            raise RuntimeError(
+                f"DataValue {value_name!r}: {index_label} unavailable "
+                f"in {len(values)}-entry row"
+            )
+        return _snapped(values[value_index], f"DataValue {value_name!r} {index_label}")
     raise RuntimeError(f"DataValue {value_name!r} not found")
 
 

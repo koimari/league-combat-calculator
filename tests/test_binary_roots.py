@@ -1,8 +1,4 @@
-"""The shared character-binary runtime seam (``src/calculator/binary_roots``).
-
-Phase 1 of binary-rooting every champion's values: the dumps are tracked,
-every cache name resolves to one, and lookups fail closed.
-"""
+"""The shared character-binary runtime seam (``src/calculator/binary_roots``)."""
 
 import json
 from pathlib import Path
@@ -88,6 +84,10 @@ def test_data_value_failures_are_named_not_zero():
         data_value(e, "GravityIncPerBreakpoint")
     with pytest.raises(RuntimeError, match="not found"):
         data_value(e, "NoSuchDataValue")
+    with pytest.raises(RuntimeError, match=r"mSpell\.DataValues not found or unusable"):
+        data_value({"mSpell": {}}, "X")
+    with pytest.raises(RuntimeError, match="non-finite"):
+        data_value({"mSpell": {"DataValues": [{"name": "X", "values": [1e999]}]}}, "X")
 
 
 def test_data_value_at_rank_is_one_based_and_fails_closed():
