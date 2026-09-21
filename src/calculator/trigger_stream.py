@@ -652,12 +652,12 @@ def _walk_item(  # pylint: disable=too-many-arguments
     packet_source: str | RiderDelivery,
     *,
     holder_stacking: HolderStacking | None,
+    impl: str,
     reads: frozenset[Stream] = frozenset(),
     needs: frozenset[Field] = frozenset(),
     authority: Authority = Authority.COUPLED_AUTHORITATIVE,
     pairing: Pairing = Pairing.SOLO,
     pair_of: str | None = None,
-    impl: str,
 ) -> MechanicCapability:
     """One item-granted mechanic the participant walk implements.
 
