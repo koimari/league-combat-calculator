@@ -21,7 +21,7 @@ Exceptions raised by the pipeline are captured as {"error": "Type: msg"}
 snapshot values — a refactor turning a crash into a number (or vice versa)
 shows up as a diff.
 
-Two baselines, two jurisdictions (runbook R-11).  ``capture``/``compare``
+Two baselines, two jurisdictions.  ``capture``/``compare``
 own the **pair engine**: every scenario enters through ``pipeline.run_fight``,
 so this snapshot proves no pair-engine leak and nothing about the coupled
 roster walk.  ``capture-coupled``/``compare`` own the **roster path**: those
@@ -620,7 +620,7 @@ def fingerprint(snapshot: Mapping[str, Any]) -> dict[str, int | str]:
 
 
 # ---------------------------------------------------------------------------
-# Classified diffs — R-15's triage, not an eyeball
+# Classified diffs — a triage, not an eyeball
 # ---------------------------------------------------------------------------
 
 Transition = Literal[
@@ -900,7 +900,7 @@ def leaf_report(old: Mapping[str, Any], new: Mapping[str, Any]) -> tuple[LeafDif
 
 
 def qualifies_for_investigation(diff: LeafDiff) -> bool:
-    """R-15's threshold — the one predicate that decides an investigator is owed."""
+    """The one predicate that decides an investigator is owed a look."""
     if diff.transition != "value":
         return True
     if abs(diff.percent) > INVESTIGATION_PERCENT:
@@ -911,7 +911,7 @@ def qualifies_for_investigation(diff: LeafDiff) -> bool:
 
 
 def receipt_numeric_leaves(kind: str) -> int | None:
-    """The numeric-leaf denominator R-15's ratio clause reads from the receipt.
+    """The numeric-leaf denominator the ratio clause reads from the receipt.
 
     Never a figure written in a document: the receipt is the sole home of
     every golden shape count, and this returns ``None`` when it has not been
@@ -928,7 +928,7 @@ def receipt_numeric_leaves(kind: str) -> int | None:
 
 
 # ---------------------------------------------------------------------------
-# The coupled roster baseline — the jurisdiction golden cannot see (R-11, R-12)
+# The coupled roster baseline — the jurisdiction the pair golden cannot see
 # ---------------------------------------------------------------------------
 
 
@@ -1508,7 +1508,7 @@ def bench_roster_scenarios() -> tuple[CoupledScenario, ...]:
 def _uncovered_producers(
     scenarios: Collection[CoupledScenario], producers: Collection[str]
 ):
-    """Producers no scenario equips the item for — R-12's derived coverage."""
+    """Producers no scenario equips the item for — the derived coverage."""
     equipped = frozenset().union(*(s.equipped() for s in scenarios))
     return tuple(sorted(p for p in producers if producer_item(p) not in equipped))
 
@@ -1556,7 +1556,7 @@ def _unarmed(covering: Mapping[str, Any]) -> tuple[str, ...]:
 def _uncovered_families(
     scenarios: Collection[CoupledScenario], families: Mapping[str, Iterable[str]]
 ):
-    """Deferral families no scenario equips a declaring item of (R-12)."""
+    """Deferral families no scenario equips a declaring item of."""
     return _unarmed(covering_scenarios(scenarios, families))
 
 
@@ -1675,7 +1675,7 @@ def _unarmed_repricing_windows(
     scenarios: Collection[CoupledScenario],
     windows: Mapping[str, Sequence[Collection[str]]],
 ):
-    """Re-pricing windows no scenario arms (R-12)."""
+    """Re-pricing windows no scenario arms."""
     return _unarmed(window_covering_scenarios(scenarios, windows))
 
 
@@ -1829,7 +1829,7 @@ def swing_term_covering_scenarios(
 def _unarmed_swing_terms(
     scenarios: Collection[CoupledScenario], terms: Mapping[str, Iterable[str]]
 ):
-    """Target-side swing terms no scenario arms against a swing (R-12)."""
+    """Target-side swing terms no scenario arms against a swing."""
     return _unarmed(swing_term_covering_scenarios(scenarios, terms))
 
 
@@ -1927,7 +1927,7 @@ def coupled_entry(scenario: CoupledScenario) -> dict[str, Any]:
 
 
 def _exact_totals(entry: Mapping[str, Any]):
-    """Per-attacker totals at full precision — R-13's bit-exactness instrument.
+    """Per-attacker totals at full precision — the bit-exactness instrument.
 
     Golden equality is equality to two decimals, so a summation-order change
     under 0.005 per leaf is invisible to it.  These ``repr(float)`` strings
@@ -1974,15 +1974,14 @@ def capture_coupled(
 ) -> dict[str, Any]:
     """Roster snapshots through the coupled path, covering every producer.
 
-    ``producers`` is read, never typed: it was the ``ast`` table
-    ``item_support_effects`` derived from its own packet call sites at
-    0A/0B, and is :func:`cross_participant_producers` — the
-    ``trigger_stream.CAPABILITIES`` reading — from P2a (R-12), so a seventh
+    ``producers`` is read, never typed: it is
+    :func:`cross_participant_producers`, the
+    ``trigger_stream.CAPABILITIES`` reading, so a seventh
     ``damage_modifier`` producer with no covering scenario fails here rather
-    than passing silently.  ``families`` is R-12's second reading and is read
+    than passing silently.  ``families`` is the second reading and is read
     the same way, defaulting to :func:`receipt_walk_families`; passing it is
-    the seam a negative test drives the guard through (R-05).  ``amps`` is
-    R-12's third reading, defaulting to :func:`holder_amp_declarations`,
+    the seam a negative test drives the guard through.  ``amps`` is the
+    third reading, defaulting to :func:`holder_amp_declarations`,
     ``windows`` its fourth, defaulting to
     :func:`repricing_window_declarations`, and ``swing_terms`` its fifth,
     defaulting to :func:`swing_term_declarations`; all three carry the same
@@ -2225,7 +2224,7 @@ def main() -> None:
     compare_parser.add_argument(
         "--report",
         default=None,
-        help="write the classified LeafDiff report to this path (R-15)",
+        help="write the classified LeafDiff report to this path",
     )
     coupled = commands.add_parser("capture-coupled")
     coupled.add_argument("outfile")

@@ -596,7 +596,7 @@ def main() -> None:
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
-            "Source supply (issue #134, no developer-home defaults):\n"
+            "Source supply, with no developer-home defaults:\n"
             "  --wiki-db / LCC_WIKI_DB      -> data/wiki/league-wiki.sqlite3\n"
             "  --axword-source / LCC_AXWORD_SOURCE\n"
             "                                -> sibling lol-strength-analysis checkout\n"

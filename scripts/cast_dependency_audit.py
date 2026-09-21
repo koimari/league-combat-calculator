@@ -835,7 +835,7 @@ def run_audit(
     Args:
         acknowledged_gaps: The dated gap list to honour; read from the
             committed receipt when omitted.  Passing ``()`` is how the
-            gate's own negative test reproduces a red on demand (R-05).
+            gate's own negative test reproduces a red on demand.
 
     Returns:
         The gate-receipt envelope carrying the five ledgers.

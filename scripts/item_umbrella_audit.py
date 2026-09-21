@@ -99,7 +99,7 @@ def receipt_diff(
 
 
 def run_audit() -> dict[str, Any]:
-    """Return the deterministic CP20 item-umbrella audit receipt."""
+    """Return the deterministic item-umbrella audit receipt."""
 
     cached = fetch_item_data()
     ordinary = sorted(

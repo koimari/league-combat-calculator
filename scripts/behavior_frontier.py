@@ -267,8 +267,8 @@ CLASS_C_CLAIM_EVIDENCE_CONTAINERS: Mapping[str, Mapping[str, str]] = {
 }
 
 # The prior counts this instrument replaces, carried beside the measurement
-# with the cause of each divergence.  A prior is never a gate (runbook R-07);
-# it is here so a reader can see what moved and why.
+# with the cause of each divergence.  A prior is never a gate; it is here so
+# a reader can see what moved and why.
 PRIORS: Mapping[str, Mapping[str, Any]] = {
     "counter_1": {
         "value": 282,
@@ -1435,7 +1435,7 @@ def check(
 ) -> tuple[str, ...]:
     """Differences between the committed receipt and this tree — the gate.
 
-    ``committed`` is the seam the gate's own negative test drives (R-05); it
+    ``committed`` is the seam the gate's own negative test drives; it
     defaults to the receipt on disk, which is what ``--check`` gates against.
     """
     committed = load_receipt() if committed is None else committed
@@ -1475,7 +1475,7 @@ def main(
     champions_root: Path = CHAMPIONS_ROOT,
 ) -> int:
     """Run the scan, and write or gate the receipt."""
-    parser = argparse.ArgumentParser(description="Phase 3 behaviour frontier")
+    parser = argparse.ArgumentParser(description="behaviour frontier")
     parser.add_argument("--json", action="store_true", help="print the receipt")
     parser.add_argument("--write", action="store_true", help="refresh the receipt")
     parser.add_argument("--check", action="store_true", help="gate against the receipt")

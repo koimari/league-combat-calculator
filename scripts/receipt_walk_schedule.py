@@ -1408,7 +1408,7 @@ def schedule() -> dict[str, Any]:
     baseline = json.loads(COUPLED_BASELINE_PATH.read_text(encoding="utf-8"))[
         "coupled_scenarios"
     ]
-    # One home for "which scenarios cover this family" (R-12): the capture
+    # One home for "which scenarios cover this family": the capture
     # guard that refuses a blind baseline and this file's population read the
     # same predicate, so a covering scenario and a scheduled population can
     # never disagree about what covering means.  The committed baseline is
@@ -1673,7 +1673,7 @@ def schedule() -> dict[str, Any]:
 def check(committed: Mapping[str, Any] | None = None) -> list[str]:
     """Every way the committed schedule can stop being true of the tree.
 
-    ``committed`` is R-05's seam, so the gate has a red it can reproduce on
+    ``committed`` is the test's seam, so the gate has a red it can reproduce on
     demand rather than one demonstrated once during development.
     """
     if committed is None:

@@ -56,7 +56,7 @@ from src.app import app
 # ``/api/optimize`` clamps ``time_budget_ms`` into [100, 60_000] and defaults
 # to 12_000.  A budget the machine can exhaust makes every counter below a
 # property of the machine, so the harness always asks for the ceiling and
-# voids any run that still reports ``truncated`` (R-09).
+# voids any run that still reports ``truncated``.
 TIME_BUDGET_CLAMP_MS = 60_000
 
 # The issue's headline scenario: Cassiopeia optimized into an Alistar +
@@ -217,7 +217,7 @@ def _measure_the_optimizer_not_the_cache() -> None:
 
 @dataclass(slots=True)
 class WorkCounters:
-    """One search's work, threaded onto the search itself (R-24).
+    """One search's work, threaded onto the search itself.
 
     ``public_evaluations`` is read back from the optimizer's own response
     rather than counted here: it is a published figure, and a second counting
@@ -274,7 +274,7 @@ def _enemy_count(scenario: str) -> int:
 
 
 def _fixed_work_payload(scenario: str) -> dict[str, Any]:
-    """The scenario's request at the app's time-budget ceiling (R-09)."""
+    """The scenario's request at the app's time-budget ceiling."""
     return {**SCENARIOS[scenario], "time_budget_ms": TIME_BUDGET_CLAMP_MS}
 
 
@@ -330,7 +330,7 @@ def _single_run(scenario: str, *, compiled: bool) -> dict[str, Any]:
 
 
 def _isolated_run(scenario: str, *, compiled: bool) -> dict[str, Any]:
-    """One repeat in a fresh interpreter (R-26).
+    """One repeat in a fresh interpreter.
 
     ``_RESOLVED_DAMAGE_EFFECTS``, ``_DERIVED_RULE_CACHE``, ``_MATRIX_DPS_CACHE``,
     ``_ITEM_STATS_MEMO`` and ``data_fetcher``'s ``lru_cache`` all survive a
@@ -374,7 +374,7 @@ def fixed_work_report(
     time is the best of them; every repeat is kept so
     :func:`determinism_probe` can decide which counters may be equality
     gated.  A scenario whose every repeat voids is reported void — never as
-    an absent-but-assumed-green counter (R-09).
+    an absent-but-assumed-green counter.
     """
     runs = [
         (
@@ -413,7 +413,7 @@ def determinism_probe(
 ) -> dict[str, Literal["exact", "tolerant"]]:
     """Which counters repeated exactly, and may therefore be equality gated.
 
-    R-08: a counter that does not reproduce across five isolated repeats is
+    A counter that does not reproduce across five isolated repeats is
     demoted to a ratchet with its spread recorded, because an unexplainable
     drift of two destroys a gate's authority faster than having no gate.
     """
@@ -444,9 +444,9 @@ def determinism_spread(reports: Sequence[Mapping[str, Any]]) -> dict[str, int]:
 def routing_divergences(
     compiled_report: Mapping[str, Any], receipt_report: Mapping[str, Any]
 ) -> tuple[str, ...]:
-    """Where the two routings answered differently — R-01 row 11's verdict.
+    """Where the two routings answered differently — the comparison's verdict.
 
-    Row 11 runs one scenario through the compiled score path and again
+    The comparison runs one scenario through the compiled score path and again
     forced onto the receipt walk, and demands the same winner and the same
     score.  The rung histogram is *expected* to differ and is deliberately
     not compared here; a different **answer** is a routing change wearing a
@@ -490,13 +490,13 @@ def routing_comparison(
 ) -> dict[str, dict[str, Any]]:
     """Every named scenario run both ways, each carrying its own verdict.
 
-    This is the body of R-01 row 11's command: the row is defined against
-    row 8's default run, so the command runs that routing itself instead of
+    This is the body of the routing comparison's command, defined against
+    the default run, so the command runs that routing itself instead of
     trusting a reader to pair two invocations.  Each entry is the
     receipt-walk report plus the compiled run under ``compiled_run`` and
     :func:`routing_divergences`'s verdict under ``routing_divergences``.
-    ``report`` is the seam a test drives to make the verdict red on demand
-    (R-05); it defaults to :func:`fixed_work_report`.
+    ``report`` is the seam a test drives to make the verdict red on demand;
+    it defaults to :func:`fixed_work_report`.
     """
     measure = report or fixed_work_report
     comparison: dict[str, dict[str, Any]] = {}
@@ -660,15 +660,15 @@ def _build_parser() -> argparse.ArgumentParser:
         "--no-compiled",
         action="store_true",
         help=(
-            "R-01 row 11: run each scenario on the receipt walk and again on "
-            "the compiled path, and exit non-zero if they disagree"
+            "run each scenario on the receipt walk and again on the compiled "
+            "path, and exit non-zero if they disagree"
         ),
     )
     parser.add_argument(
         "--single-routing",
         action="store_true",
         help=(
-            "measure only the routing asked for, skipping row 11's comparison "
+            "measure only the routing asked for, skipping the comparison "
             "— what an isolated repeat's child process runs"
         ),
     )
@@ -678,7 +678,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--determinism",
         action="store_true",
-        help="classify each counter exact or tolerant over the repeats (R-08)",
+        help="classify each counter exact or tolerant over the repeats",
     )
     parser.add_argument(
         "--alloc", action="store_true", help="tracemalloc peak for one evaluation"
@@ -687,7 +687,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _run_fixed_work(args: argparse.Namespace, selected: Mapping[str, Any]) -> None:
-    """R-01 row 8's command body: one routing, counters, peaks, and the print.
+    """The default command body: one routing, counters, peaks, and the print.
 
     The peak rides the reading unless this process is an isolated repeat's
     child, which is measuring one routing for its parent rather than answering

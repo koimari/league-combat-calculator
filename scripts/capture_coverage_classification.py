@@ -89,7 +89,7 @@ CLASSIFIER_NAMES: Mapping[str, str] = {
 
 # Metadata keys ``compare`` ignores: ``git_head`` moves every commit and the
 # fetch stamp moves on every data pull.  ``item_count`` is deliberately absent
-# from this set — it is the gate, not provenance (R-14's named-home rule).
+# from this set — it is the gate, not provenance.
 COMPARE_EXCLUDED_PROVENANCE: frozenset[str] = frozenset(
     {"git_head", "items_fetched_at"}
 )
