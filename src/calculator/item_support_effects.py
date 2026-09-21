@@ -27,13 +27,13 @@ from .ally_packet_shape import (
     _MISSING,
     _active_seconds,
     _active_seconds_for,
+    _allies,
     _item_names,
     _option,
     _packet,
     _producer,
     _same_side,
     _shred_ramp,
-    _allies,
 )
 
 # The closed support-scope vocabulary and the kernel's typed trigger,

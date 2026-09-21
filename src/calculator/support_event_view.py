@@ -9,7 +9,7 @@ from collections.abc import Collection, Iterable, Iterator, Mapping
 from dataclasses import replace
 from typing import Any
 
-from .ally_packet_shape import _MISSING, _item_names, _option, _producer, _allies
+from .ally_packet_shape import _MISSING, _allies, _item_names, _option, _producer
 from .interpreters.ally_packet import resolve_slots
 from .item_behavior import AllyProducer, PacketKind
 from .program import route as program_route

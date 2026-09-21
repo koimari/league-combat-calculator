@@ -1,4 +1,13 @@
-"""What a published number is: measured, a structural zero, withheld, or starved."""
+"""What a published number is: measured, a structural zero, withheld, or starved.
+
+This module owns the refusal vocabulary, because it owns the two kinds a
+refusal comes in.  A *refusal* is a rule answering with a named reason instead
+of a number, and it is either :class:`Withheld` (coverage refused to model it,
+receipts and no number) or :class:`Starved` (a projection cannot answer the
+question a rule asked).  ``refusal``, ``refused``, ``withheld`` and ``starved``
+are the only spellings of that fact; ``scripts/one_spelling.py`` is the gate,
+and its tables name the words that mean something else.
+"""
 
 from dataclasses import dataclass
 
