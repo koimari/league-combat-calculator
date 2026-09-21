@@ -29,11 +29,10 @@ numbered work phase, a dated decision, a named unit of work -- where the
 reason itself belongs.  A hit is allowed when the same line names a
 repository path that resolves, which is what keeps
 ``docs/receipts/campaign-stages.json`` citable; prose citing a wiki URL or
-a game file for a number is evidence and is never reported.  It fails over
-``TARGETS`` and reports over ``TESTS_SCOPE`` as ``test_pointer``, under a
-ceiling the test holds and that may only fall.
+a game file for a number is evidence and is never reported.  It is the one
+rule that reaches ``TESTS_SCOPE`` as well as ``TARGETS``.
 
-A ninth, ``unsourced_constant``, reports a module-level numeric literal under
+An eighth, ``unsourced_constant``, reports a module-level numeric literal under
 ``CHAMPIONS_SCOPE`` whose provenance nothing states: a citation, a cached field
 name or a composition, either trailing the line or heading the unbroken run of
 assignments it sits in.  It reports under its own ceiling for the same reason.
@@ -72,7 +71,7 @@ FAILING = (
     "long_assumption",
     "pointer",
 )
-REPORTING = ("test_pointer", "unsourced_constant")
+REPORTING = ("unsourced_constant",)
 SCOPES = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
 FUNCS = (ast.FunctionDef, ast.AsyncFunctionDef)
 
@@ -93,9 +92,10 @@ POINTER = re.compile(
 BANNER = re.compile(r"^# -{5,}$")
 # A repository path, which is what makes a pointer resolve.
 REPO_PATH = re.compile(r"[\w.-]+(?:/[\w.-]+)+")
-#: Which rules a file in each scope answers to.
+#: Which rules a file in each scope answers to.  A test's prose answers to
+#: the pointer rule and to nothing else: its length and its tense are its own.
 SOURCE_RULES = (("history", HISTORY), ("pointer", POINTER))
-TEST_RULES = (("test_pointer", POINTER),)
+TEST_RULES = (("pointer", POINTER),)
 # Where a number comes from: a citation, a cached field name or a quoted cached
 # phrase, or a composition of two numbers.
 PROVENANCE = re.compile(
@@ -349,9 +349,8 @@ def _cite(
 def scan(root: Path = ROOT, exclude: tuple[str, ...] = ()) -> dict[str, list[str]]:
     """Report every finding over every ``.py`` file this lint reads.
 
-    ``TARGETS`` carries every rule.  ``TESTS_SCOPE`` carries the pointer rule
-    alone, under its own key, because a test's prose is swept and not yet
-    clear.
+    ``TARGETS`` carries every rule; ``TESTS_SCOPE`` carries the pointer rule
+    alone.
     """
     found: dict[str, list[str]] = {key: [] for key in (*FAILING, *REPORTING)}
     scopes = (*TARGETS, TESTS_SCOPE)

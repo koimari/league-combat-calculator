@@ -17,7 +17,6 @@ PENDING: tuple[str, ...] = ()
 #: a run prints; never raise it.  At zero the rule joins ``FAILING`` and its
 #: row goes away.
 CEILINGS = {
-    "test_pointer": (747, "state the fact instead of citing the work that made it"),
     "unsourced_constant": (69, "cite the cached field, the source or the composition"),
 }
 
@@ -243,13 +242,12 @@ def test_a_pointer_beside_a_path_that_resolves_is_not_reported(tmp_path):
     assert scan(root=tmp_path)["pointer"] == ["src/seed.py:4: # Phase 4 ruled it."]
 
 
-def test_a_test_files_pointers_report_under_their_own_key(tmp_path):
-    """``tests/`` answers to this rule alone, and never to the other six."""
+def test_a_test_file_answers_to_the_pointer_rule_and_to_nothing_else(tmp_path):
+    """``tests/`` carries this rule, and never the other six."""
     (tmp_path / "src").mkdir()
     (tmp_path / "scripts").mkdir()
     (tmp_path / "tests").mkdir()
     (tmp_path / "tests" / "test_seed.py").write_text(SEEDED, encoding="utf-8")
     found = scan(root=tmp_path)
-    assert found["pointer"] == []
-    assert len(found["test_pointer"]) == 1
+    assert len(found["pointer"]) == 1
     assert all(found[kind] == [] for kind in FAILING if kind != "pointer")
