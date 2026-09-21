@@ -33,7 +33,7 @@ from src.calculator.item_behavior_catalog import (
     NO_LEADING_STACKS,
     behavior_rules,
 )
-from src.calculator.item_effects import ITEM_EFFECTS
+from src.calculator.item_effects import sustain_effect_value
 
 CARVE_HOLDER = "Black Cleaver"
 VILE_DECAY_HOLDER = "Bloodletter's Curse"
@@ -102,9 +102,8 @@ def test_the_carve_leading_hit_assumption_is_declared() -> None:
 
 def test_the_cesaro_average_reproduces_the_engines_own_closed_form() -> None:
     """Below the cap the ramp is half the count; at it, the saturated mean."""
-    entry = ITEM_EFFECTS[CARVE_HOLDER]
-    per_stack = float(entry["reduction_per_stack"])
-    cap = int(entry["max_stacks"])
+    per_stack = sustain_effect_value(CARVE_HOLDER, "reduction_per_stack")
+    cap = int(sustain_effect_value(CARVE_HOLDER, "max_stacks"))
     slot = _armor()
     # Zero autos still carries the four assumed leading ability hits.
     assert slot.average_reduction(0) == pytest.approx(per_stack * (4 / 2.0))
@@ -115,11 +114,11 @@ def test_the_cesaro_average_reproduces_the_engines_own_closed_form() -> None:
 
 def test_the_exact_model_counts_stacks_one_at_a_time() -> None:
     """The cut at N stacks, in the percent unit the resistance arithmetic takes."""
-    per_stack = float(ITEM_EFFECTS[VILE_DECAY_HOLDER]["mr_reduction_per_stack"])
+    per_stack = sustain_effect_value(VILE_DECAY_HOLDER, "mr_reduction_per_stack")
     slot = _magic()
     assert slot.reduction_percent(0) == pytest.approx(0.0)
     assert slot.reduction_percent(3) == pytest.approx(per_stack * 3 * 100.0)
-    assert slot.max_stacks == int(ITEM_EFFECTS[VILE_DECAY_HOLDER]["max_stacks"])
+    assert slot.max_stacks == int(sustain_effect_value(VILE_DECAY_HOLDER, "max_stacks"))
 
 
 def test_each_model_refuses_the_other_models_question() -> None:

@@ -24,6 +24,7 @@ from src.calculator.item_effects import (
     ITEM_EFFECTS,
     DamageInputs,
     required_effect_value,
+    sustain_effect_value,
     target_class_denials,
 )
 from src.calculator.item_source import effect_entries
@@ -119,7 +120,8 @@ def test_the_minimum_is_a_floor_on_the_sum() -> None:
     strike = _strike("Blade of the Ruined King")
     healthy = strike.source.raw_damage(_inputs())
     assert healthy == pytest.approx(
-        entry["current_hp_ratio_melee"] * 1000.0  # type: ignore[operator]
+        sustain_effect_value("Blade of the Ruined King", "current_hp_ratio_melee")
+        * 1000.0
     )
     drained = dataclasses.replace(_inputs(), target_current_health=0.0)
     assert strike.source.raw_damage(drained) == pytest.approx(entry["min_damage"])
@@ -127,12 +129,17 @@ def test_the_minimum_is_a_floor_on_the_sum() -> None:
 
 def test_the_range_split_is_paid_from_the_swings_own_range_class() -> None:
     """Both rates resolve at build time and the swing decides which is paid."""
-    entry = ITEM_EFFECTS["Blade of the Ruined King"]
     strike = _strike("Blade of the Ruined King")
     melee = strike.source.raw_damage(_inputs(is_melee=True))
     ranged = strike.source.raw_damage(_inputs(is_melee=False))
-    assert melee == pytest.approx(entry["current_hp_ratio_melee"] * 1000.0)  # type: ignore[operator]
-    assert ranged == pytest.approx(entry["current_hp_ratio_ranged"] * 1000.0)  # type: ignore[operator]
+    assert melee == pytest.approx(
+        sustain_effect_value("Blade of the Ruined King", "current_hp_ratio_melee")
+        * 1000.0
+    )
+    assert ranged == pytest.approx(
+        sustain_effect_value("Blade of the Ruined King", "current_hp_ratio_ranged")
+        * 1000.0
+    )
 
 
 def test_the_live_health_flag_is_derived_from_the_terms() -> None:

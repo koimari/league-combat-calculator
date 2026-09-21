@@ -21,7 +21,11 @@ from src.calculator.item_behavior import (
     validate_rule,
 )
 from src.calculator.item_behavior_catalog import behavior_rules, build_context
-from src.calculator.item_effects import ITEM_EFFECTS, DamageInputs
+from src.calculator.item_effects import (
+    ITEM_EFFECTS,
+    DamageInputs,
+    sustain_effect_value,
+)
 
 PLAIN = "Sheen"
 WITH_ABILITY_POWER = "Lich Bane"
@@ -84,15 +88,15 @@ def test_the_three_formulas_sum_their_declared_shares() -> None:
     assert magical is not None
     assert critical is not None
     assert plain.source.raw_damage(_inputs(**stats)) == pytest.approx(
-        float(ITEM_EFFECTS[PLAIN]["base_ad_ratio"]) * 100.0  # type: ignore[arg-type]
+        sustain_effect_value(PLAIN, "base_ad_ratio") * 100.0
     )
     assert magical.source.raw_damage(_inputs(**stats)) == pytest.approx(
-        float(ITEM_EFFECTS[WITH_ABILITY_POWER]["base_ad_ratio"]) * 100.0  # type: ignore[arg-type]
-        + float(ITEM_EFFECTS[WITH_ABILITY_POWER]["ap_ratio"]) * 200.0  # type: ignore[arg-type]
+        sustain_effect_value(WITH_ABILITY_POWER, "base_ad_ratio") * 100.0
+        + sustain_effect_value(WITH_ABILITY_POWER, "ap_ratio") * 200.0
     )
     assert critical.source.raw_damage(_inputs(**stats)) == pytest.approx(
-        float(ITEM_EFFECTS[WITH_CRIT]["base_ad_ratio"]) * 100.0  # type: ignore[arg-type]
-        + float(ITEM_EFFECTS[WITH_CRIT]["crit_bonus_max"]) * 0.5  # type: ignore[arg-type]
+        sustain_effect_value(WITH_CRIT, "base_ad_ratio") * 100.0
+        + sustain_effect_value(WITH_CRIT, "crit_bonus_max") * 0.5
     )
 
 
@@ -181,9 +185,9 @@ def test_the_row_keeps_the_breakdown_key_the_engine_publishes() -> None:
         armed.source.breakdown_key == f"{spellblade.SPELLBLADE_BREAKDOWN_PREFIX}{PLAIN}"
     )
     assert armed.source.display_name == f"{PLAIN} ({spellblade.SPELLBLADE_SUFFIX})"
-    assert armed.cooldown == pytest.approx(float(ITEM_EFFECTS[PLAIN]["cooldown"]))  # type: ignore[arg-type]
+    assert armed.cooldown == pytest.approx(sustain_effect_value(PLAIN, "cooldown"))
     assert armed.weave_delay == pytest.approx(
-        float(ITEM_EFFECTS[PLAIN]["weave_delay"])  # type: ignore[arg-type]
+        sustain_effect_value(PLAIN, "weave_delay")
     )
 
 
@@ -201,4 +205,4 @@ def test_the_pair_interpreter_compiles_the_cooldown_it_can_know() -> None:
     )
     (field,) = spellblade.spellblade_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.name == spellblade.SPELLBLADE_COOLDOWN_FIELD
-    assert field.value == pytest.approx(float(ITEM_EFFECTS[PLAIN]["cooldown"]))  # type: ignore[arg-type]
+    assert field.value == pytest.approx(sustain_effect_value(PLAIN, "cooldown"))

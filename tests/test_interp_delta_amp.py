@@ -52,7 +52,11 @@ from src.calculator.item_behavior_catalog import (
     build_context,
     rule_owners,
 )
-from src.calculator.item_effects import ALLY_ITEM_EFFECTS, ITEM_EFFECTS
+from src.calculator.item_effects import (
+    ALLY_ITEM_EFFECTS,
+    ITEM_EFFECTS,
+    sustain_effect_value,
+)
 from src.calculator.value_ref import Const
 
 
@@ -782,13 +786,16 @@ def test_the_ability_amp_is_the_registry_base_plus_its_bonus_mana_rate() -> None
     either number moves the expectation with the declaration instead of
     turning this test red for being right.
     """
-    entry = ITEM_EFFECTS["Actualizer"]
     amp = _part_amp("Actualizer", melee=True, attack_class=AttackClass.ABILITY)
     assert amp is not None
     assert amp.owner == "Actualizer"
-    assert amp.multiplier({"bonus_mana": 0.0}) == pytest.approx(1.0 + entry["base_amp"])
+    assert amp.multiplier({"bonus_mana": 0.0}) == pytest.approx(
+        1.0 + sustain_effect_value("Actualizer", "base_amp")
+    )
     assert amp.multiplier({"bonus_mana": 300.0}) == pytest.approx(
-        1.0 + entry["base_amp"] + entry["amp_per_100_bonus_mana"] * 3.0
+        1.0
+        + sustain_effect_value("Actualizer", "base_amp")
+        + sustain_effect_value("Actualizer", "amp_per_100_bonus_mana") * 3.0
     )
 
 
@@ -839,13 +846,15 @@ def test_the_basic_amp_declares_its_range_assumption_as_a_derivation() -> None:
     )
     assert ranged is not None
     assert melee is not None
-    assert ranged.multiplier({}) == pytest.approx(1.0 + entry["max_amp"])
+    assert ranged.multiplier({}) == pytest.approx(
+        1.0 + sustain_effect_value("Hexoptics C44", "max_amp")
+    )
     assert melee.multiplier({}) == pytest.approx(
         1.0
-        + entry["max_amp"]
+        + sustain_effect_value("Hexoptics C44", "max_amp")
         * (
             min(entry["melee_assumed_distance"], entry["max_distance"])
-            / entry["max_distance"]
+            / sustain_effect_value("Hexoptics C44", "max_distance")
         )
     )
 

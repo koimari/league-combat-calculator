@@ -4181,12 +4181,13 @@ def fimbulwinter_nearby_enemy_range_authority() -> dict[str, Any]:
 
 
 def sustain_effect_value(item_name: str, key: str) -> float:
-    """Read one sourced sustain value from an item's typed effect record."""
+    """One sourced numeric value from an item's typed effect record.
+
+    Rule 5's front door over ``ITEM_EFFECTS``: a miss names item and key.
+    """
     value = required_effect_value(item_name, key)
     if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise TypeError(
-            f"ITEM_EFFECTS[{item_name!r}][{key!r}] must be numeric for sustain"
-        )
+        raise TypeError(f"ITEM_EFFECTS[{item_name!r}][{key!r}] must be numeric")
     return float(value)
 
 

@@ -14,7 +14,7 @@ from src.calculator.interpreters import secondary_target
 from src.calculator.interpreters.interpretation_error import InterpretationError
 from src.calculator.item_behavior import FightFacts, RuleFamily, SecondaryTargetRule
 from src.calculator.item_behavior_catalog import behavior_rules
-from src.calculator.item_effects import ITEM_EFFECTS
+from src.calculator.item_effects import ITEM_EFFECTS, sustain_effect_value
 
 HOLDER = "Runaan's Hurricane"
 
@@ -47,7 +47,7 @@ def test_the_bolt_count_excludes_the_target_the_attack_was_aimed_at() -> None:
     """The cardinality the engine has always used, now read off the rule."""
     slot = _slot(HOLDER)
     assert slot is not None
-    cap = int(ITEM_EFFECTS[HOLDER]["max_secondary_targets"])  # type: ignore[arg-type]
+    cap = int(sustain_effect_value(HOLDER, "max_secondary_targets"))
     assert slot.bolt_count(1) == 0
     assert slot.bolt_count(2) == 1
     assert slot.bolt_count(2 + cap) == cap
@@ -57,7 +57,7 @@ def test_one_bolt_is_the_declared_share_of_the_attack() -> None:
     """The bolt's number is a share of the swing, not a formula of its own."""
     slot = _slot(HOLDER)
     assert slot is not None
-    ratio = float(ITEM_EFFECTS[HOLDER]["secondary_ad_ratio"])  # type: ignore[arg-type]
+    ratio = sustain_effect_value(HOLDER, "secondary_ad_ratio")
     assert slot.bolt_damage(200.0) == pytest.approx(200.0 * ratio)
 
 

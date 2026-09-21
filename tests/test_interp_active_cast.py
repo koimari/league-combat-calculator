@@ -20,7 +20,11 @@ from src.calculator.item_behavior import (
     RuleFamily,
 )
 from src.calculator.item_behavior_catalog import behavior_rules, build_context
-from src.calculator.item_effects import ITEM_EFFECTS, DamageInputs
+from src.calculator.item_effects import (
+    ITEM_EFFECTS,
+    DamageInputs,
+    sustain_effect_value,
+)
 
 LEVEL_RAMPED = "Hextech Gunblade"
 LIFESTEALING = "Ravenous Hydra"
@@ -69,9 +73,8 @@ def test_every_active_entry_declares_exactly_one_rule() -> None:
 def test_a_flat_plus_ability_power_active_sums_its_declared_shares() -> None:
     """The two-term schema, reproduced share for share."""
     (source,) = _sources(FLAT_AP)
-    entry = ITEM_EFFECTS[FLAT_AP]
-    base = float(entry["base"])  # type: ignore[arg-type]
-    ratio = float(entry["ap_ratio"])  # type: ignore[arg-type]
+    base = sustain_effect_value(FLAT_AP, "base")
+    ratio = sustain_effect_value(FLAT_AP, "ap_ratio")
     assert source.raw_damage(_inputs(ability_power=400.0)) == pytest.approx(
         base + ratio * 400.0
     )
@@ -79,9 +82,8 @@ def test_a_flat_plus_ability_power_active_sums_its_declared_shares() -> None:
 
 def test_the_level_ramp_reaches_both_ends_of_the_registry_span() -> None:
     """The ramp interpolates to the level cap, not to eighteen."""
-    entry = ITEM_EFFECTS[LEVEL_RAMPED]
-    low = float(entry["base_min"])  # type: ignore[arg-type]
-    high = float(entry["base_max"])  # type: ignore[arg-type]
+    low = sustain_effect_value(LEVEL_RAMPED, "base_min")
+    high = sustain_effect_value(LEVEL_RAMPED, "base_max")
     at_one = _sources(LEVEL_RAMPED, level=1)[0]
     at_cap = _sources(LEVEL_RAMPED, level=20)[0]
     above_cap = _sources(LEVEL_RAMPED, level=25)[0]
@@ -93,7 +95,7 @@ def test_the_level_ramp_reaches_both_ends_of_the_registry_span() -> None:
 def test_life_steal_inheritance_is_declared_and_its_absence_is_too() -> None:
     """A declared ``None`` and a sourced rate are different claims."""
     inheriting, plain = _sources(LIFESTEALING, PLAIN)
-    declared = float(ITEM_EFFECTS[LIFESTEALING]["lifesteal_effectiveness"])  # type: ignore[arg-type]
+    declared = sustain_effect_value(LIFESTEALING, "lifesteal_effectiveness")
     assert inheriting.lifesteal_effectiveness == pytest.approx(declared)
     assert plain.lifesteal_effectiveness == active_cast.NO_INHERITED_LIFESTEAL
     (rule,) = rules_of([PLAIN], RuleFamily.ACTIVE_CAST)
@@ -125,5 +127,5 @@ def test_the_pair_interpreter_compiles_the_cooldown_it_can_know() -> None:
     )
     (field,) = active_cast.active_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.name == active_cast.ACTIVE_COOLDOWN_FIELD
-    assert field.value == pytest.approx(float(ITEM_EFFECTS[PLAIN]["cooldown"]))  # type: ignore[arg-type]
+    assert field.value == pytest.approx(sustain_effect_value(PLAIN, "cooldown"))
     assert field.rule_id == rule.mechanic_id
