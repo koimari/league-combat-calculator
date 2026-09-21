@@ -292,7 +292,7 @@ def _unraveled_earth(
 
 
 CAST_ORDER = ("E", "W", "Q")
-CUSTOM_CAST_ORDER_UNAVAILABLE_REASON = (
+CUSTOM_CAST_ORDER_REFUSAL = (
     "Taliyah uses the certified E -> W -> Q sequence so Seismic Shove can "
     "detonate the selected number of stones."
 )

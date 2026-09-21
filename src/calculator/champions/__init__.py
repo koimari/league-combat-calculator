@@ -637,11 +637,9 @@ def get_champion_module_meta(champion_name: str) -> dict[str, Any]:
     return result
 
 
-def get_custom_cast_order_unavailable_reason(champion_name: str) -> str | None:
+def get_custom_cast_order_refusal(champion_name: str) -> str | None:
     """Explain why a module's certified cast sequence cannot be reordered."""
-    return _optional_declaration(
-        champion_name, "CUSTOM_CAST_ORDER_UNAVAILABLE_REASON", str
-    )
+    return _optional_declaration(champion_name, "CUSTOM_CAST_ORDER_REFUSAL", str)
 
 
 def champion_options_meta_map() -> dict[str, dict[str, list]]:

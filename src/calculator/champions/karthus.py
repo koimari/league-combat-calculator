@@ -234,7 +234,7 @@ def _requiem(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any]
 
 
 CAST_ORDER = ("W", "Q", "E", "R")
-CUSTOM_CAST_ORDER_UNAVAILABLE_REASON = (
+CUSTOM_CAST_ORDER_REFUSAL = (
     "Karthus uses the certified alive-state W -> Q -> E -> R sequence so the "
     "wall reduction is established before damage."
 )

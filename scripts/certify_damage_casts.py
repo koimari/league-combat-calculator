@@ -31,7 +31,7 @@ from scripts.generated_file import (
 )  # pylint: disable=wrong-import-position
 from src.calculator.champions import (  # pylint: disable=wrong-import-position
     _CHAMPION_MODULES,
-    get_custom_cast_order_unavailable_reason,
+    get_custom_cast_order_refusal,
     parse_champion_abilities,
 )
 from src.calculator.combat_events import (  # pylint: disable=wrong-import-position
@@ -83,7 +83,7 @@ def derive() -> dict[tuple[str, str], str]:
         # Karthus) cannot take an authored slot on its own; the request
         # would be refused with the module's own reason, so nothing here
         # advertises it.
-        if get_custom_cast_order_unavailable_reason(name):
+        if get_custom_cast_order_refusal(name):
             continue
         entries = parse_champion_abilities(
             get_champion(name),

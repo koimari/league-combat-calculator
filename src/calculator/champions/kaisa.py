@@ -553,7 +553,7 @@ def _killer_instinct(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 CAST_ORDER = ("W", "Q", "R")
-CUSTOM_CAST_ORDER_UNAVAILABLE_REASON = (
+CUSTOM_CAST_ORDER_REFUSAL = (
     "Kai'Sa uses the certified W -> Q sequence so Plasma resolves before the "
     "volley; custom cast orders are not available yet."
 )

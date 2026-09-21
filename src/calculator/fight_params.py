@@ -12,7 +12,7 @@ from .auto_attack_policy import (
     AUTO_ATTACK_UPTIME_MODES,
 )
 from .cast_dependency import BASE_CAST_SLOTS, orderable_slots
-from .champions import get_custom_cast_order_unavailable_reason
+from .champions import get_custom_cast_order_refusal
 from .champions.skill_orders import get_ability_rank
 from .combat_events import parse_combat_events, parse_combat_events_mode
 from .fight.config import FightConfig
@@ -306,7 +306,7 @@ class FightParams(FightConfig):
         if level > max_champion_level(self.role, self.role_quest_complete):
             raise ValueError(f"Level {level} requires the completed top role quest")
 
-        custom_order_reason = get_custom_cast_order_unavailable_reason(champion_name)
+        custom_order_reason = get_custom_cast_order_refusal(champion_name)
         if self.cast_order is not None and custom_order_reason is not None:
             raise ValueError(custom_order_reason)
         if kit is not None:

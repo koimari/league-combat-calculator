@@ -8,7 +8,7 @@ from src.calculator.calculate import calculate_payload
 from src.calculator.champions import (
     get_champion_cast_order,
     get_champion_options_meta,
-    get_custom_cast_order_unavailable_reason,
+    get_custom_cast_order_refusal,
     taliyah,
 )
 from tests import cc_review
@@ -137,7 +137,7 @@ def test_public_metadata_exposes_state_and_sources():
     }
     assert len(meta["sources"]) == 5
     # The certified E -> W -> Q sequence still refuses custom orders.
-    assert get_custom_cast_order_unavailable_reason("Taliyah")
+    assert get_custom_cast_order_refusal("Taliyah")
 
 
 # ---------------------------------------------------------------------------

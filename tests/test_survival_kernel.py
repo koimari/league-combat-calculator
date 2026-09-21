@@ -1120,7 +1120,7 @@ class TestTheWalkPricesADeclarationAgainstWhatItMeets:
         price = price_declared_packet(
             packet, baseline_effective_armor=120.0, baseline_effective_mr=67.0
         )
-        assert price.unavailable == ""
+        assert price.refusal == ""
         assert price.resistance == 67.0
         assert price.amount == apply_resistance(252.0, 67.0)
 
@@ -1177,7 +1177,7 @@ class TestTheWalkPricesADeclarationAgainstWhatItMeets:
             baseline_effective_mr=None,
         )
         assert price.amount is None
-        assert price.unavailable == NO_RESISTANCE_PUBLISHED
+        assert price.refusal == NO_RESISTANCE_PUBLISHED
 
     def test_a_damage_class_no_resistance_answers_for_is_refused(self):
         """R-05's second red: an unrecognized class is not paid in full.
@@ -1191,7 +1191,7 @@ class TestTheWalkPricesADeclarationAgainstWhatItMeets:
             baseline_effective_mr=67.0,
         )
         assert price.amount is None
-        assert price.unavailable == UNPRICEABLE_DAMAGE_TYPE
+        assert price.refusal == UNPRICEABLE_DAMAGE_TYPE
         assert DamageClass.named("adaptive") is None
 
 

@@ -112,7 +112,7 @@ def test_public_metadata_keeps_the_certified_sequence():
     }
     # The certified W -> Q -> E -> R sequence itself stays unreorderable.
     assert karthus.CAST_ORDER == ("W", "Q", "E", "R")
-    assert karthus.CUSTOM_CAST_ORDER_UNAVAILABLE_REASON
+    assert karthus.CUSTOM_CAST_ORDER_REFUSAL
     assert any("Death Defied" in note for note in meta["assumptions"])
     assert len(meta["sources"]) == 5
 

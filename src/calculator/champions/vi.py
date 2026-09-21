@@ -511,7 +511,7 @@ def _cease_and_desist(
 
 
 CAST_ORDER = ("Q", "E", "R")
-CUSTOM_CAST_ORDER_UNAVAILABLE_REASON = (
+CUSTOM_CAST_ORDER_REFUSAL = (
     "Vi uses the certified Q -> E -> R sequence; custom cast orders are not "
     "available yet."
 )

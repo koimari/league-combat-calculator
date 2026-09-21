@@ -302,7 +302,7 @@ UNPRICEABLE_DAMAGE_TYPE = "unpriceable_damage_type"
 class DeclaredPrice(NamedTuple):
     """What the walk's own pricing produced for one declared packet.
 
-    ``amount`` is ``None`` exactly when ``unavailable`` names a reason, so a
+    ``amount`` is ``None`` exactly when ``refusal`` names a reason, so a
     refusal cannot be read as a zero a caller may quietly add to a total.
     ``resistance`` is the value the raw amount was mitigated at and is
     ``None`` for true damage, which met none.
@@ -310,7 +310,7 @@ class DeclaredPrice(NamedTuple):
 
     amount: float | None
     resistance: float | None
-    unavailable: str = ""
+    refusal: str = ""
 
 
 def mitigate_declared(raw_amount: float, damage_type: str, resistance: float) -> float:

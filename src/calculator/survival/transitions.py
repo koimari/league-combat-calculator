@@ -721,7 +721,7 @@ def apply_declared_price(
             action,
             declared_price_unavailable={
                 "rule": packet.rule_id,
-                "reason": price.unavailable,
+                "reason": price.refusal,
                 "damage_type": packet.damage_type,
             },
         )
