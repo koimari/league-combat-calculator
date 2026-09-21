@@ -5,8 +5,7 @@ the scanned module text, or the capability registry — and every one of them
 is exercised twice: once against the live tree, where it must pass, and once
 against an injected mutation, where it must fail.  That second call is the
 permanent seam R-05 requires: a check whose red is remembered rather than
-reproducible is indistinguishable from a check that cannot fail, which is
-the exact failure this campaign exists to end.
+reproducible is indistinguishable from a check that cannot fail.
 """
 
 import ast
@@ -92,10 +91,10 @@ def _enclosing(tree: ast.AST, node: ast.AST) -> str:
 
 
 def _declared_guard_names(function: ast.AST) -> frozenset[str]:
-    """Every item this function guards through a Phase 3 ally-packet producer.
+    """Every item this function guards through an ally-packet producer.
 
-    Phase 3's ``3.6`` replaces ``if "Fimbulwinter" in names`` with a guard on
-    the declared producer the holder's registry entry carries, so A3's
+    A guard on the declared producer the holder's registry entry carries
+    replaces ``if "Fimbulwinter" in names``, so A3's
     question — "does this impl guard exactly the items it declares?" — has to
     be asked of both guard forms or it would read a migrated branch as an
     unguarded one.  The producer is mapped back to its owners by
@@ -246,7 +245,7 @@ def test_trigger_construction_violations_name_their_field(field, value):
 
 
 def test_a_cc_trigger_can_never_carry_cc_none():
-    """``kind is CC ⟹ cc is not NONE`` — the D-33 invariant, enforced."""
+    """``kind is CC ⟹ cc is not NONE``, enforced."""
     with pytest.raises(ValueError, match="NONE"):
         ts.Trigger(
             kind=ts.TriggerKind.CC,
@@ -341,7 +340,7 @@ def test_a_misspelled_cc_kind_is_rejected_whichever_kind_was_asked_for():
 
 
 def test_event_triggers_builds_only_the_kinds_asked_for():
-    """D-30's laziness, made real: an unasked kind is never constructed.
+    """Laziness made real: an unasked kind is never constructed.
 
     Not a micro-optimisation — an unbuilt trigger is also an unjudged one,
     which is what lets a control-only holder read a row the damage stream's
@@ -416,9 +415,8 @@ def test_sequence_zero_is_a_sequence_and_not_an_absent_one():
 def retired_immobilizing(row) -> bool:
     """The body ``ability_spec.is_immobilizing_event`` carried until P2c.
 
-    P2a and P2b pinned the bus predicate against the *live* legacy symbol,
-    which is what D-98 asks of a derivation landing beside the thing it
-    replaces.  P2c deletes that symbol, so the witness becomes this
+    A derivation landing beside the thing it replaces is pinned against the
+    live symbol.  With that symbol deleted, the witness becomes this
     transcription — kept here, in the suite, so the 192-row equivalence
     below stays a measurement rather than a memory of one.
     """
@@ -497,7 +495,7 @@ def test_the_ladder_reads_immobilize_evidence_before_slow_evidence():
 
 
 def test_authored_triggers_builds_only_the_declared_streams():
-    """Lazy by construction — the whole performance argument for D-30."""
+    """Lazy by construction, which is the whole performance argument."""
     result = {"damage_events": [_row(cc_kind="stun")], "takedown_events": [{}]}
     only_cc = ts.authored_triggers(result, streams=frozenset({ts.Stream.CC}))
     assert {trigger.kind for trigger in only_cc} == {ts.TriggerKind.CC}
@@ -512,7 +510,7 @@ def test_authored_triggers_skips_rows_that_are_not_mappings():
 
 
 def test_a_tuple_ledger_starves_a_declared_stream():
-    """The campaign's ``STARVED`` leaf, as a control-flow signal."""
+    """The ``STARVED`` leaf, as a control-flow signal."""
     with pytest.raises(ProjectionStarvation) as excinfo:
         ts.authored_triggers(
             {"damage_events_tuple": [(0.0, "main", 1.0)]},
@@ -579,7 +577,7 @@ def test_projections_equal_their_declared_memberships(projection, expected):
 
 
 def test_solstice_sleigh_is_tuple_incapable_by_declaration():
-    """D-02: membership, and health regen is *not* the reason it is safe."""
+    """Membership, and health regen is *not* the reason it is safe."""
     sleigh = ts.CAPABILITIES["solstice_sleigh.going_sledding"]
     assert "Solstice Sleigh" in ts.tuple_incapable_items()
     assert ts.Stream.CC in sleigh.reads
@@ -587,14 +585,14 @@ def test_solstice_sleigh_is_tuple_incapable_by_declaration():
 
 
 def test_fimbulwinter_needs_the_enriched_view():
-    """D-03: it carries ``_event_id`` onto its shield packet."""
+    """It carries ``_event_id`` onto its shield packet."""
     fimbulwinter = ts.CAPABILITIES["fimbulwinter.everlasting"]
     assert ts.Field.EVENT_ID in fimbulwinter.needs
     assert "Fimbulwinter" in ts.enriched_view_items()
 
 
-# D-98's witness — ``tuple_incapable_items() ^ EVENT_VIEW_SUPPORT_ITEMS``
-# asserted empty against the **imported** live set — lived here through P2a
+# The witness — ``tuple_incapable_items() ^ EVENT_VIEW_SUPPORT_ITEMS``
+# asserted empty against the **imported** live set — lived here while
 # and P2b and is deleted by the same one-symbol commit that deletes the set
 # it witnessed.  What survives it is stronger and not a comparison against a
 # second list at all: ``test_projections_equal_their_docstring_memberships``
@@ -786,7 +784,7 @@ def test_the_bus_imports_only_the_vocabulary_leaves_and_the_view_tag():
     ``EngineLane``'s home out: importing ``item_behavior`` opens
     ``data/items.json`` and ``data/runes.json`` at module scope, and a bus
     that reads ``data/`` is neither a leaf nor inside the caching layer
-    (D-35, repo rule 2).  Anything beyond these four is an error.
+    (repo rule 2).  Anything beyond these four is an error.
     """
     tree = ast.parse((SRC / "calculator/trigger_stream.py").read_text("utf-8"))
     relative = {
@@ -803,14 +801,14 @@ def test_the_bus_imports_only_the_vocabulary_leaves_and_the_view_tag():
 
 
 def test_the_view_tag_vocabulary_costs_the_bus_no_data_read():
-    """The amendment's own red: ``program.views.view_tag`` stays import-free.
+    """The red for the leaf claim: ``program.views.view_tag`` is import-free.
 
     A future edit that gave the tag's module a module-scope import of the
     behaviour registry would re-create exactly the condition the clause
     above forbids — silently, because the bus would keep importing one name
     from one module.  So the admissible import is pinned at its source.
 
-    ``ability_spec`` is on the list because it is the campaign's
+    ``ability_spec`` is on the list because it is the tree's
     dependency-free vocabulary leaf, which the line above already admits as
     the bus's *own* first import, so admitting it here reaches nothing the
     bus did not already reach.  The stdlib members are the type annotations
@@ -915,8 +913,8 @@ def test_a_paired_capability_pointing_at_a_walk_half_is_rejected(monkeypatch):
 def test_a_paired_capability_naming_no_delivery_is_rejected(monkeypatch):
     """``PAIRED ⇒ a delivery reference`` — the half the pair half is paired against.
 
-    The negative direction of Amendment C, and the one that had to survive
-    it: widening the field to admit a rider must not turn "declares nothing"
+    The negative direction, and the one that has to survive the widening:
+    admitting a rider must not turn "declares nothing"
     into a legal declaration.  Neither a packet source nor a rider stamp is
     still a paired half nobody can find.
     """
@@ -933,11 +931,11 @@ def test_a_paired_capability_naming_no_delivery_is_rejected(monkeypatch):
 
 
 def test_a_rider_delivered_paired_half_is_a_legal_declaration(monkeypatch):
-    """The positive direction of Amendment C: a rider is a delivery.
+    """The positive direction: a rider is a delivery.
 
     Shadowflame's Cinderbloom hands the walk an ``AmpBonus`` rider on its
-    own triggering event rather than a packet, and before this amendment the
-    registry had no shape that could say so — a ``PAIRED`` walk half had to
+    own triggering event rather than a packet, and a registry with no shape
+    for that cannot say so — a ``PAIRED`` walk half would have to
     carry a ``packet_source``, so the only constructible declaration was one
     that lied about what the mechanic does.  A stamp is a delivery
     reference, and this is the test that it constructs.
@@ -963,13 +961,13 @@ def test_a_rider_delivered_paired_half_is_a_legal_declaration(monkeypatch):
     "empty", [ts.RiderDelivery("  "), ts.HolderPacket("")], ids=["rider", "holder"]
 )
 def test_a_self_scoped_delivery_naming_nothing_is_rejected(monkeypatch, empty):
-    """R-05's red for the amendment's own branch, for both self-scoped shapes.
+    """The red for that branch, for both self-scoped shapes.
 
     An empty literal is the self-scoped spelling of the packet with no
     source: a delivery reference nobody can grep for is a number no reader
     can trace back to the mechanic that authored it.  One clause covers both
-    because it reads ``SELF_SCOPED_DELIVERIES``, so Amendment M's shape
-    arrived already checked rather than with a second copy of the check.
+    because it reads ``SELF_SCOPED_DELIVERIES``, so the second self-scoped
+    shape arrived already checked rather than with a second copy of the check.
     """
     broken = dict(ts.CAPABILITIES)
     broken["synthetic.mechanic"] = _capability(packet_source=empty)
@@ -990,8 +988,7 @@ def test_a_self_scoped_delivery_naming_nothing_is_rejected(monkeypatch, empty):
 # visible, attributable edit rather than a silent one.
 CC_KIND_READERS = {
     # ``_damage_event_row`` copies the token onto the ledger row; it is
-    # the one reader that never classifies.  D-34's certification gate left
-    # this map at P2b, when it moved onto the bus.
+    # the one reader that never classifies.
     "src/calculator/fight/ledger/event_rows.py": frozenset({"_damage_event_row"}),
     # The two compiler entries are copies too, and the distinction is the
     # whole of A1: each stamps the raw token onto ``SurvivalAction.cc_kind``
@@ -1012,8 +1009,8 @@ CC_KIND_READERS = {
     "src/calculator/program/views/receipt.py": frozenset({"_damage_event_rows"}),
     "src/calculator/trigger_stream.py": frozenset({"_classify_cc"}),
     # ``state_timeline`` asks main's *action-blocking* question (may the
-    # holder act?), which D-08 rules is a different question from the bus's
-    # immobilize one: the two vocabularies differ on polymorph and on
+    # holder act?), a different question from the bus's immobilize one:
+    # the two vocabularies differ on polymorph and on
     # flee/pull/snare/stasis, and it receipts an out-of-vocabulary token as
     # ``unknown_cc_kind`` where the bus refuses it.  One classifier per
     # question; each declared here.
@@ -1292,7 +1289,7 @@ def immobilize_literal_sites(
 
 
 def test_a7_the_immobilize_vocabulary_lives_only_in_the_vocabulary_module():
-    """A7 — the fourth re-typing of this set is what D-08 had to widen.
+    """A7 — the immobilize set has one home and every reader reads it.
 
     MERGE: ``control_spec`` declares TWO such literals, and they are two
     questions rather than one fact typed twice.  ``IMMOBILIZING_CC_KINDS``
@@ -1434,13 +1431,12 @@ def pairing_defects(
 def test_a8_every_pairing_claim_holds_against_source():
     """A8 — empty defect set, and both escape hatches empty.
 
-    ``UNPAIRED_KNOWN_DEFECT`` is the escape hatch D-92 pins empty: one half
-    missing is a different statement from two halves disagreeing.  Phase 3
-    froze Bloodsong's disagreement as the campaign's one
-    :class:`DivergenceReceipt`, and Phase 4 S7 retired it by naming an
-    authority — the walk — so the pair reading became a declared
-    ``THEORETICAL`` preview rather than a rival answer.  ``DIVERGENCES`` is
-    therefore empty too, and no row points at a receipt.
+    ``UNPAIRED_KNOWN_DEFECT`` is the escape hatch, pinned empty: one half
+    missing is a different statement from two halves disagreeing.
+    Bloodsong's disagreement was the last :class:`DivergenceReceipt`, and it
+    closed when the walk was named authoritative, so the pair reading is a
+    declared ``THEORETICAL`` preview rather than a rival answer.
+    ``DIVERGENCES`` is empty too, and no row points at a receipt.
 
     Empty is the end state, not a hole: the type survives, and the next
     divergence has to be a typed entry pointing at a receipt.
@@ -1603,15 +1599,13 @@ def test_a9_has_a_permanent_injection_seam():
 
 
 # ---------------------------------------------------------------------------
-# The R-12 producer source, and D-25's single boundary
+# The producer source, and the single starvation boundary
 # ---------------------------------------------------------------------------
 
 
-# D-07's producer set, by name and not only by count: umbrella criterion 3
-# reads "six, not five", and the count alone cannot tell a seventh producer
-# from a swapped one.  Pinned here, beside the derivation, because this is
-# the number the Shadowflame escalation argued from and the one Amendment C
-# keeps standing.
+# The cross-participant producer set, by name and not only by count: a
+# count alone cannot tell a seventh producer from a swapped one.  Pinned
+# here, beside the derivation it checks.
 RULED_CROSS_PARTICIPANT_PRODUCERS = frozenset(
     {
         "Abyssal Mask — Unmake",
@@ -1632,7 +1626,7 @@ def test_the_cross_participant_producers_are_the_ruled_six():
 
 
 def test_a_rider_delivered_half_is_not_a_cross_participant_producer(monkeypatch):
-    """Amendment C's other half — D-07 keys on the semantic, not the field.
+    """The set keys on the semantic, not on the field.
 
     A rider amplifies the event it rides, and that event belongs to its own
     holder, so a rider-delivered half modifies no *other* participant's
@@ -1666,13 +1660,13 @@ def test_a_rider_delivered_half_is_not_a_cross_participant_producer(monkeypatch)
 
 
 def test_a_holder_scoped_packet_half_is_not_a_cross_participant_producer(monkeypatch):
-    """Amendment M, Ruling 3 — the same semantic, the other delivery shape.
+    """The same semantic, the other delivery shape.
 
     A retiring family's walk half prices *its own holder's* damage and
     delivers it as an ordinary walk packet.  Keyed on "packet-delivered with
-    a cross-participant authority" it would join the ruled six on the commit
-    its retirement slice declares it, which is the ruled count moving to
-    satisfy a validator that Amendment C already refused from the rider side.
+    a cross-participant authority" it would join the six on the commit that
+    declares it, which is the count moving to satisfy a validator — the same
+    move the rider side already refuses.
 
     Three assertions, because the distinction has to hold without becoming a
     hole: the holder packet is not a producer, the producer set does not move
@@ -1731,7 +1725,7 @@ def test_a_seventh_producer_with_no_scenario_fails_capture(monkeypatch):
 
 
 #: Every spelling that catches a member of the ``STARVED`` class.  The base
-#: and its members are listed together because D-25's rule is about *where* a
+#: and its members are listed together because the rule is about *where* a
 #: named refusal is converted, so catching a subclass somewhere else evades it
 #: exactly as catching the base would.
 _STARVED_CLASS_NAMES = frozenset(
@@ -1762,10 +1756,10 @@ def except_starved_signal_sites(
 
 
 def test_exactly_one_starved_signal_catch_exists():
-    """D-25 — allowlisted by source assertion, and every other forbidden.
+    """One catch, allowlisted by source assertion, every other forbidden.
 
-    Over the class rather than over one name.  Amendment G reads "exactly one
-    catch" as one *place*, which is only enforceable if catching a member
+    Over the class rather than over one name.  "Exactly one catch" means one
+    *place*, which is only enforceable if catching a member
     somewhere else is as red as catching the base: an absorbed
     ``ProjectionStarvation`` is a consumer reading a stream that cannot
     answer it, and it would be invisible to a scan keyed on one spelling.
@@ -1835,8 +1829,8 @@ def test_every_registered_view_runs_inside_the_boundary():
 #
 # A pure refactor still has a boundary: four consumers stopped reading raw
 # rows and started reading Triggers, and a Trigger is a narrower object than
-# the dict it summarises.  Each difference below was found by the
-# ``verify-P2b`` signoff rather than declared by the slice that shipped it,
+# the dict it summarises.  Each difference below was found by review rather
+# than declared by the change that shipped it,
 # which is exactly why each is now a pin: prose that says "latent" ages into
 # prose that said "latent", while a test says it again on every run.
 
@@ -2406,10 +2400,9 @@ def test_an_out_of_vocabulary_cc_kind_raises_on_every_path_p2b_repointed():
 
     All three retired predicates coerced an unknown ``cc_kind`` to "not
     immobilizing" and carried on, so a kind outside the vocabulary priced
-    zero in silence.  P2b routed four consumers onto ``_classify_cc``,
-    which refuses it — the ruling in Phase 2's Types section, and the right
-    answer: a misspelled kind must never author a no-op stun.  None of the
-    nine slice bodies says the walk started raising, so the pin says it.
+    zero in silence.  Four consumers read ``_classify_cc`` instead, which
+    refuses it, and that is the right answer: a misspelled kind must never
+    author a no-op stun.  The pin is what says the walk raises.
 
     The control is the sibling authoring path: a ``cc_kind`` on a *part* is
     already refused at parse time, by a message naming the champion, the
@@ -2519,18 +2512,18 @@ class TestAnAuthoredCcKindIsUncheckedUntilTheWalk:
 
 
 # ---------------------------------------------------------------------------
-# Phase 4 S7 — the two fields the migration lane writes on the declaration
+# The two fields a declaration carries beyond its transport
 # ---------------------------------------------------------------------------
 
 
 def test_every_half_tags_exactly_the_engine_it_runs_on():
-    """D-62's "one tag per (mechanic, engine)", read off the live registry.
+    """One tag per (mechanic, engine), read off the live registry.
 
     A tag says what *this* half's numbers mean.  A half carrying a tag for
     the other engine would be one side of a split mechanic declaring what the
     other side's number is worth, which is the shape of the sentence — "the
-    holder's pair engine already prices its own amp" — that this campaign
-    exists because nobody could check.
+    holder's pair engine already prices its own amp" — that nobody could
+    check.
     """
     for mechanic, capability in ts.CAPABILITIES.items():
         assert set(capability.view_tags) == {capability.engine}, mechanic
@@ -2554,8 +2547,8 @@ def test_every_half_tags_exactly_the_engine_it_runs_on():
         ),
     ],
 )
-def test_the_two_phase_four_fields_reject_their_own_defects(overrides, message):
-    """Both directions of D-66, plus the tag rule, each with a red.
+def test_the_two_declaration_fields_reject_their_own_defects(overrides, message):
+    """Both directions of holder stacking, plus the tag rule, each with a red.
 
     A dual-sided declaration that omits ``holder_stacking`` must fail to
     construct rather than inherit a guess; a solo one that carries a value
@@ -2570,11 +2563,11 @@ def test_the_two_phase_four_fields_reject_their_own_defects(overrides, message):
 def test_holder_stacking_is_declared_exactly_on_the_dual_sided_mechanics():
     """The fifty-four, by name, with the value each one declares.
 
-    Pinned rather than derived: D-66's whole point is that the answer is a
-    per-mechanic fact, so a test that recomputed it from some property of the
+    Pinned rather than derived: the answer is a per-mechanic fact, so a test
+    that recomputed it from some property of the
     row would be the second answer the field exists to prevent.  Abyssal Mask
-    is the aura; every other row is per-holder, and two of them carry an
-    unanswered ``[H]`` id rather than a ruling.
+    is the aura; every other row is per-holder, and two of them name the
+    decision they wait on rather than a settled one.
 
     Shadowflame's Cinderbloom is per-holder for a reason worth stating,
     because it is the one row that arms nothing: its bonus rides its own
@@ -2674,19 +2667,18 @@ def test_a_rider_stamp_naming_no_live_predicate_rule_is_a_pairing_defect():
 
 
 def test_the_three_held_authority_moves_name_their_blocking_human_decision():
-    """Command, Carve and Vile Decay carry an ``[H]`` id, not a guess.
+    """Command, Carve and Vile Decay name what they wait on, not a guess.
 
-    Phase 4 declares seven authority moves and lands four.  The other three
-    are blocked on decisions a machine may not make, and the campaign's rule
-    is that a deferral is *written down* where the declaration lives — a row
-    that simply kept its old authority with no explanation is
-    indistinguishable from a row nobody looked at.
+    Three authority moves are blocked on decisions a machine may not make,
+    and each row says which where the declaration lives — a row that simply
+    kept its old authority with no explanation is indistinguishable from a
+    row nobody looked at.
     """
     source = (SRC / "calculator/trigger_stream.py").read_text("utf-8")
     for mechanic, marker in (
-        ("imperial_mandate.command", "# H2"),
-        ("black_cleaver.carve", "# H1"),
-        ("bloodletters_curse.vile_decay", "# H1"),
+        ("imperial_mandate.command", "waits on a sourced"),
+        ("black_cleaver.carve", "moves numbers a human owns"),
+        ("bloodletters_curse.vile_decay", "re-tuning the same approximation"),
     ):
         row = source.index(f'"{mechanic}"')
         preamble = source[max(0, row - 700) : row]
@@ -2695,7 +2687,7 @@ def test_the_three_held_authority_moves_name_their_blocking_human_decision():
 
 
 def test_every_compiled_rune_declares_exactly_one_capability():
-    """The rune half of D-36's non-item owners, joined to its own table.
+    """The rune half of the non-item owners, joined to its own table.
 
     ``trigger_stream`` is a data-free leaf and ``rune_effects`` reads
     ``data/runes.json`` at import, so the names are spelled in the

@@ -1182,7 +1182,8 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
         impl="item_support_shred._resistance_shred_packets",
     ),
     # Vile Decay is Carve's shape, magic- and ability-gated, and stays
-    # ``SPLIT`` for the same reason.
+    # ``SPLIT`` because re-tuning the same approximation moves numbers a
+    # human owns.
     _walk_item(
         "bloodletters_curse.vile_decay",
         "Bloodletter's Curse",
@@ -1298,8 +1299,8 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
     ),
     # Command keeps ``SPLIT`` because its authority move waits on a sourced
     # ``CcScope`` reading for Syndra E.  Its ``PER_HOLDER`` is the written
-    # fail-closed value rather
-    # than an absence: two Imperial Mandate holders each pay their own pool,
+    # fail-closed value rather than an absence: two Imperial Mandate holders
+    # each pay their own pool,
     # and a flat aura key would silently drop the second — the incident's own
     # shape mandated by a rule.
     _walk_item(
