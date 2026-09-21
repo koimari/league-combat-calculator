@@ -81,10 +81,10 @@ def optimize_build(
         require_complete_timeline: Withhold any build whose damage is not
             event-order certified. Public BIS requests enable this.
         work_counters: Optional benchmark sink for this search's proposal,
-            memo, pair-fight and fallback-rung counts (runbook R-24).
+            memo, pair-fight and fallback-rung counts.
         use_compiled_walk: False forces every coupled evaluation onto the
             receipt walk. The two walks are pinned equivalent, so this
-            changes cost and never an answer (R-01 row 11).
+            changes cost and never an answer.
 
     Returns:
         Dict with optimized build, damage, and metadata.

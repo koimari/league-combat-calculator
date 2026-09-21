@@ -2903,7 +2903,7 @@ class CoupledSearchContext:
         # skipped for the rest of the search.
         "uncompilable",
         # The benchmark harness's counter sink, and its switch for forcing
-        # every evaluation onto the receipt walk (runbook R-24, R-01 row 11).
+        # every evaluation onto the receipt walk.
         # Both are inert unless a caller installs them, and neither can
         # change a number: the two walks are pinned equivalent.
         "work_counters",
@@ -3467,7 +3467,7 @@ def _score_with_search_context(
     # compiled the roster's actions rather than cloning a cached set — and
     # every later evaluation on the same signature is ``CompiledFast``.  The
     # two share one published label, so this split moves no counter; what it
-    # buys is that the residual (R-25) has a decision to name when panel
+    # buys is that the residual has a decision to name when panel
     # reuse stops happening, instead of a histogram still reading 100%
     # compiled.
     compiled_rung = CompiledFast() if panel is not None else CompiledFull()

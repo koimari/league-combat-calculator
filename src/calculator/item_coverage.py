@@ -964,7 +964,7 @@ def require_calculation_item_coverage(
             and coverage.status == "withheld"
             and coverage.name in ALLY_ITEM_EFFECTS
         ):
-            # CP17's cross-participant packet layer is the authoritative
+            # The cross-participant packet layer is the authoritative
             # calculation path for support items.  They remain withheld from
             # ordinary BIS ranking until every holder-side sibling is
             # modeled, but an explicitly rostered support item is safe to

@@ -14,12 +14,12 @@ MODULE_FORMULA_ZERO = ZeroPolicy(
     "produced this total; a zero here is a computed zero, not a rule that "
     "never ran",
 )
-"""The one declared ``zero_policy`` default in the champion tree (D-24).
+"""The one declared ``zero_policy`` default in the champion tree.
 
 Every numeric leaf a champion authors is born in one of the two builders
 below, so this is the single place the disposition has to be stated: the
 399 call sites across 152 champion modules are deliberately **not** edited,
-and a required-no-default field there would be a campaign-wide champion
+and a required-no-default field there would be a tree-wide champion
 sweep smuggled in by an idiom.  Those two figures are measured, not
 recalled: ``tests/test_zero_policy.py`` counts the calls and states the
 counting rule, so restating them anywhere turns it red.  ``MEASURED`` is the

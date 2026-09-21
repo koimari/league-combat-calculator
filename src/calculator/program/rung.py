@@ -44,7 +44,7 @@ class CompiledFull:
     """The compiled walk priced it, rebuilding actions this evaluation.
 
     Its own member rather than a flag on :class:`CompiledFast` because the
-    two cost different amounts and the residual (R-25) moves between them:
+    two cost different amounts and the residual moves between them:
     collapsing them would hide a cache that stopped hitting behind a
     histogram that still reads 100% compiled.
     """
@@ -101,8 +101,8 @@ RUNGS: tuple[type, ...] = (CompiledFast, CompiledFull, ReceiptWalk, SearchPoison
 
 # One decision, one published label.  ``CompiledFast`` and ``CompiledFull``
 # share a label because the committed bench receipts have one ``compiled``
-# key and R-32 forbids moving a baseline to add a second; the split lives in
-# the decision, where a later stage can publish it without rewriting history.
+# key and a committed baseline may not move to add a second; the split lives
+# in the decision, where a later reader can publish it without moving one.
 _LABELS = {
     CompiledFast: CounterRung.COMPILED,
     CompiledFull: CounterRung.COMPILED,

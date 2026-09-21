@@ -352,7 +352,7 @@ def schedule_knights_vow(
 # ``ally_packet_shape._packet``, which resolves that member against
 # ``trigger_stream.CAPABILITIES`` and stops on a producer no capability
 # declares.  That one table is also what the coupled golden baseline reads
-# to prove its scenario set covers every producer (runbook R-12).
+# to prove its scenario set covers every producer.
 
 
 __all__ = ["derive_item_support_effects", "schedule_knights_vow"]

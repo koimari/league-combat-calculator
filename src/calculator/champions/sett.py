@@ -282,7 +282,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "only).",
         "The expended Grit also shields Sett for an equal amount for 3s; the outer "
         "physical ring is state.",
-        "E/R damage keep the reviewed CP10.7 packet pricing",
+        "E/R damage keep the reviewed packet pricing",
         "P (Pit Grit)'s always-on missing-health regeneration is authored by "
         "derive_self_healing.",
         "The cached row is 0.075/0.25/0.5/1/1.025/1.05 by level health per 0.5s per "

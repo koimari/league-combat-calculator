@@ -179,7 +179,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "posture.",
         "With it off no attack carries the rider, though Blade Whirl and Wild Rush "
         "still do.",
-        "Q/W/E and R damage keep the reviewed CP10.7 packet pricing (R: 10 sourced 0.2s shots)",
+        "Q/W/E and R damage keep the reviewed packet pricing (R: 10 sourced 0.2s shots)",
         "E (Wild Rush) places its bonus attack speed as a 5-second window at the "
         "first E cast.",
         "The takedown reset and the second window a longer fight earns are not "

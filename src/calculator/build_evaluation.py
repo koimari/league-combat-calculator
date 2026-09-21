@@ -139,7 +139,7 @@ def _evaluate_build_uncached(
     Creates fresh copies of mutable state to avoid cross-call contamination.
 
     This is the simulation the search pays for, so it is where a memo miss is
-    counted (R-24) — one increment in the function that does the work, rather
+    counted — one increment in the function that does the work, rather
     than one beside every branch that decides to call it.
     """
     if work_counters is not None:

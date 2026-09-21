@@ -12,7 +12,7 @@ Nothing here counts anything.  This module declares only *what* a counter
 sink looks like and *which rung* priced an evaluation; the optimizer and the
 participant timeline increment a sink the caller supplied, and the concrete
 sink is the benchmark harness's own dataclass in
-``scripts/bench_coupled_optimizer.py``.  That direction is deliberate (R-24):
+``scripts/bench_coupled_optimizer.py``.  That direction is deliberate:
 a harness that monkey-patched the search to observe it could not be unit
 tested and would not be measuring the code CI ships.  With no sink installed
 every counting site is a single ``is None`` test.

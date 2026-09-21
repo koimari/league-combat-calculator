@@ -367,7 +367,7 @@ class WalkResult:
     :class:`WalkOrigin`.  It is ``compare=False`` because two walks that
     produced identical numbers *are* equal as results and are not the same
     walk, and collapsing those two questions into one operator would make
-    the R-05 negative below untypable: the fixture's hand-built second
+    the negative below untypable: the fixture's hand-built second
     record has to be equal to the kernel's and identifiable as a second
     entry, at the same time.
     """

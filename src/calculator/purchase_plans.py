@@ -76,7 +76,7 @@ class PurchaseSearch:
         self.capacity = capacity
         self.reserve_boot_slot = reserve_boot_slot
         # The work-counter sink rides the search context itself rather than
-        # a patched module attribute (runbook R-24), so the counters CI reads
+        # a patched module attribute, so the counters CI reads
         # come from the same object the search itself carries.
         self.work_counters = work_counters
         self.evaluations = 0

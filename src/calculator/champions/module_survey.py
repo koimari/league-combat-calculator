@@ -213,7 +213,7 @@ def _module_cc(sites: DeclarationSites) -> dict[str, str]:
     """The module's reviewed crowd control, one entry per slot it emits.
 
     ``MODULE_CC`` is the single declaration site for a kit's crowd-control
-    facts (D-6): ``{slot: kind}`` with kinds from
+    facts: ``{slot: kind}`` with kinds from
     :data:`ability_spec.CC_KIND_VOCABULARY`, where ``"none"`` is a reviewed
     *absence* of control.
 

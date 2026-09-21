@@ -6190,7 +6190,7 @@ def built_per_rule[T](
 def _validate_tag_closure(tags: frozenset[str] | None = None) -> None:
     """``TAG_FAMILY`` is total and single-valued over the registry's tags.
 
-    ``tags`` is the seam the closure's own negative test drives (R-05): a
+    ``tags`` is the seam the closure's own negative test drives: a
     gate that cannot be made to fail on demand is indistinguishable from a
     gate that passes.
     """
@@ -6231,7 +6231,7 @@ def _validate_h4_closure() -> None:
 
 
 def _validate_action_kind_closure(kinds: frozenset[Any] | None = None) -> None:
-    """``ACTION_KIND_FAMILY`` is total over ``ActionKind`` (seam: R-05)."""
+    """``ACTION_KIND_FAMILY`` is total over ``ActionKind``, ``kinds`` its seam."""
     mapped = frozenset(ACTION_KIND_FAMILY)
     declared = frozenset(ActionKind) if kinds is None else kinds
     if mapped != declared:
@@ -6244,7 +6244,7 @@ def _validate_action_kind_closure(kinds: frozenset[Any] | None = None) -> None:
 def _validate_defense_source_closure(
     mechanics: frozenset[DefenseMechanic] | None = None,
 ) -> None:
-    """Every defensive mechanic has a family (seam: R-05).
+    """Every defensive mechanic has a family, ``mechanics`` the test's seam.
 
     The population is :class:`~.item_behavior.DefenseMechanic` itself, so a
     new defence fails *collection* until somebody decides which family models
@@ -6263,7 +6263,7 @@ def _validate_defense_source_closure(
 def _validate_event_certification(
     certified: Mapping[DefenseMechanic, str] | None = None,
 ) -> None:
-    """Every certification names a known mechanic *and* says why (seam: R-05).
+    """Every certification names a known mechanic *and* says why.
 
     Two clauses.  The first is structural: the certification is a property
     *of* a declared defence, so a member no declaration and no citation names
