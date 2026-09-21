@@ -9,7 +9,7 @@ silently disappear from the other (see tests/test_endpoint_parity.py).
 """
 
 import math
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -69,51 +69,6 @@ def public_loadout_summary(loadout: ChampionLoadout) -> dict[str, Any]:
     summary["item_icons"] = [https_icon(icon) for icon in summary["item_icons"]]
     summary["engine_registration"] = engine_registration_kind(summary["champion"])
     return summary
-
-
-# One combine policy per public key, shared by both serializers.
-# ``primary`` keeps the first target's value (the primary target), ``sum``
-# totals across targets, ``any`` ORs a boolean, ``sum_by_key`` adds
-# per-damage-type totals, ``sum_breakdown`` merges the per-ability rows,
-# ``concat`` concatenates ordered per-target streams, and
-# ``combine_timeline_coverages`` merges ordering receipts without
-# overstating precision.
-_PUBLIC_FIELD_POLICIES: dict[str, str] = {
-    "champion_stats": "primary",
-    "champion_stats_state": "primary",
-    "total_damage": "sum",
-    "health_damage": "sum",
-    "shield_absorbed": "sum",
-    "magic_shield_absorbed": "sum",
-    "physical_shield_absorbed": "sum",
-    "general_shield_absorbed": "sum",
-    "threshold_shield_absorbed": "sum",
-    "threshold_health_triggered": "any",
-    "threshold_health_bonus_gained": "sum",
-    "target_healing_received": "sum",
-    "target_ending_health": "sum",
-    "target_effective_max_health": "sum",
-    "target_effective_health": "sum",
-    "overkill": "sum",
-    "ability_damage": "sum",
-    "auto_attack_damage": "sum",
-    "damage_by_type": "sum_by_key",
-    "breakdown": "sum_breakdown",
-    "self_healing": "sum",
-    "self_healing_events": "concat",
-    "effective_mr": "primary",
-    "effective_armor": "primary",
-    "cast_timeline": "primary",
-    "rotation": "primary",
-    "resource_spent": "primary",
-    "resource_remaining": "primary",
-    "resource_ledger": "primary",
-    "notes": "primary",
-    "timeline_coverage": "combine_timeline_coverages",
-    "auto_attack_policy": "primary",
-    "auto_attack_schedule": "primary",
-    "damage_events": "concat",
-}
 
 
 def _public_event_time(event: Mapping[str, object]) -> float | None:
@@ -331,9 +286,9 @@ def serialize_fight_result(result: Mapping[str, object]) -> dict[str, Any]:
     }
 
 
-def _primary_value(result: Mapping, key: str) -> object:
+def _primary(key: str, results: list[dict[str, Any]]) -> object:
     """Copy the primary target's value defensively (mapping/list containers)."""
-    value = result[key]
+    value = results[0][key]
     if isinstance(value, Mapping):
         return dict(value)
     if isinstance(value, list):
@@ -341,31 +296,65 @@ def _primary_value(result: Mapping, key: str) -> object:
     return value
 
 
-def _concat_damage_events(results: list[dict]) -> list[dict]:
-    """Flatten per-target damage events with a 1:1 ``target_index`` stamp.
+def _any_true(key: str, results: list[dict[str, Any]]) -> object:
+    """OR one published boolean across targets."""
+    return any(result.get(key, False) for result in results)
 
-    The roster response keeps the per-target table (``targets[i].result``) and
-    also exposes this flattened stream, so a consumer reading only the
-    top-level ``damage_events`` key sees every target.  A single-target
-    response carries no ``target_index``.
+
+def _concat(key: str, results: list[dict[str, Any]]) -> object:
+    """Concatenate one ordered per-target stream."""
+    return [event for result in results for event in result.get(key, [])]
+
+
+def _concat_stamped(key: str, results: list[dict[str, Any]]) -> object:
+    """Flatten per-target damage events, each stamped with ``target_index``.
+
+    The roster response also keeps the per-target table
+    (``targets[i].result``); a single-target response carries no stamp.
     """
-    flattened: list[dict] = []
-    for target_index, result in enumerate(results):
-        for event in result.get("damage_events", []):
-            stamped = dict(event)
-            stamped["target_index"] = target_index
-            flattened.append(stamped)
-    return flattened
+    return [
+        dict(event, target_index=target_index)
+        for target_index, result in enumerate(results)
+        for event in result.get(key, [])
+    ]
 
 
-def _sum_breakdown(results: list[dict]) -> dict:
+def _summed(key: str, results: list[dict[str, Any]]) -> object:
+    """Total one published number across targets."""
+    return round(sum(float(result.get(key, 0.0)) for result in results), 1)
+
+
+def _summed_measure(
+    measure: Callable[[Mapping[str, object]], float],
+) -> Callable[[str, list[dict[str, Any]]], object]:
+    """Total one derived per-target measure, which has no public key to read."""
+    return lambda _key, results: round(sum(measure(result) for result in results), 1)
+
+
+def _summed_by_damage_type(key: str, results: list[dict[str, Any]]) -> object:
+    """Add the per-damage-type totals, publishing the three classes always."""
+    damage_types = {"physical": 0.0, "magic": 0.0, "true": 0.0}
+    for result in results:
+        for damage_type, amount in result[key].items():
+            damage_types[damage_type] = damage_types.get(damage_type, 0.0) + amount
+    return {
+        damage_type: round(amount, 1) for damage_type, amount in damage_types.items()
+    }
+
+
+def _combined_timeline_coverage(_key: str, results: list[dict[str, Any]]) -> object:
+    """Merge the per-target ordering receipts without overstating precision."""
+    return aggregate_timeline_coverage(results)
+
+
+def _summed_breakdown(key: str, results: list[dict[str, Any]]) -> object:
     """Merge per-target breakdown rows with the existing receipt shape."""
     target_count = len(results)
     breakdown = {}
     for result in results:
-        for key, entry in result["breakdown"].items():
+        for row_key, entry in result[key].items():
             aggregate = breakdown.setdefault(
-                key,
+                row_key,
                 {
                     "name": entry["name"],
                     "total_damage": 0.0,
@@ -396,51 +385,49 @@ def _sum_breakdown(results: list[dict]) -> dict:
     return breakdown
 
 
-# pylint: disable-next=too-many-branches  # one branch per combine policy
+# One combine policy per public key, shared by both serializers: the single
+# target serializer's key set is this table's keys, so a key added to one
+# cannot silently disappear from the other.
+_PUBLIC_FIELD_POLICIES: dict[str, Callable[[str, list[dict[str, Any]]], object]] = {
+    "champion_stats": _primary,
+    "champion_stats_state": _primary,
+    "total_damage": _summed,
+    "health_damage": _summed,
+    "shield_absorbed": _summed,
+    "magic_shield_absorbed": _summed,
+    "physical_shield_absorbed": _summed,
+    "general_shield_absorbed": _summed,
+    "threshold_shield_absorbed": _summed,
+    "threshold_health_triggered": _any_true,
+    "threshold_health_bonus_gained": _summed,
+    "target_healing_received": _summed,
+    "target_ending_health": _summed,
+    "target_effective_max_health": _summed,
+    "target_effective_health": _summed_measure(_target_effective_health),
+    "overkill": _summed_measure(_legacy_overkill),
+    "ability_damage": _summed,
+    "auto_attack_damage": _summed,
+    "damage_by_type": _summed_by_damage_type,
+    "breakdown": _summed_breakdown,
+    "self_healing": _summed,
+    "self_healing_events": _concat,
+    "effective_mr": _primary,
+    "effective_armor": _primary,
+    "cast_timeline": _primary,
+    "rotation": _primary,
+    "resource_spent": _primary,
+    "resource_remaining": _primary,
+    "resource_ledger": _primary,
+    "notes": _primary,
+    "timeline_coverage": _combined_timeline_coverage,
+    "auto_attack_policy": _primary,
+    "auto_attack_schedule": _primary,
+    "damage_events": _concat_stamped,
+}
+
+
 def aggregate_public_results(results: list[dict[str, Any]]) -> dict[str, Any]:
-    """Sum the same selected damage package across every hit target.
-
-    Driven by ``_PUBLIC_FIELD_POLICIES`` so every key the single-target
-    serializer emits also exists here (including ``damage_events``, the
-    flattened per-target stream stamped with ``target_index``).
-    """
-    primary = results[0]
-    timeline_coverage = aggregate_timeline_coverage(results)
-    damage_types = {"physical": 0.0, "magic": 0.0, "true": 0.0}
-    for result in results:
-        for damage_type, amount in result["damage_by_type"].items():
-            damage_types[damage_type] = damage_types.get(damage_type, 0.0) + amount
-
-    aggregated: dict[str, object] = {}
-    for key, policy in _PUBLIC_FIELD_POLICIES.items():
-        if policy == "primary":
-            aggregated[key] = _primary_value(primary, key)
-        elif policy == "any":
-            aggregated[key] = any(result.get(key, False) for result in results)
-        elif policy == "concat":
-            if key == "damage_events":
-                aggregated[key] = _concat_damage_events(results)
-            else:
-                aggregated[key] = [
-                    event for result in results for event in result.get(key, [])
-                ]
-        elif policy == "sum_by_key":
-            aggregated[key] = {
-                damage_type: round(amount, 1)
-                for damage_type, amount in damage_types.items()
-            }
-        elif policy == "sum_breakdown":
-            aggregated[key] = _sum_breakdown(results)
-        elif policy == "combine_timeline_coverages":
-            aggregated[key] = timeline_coverage
-        elif policy == "sum":
-            if key == "target_effective_health":
-                value = sum(_target_effective_health(result) for result in results)
-            elif key == "overkill":
-                value = sum(_legacy_overkill(result) for result in results)
-            else:
-                value = sum(float(result.get(key, 0.0)) for result in results)
-            aggregated[key] = round(value, 1)
-        else:
-            raise AssertionError(f"unknown combine policy {policy!r} for {key}")
-    return aggregated
+    """Fold the same selected damage package across every hit target."""
+    return {
+        key: combine(key, results) for key, combine in _PUBLIC_FIELD_POLICIES.items()
+    }
