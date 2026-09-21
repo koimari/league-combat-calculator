@@ -2,7 +2,7 @@
 
 ``MODULE_COVERAGE`` is a claim about damage, and a claim no test reads is
 a claim that drifts: between ``b03bbad9`` and the coverage-frontier
-campaign, Samira's, Yasuo's and Kindred's maps each named the wrong set
+review, Samira's, Yasuo's and Kindred's maps each named the wrong set
 of slots while every row they price stayed correct.  So the modules that
 declare a map assert it against this read, taken off a real parse, and
 the two can only disagree by failing.

@@ -18,7 +18,7 @@ The property, one clause per engine, over ``delta_amp``, ``ally_packet`` and
   with the ``owner`` handshake the incident's own fix installed;
 * the **compiled walk** either matches it or refuses with a named receipt —
   never silently drops it.  All three answers occur here: the lifeline is
-  matched, the amp is D-101's categorical refusal, and the aura is the support
+  matched, the amp is the categorical refusal, and the aura is the support
   kernel's;
 * the **light-tuple path** raises rather than pricing the declaration at zero,
   which is the one failure a returned number could not disclose.
@@ -239,7 +239,7 @@ def test_the_receipt_walk_applies_the_aura_to_others_and_not_the_holder(
     for packet in curse:
         assert packet["owner"] == holder.participant_id
         assert packet["multiplier"] == pytest.approx(1.0 + declared_rate)
-        # D-04: both restriction axes are required and neither is empty-means-
+        # Both restriction axes are required and neither is empty-means-
         # all, so the packet carries what the declaration says it modifies.
         assert packet["damage_classes"] == frozenset({DamageClass.MAGIC})
         assert packet["attack_classes"] == frozenset(AttackClass)

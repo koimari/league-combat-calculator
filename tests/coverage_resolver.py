@@ -4,7 +4,7 @@
 cannot be backed by anything.  This module is the tier that asks the harder
 question — does the thing a claim's evidence names actually exist in *this*
 tree — and it answers it on **every** ``pytest`` run, including under ``-k``
-and inside a ``git bisect``, because the drift window this campaign closes is
+and inside a ``git bisect``, because the drift window this closes is
 one commit wide.
 
 Four properties of this file are ruled, and every one of them is load-bearing.
@@ -787,7 +787,8 @@ FULL_ENTRY_AUDIT = "docs/wiki-full-entry-audit.json"
 # four live together and the runes one does not, which is exactly why the
 # member carries the registry name rather than a dotted path — a claim says
 # *which* registry holds the number, and this table is the only place that
-# turns the answer into a module (D-46's three plus ``ITEM_INPUT_OPTIONS``).
+# turns the answer into a module (the three registries plus
+# ``ITEM_INPUT_OPTIONS``).
 REGISTRY_MODULES: Mapping[str, str] = {
     "ITEM_EFFECTS": "item_effects",
     "ALLY_ITEM_EFFECTS": "item_effects",
@@ -848,7 +849,7 @@ class PacketSite:
         source: the rendered ``source=`` argument; an f-string's interpolated
             parts collapse to bare ``{}`` slots.
         keywords: every keyword name the call passes.  ``owner`` is the one
-            the campaign turns on — a dual-sided packet that stops declaring
+            the gate turns on — a dual-sided packet that stops declaring
             it is the incident's second failure layer — so the set is carried
             rather than a boolean about one of them.
     """
@@ -886,7 +887,7 @@ def packet_sites(module_text: str) -> tuple[PacketSite, ...]:
     """Every call carrying ``source=``, with its keyword-name set.
 
     Measured 29 in ``item_support_effects.py``; the measurement, not a pinned
-    integer, is the contract, and Phase 3's producer count is derived from it
+    integer, is the contract, and the producer count is derived from it
     (the length of the distinct ``source`` set).  A call whose source is not a
     literal is skipped rather than reported: it is unquotable evidence, not a
     broken site.
@@ -1166,7 +1167,7 @@ def resolve_paired_sides(
 def _capabilities(
     sides: PairedSides, claim: Claim, ctx: ResolverContext
 ) -> Mapping[str, Any]:
-    """Phase 2's capability registry, through the importer seam."""
+    """The capability registry, through the importer seam."""
     try:
         trigger_stream = ctx.importer(f"{PACKAGE}.trigger_stream")
     except ImportError as missing:

@@ -510,7 +510,7 @@ def test_calculate_prices_steraks_lifeline_in_certified_timed_fight():
 def _uncertify(monkeypatch, source="proc_Synthetic"):
     """Make every fight report one uncertified damage source.
 
-    The coverage campaign certified every source a real build can reach, so
+    Every source a real build can reach is certified, so
     the Lifeline guard has nothing left to fire on — and a guard proven only
     by whichever mechanic happens to be uncertified this week is a guard that
     retires itself silently. The fight is made to report a coarse source

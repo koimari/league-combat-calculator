@@ -326,7 +326,7 @@ class TestPassiveDrakehoundsStep:
 
 
 class TestPassiveEventCertification:
-    """Wave 1B: the passive's ledger rides the real swing schedule."""
+    """The passive's ledger rides the real swing schedule."""
 
     @staticmethod
     def _timed_params():

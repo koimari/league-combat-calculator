@@ -1,7 +1,7 @@
 """H5 — the compiled score kernel's timed, typed damage modifiers.
 
 The umbrella records H5 as **SCOPED**: the compiled score kernel is taught
-timed, typed damage modifiers, as its own stage after Phase 4's S7, **with
+timed, typed damage modifiers, **with
 its own equivalence fixture**.  This file is that fixture, and it is the
 condition on which the stage may ship at all — a compiled lane that prices a
 build differently from the receipt walk is the divergent lane the stage is

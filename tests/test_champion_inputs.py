@@ -1,7 +1,7 @@
-"""Test front door for ``champions/inputs.py`` — D-24's guard, asserted.
+"""Test front door for ``champions/inputs.py``: the guard, asserted.
 
 The champion tree discharges its ``zero_policy`` obligation with a declared
-default at two builders instead of editing every call site, and D-24 makes
+default at two builders instead of editing every call site, and the rule makes
 that exception conditional: *a source assertion over* ``champions/``
 *forbids a* ``.get(key, <literal>)``-*shaped fallback from feeding a damage
 formula*, because a zero produced by an input nothing wired would be stamped
@@ -97,7 +97,7 @@ def _input_fallback_sites(root: Path = CHAMPIONS_ROOT) -> list[str]:
 
 
 def test_no_champion_module_defaults_an_input_to_a_literal() -> None:
-    """D-24's source assertion, stated over the tree it governs."""
+    """The source assertion, stated over the tree it governs."""
     assert _input_fallback_sites() == [], (
         "a champion input read with a literal fallback keeps answering after "
         "the input stops being wired, and the declared zero_policy default "

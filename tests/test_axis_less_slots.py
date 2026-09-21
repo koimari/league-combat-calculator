@@ -274,7 +274,7 @@ class TestSylasHijackHasNoDamageOfItsOwn:
         assert "scaling based on Hijack's rank and his own statistics" in prose
 
     def test_the_conversion_rule_is_sourced_and_is_not_the_blocker(self):
-        """What a future slice would already have: the AD-to-AP conversion.
+        """What a later change would already have: the AD-to-AP conversion.
 
         Pinned so the blocker cannot later be misreported as this rule being
         missing. What is missing is a second champion's ultimate inside one

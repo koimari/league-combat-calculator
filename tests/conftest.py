@@ -30,7 +30,7 @@ The hooks at the bottom of this file serve the coverage-claim resolver
 (``tests/coverage_resolver.py``): they stash the collected node set and
 answer whether this session collected everything.  They are purely additive
 — no item is mutated and nothing depends on collection order — except for
-two deliberate removals, both the same ruling: ``pytest.skip`` prints green
+two deliberate removals, for the same reason: ``pytest.skip`` prints green
 and a check that reports skipped is a check that reports nothing.
 
 - In a *filtered* session the full-session tier is **not collected**,
@@ -478,9 +478,9 @@ def pytest_collection_modifyitems(
 ) -> None:
     """Stash the collected node set, and drop what this run cannot answer.
 
-    Deselection rather than ``pytest.skip`` is the ruling: a skipped
+    Deselection rather than ``pytest.skip``, because a skipped
     check takes the green path and reports success for work it did not do,
-    which is this campaign's own failure shape inside its own gate.  A
+    which is a green gate over work nobody did.  A
     deselected node is absent from the report entirely, and the resolution
     tier proves the weaker fact by source scan in its place.
 

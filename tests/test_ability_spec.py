@@ -436,7 +436,7 @@ def test_the_union_has_exactly_the_four_dispositions() -> None:
 
 
 def test_disposition_survives_as_the_tag_projection() -> None:
-    """D-72's "``Disposition`` survives as ``Quantity``'s tag projection"."""
+    """ "``Disposition`` survives as ``Quantity``'s tag projection"."""
     assert MEASURED.disposition is Disposition.MEASURED
     assert STRUCTURAL.disposition is Disposition.STRUCTURAL_ZERO
     assert WITHHELD.disposition is Disposition.WITHHELD
@@ -476,7 +476,7 @@ def test_a_withheld_quantity_with_no_receipt_cannot_be_constructed() -> None:
 
 
 def test_reading_a_starved_quantity_raises_projection_starvation() -> None:
-    """D-25: lazily, on first read, carrying field/producer/reason."""
+    """Lazily, on first read, carrying field, producer and reason."""
     with pytest.raises(quantity.ProjectionStarvation) as excinfo:
         STARVED.read()
     message = str(excinfo.value)
@@ -552,10 +552,10 @@ def test_a_starved_member_raises_from_every_side_of_a_fold() -> None:
 
 
 def test_starved_beats_withheld_in_both_orders() -> None:
-    """The clause order is the ruling, so it is asserted rather than implied.
+    """The clause order is the rule, so it is asserted rather than implied.
 
     A withheld total that quietly swallowed a programming error would be
-    exactly the failure this campaign is named after, wearing a receipt.
+    a number nobody computed, wearing a receipt.
     """
     with pytest.raises(quantity.ProjectionStarvation):
         _ = WITHHELD + STARVED

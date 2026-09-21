@@ -199,7 +199,7 @@ class TestInferredKindCoverage:
         assert empty == ["enhanced_consume"]
 
     def test_the_gap_is_one_dated_reviewed_entry(self, receipt) -> None:
-        """D-88 / H6: a dated one-line gap is auditable, a dead branch is not."""
+        """A dated one-line gap is auditable, a dead branch is not."""
         gaps = receipt["acknowledged_gaps"]
         assert len(gaps) == 1
         gap = gaps[0]
@@ -394,7 +394,7 @@ class TestDeclarations:
         assert set(frontier["reasons"]) == set(ORDER_OVERRIDE_REASONS)
 
     def test_the_head_only_seeds_are_the_seeds_that_also_declare(self, receipt) -> None:
-        """D-89's second disposition, measured rather than remembered.
+        """The second disposition, measured rather than remembered.
 
         All seven survivors carry ``dps_tiebreak``, so the reason
         histogram alone cannot separate a head-only seed (declaration

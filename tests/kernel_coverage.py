@@ -21,7 +21,7 @@ def required_coverage_keys() -> frozenset[str]:
     adds it — and fails this suite until it has a fixture.
 
     Both now project one declaration table.  The item half read the hand set
-    ``item_support_effects.EVENT_VIEW_SUPPORT_ITEMS`` until Phase 2's P2c
+    ``item_support_effects.EVENT_VIEW_SUPPORT_ITEMS`` until that name
     deleted it, and the producer half read that module's ``ast`` derivation
     over its own call sites until the same commit; both are
     ``trigger_stream.CAPABILITIES`` projections now.

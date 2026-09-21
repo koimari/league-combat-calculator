@@ -108,7 +108,7 @@ def declared_classes_by_producer():
 def timed_cross_participant_producers():
     """Every ``damage_modifier`` producer whose declaration carries an expiry.
 
-    Read from the Phase 3 declarations rather than from the ``duration=``
+    Read from the declarations rather than from the ``duration=``
     expression at the call site: 3.6 moved the number behind the producer's
     own reference, so "does this modifier close" is now a declared axis
     (``Persistence``) instead of something a reader infers from whether one

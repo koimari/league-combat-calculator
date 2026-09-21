@@ -1,6 +1,6 @@
 """The fixed-work bench: its arithmetic, its void rule, and its scenarios.
 
-R-01 row 8 gates every campaign commit on this harness, so the harness needs
+The fixed-work reading gates a performance commit, so the harness needs
 gates of its own — most of all a void rule that can be made to fire, because
 a run the wall clock truncated measured the machine and must never be read as
 a counter.
@@ -127,7 +127,7 @@ class TestRoutingComparison:
     walk elects the same build and scores it the same.  Before this suite the
     row had no code that could say otherwise: the two JSON blobs were paired
     by a reader, so the gate could not fail, which is the exact shape the
-    campaign exists to remove.  ``routing_comparison``'s ``report`` argument
+    gate exists to remove.  ``routing_comparison``'s ``report`` argument
     is the seam, the way ``score`` is ``check_ratchet``'s.
     """
 

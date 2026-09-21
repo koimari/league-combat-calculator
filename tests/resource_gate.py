@@ -2,7 +2,7 @@
 
 A test whose evidence is a locally built game file, or a browser probe that
 shells out to ``node``, cannot run where the resource is not there.  The
-ruling is that the nodes needing it are deselected and counted rather
+rule is that the nodes needing it are deselected and counted rather
 than skipped, because a skip prints green for work that did not happen.
 
 This is the vocabulary; ``tests/conftest.py`` holds the hooks that act on it

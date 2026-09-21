@@ -152,7 +152,8 @@ class TestTheChargeFieldCapsAreStillAbsent:
     #: ``champion -> (bin slot path fragment, the mMaxAmmo the binary holds)``.
     #: The GAME FILES carry a charge stock for every one of these, per rank,
     #: where the wiki prose carries one for only some. That is a source this
-    #: campaign had not looked in, and SR4 says the opposite about Caitlyn.
+    #: earlier review had not looked in, and SR4 says the opposite about
+    #: Caitlyn.
     BINARY_AMMO = {
         "caitlyn": ("CaitlynWAbility/CaitlynW", [2, 3, 3, 4, 4, 5, 5]),
         "gangplank": ("GangplankEAbility/GangplankE", [3, 3, 3, 4, 4, 5, 5]),
@@ -172,8 +173,8 @@ class TestTheChargeFieldCapsAreStillAbsent:
         Caitlyn included, whose ``ChargeRule`` says no stock exists.
 
         Wiring it into ``charge_cadence`` moves cast schedules for several
-        champions and is its own slice. This asserts the data is there so
-        that slice starts from a fact rather than a rediscovery.
+        champions and is its own change. This asserts the data is there so
+        that change starts from a fact rather than a rediscovery.
         """
         fragment, expected = self.BINARY_AMMO[stem]
         data = json.loads((BINS / f"{stem}.bin.json").read_text(encoding="utf-8"))

@@ -152,7 +152,7 @@ def _item(name):
 
     Deliberately *not* a fixed vocabulary: the suite's required item set is
     derived from the registries below, so a scenario reaching a new item may
-    not have to extend a hand list to name it (slice 0A.9)."""
+    not have to extend a hand list to name it."""
     return get_item_by_name(name)
 
 
@@ -211,7 +211,7 @@ class KernelFixture:
     """One compiled-vs-receipt scenario, and what it puts on the board.
 
     ``pinned_divergence`` is a *characterization*: a named, reproduced
-    disagreement between the two walks that Phase 0A may not fix, because 0A
+    disagreement between the two walks that a pure refactor may not fix, because it
     moves no number in ``src/``.  A pinned fixture asserts the walks still
     disagree, so the commit that fixes the mechanic turns this suite red and
     its author has to read the reason rather than inherit it.

@@ -1,7 +1,7 @@
 """CI checks out the tree, not the repository.
 
 Every gate the workflow runs answers from the files in the checkout.  Four
-records — the corpus anchor's merge base, the campaign's slice tags, the
+records — the corpus anchor's merge base, the committed slice tags, the
 migration counters' receipt-to-receipt diff and the P2a breach's tree
 extraction — are closed and pinned, so none of them needs a commit and none
 justifies ``fetch-depth: 0`` on the test job.  The two halves of that are

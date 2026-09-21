@@ -264,8 +264,9 @@ class TestReviewedCrowdControl:
     """Anivia's crowd-control review, and the two slots that withhold.
 
     R's blizzard ticks ride their cached 0.5-second beat and each slows,
-    but stating the kind on them is the ``enhanced_consume`` ruling that
-    has its own slice.  Q's row is the cached 'Total Magic Damage' of the
+    but stating the kind on them would make the ``enhanced_consume``
+    claim, which is its own change.  Q's row is the cached 'Total Magic
+    Damage' of the
     slowing pass-through and the stunning shatter, with no cached time for
     the shatter.  Both name themselves per-part and neither answers.
     """
@@ -302,7 +303,7 @@ class TestReviewedCrowdControl:
 
         Stating it makes Anivia the roster's first ``enhanced_consume``
         producer, R's chill feeding E's "Enhanced Damage", which is the
-        cast-dependency ruling reserved to its own slice.
+        cast-dependency claim, which is its own change.
         """
         text = cc_review.slot_text(cc_review.kit("Anivia"), "R")
         assert "slowing them for 1 second" in text

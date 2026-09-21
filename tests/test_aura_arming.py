@@ -1,4 +1,4 @@
-"""When a persistent cross-participant aura arms (C4, D-05/D-06/D-63).
+"""When a persistent cross-participant aura arms.
 
 A ``damage_modifier`` some trigger armed is a debuff: it resolves after the
 damage at its own timestamp, because the packet that triggered it landed
@@ -175,7 +175,7 @@ class TestTheAuraPricesItsOwnTimestamp:
 
 
 class TestThePublishedLedgerGainsItsSeventhPhase:
-    """D-63's second value: a published payload changed, so the version moved."""
+    """A published payload changed, so the schema version moved."""
 
     def test_the_aura_slot_is_published_between_the_barriers_and_the_damage(self):
         phases = PARTICIPANT_LEDGER_CONTRACT["phases"]

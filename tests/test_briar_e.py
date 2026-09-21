@@ -249,7 +249,7 @@ def _run_modifier_window_walk():
         source_key="E",
         event_slot=EVENT_SLOTS.slot("mod"),
         sequence=0,
-        # D-04: an armed modifier declares the classes it prices, and
+        # An armed modifier declares the classes it prices, and
         # empty-means-all is banned.  ``all_sources`` is Briar's own
         # "from all sources", so every class is declared.
         damage_classes=frozenset(DamageClass),

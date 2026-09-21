@@ -226,7 +226,7 @@ class TestOneHomePerFact:
         assert self._contract(MODULE_COVERAGE=declared).coverage == declared
 
     def test_modeled_without_a_row_or_a_channel_is_refused(self):
-        """The relabel this campaign bans: ``modeled`` backed by nothing."""
+        """The relabel the ladder bans: ``modeled`` backed by nothing."""
         declared = dict.fromkeys("PQWER", "out_of_scope") | {"Q": "modeled"}
         with pytest.raises(ValueError, match=r"\['P'\]"):
             self._contract(MODULE_COVERAGE=declared | {"P": "modeled"})

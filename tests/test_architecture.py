@@ -168,7 +168,8 @@ FRONT_DOOR_FRONTIER: Mapping[str, FrontierEntry] = {
     # sentinel set (`None` and `""`, never 0) that three optimize fields had
     # each been spelling inline, and a sentinel policy exercised only through
     # an endpoint is a policy nobody has watched decide.
-    # `survival.receipt_state` left this frontier at Phase 4 S4, which is what
+    # `survival.receipt_state` left this frontier when the one
+    # ``SurvivalAction`` constructor landed, which is what
     # a member closing looks like: the stage that gave `ReceiptLedger` its
     # injected `compile_event` also gave the module an importing test module
     # (`tests/test_program_structure.py`, the one-direction assertions), so the
@@ -176,12 +177,12 @@ FRONT_DOOR_FRONTIER: Mapping[str, FrontierEntry] = {
     # It is recorded here as a comment rather than silently deleted because the
     # set is the receipt: a member that leaves without a sentence saying why is
     # indistinguishable from a member somebody deleted to make a gate pass.
-    # `healing_legacy` left this frontier at the heal-anchor slice, when the
+    # `healing_legacy` left this frontier when the
     # self-heal rules gained a declared anchor: `tests/test_healing.py` imports `HealAnchor` and
     # `_payments` to pin what each rule pays on -- a cast, a hit that dealt
     # damage, or a tick schedule of its own -- so the module that had been
     # covered by behaviour without being named is named.
-    # `survival.score_state` left this frontier at Phase 4 S10, the last of
+    # `survival.score_state` left this frontier last, after
     # the six `survival/` members the phase closes (criterion 18).  Its front
     # door is `tests/test_score_state.py`, and writing one was the work: the
     # score ledger's contract is almost entirely refusals -- it records one
@@ -210,7 +211,7 @@ def test_item_identity_stops_at_the_fight_engines_door() -> None:
 
 
 def test_every_module_outside_champions_has_a_front_door_or_a_frontier_entry() -> None:
-    """D-95: the front-door registry is derived, and this is what it says.
+    """The front-door registry is derived, and this is what it says.
 
     Set equality in both directions.  A module that gains a front door has to
     leave the frontier in the same commit, and a module that loses one has to
@@ -224,7 +225,7 @@ def test_every_module_outside_champions_has_a_front_door_or_a_frontier_entry() -
 
 
 def test_the_survey_covers_more_than_the_filename_convention_it_replaced() -> None:
-    """The other half of D-95: a front door is an import, not a filename.
+    """The other half: a front door is an import, not a filename.
 
     The registry this replaced was a tuple of eleven module names checked
     against `tests/test_<module>.py` existing.  A file whose name matches

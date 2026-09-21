@@ -1,6 +1,6 @@
 """The timed cast scheduler: variant-slot haste, ultimate recasts, autos-only.
 
-These pin the three scheduler decisions the surface-area campaign found
+These pin the three scheduler decisions a surface-area review found
 (backlog CF2, CF18, CF23) at the engine boundary, where a synthetic kit can
 name a slot no cached champion emits today.
 """

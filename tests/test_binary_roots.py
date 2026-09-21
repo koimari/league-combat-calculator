@@ -27,7 +27,7 @@ _CHAMPIONS = json.loads((Path("data/champions.json")).read_text(encoding="utf-8"
 def test_every_cache_champion_resolves_to_a_tracked_binary():
     """182/182 alignment: each champions.json key maps to a dump on disk.
 
-    This is the campaign's completeness gate — a champion without a dump
+    This is the completeness gate — a champion without a dump
     fails here, not later as a mysterious runtime error.
     """
     missing = [
