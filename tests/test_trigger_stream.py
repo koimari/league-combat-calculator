@@ -1732,9 +1732,6 @@ _STARVED_CLASS_NAMES = frozenset(
     {
         "StarvedSignal",
         "ProjectionStarvation",
-        "OutcomeRewritten",
-        "DuplicateApplied",
-        "UnwrittenAdjustment",
     }
 )
 
@@ -1764,8 +1761,8 @@ def test_exactly_one_starved_signal_catch_exists():
     Over the class rather than over one name.  Amendment G reads "exactly one
     catch" as one *place*, which is only enforceable if catching a member
     somewhere else is as red as catching the base: an absorbed
-    ``OutcomeRewritten`` is the last-write-wins the write-once ledger exists
-    to refuse, and it would be invisible to a scan keyed on one spelling.
+    ``ProjectionStarvation`` is a consumer reading a stream that cannot
+    answer it, and it would be invisible to a scan keyed on one spelling.
     """
     assert except_starved_signal_sites() == ("src/app.py",)
 
@@ -1781,30 +1778,6 @@ def test_the_single_catch_has_a_permanent_injection_seam():
         "    try:\n"
         "        return run()\n"
         "    except ProjectionStarvation:\n"
-        "        return 0.0\n",
-    )
-    assert except_starved_signal_sites(injected) == (
-        "src/app.py",
-        "src/calculator/economy.py",
-    )
-
-
-def test_the_seam_catches_a_swallowed_ledger_raise_too():
-    """The widening the class buys, injected: a member, not the base.
-
-    Without this the generalisation would be untested in the direction that
-    matters — the one where somebody absorbs a contested outcome under a name
-    D-25 never mentioned.
-    """
-    injected = _with(
-        live_sources(),
-        "src/calculator/economy.py",
-        "from .survival.outcome_state import OutcomeRewritten\n"
-        "\n"
-        "def swallow(run):\n"
-        "    try:\n"
-        "        return run()\n"
-        "    except OutcomeRewritten:\n"
         "        return 0.0\n",
     )
     assert except_starved_signal_sites(injected) == (

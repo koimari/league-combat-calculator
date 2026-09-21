@@ -591,8 +591,8 @@ def _within_starvation_boundary(view):
     umbrella's Amendment G reads its "exactly one catch" — one *place*, not
     one exception type).  Everywhere else they propagate: a named refusal
     that is quietly absorbed is the zero this campaign exists to kill, and
-    an absorbed ``OutcomeRewritten`` in particular is the last-write-wins the
-    write-once ledger was landed to replace.
+    an absorbed rewrite signal in particular is the last-write-wins the
+    write-once ledger refuses.
 
     One wrapper over every registered view rather than one ``except`` per
     route, because "exactly one catch" is the rule and repeating it would be

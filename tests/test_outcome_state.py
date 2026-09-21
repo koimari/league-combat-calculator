@@ -52,17 +52,20 @@ def test_a_second_write_of_one_field_raises_naming_both_values() -> None:
     """Write-once, and the report is actionable rather than a bare complaint."""
     ledger = outcome_state.OutcomeLedger()
     ledger.write(action(3), damage=90.0)
-    with pytest.raises(outcome_state.OutcomeRewritten) as excinfo:
+    with pytest.raises(quantity.StarvedSignal) as excinfo:
         ledger.write(action(3), damage=10.0)
-    assert (excinfo.value.slot, excinfo.value.field) == (3, "applied")
-    assert (excinfo.value.old, excinfo.value.new) == (90.0, 10.0)
+    assert excinfo.value.field == "applied"
+    assert str(excinfo.value) == (
+        "action slot 3 already recorded applied=90.0; a second write of 10.0 "
+        "would replace an answer rather than revise it."
+    )
 
 
 def test_rewriting_the_same_value_is_still_a_rewrite() -> None:
     """Two rules answering one question agree today; that is not the test."""
     ledger = outcome_state.OutcomeLedger()
     ledger.write(action(1), damage=42.0)
-    with pytest.raises(outcome_state.OutcomeRewritten):
+    with pytest.raises(quantity.StarvedSignal):
         ledger.write(action(1), damage=42.0)
 
 
@@ -70,7 +73,7 @@ def test_two_kernel_kwargs_naming_one_outcome_field_collide() -> None:
     """``damage`` and ``applied_amount`` are one field, so they cannot both win."""
     ledger = outcome_state.OutcomeLedger()
     ledger.write(action(2), damage=5.0)
-    with pytest.raises(outcome_state.OutcomeRewritten):
+    with pytest.raises(quantity.StarvedSignal):
         ledger.write(action(2), applied_amount=5.0)
 
 
@@ -103,7 +106,7 @@ def test_a_second_refusal_raises_unless_the_first_is_preserved() -> None:
     ledger.skip(action(6), "holder_health_gate")
     ledger.skip(action(6), "redirect_gate", preserve_reason=True)
     assert ledger.get(6).skipped_reason == "holder_health_gate"
-    with pytest.raises(outcome_state.OutcomeRewritten):
+    with pytest.raises(quantity.StarvedSignal):
         ledger.skip(action(6), "redirect_gate")
 
 
@@ -272,13 +275,14 @@ class TestAtMostOneAppliedContribution:
         ledger.write(
             self.contribution(0, source="mandate", subject=1, event=7), damage=40.0
         )
-        with pytest.raises(outcome_state.DuplicateApplied) as raised:
+        with pytest.raises(quantity.StarvedSignal) as raised:
             ledger.write(
                 self.contribution(3, source="mandate", subject=1, event=7),
                 applied_amount=40.0,
             )
-        assert raised.value.key == ("mandate", 1, 7)
-        assert (raised.value.first, raised.value.second) == (0, 3)
+        assert raised.value.field == "applied"
+        assert "'mandate' on subject 1 at event 7" in str(raised.value)
+        assert "action slots 0 and 3" in str(raised.value)
 
     def test_the_same_mechanic_on_a_second_subject_is_not_a_duplicate(self) -> None:
         """Imperial Mandate arms two allies; that is two contributions."""
@@ -318,7 +322,7 @@ class TestAtMostOneAppliedContribution:
         ledger = outcome_state.OutcomeLedger()
         packet = self.contribution(0, source="mandate", subject=1, event=7)
         ledger.write(packet, damage=40.0)
-        with pytest.raises(outcome_state.OutcomeRewritten):
+        with pytest.raises(quantity.StarvedSignal):
             ledger.write(packet, applied_amount=40.0)
 
     def test_a_refusal_claims_no_contribution(self) -> None:
@@ -464,7 +468,7 @@ class TestTheReceiptWalkRunsIt:
             event={},
         )
         ledger.write(first, damage=40.0)
-        with pytest.raises(outcome_state.DuplicateApplied):
+        with pytest.raises(quantity.StarvedSignal):
             ledger.write(second, damage=40.0)
 
     def test_the_production_ledger_refuses_a_second_answer(self) -> None:
@@ -475,17 +479,17 @@ class TestTheReceiptWalkRunsIt:
         )
         packet = SurvivalAction(kind=ActionKind.DAMAGE, aidx=0, event={})
         ledger.write(packet, overkill=1.0)
-        with pytest.raises(outcome_state.OutcomeRewritten):
+        with pytest.raises(quantity.StarvedSignal):
             ledger.write(packet, overkill=2.0)
 
 
 @pytest.mark.parametrize(
     "raised",
     [
-        outcome_state.OutcomeRewritten(0, "applied", 1.0, 2.0),
-        outcome_state.DuplicateApplied(("Imperial Mandate - Command", 1, 3), 0, 1),
+        outcome_state.outcome_rewritten(0, "applied", 1.0, 2.0),
+        outcome_state.duplicate_applied(("Imperial Mandate - Command", 1, 3), 0, 1),
     ],
-    ids=["OutcomeRewritten", "DuplicateApplied"],
+    ids=["outcome_rewritten", "duplicate_applied"],
 )
 def test_the_request_boundary_names_these_raises(raised) -> None:
     """A contested outcome reaches the user as a ``STARVED`` receipt.

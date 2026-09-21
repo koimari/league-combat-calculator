@@ -7,7 +7,7 @@ inside the hot loop, and the dependency runs ``program -> survival`` only.
 
 What separates it from the two adapters beside it is what it forbids.  Every
 field is write-once: a second write of a field a transition already answered
-raises :class:`OutcomeRewritten`, naming the slot, the field and both values.
+raises :func:`outcome_rewritten`, naming the slot, the field and both values.
 Writing the *same* value twice is still a rewrite, because two rules
 answering one question happen to agree today and are one edit away from not
 agreeing, and a ledger that tolerates the agreement cannot see the
@@ -26,11 +26,11 @@ from .typed_action import SurvivalAction, TriggerLinkage
 
 __all__ = [
     "OUTCOME_FIELDS",
-    "DuplicateApplied",
     "Outcome",
     "OutcomeLedger",
-    "OutcomeRewritten",
+    "duplicate_applied",
     "outcome_quantity",
+    "outcome_rewritten",
 ]
 
 
@@ -55,35 +55,28 @@ OUTCOME_FIELDS: tuple[str, ...] = (
 )
 
 
-class OutcomeRewritten(StarvedSignal):
+def outcome_rewritten(slot: int, field: str, old: Any, new: Any) -> StarvedSignal:
     """A transition answered a question another transition already answered.
 
-    Carries the slot, the field and both values, because "a field was
-    written twice" without them is a report nobody can act on.
-
-    A :class:`~trigger_stream.StarvedSignal`, so the serving boundary turns it
-    into a named 500 carrying a receipt: two rules answered one question
-    differently, so this record holds no answer, which is what ``STARVED``
-    names.
+    The slot, the field and both values are in the message, because "a field
+    was written twice" without them is a report nobody can act on.  A
+    ``STARVED`` signal, so the serving boundary turns it into a named 500:
+    two rules answered one question differently, so this record holds no
+    answer, which is what ``STARVED`` names.
     """
-
-    def __init__(self, slot: int, field: str, old: Any, new: Any) -> None:
-        super().__init__(
-            f"action slot {slot} already recorded {field}={old!r}; a second "
-            f"write of {new!r} would replace an answer rather than revise it.",
-            field,
-            f"action slot {slot}",
-            (
-                f"two rules answered this field for one transition — {old!r} "
-                f"and {new!r} — so the ledger holds no single answer to publish"
-            ),
-        )
-        self.slot = slot
-        self.old = old
-        self.new = new
+    return StarvedSignal(
+        f"action slot {slot} already recorded {field}={old!r}; a second "
+        f"write of {new!r} would replace an answer rather than revise it.",
+        field,
+        f"action slot {slot}",
+        (
+            f"two rules answered this field for one transition — {old!r} "
+            f"and {new!r} — so the ledger holds no single answer to publish"
+        ),
+    )
 
 
-class DuplicateApplied(StarvedSignal):
+def duplicate_applied(key: tuple[Any, ...], first: int, second: int) -> StarvedSignal:
     """Two producers claimed the same applied contribution.
 
     At most one applied contribution exists per ``(mechanic, subject,
@@ -92,26 +85,20 @@ class DuplicateApplied(StarvedSignal):
     unless the ledger refuses at the second write.  The key is read off the
     action as its packet source, its subject slot and its interned event slot.
     """
-
-    def __init__(self, key: tuple[Any, ...], first: int, second: int) -> None:
-        """Name the contribution and both slots that claimed it."""
-        mechanic, subject, event = key
-        super().__init__(
-            f"two applied contributions for mechanic {mechanic!r} on subject "
-            f"{subject} at event {event}: action slots {first} and {second}. "
-            "At most one applied contribution exists per "
-            "(mechanic, subject, event_id) across all producers (D-62)",
-            "applied",
-            f"{mechanic!r} on subject {subject} at event {event}",
-            (
-                f"action slots {first} and {second} both claimed this "
-                "contribution, so the applied number for the key is a double "
-                "count rather than an answer"
-            ),
-        )
-        self.key = key
-        self.first = first
-        self.second = second
+    mechanic, subject, event = key
+    return StarvedSignal(
+        f"two applied contributions for mechanic {mechanic!r} on subject "
+        f"{subject} at event {event}: action slots {first} and {second}. "
+        "At most one applied contribution exists per "
+        "(mechanic, subject, event_id) across all producers (D-62)",
+        "applied",
+        f"{mechanic!r} on subject {subject} at event {event}",
+        (
+            f"action slots {first} and {second} both claimed this "
+            "contribution, so the applied number for the key is a double "
+            "count rather than an answer"
+        ),
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -197,7 +184,7 @@ class OutcomeLedger(TriggerLinkage):
             if field is None:
                 continue
             if field in recorded:
-                raise OutcomeRewritten(slot, field, recorded[field], value)
+                raise outcome_rewritten(slot, field, recorded[field], value)
             if field == "applied":
                 self._claim_applied(action, slot)
             recorded[field] = value
@@ -214,7 +201,7 @@ class OutcomeLedger(TriggerLinkage):
         key = (action.source_key, action.subject, action.event_slot)
         first = self._applied_by.setdefault(key, slot)
         if first != slot:
-            raise DuplicateApplied(key, first, slot)
+            raise duplicate_applied(key, first, slot)
 
     # pylint: disable=unused-argument  # protocol shape
     def restore(self, action: SurvivalAction, **fields: Any) -> None:
@@ -250,7 +237,7 @@ class OutcomeLedger(TriggerLinkage):
         if "skipped_reason" in recorded:
             if preserve_reason:
                 return
-            raise OutcomeRewritten(
+            raise outcome_rewritten(
                 slot, "skipped_reason", recorded["skipped_reason"], reason
             )
         recorded["skipped_reason"] = reason
