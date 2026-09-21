@@ -30,7 +30,7 @@ def champion_key(name: str) -> str:
     return _NONALNUM.sub("", str(name).lower())
 
 
-def dig(obj: object, *keys: str, want: type | tuple[type, ...]) -> Any:
+def _dig(obj: object, *keys: str, want: type | tuple[type, ...]) -> Any:
     """Walk one JSON hop chain, naming the whole path when it does not land.
 
     Every hop but the last must be a mapping and the last must be an instance
@@ -109,7 +109,7 @@ def record_value(root: Mapping[str, Any], field: str) -> float:
     """One ModifiableFloat-style record field's ``baseValue``, snapped the
     same way :func:`data_value` snaps spell DataValues."""
     return _snapped(
-        dig(root, field, "baseValue", want=(int, float)), f"record field {field!r}"
+        _dig(root, field, "baseValue", want=(int, float)), f"record field {field!r}"
     )
 
 
@@ -166,7 +166,7 @@ def calculation_breakpoints(
 
 def _formula_parts(spell_obj: dict[str, Any], calculation_name: str) -> list:
     """A calculation's non-empty ``mFormulaParts``, or raise naming its path."""
-    parts = dig(
+    parts = _dig(
         spell_obj,
         "mSpell",
         "mSpellCalculations",
@@ -273,7 +273,7 @@ def _data_value_at_index(
     spell_obj: dict[str, Any], value_name: str, value_index: int, index_label: str
 ) -> float:
     """Read one finite, snapped entry from a named DataValue row."""
-    for row in dig(spell_obj, "mSpell", "DataValues", want=list):
+    for row in _dig(spell_obj, "mSpell", "DataValues", want=list):
         if not isinstance(row, Mapping) or row.get("name") != value_name:
             continue
         values = row.get("values")
