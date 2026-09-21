@@ -11,14 +11,12 @@ from pathlib import Path
 
 import pytest
 
-#: ``TRAPS.md`` accretes: a wave's worth of new findings must fit without the
-#: budget forcing a trap out, so its ceiling is today's file plus one measured
-#: wave. The file is 8,232 words and the widest wave measured, Wave D1's five
-#: codemod units, is 1,429 words compressed to the house form, which is what
-#: that number is measured from. A wave narrower than five units leaves
-#: headroom rather than raising this again. The other two hold a fixed subject
-#: and their ceilings do not move.
-BUDGETS = {"CLAUDE.md": 1_600, "TRAPS.md": 9_700, "architecture.md": 7_400}
+#: ``TRAPS.md`` holds 6,035 words in the house form, one fact and one fix per
+#: bullet at about 40 words. Its number is a ceiling, not headroom: a new trap
+#: fits by being written that way, and lifting the ceiling takes a reason in
+#: the commit that lifts it. The other two hold a fixed subject and their
+#: ceilings do not move.
+BUDGETS = {"CLAUDE.md": 1_600, "TRAPS.md": 6_100, "architecture.md": 7_400}
 
 #: Where a citation of a root doc must resolve, each root named so no walk can
 #: reach ``.claude/worktrees``. ``docs/`` is left out while the docs unit
