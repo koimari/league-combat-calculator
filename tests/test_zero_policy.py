@@ -1,19 +1,19 @@
-"""D-24's ruled exception, and the guard it ships with.
+"""The zero-policy exception, and the guard it ships with.
 
 Every ``BehaviorRule`` carries a ``zero_policy`` with no default, because a
-defaulted disposition is the indistinguishable zero this campaign exists to
+defaulted disposition is the indistinguishable zero the rule exists to
 remove.  The champion tree is the one place that rule is discharged by a
 *declared default* instead: ``damage_entry`` and ``simple_damage`` are the
 single construction layer for every numeric leaf a champion module authors,
 so the policy is stated once there and every call site across the champion
 tree is deliberately not edited — a required-no-default field there would be
-a campaign-wide champion sweep smuggled in by an idiom.
+a tree-wide champion sweep smuggled in by an idiom.
 
 An exception is only as good as its guard, so three things are asserted
 here: the default exists at those two builders and nowhere else in
 ``champions/``, it is genuinely overridable (``stat_buff``'s steroid zero is
 a ``STRUCTURAL_ZERO`` and says so), and it reaches the leaf — the part, not
-just the entry — so Phase 4 has a disposition to serialize.
+just the entry — so ``serialize_leaf`` has a disposition to publish.
 """
 
 from __future__ import annotations
@@ -64,7 +64,7 @@ def _defaulted_zero_policy_params(path: Path) -> list[tuple[str, int]]:
 
 
 def test_the_declared_default_lives_at_exactly_one_layer() -> None:
-    """D-24's exception is two named builders, not a habit spread by copying."""
+    """The exception is two named builders, not a habit spread by copying."""
     layers = {
         path.relative_to(CHAMPIONS_ROOT).as_posix(): _defaulted_zero_policy_params(path)
         for path in sorted(CHAMPIONS_ROOT.rglob("*.py"))
@@ -82,7 +82,7 @@ def test_the_declared_default_is_keyword_only_at_both_builders() -> None:
     them positionally across the champion tree; a seventh positional slot
     named ``zero_policy`` turns any miscounted call into a policy silently
     replaced by a float — the indistinguishable-default shape one layer up
-    from the one D-24 removes.
+    from the one the rule removes.
     """
     for builder in (damage_entry, simple_damage):
         parameters = inspect.signature(builder).parameters
@@ -124,20 +124,19 @@ def test_a_raw_part_is_undispositioned_rather_than_defaulted() -> None:
     """``DamagePart`` itself has no opinion; only a builder declares one.
 
     The default belongs to the construction *layer*, not to the record: a
-    ``DamagePart`` built by hand somewhere the campaign has not reached says
+    ``DamagePart`` built by hand outside the two builders says
     ``None``, which is a measurable gap, where a ``MEASURED`` default there
-    would be the campaign's own failure shape written into the type.
+    would be the indistinguishable zero written into the type.
     """
     assert DamagePart("physical", 0.0).zero_policy is None
 
 
 def test_the_policy_is_absent_from_the_golden_repr() -> None:
-    """Publication is Phase 4's ``serialize_leaf``, not the pair snapshot.
+    """Publication is ``serialize_leaf``, not the pair snapshot.
 
     The golden snapshot serializes parts through ``repr``, so a printed
     policy would move every ability repr in the baseline for a field no
-    engine reads — and this phase's criterion 17 allows a golden diff for
-    exactly one slice, which is not this one.
+    engine reads, and a golden diff here would be a diff nobody asked for.
     """
     printed = repr(DamagePart("physical", 5.0, zero_policy=MODULE_FORMULA_ZERO))
     assert "zero_policy" not in printed

@@ -88,7 +88,7 @@ def test_the_compiled_score_walk_gap_is_a_dated_route_and_not_a_zero() -> None:
     has no interpreter of its own — the walk never reads an amp declaration —
     so what stands between it and an unreceipted zero is the dated row naming
     the two routes the number actually arrives by.  A gap excused by neither
-    cannot import (D-101's successor state, not its relaxation).
+    cannot import.
     """
     pair = (RuleFamily.DELTA_AMP, EngineLane.COMPILED_SCORE_WALK)
     assert pair in interpreters.uninterpreted_pairs()
@@ -142,7 +142,7 @@ def test_an_owner_with_no_registry_entry_has_nothing_to_represent() -> None:
 def test_the_fold_concatenates_receipt_only_reasons_in_declaration_order(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """D-43's fold, stated here rather than left to each caller."""
+    """The compilability fold, stated here rather than left to each caller."""
 
     class _Rule:  # pylint: disable=too-few-public-methods
         def __init__(self, compilability) -> None:
@@ -187,7 +187,7 @@ def test_all_compilable_folds_to_compilable(monkeypatch: pytest.MonkeyPatch) -> 
 
 
 def test_no_registered_interpreter_is_an_orphan_branch() -> None:
-    """D-51's interpreter->author direction, over the live registry."""
+    """The interpreter->author direction, over the live registry."""
     assert interpreters.reachability_report(registry_owners()).orphan_branches == ()
 
 
@@ -204,11 +204,11 @@ def test_a_declaration_no_lane_serves_is_reported_rather_than_silent() -> None:
 def test_an_interpreter_no_declaration_reaches_is_an_orphan_branch(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """D-51's interpreter->author direction, with a red it can reproduce.
+    """The interpreter->author direction, with a red it can reproduce.
 
-    The pair is read off the frontier rather than named: every migration
-    slice registers another one, and a hard-coded family would make this
-    test quietly stop testing the direction it exists for.
+    The pair is read off the frontier rather than named, so a hard-coded
+    family cannot make this test quietly stop testing the direction it
+    exists for.
     """
     family, lane = interpreters.uninterpreted_pairs()[0]
     monkeypatch.setattr(
@@ -432,9 +432,9 @@ def test_a_dated_gap_receipt_no_declaration_reaches_is_refused(
 ) -> None:
     """The reverse direction: a receipt for a lane that is served.
 
-    A gap table nobody prunes is the hand-maintained exception list this
-    campaign deletes everywhere else, so a row for a pair some interpreter
-    already serves is a failure rather than a harmless leftover.
+    A gap table nobody prunes is a hand-maintained exception list, so a row
+    for a pair some interpreter already serves is a failure rather than a
+    harmless leftover.
 
     The planted row is otherwise impeccable — ``sustain`` really is served on
     both the lane the row names and the lane it routes to — so the only thing
@@ -480,9 +480,9 @@ def test_a_compiled_gap_is_excused_by_the_rules_own_receipt(
     declaration reaches any more.
 
     The narrowing serves the receipt walk from the live registration rather
-    than excusing it from the dated table, because Amendment M, Ruling 1
-    retired that row: the family's walk interpreter landed, and a fixture
-    excusing a lane the tree serves would be testing a tree nobody has.
+    than excusing it from the dated table: the family's walk interpreter is
+    registered, and a fixture excusing a lane the tree serves would be
+    testing a tree nobody has.
     """
     assert (
         RuleFamily.DELTA_AMP,
@@ -561,8 +561,8 @@ def test_a_subject_its_authority_cannot_see_is_refused(
 def test_every_gap_row_says_why_the_lane_is_unserved() -> None:
     """A gap with no reason is the silence the table exists to replace.
 
-    What the row does *not* carry is when it retires: that is campaign
-    bookkeeping with one home in ``docs/receipts/campaign-stages.json``, and
+    What the row does *not* carry is when it retires: that has one home in
+    ``docs/receipts/campaign-stages.json``, and
     ``tests/test_behavior_frontier`` asserts no stage name reaches ``src/``.
     """
     for (family, lane), row in interpreters.UNSERVED_LANE_RECEIPTS.items():
@@ -614,10 +614,9 @@ def test_a_route_the_registry_does_not_serve_is_refused(
     plausible false one.
 
     ``unserved`` needs a route lane the family declares and no interpreter
-    serves, and that is the one shape a *retiring* campaign runs out of: a
-    case driven through whichever family still defers its receipt walk turns
-    green at each retirement for a reason with nothing to do with the clause
-    it tests.  So the case instead removes the
+    serves, and retirements run that shape out: a case driven through
+    whichever family still defers its receipt walk turns green at each
+    retirement for a reason with nothing to do with the clause it tests.  So the case instead removes the
     route's own interpreter along with the route — the registry is a
     monkeypatched mapping either way, and unregistering is a smaller
     fabrication than keeping a family deferred to be tested against.
@@ -682,7 +681,7 @@ def test_the_walk_lane_serves_the_family_that_authors_its_own_recoveries() -> No
 
 
 def test_the_fold_is_what_bis_publishes() -> None:
-    """D-98: the published receipt is the derived fold, in both directions.
+    """The published receipt is the derived fold, in both directions.
 
     A payload wired to something else entirely could not pass this by
     certifying nothing, because the fold's own owners are named.
@@ -752,8 +751,8 @@ def test_a_forced_strike_that_heals_somebody_else_is_not_a_holder_ledger_entry()
 
 # ── damage_routing's per-owner equivalence fixtures ───────────────────────
 #
-# Umbrella Amendment P requires a fixture PER OWNER for this family, and the
-# plural is the point: three owners deliver through three different kernel
+# A fixture PER OWNER for this family, and the plural is the point: three
+# owners deliver through three different kernel
 # mechanisms, and the one committed coupled scenario that covers the family
 # holds only Death's Dance, so a green baseline proves nothing about the two
 # that can still fail.  Each fixture below asserts the retirement was a
@@ -851,7 +850,7 @@ def test_the_walk_deferral_equals_the_resolved_defensive_state(
 
 
 def test_no_routing_declaration_is_left_without_a_walk_branch() -> None:
-    """Amendment P's stop clause, as a test rather than as a reading.
+    """The stop clause, as a test rather than as a reading.
 
     Every declaration of the family compiles on the walk lane.  A fourth
     mechanic whose payload the interpreter has no branch for raises here
@@ -883,8 +882,8 @@ def test_no_routing_declaration_is_left_without_a_walk_branch() -> None:
 
 # ── resistance_shred's per-owner equivalence fixtures ─────────────────────
 #
-# Umbrella Amendment P's plural, for the family that retired on the same
-# ground: two owners, two resistances, two declared summation models, and the
+# The same plural, for the family that retired on the same ground: two
+# owners, two resistances, two declared summation models, and the
 # retirement is a re-spelling only if BOTH of them read the same numbers
 # afterwards that the walk read before.  Unlike the routing family this one's
 # covering population reaches every owner -- Black Cleaver is on two committed
@@ -949,8 +948,8 @@ def test_the_walk_shred_ramp_equals_the_ally_packet_numbers_it_replaced(
 def test_both_lanes_of_a_shred_compile_one_declaration_to_one_ramp() -> None:
     """The pair engine's reading and the walk's are the same declaration.
 
-    The property umbrella Amendment K's act discharges, stated as an equality
-    rather than as a shared function: whatever the pair engine resolves into
+    Stated as an equality rather than as a shared function: whatever the
+    pair engine resolves into
     its own combat state, the walk stages the same numbers for the
     cross-participant packet, and only the lane stamped on the compiled fields
     differs.

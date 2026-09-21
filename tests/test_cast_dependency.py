@@ -1,10 +1,9 @@
 """The declared cast-dependency vocabulary leaf.
 
-Phase 5's leaf lands before anything consumes it, so these tests cover the
-module on its own terms: that it stays a leaf, that its two vocabularies
-are closed and disjoint, that every import-time failure has a negative
-test which reaches it, and that the two order functions Phase 0B's C6
-consumes behave. The precedence table and the resolver merge belong to
+These tests cover the module on its own terms: that it stays a leaf, that
+its two vocabularies are closed and disjoint, that every import-time failure
+has a negative test which reaches it, and that its two order functions
+behave. The precedence table and the resolver merge belong to
 ``rotation_resolver`` and are tested with it.
 
 file-length-ok: one test file per module under test, and this one is a matrix
@@ -129,8 +128,7 @@ def _detector_edge_kinds() -> tuple[set[str], int]:
 def _emptiness_guard_line(function: ast.FunctionDef, name: str) -> int:
     """The line of the ``if not <name>: return`` guard that opens *function*.
 
-    D-85's shape: nothing below the guard runs for a champion that
-    declares nothing.
+    Nothing below the guard runs for a champion that declares nothing.
     """
     for node in function.body:
         if (
@@ -718,7 +716,7 @@ class TestTheContractCarriesDeclarations:
         assert contract.cast_dependencies == (_dep(),)
 
     def test_a_non_declaring_modules_cast_order_reaches_no_new_check(self) -> None:
-        """D-85: the 170 non-declaring champions must be byte-identical.
+        """The 170 non-declaring champions must be byte-identical.
 
         Jayce's live ``CAST_ORDER`` names ``Q2``, a slot his ``SLOTS`` does
         not have, so a slot check that ran for every module would fail his
@@ -733,7 +731,7 @@ class TestTheContractCarriesDeclarations:
 
 
 class TestNonDeclaringChampionsReachNoNewCode:
-    """D-85 asserted at source level, in the ``test_public_integer_policy`` idiom.
+    """Asserted at source level, in the ``test_public_integer_policy`` idiom.
 
     "The 170 non-declaring champions are byte-identical" is what makes
     the migration provably diff-free, and a behavioural test can only
@@ -782,8 +780,8 @@ class TestNonDeclaringChampionsReachNoNewCode:
     def test_the_derivation_gates_its_cycle_failure_on_a_declaration(self) -> None:
         """A cycle raises for a declarer and falls back for everyone else.
 
-        The fallback is the pre-campaign behaviour and the 170 keep it;
-        the raise is reachable only from inside a branch that tested the
+        The 170 keep the fallback; the raise is reachable only from inside
+        a branch that tested the
         declarations, which this reads out of the AST rather than trusting.
         """
         function = _resolver_function("derive_champion_rule")
@@ -882,8 +880,7 @@ class TestAnEmptyCarrierShadowsNothing:
     ``getattr(a, x, getattr(b, y, ()))`` evaluates its default *eagerly*,
     so a chain of them lets ``CAST_DEPENDENCIES = ()`` on the module win
     over a non-empty parser declaration and throw it away with no error.
-    A packet champion would lose its declared ordering rules silently —
-    the exact failure class this campaign exists to kill.
+    A packet champion would lose its declared ordering rules silently.
     """
 
     def test_an_empty_module_attribute_keeps_the_parsers_declaration(self) -> None:
@@ -1062,7 +1059,7 @@ class TestSyndraDeclaresHerStun:
             assert suppression.kind == "cc_setup"
 
     def test_only_the_recast_suppression_is_latent(self) -> None:
-        """D-84's deleted test exception, moved where the audit can see it."""
+        """The deleted-test exception, moved where the audit can see it."""
         by_pair = {
             dep.requires: dep.suppresses[0]
             for dep in get_champion_cast_dependencies("Syndra")
@@ -1073,9 +1070,8 @@ class TestSyndraDeclaresHerStun:
     def test_the_latent_claim_is_true_of_this_tree(self) -> None:
         """The suppression it opposes exists for Q and does not for Q2.
 
-        A latent_reason nobody checks is the prose-outruns-code shape this
-        campaign exists to kill, so the claim is asserted against the
-        detector rather than believed.
+        A latent_reason nobody checks is prose outrunning code, so the
+        claim is asserted against the detector rather than believed.
         """
         from src.calculator.cast_edge_inference import detect_setup_consume_edges
         from src.calculator.data_fetcher import fetch_champion_data
@@ -1229,12 +1225,12 @@ def _pipeline_check_calls(run: ast.FunctionDef) -> list[ast.Call]:
 
 
 class TestTheRequestBoundaryRefusesAnImpossibleOrder:
-    """D-86 — a custom order inverting an active declaration is rejected.
+    """A custom order inverting an active declaration is rejected.
 
     A declared dependency states impossibility, not preference. Casting
     Syndra's E before her Q has the engine author a ``cc_kind="stun"``
     that cannot exist, and Imperial Mandate's Command then amplifies off a
-    stun that never happened — the incident this campaign is named after,
+    stun that never happened — a number nobody could check,
     reached through a public request parameter. So the refusal quotes the
     declaration's own ``reason`` and ``source``: the caller is told which
     mechanic forbids the order, not which rule caught it.
@@ -1294,7 +1290,7 @@ class TestTheRequestBoundaryRefusesAnImpossibleOrder:
         assert caught.value.order == ("E", "Q", "W", "R")
 
     def test_the_api_refuses_with_a_400_carrying_the_declaration(self) -> None:
-        """D-86's body clause: the reason and source reach the response."""
+        """The body clause: the reason and source reach the response."""
         response = app_module.app.test_client().post(
             "/api/calculate",
             json={
@@ -1330,7 +1326,7 @@ class TestTheRequestBoundaryRefusesAnImpossibleOrder:
         assert "Q" not in result["breakdown"]
 
     def test_a_non_declaring_champion_may_still_be_told_anything(self) -> None:
-        """D-85 at the request boundary: 170 modules reach no new failure."""
+        """At the request boundary: 170 modules reach no new failure."""
         assert not get_champion_cast_dependencies("Ahri")
         result = run_fight(
             get_champion("Ahri"), 18, [], _fight_params(cast_order=["E", "Q", "W", "R"])
@@ -1341,7 +1337,7 @@ class TestTheRequestBoundaryRefusesAnImpossibleOrder:
         """A resolved order already merged the declarations that made it.
 
         ``resolve_cast_order`` folds the declarations over its inferred
-        edges before it orders anything (D-82/D-85), so re-checking its
+        edges before it orders anything, so re-checking its
         output would assert the resolver against itself. The check lives in
         the branch a *caller* supplied an order to, and this is that shape
         read off the tree rather than off the request.

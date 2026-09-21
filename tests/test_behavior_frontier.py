@@ -3,7 +3,7 @@
 A frontier is only worth the exclusions it stands on.  Two properties are
 therefore checked here rather than trusted: the committed receipt's exclusion
 sets are equal to the ones the script declares (so an edit is a diff in a
-committed artifact, D-40), and counter 1's default is the *strictest* class,
+committed artifact), and counter 1's default is the *strictest* class,
 so a name-dispatch site in a brand-new module raises the counter instead of
 escaping it.  The second is the negative the phase document asks for by name:
 "no site remains in any of the thirteen baseline modules" would be
@@ -33,7 +33,7 @@ def _receipt() -> dict:
 
 
 def test_the_receipt_is_committed_and_reproduces_on_this_commit() -> None:
-    """R-36: the receipt moves with the slice that moves a counter."""
+    """The receipt moves with the change that moves a counter."""
     assert RECEIPT_PATH.exists()
     assert behavior_frontier.check(behavior_frontier.scan()) == ()
 
@@ -58,7 +58,7 @@ def test_every_descriptive_counter_in_the_receipt_reproduces() -> None:
 
 
 def test_the_exclusion_sets_are_committed_beside_the_counters() -> None:
-    """D-40: exclusions that live only in the tool can be edited to zero."""
+    """Exclusions that live only in the tool can be edited to zero."""
     receipt = _receipt()
     committed_c = set(receipt["exclusions"]["class_c_declarative_homes"]["modules"])
     committed_d = set(receipt["exclusions"]["class_d_non_behavioural"]["modules"])
@@ -72,9 +72,9 @@ def test_the_exclusion_sets_are_committed_beside_the_counters() -> None:
 
 
 def test_the_claim_evidence_containers_are_committed_beside_the_counter() -> None:
-    """Amendment A's Class C arm is diff-gated exactly like the module sets.
+    """Class C's container arm is diff-gated exactly like the module sets.
 
-    The umbrella's dated amendment (criterion 7) rules Phase 1's authored
+    The container arm covers the authored
     claim-evidence corpus and ``_REVIEW_ISSUE_REFS`` out of counter 2.  An
     exclusion that big has to be a diff in a committed artifact, per container
     and not merely per module, or the counter can be driven to its target by
@@ -106,7 +106,7 @@ def test_counter_two_is_measured_net_of_the_committed_exclusions() -> None:
     """The netting is arithmetic over the receipt, not a number in prose.
 
     Gross minus the committed containers is the counter, and what survives is
-    the population the amendment deliberately left counted.
+    the population deliberately left counted.
     """
     report = behavior_frontier.scan()
     per_container = report.claim_evidence_by_container["calculator/item_coverage.py"]
@@ -323,7 +323,7 @@ def test_the_zero_policy_populations_are_committed_and_reproduce() -> None:
 
 
 def test_the_forbidden_population_is_empty_and_the_gate_says_so() -> None:
-    """D-24's source assertion is a refusal, not a counter.
+    """The zero-policy source assertion is a refusal, not a counter.
 
     A champion input read with a literal fallback fails ``--check`` on its
     first occurrence, whatever the receipt records — the ratchet applies to
@@ -675,7 +675,7 @@ def test_a_receipt_missing_the_unserved_lane_section_fails_closed() -> None:
 
 
 def test_a_moved_gap_receipt_is_a_diff_in_the_committed_artifact() -> None:
-    """D-40: the content is set-equality gated, exactly like the exclusions."""
+    """The content is set-equality gated, exactly like the exclusions."""
     receipt = _receipt()
     receipt["counters"]["counter_4"]["receipts"]["dated"].pop(_some_dated_key(receipt))
     failures = behavior_frontier.check(behavior_frontier.scan(), receipt)
@@ -723,9 +723,9 @@ def test_an_outstanding_target_names_what_the_ruled_records_say_retires_it() -> 
         # The join is the assertion, in both directions: a lane with an open
         # gap names the record claiming its debt, and a lane with none names
         # nothing.  Both halves are live now — the receipt walk moved from the
-        # first to the second on 2026-08-17, when umbrella Amendment F's
-        # fourteenth row retired, and reading only the first would have made
-        # this case one nobody could tell from a stale name.
+        # first to the second when its last open row retired, and reading
+        # only the first would have made this case one nobody could tell from
+        # a stale name.
         expected = (
             behavior_frontier.creditor_stage(f"counter_4/{lane}") if open_gaps else ""
         )

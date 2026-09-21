@@ -7,7 +7,7 @@ not import fails collection rather than running with a hole in it.  Each of
 those three closures therefore ships with the red it can reproduce on demand
 (runbook R-05), driven through the validator's own seam — because a gate
 nobody has seen fail is indistinguishable from a gate that always passes,
-which is this campaign's founding observation.
+which is what a declaration table prevents.
 """
 
 import ast
@@ -130,7 +130,7 @@ def test_a_new_defense_mechanic_fails_the_catalog() -> None:
 
 
 def test_one_compiler_per_family() -> None:
-    """D-52's registry: closed enum key, module-level defs, totality asserted."""
+    """The compiler registry: closed enum key, module-level defs, totality."""
     compilers = catalog._COMPILERS  # pylint: disable=protected-access
     assert frozenset(compilers) == frozenset(RuleFamily)
     assert all(
@@ -266,7 +266,7 @@ def test_an_unknown_tag_in_the_registry_raises_rather_than_compiling_nothing(
 
 
 def test_the_build_context_carries_the_data_version() -> None:
-    """D-49: every downstream memo keys on one counter, read in one place."""
+    """Every downstream memo keys on one counter, read in one place."""
     from src.calculator import data_registry  # pylint: disable=import-outside-toplevel
 
     context = catalog.build_context(
@@ -338,7 +338,7 @@ def test_an_unexplained_certified_mechanic_fails_the_catalog() -> None:
 
     A certified mechanic withholds a whole calculation when the timeline is
     coarse.  Certifying one with a blank reason would make that refusal
-    unexplainable to the caller it refuses, which is the failure this campaign
+    unexplainable to the caller it refuses, which is the failure a receipt
     exists to remove rather than a new one it may introduce.
     """
     with pytest.raises(RuntimeError, match="unexplained"):
@@ -371,7 +371,7 @@ def _live_refusals() -> tuple[ReceiptOnly, ...]:
 
 
 def test_every_refusal_scope_is_reached_by_a_live_declaration() -> None:
-    """D-51's orphan-branch direction, applied to the refusal axis.
+    """The orphan-branch direction, applied to the refusal axis.
 
     A scope no declaration carries is a member that means nothing — the
     reader learns a distinction the tree does not make, which is how the
@@ -387,7 +387,7 @@ def test_every_refusal_scope_is_reached_by_a_live_declaration() -> None:
     member nobody argued about.  Its declaration survives as the flip's
     revert target (``COMPILED_KERNEL_CANNOT_AMP``), so the scope is still
     carried by a ``ReceiptOnly`` a reader can go and look at — and the
-    emptiness is asserted here rather than left to be noticed, which is D-92's
+    emptiness is asserted here rather than left to be noticed, which is the
     own idiom read in the other direction.
     """
     reached = {refusal.scope for refusal in _live_refusals()}
@@ -445,7 +445,7 @@ def test_each_unstageable_sustain_shape_refuses_and_the_others_do_not() -> None:
     each is one payload type the score ledger has nowhere to put.  The second
     half is the half that matters — a shape-keyed table that refused every
     sustain rule would reproduce the hand set by over-withholding, which is
-    the family-predicate failure D-43 rejects.
+    the family-predicate failure the fold rejects.
     """
     refused: dict[type, set[str]] = {}
     allowed: set[type] = set()
@@ -570,7 +570,7 @@ def test_the_two_halves_answer_in_two_scopes() -> None:
 # different family.  Looked for in the live entry, a parse that dropped that
 # one key would take the whole mechanic out of the catalog — and a mechanic
 # nothing declares is priced as nothing by every lane at once, silently,
-# which is the failure this campaign is named after.  The schema is the
+# which is a number nobody can check.  The schema is the
 # authority, so the family is still claimed and the missing key raises.
 
 SECONDARY_SIGNATURE_KEYS = (
