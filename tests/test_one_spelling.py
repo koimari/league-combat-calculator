@@ -1,4 +1,8 @@
-"""X2's counter: one concept has one spelling in ``src/`` and ``scripts/``."""
+"""One concept has one spelling in ``src/`` and ``scripts/``.
+
+The vocabulary and its reasons live in ``scripts/one_spelling.py``; this file
+is the gate's pytest row and the guard over its two tables.
+"""
 
 import ast
 
@@ -36,10 +40,9 @@ def test_a_second_spelling_of_either_kind_fails(tmp_path):
     (tmp_path / "src" / "drifted.py").write_text(DRIFTED, encoding="utf-8")
     found = scan(root=tmp_path, targets=("src",))
     reported = {line.split(": ", 1)[1] for line in found}
-    assert "catalogue -> catalog" in reported
+    assert {"catalogue -> catalog", "wearer -> holder"} <= reported
     assert {
         "teammate holds teammate -> ally",
-        "wearer holds wearer -> holder",
         "unavailable holds unavailab -> withheld / refusal",
     } <= reported
 

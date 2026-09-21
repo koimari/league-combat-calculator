@@ -1047,7 +1047,7 @@ DEFENSE_DECLARATIONS: Mapping[DefenseMechanic, DefenseDeclaration] = {
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
             "the strike-back is a sourced flat amount plus a share of the "
-            "wearer's bonus armour; a zero means both resolved to zero, which "
+            "holder's bonus armour; a zero means both resolved to zero, which "
             "the rule measured",
         ),
     ),

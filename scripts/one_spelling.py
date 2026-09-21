@@ -40,13 +40,13 @@ SELF = "scripts/one_spelling.py"
 RESPELLED: Mapping[str, str] = {
     "declin": "refuse / refusal / withheld",
     "catalogue": "catalog",
+    "wearer": "holder",
 }
 
 #: A word a published wire value spells, so only a defined name is banned.
 NAME_ONLY: Mapping[str, str] = {
     "unavailab": "withheld / refusal",
     "teammate": "ally",
-    "wearer": "holder",
 }
 
 #: Every defined name that keeps a banned word, and what makes it the name.
