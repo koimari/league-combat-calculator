@@ -139,7 +139,7 @@ def request_index_map(
     maximum_index: int,
     maximum_entries: int = 64,
 ) -> dict[str, int]:
-    """Read a bounded map from support packet keys to teammate indexes."""
+    """Read a bounded map from support packet keys to ally indexes."""
     if value is None:
         return {}
     if not isinstance(value, Mapping):

@@ -727,7 +727,7 @@ def _support_target_ids(
 def _support_selection(
     attacker: Combatant, effect: Mapping[str, Any]
 ) -> tuple[int, bool]:
-    """Return the selected teammate index and whether it was authored."""
+    """Return the selected ally index and whether it was authored."""
     selections = getattr(attacker.request, "support_target_selections", None)
     if not isinstance(selections, Mapping):
         return 0, False
@@ -1039,7 +1039,7 @@ def _trigger_reading_order(
 ) -> tuple[float, int, str]:
     """The same reading order with the holder's own triggers read last.
 
-    Aery chains off a teammate's trigger before the holder's at one
+    Aery chains off an ally's trigger before the holder's at one
     timestamp, and that is a reading order too: no rank takes part.
     """
     return (

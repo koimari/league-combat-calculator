@@ -39,7 +39,7 @@ MAX_ROTATIONS = 6
 
 
 # The roster bounds live beside the other public request bounds rather than in
-# scenario.py, which composes the roster: a support packet's teammate index is
+# scenario.py, which composes the roster: a support packet's ally index is
 # checked here and the roster lists are parsed there, and one of the two would
 # otherwise spell the other's limit as a literal.
 MAX_ENEMIES = 5

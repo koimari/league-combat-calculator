@@ -341,7 +341,7 @@ def _slot_rows(champion: str, slot: str, ability: dict[str, Any]) -> list[_Row]:
         scope, resolved_self = resolved
         # Fail closed at the emitter.  A typo or novel scope must
         # name the champion+slot at the source instead of silently redirecting
-        # the packet to teammate zero in the coupled resolver.
+        # the packet to ally zero in the coupled resolver.
         if scope not in SUPPORT_TARGET_RESOLUTION_SCOPES:
             raise ValueError(
                 "Unsupported support target_scope "

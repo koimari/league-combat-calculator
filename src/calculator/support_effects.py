@@ -88,7 +88,7 @@ def derive_ally_effects(
             # and its sourced override rather than from a row's own
             # sentence.  Fail closed at the emitter: a typo or
             # novel scope must name the champion+slot at the source instead
-            # of silently redirecting the packet to teammate zero in the
+            # of silently redirecting the packet to ally zero in the
             # coupled resolver.  A row's own scope is checked in
             # ``_slot_rows``.
             _, _, target_self, target_scope, _ = _support_profile(ability)
