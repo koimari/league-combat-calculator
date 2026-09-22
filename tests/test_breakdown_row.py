@@ -130,13 +130,11 @@ class TestTheReadersRefuseAnAbsentRequiredKey:
         with pytest.raises(ValueError, match=field):
             reader(row)
 
-    def test_a_survival_measure_keeps_the_type_the_walk_rounded_it_to(self):
+    def test_a_survival_measure_is_handed_back_and_not_re_rounded(self):
         """A published zero's type is part of what the coupled baseline pins,
-        so the reader hands back what it found."""
-        assert survival_health_damage({**SURVIVAL_ROW, "health_damage": 0}) == 0
-        assert isinstance(
-            survival_health_damage({**SURVIVAL_ROW, "health_damage": 0}), int
-        )
+        so the reader returns the walk's own object rather than a new one."""
+        row = {**SURVIVAL_ROW, "health_damage": 12.5}
+        assert survival_health_damage(row) is row["health_damage"]
 
     def test_a_stamped_row_reads_its_own_values(self):
         row = {

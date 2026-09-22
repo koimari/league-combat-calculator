@@ -50,27 +50,35 @@ FIGHT_RESULT_REQUIRED_FIELDS = (
 _required = partial(required_field, kind="fight result", stamper="pipeline.run_fight")
 
 
-def result_damage_events(result: Mapping[str, Any]) -> Sequence[Any]:
+def result_damage_events(  # sightline-ok: 1 - three row shapes, one key
+    result: Mapping[str, Any],
+) -> Sequence[Any]:
     """Every damage packet the fight priced, in engine order."""
     return _required(result, "damage_events")
 
 
-def result_cast_timeline(result: Mapping[str, Any]) -> Sequence[Any]:
+def result_cast_timeline(result: Mapping[str, Any]) -> Sequence[Mapping[str, Any]]:
     """Every cast the rotation placed, in cast order."""
     return _required(result, "cast_timeline")
 
 
-def result_self_healing_events(result: Mapping[str, Any]) -> Sequence[Any]:
+def result_self_healing_events(
+    result: Mapping[str, Any],
+) -> Sequence[Mapping[str, Any]]:
     """Every recovery the attacker paid itself."""
     return _required(result, "self_healing_events")
 
 
-def result_self_state_events(result: Mapping[str, Any]) -> Sequence[Any]:
+def result_self_state_events(
+    result: Mapping[str, Any],
+) -> Sequence[Mapping[str, Any]]:
     """Every self-state packet a champion module authored for this fight."""
     return _required(result, "self_state_events")
 
 
-def result_keystone_state_events(result: Mapping[str, Any]) -> Sequence[Any]:
+def result_keystone_state_events(
+    result: Mapping[str, Any],
+) -> Sequence[Mapping[str, Any]]:
     """Every self-state packet the selected keystone authored."""
     return _required(result, "keystone_state_events")
 

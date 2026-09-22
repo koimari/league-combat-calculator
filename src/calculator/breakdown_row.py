@@ -11,9 +11,9 @@ straight-line pass, so every row it returns carries each measure below.
 ``tests/test_row_stream_census.py`` measures the published join of the two,
 77 rows, and finds every field here on all of them.
 
-The survival measures are handed back exactly as the walk rounded them: a
-published zero's type is part of what the coupled baseline pins, so nothing
-here re-coerces one.
+Each number is handed back as its writer left it. Both write through
+``program.precision.round_field``, so the float these promise is the float
+already in the row, and a published zero keeps the type the baseline pins.
 """
 
 from __future__ import annotations
@@ -67,7 +67,7 @@ def breakdown_champion(row: Mapping[str, Any]) -> str:
     return str(_ledger(row, "champion"))
 
 
-def breakdown_total_damage(row: Mapping[str, Any]) -> Any:
+def breakdown_total_damage(row: Mapping[str, Any]) -> float:
     """The mitigated damage this participant dealt before its own death."""
     return _ledger(row, "total_damage")
 
@@ -77,31 +77,31 @@ def breakdown_sources(row: Mapping[str, Any]) -> Mapping[str, Any]:
     return _ledger(row, "sources")
 
 
-def survival_health_damage(row: Mapping[str, Any]) -> Any:
+def survival_health_damage(row: Mapping[str, Any]) -> float:
     """Damage that reached health rather than a shield."""
     return _survival(row, "health_damage")
 
 
-def survival_shield_absorbed(row: Mapping[str, Any]) -> Any:
+def survival_shield_absorbed(row: Mapping[str, Any]) -> float:
     """Damage a shield took instead."""
     return _survival(row, "shield_absorbed")
 
 
-def survival_effective_health(row: Mapping[str, Any]) -> Any:
+def survival_effective_health(row: Mapping[str, Any]) -> float:
     """How much damage this participant could still have taken."""
     return _survival(row, "effective_health")
 
 
-def survival_healing_received(row: Mapping[str, Any]) -> Any:
+def survival_healing_received(row: Mapping[str, Any]) -> float:
     """Health restored to it, after any reduction."""
     return _survival(row, "healing_received")
 
 
-def survival_healing_reduced(row: Mapping[str, Any]) -> Any:
+def survival_healing_reduced(row: Mapping[str, Any]) -> float:
     """Health a Grievous window kept it from restoring."""
     return _survival(row, "healing_reduced")
 
 
-def survival_support_shield_received(row: Mapping[str, Any]) -> Any:
+def survival_support_shield_received(row: Mapping[str, Any]) -> float:
     """Shielding an ally granted it."""
     return _survival(row, "support_shield_received")
