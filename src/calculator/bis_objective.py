@@ -66,6 +66,21 @@ BIS_OBJECTIVES: dict[str, dict[str, str]] = {
 BIS_UNMODELED_DEFENSIVE_EFFECTS: dict[str, str] = {}
 
 
+# Every survival measure a candidate is scored on is read through the one
+# reader below, and the zero it answers with is the contract twice over:
+# `bis.py` turns a `KeyError` in its candidate loop into a silently dropped
+# build, and three suites score a partial block on purpose.
+# `tests/test_slot_bis_team_outcome.py` ranks one whose only measure is
+# `effective_health`, while `tests/test_muramana_packet.py` and
+# `tests/test_interpreters_registry.py` hand the receipt an empty block to
+# read the certification alone.
+
+
+def _survival_measure(survival: Mapping[str, object], key: str) -> float:
+    """One measure off a participant's survival block, zero where it has none."""
+    return float(survival.get(key, 0.0) or 0.0)
+
+
 def bis_defensive_effect_receipt(
     item_name: str, survival: Mapping[str, object]
 ) -> dict[str, object]:
@@ -86,13 +101,13 @@ def bis_defensive_effect_receipt(
         "note": certified_note,
         "evidence": {
             "healing_received": round(
-                float(survival.get("healing_received", 0.0) or 0.0), 1
+                _survival_measure(survival, "healing_received"), 1
             ),
             "temporary_health_received": round(
-                float(survival.get("temporary_health_received", 0.0) or 0.0), 1
+                _survival_measure(survival, "temporary_health_received"), 1
             ),
             "effective_health": round(
-                float(survival.get("effective_health", 0.0) or 0.0), 1
+                _survival_measure(survival, "effective_health"), 1
             ),
         },
     }
@@ -153,7 +168,7 @@ def bis_time_to_target_defeat(
             or str(row.get("participant_id", "")) not in participant_ids
         ):
             continue
-        survival = row.get("survival", {})
+        survival = row.get("survival")
         if not isinstance(survival, Mapping):
             continue
         death_time = survival.get("death_time")
@@ -271,9 +286,9 @@ def bis_objective_score(
     if duration <= 0.0:
         duration = DEFAULT_FIGHT_DURATION
     focus_damage = float(objective.get("focus_damage_before_death", 0.0) or 0.0)
-    effective_health = float(focus_survival.get("effective_health", 0.0) or 0.0)
-    healing = float(focus_survival.get("healing_received", 0.0) or 0.0)
-    support_shield = float(focus_survival.get("support_shield_received", 0.0) or 0.0)
+    effective_health = _survival_measure(focus_survival, "effective_health")
+    healing = _survival_measure(focus_survival, "healing_received")
+    support_shield = _survival_measure(focus_survival, "support_shield_received")
     support_value = float(objective.get("focus_support_value", 0.0) or 0.0)
     damage_part = part("objective.focus_damage_before_death", focus_damage)
     health_part = part(f"{survival_path}.effective_health", effective_health)
@@ -324,7 +339,7 @@ def bis_objective_score(
             "effective_health": effective_health,
             "threat_before_defeat": focus_damage,
             "healing": healing,
-            "shield_absorbed": float(focus_survival.get("shield_absorbed", 0.0) or 0.0),
+            "shield_absorbed": _survival_measure(focus_survival, "shield_absorbed"),
         }
         return score, metric, components, rank_key
 

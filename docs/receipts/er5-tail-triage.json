@@ -2,8 +2,8 @@
  "candidates_by_module": {},
  "totals": {
   "ADJUDICATED": 22,
-  "NOT_A_ROW_FIELD": 486,
+  "NOT_A_ROW_FIELD": 484,
   "NOT_A_ROW_RECEIVER": 125,
-  "TOLERANCE_CONTRACT": 180
+  "TOLERANCE_CONTRACT": 167
  }
 }
