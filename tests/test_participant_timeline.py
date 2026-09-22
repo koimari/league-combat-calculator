@@ -3415,6 +3415,7 @@ def test_survival_walk_applies_explicit_deferred_damage_in_equal_ticks():
                     "damage_type": "physical",
                     "attacker": "source",
                     "sequence": 0,
+                    "source_key": "damage",
                     "_event_id": "deferred",
                     "deferred_fraction": 0.4,
                     "deferred_duration": 3.0,
@@ -3457,6 +3458,7 @@ def test_deaths_dance_defers_damage_and_defy_clears_remaining_ticks():
                 "attacker": "enemy",
                 "target": "main",
                 "sequence": 0,
+                "source_key": "damage",
                 "_event_id": "incoming",
             }
         ],
@@ -3603,6 +3605,7 @@ def test_deaths_dance_defy_starts_heal_at_delayed_takedown_once():
                 "attacker": "enemy",
                 "target": "main",
                 "sequence": 0,
+                "source_key": "damage",
                 "_event_id": "incoming",
             }
         ],
@@ -3701,6 +3704,7 @@ def test_deferred_ticks_are_mirrored_into_the_public_outgoing_receipt():
         "attacker": "source",
         "target": "target",
         "sequence": 0,
+        "source_key": "damage",
         "_event_id": "deferred-receipt",
         "deferred_fraction": 0.4,
         "deferred_duration": 3.0,

@@ -28,6 +28,19 @@ from . import rune_effects
 from .ability_spec import AttackClass, DamageClass
 from .ally_packet_recipient import RETARGETABLE_SCOPES, repriced_for_recipient
 from .attack_windows import AttackSpeedWindow
+from .breakdown_row import (
+    breakdown_champion,
+    breakdown_participant_id,
+    breakdown_sources,
+    breakdown_team,
+    breakdown_total_damage,
+    survival_effective_health,
+    survival_healing_received,
+    survival_healing_reduced,
+    survival_health_damage,
+    survival_shield_absorbed,
+    survival_support_shield_received,
+)
 from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
 from .cast_event_row import (
     cast_ordinal as _row_cast_ordinal,
@@ -41,8 +54,29 @@ from .cast_event_row import (
 from .champion_loadout import ResolvedLoadout
 from .champions.lulu_events import derive_lulu_support_events
 from .combat_events import certified_recipients
+from .composed_event_row import (
+    row_attacker,
+    row_damage,
+    row_damage_type,
+    row_sequence,
+    row_source_key,
+    row_target,
+    row_time,
+)
 from .defensive_effects import armed_revive
 from .fight_params import FightParams
+from .fight_result_row import (
+    result_breakdown,
+    result_cast_timeline,
+    result_damage_events,
+    result_keystone,
+    result_keystone_state_events,
+    result_self_healing_events,
+    result_self_state_events,
+    result_timeline_coverage,
+    result_total_damage,
+)
+from .heal_event_row import healed_time
 from .healing import GREY_HEALTH_RULE_CHAMPIONS
 from .healing_reduction import (
     champion_grievous_wound_sources,
@@ -326,8 +360,8 @@ def _stamp_ability_instances(result: MutableMapping[str, Any]) -> None:
     and a score-only result never passes through the pair enrichment that
     would otherwise supply it.  Same two derivers, one home.
     """
-    cast_timeline = result.get("cast_timeline") or ()
-    for event in result.get("damage_events", ()):
+    cast_timeline = result_cast_timeline(result)
+    for event in result_damage_events(result):
         if not isinstance(event, MutableMapping):
             continue
         if "ability_instance" not in event:
@@ -335,7 +369,7 @@ def _stamp_ability_instances(result: MutableMapping[str, Any]) -> None:
             if instance is not None:
                 event["ability_instance"] = instance
         event.setdefault("is_ability", is_authored_ability_event(event))
-        if str(event.get("source_key", "")) == "auto_attacks":
+        if row_source_key(event) == "auto_attacks":
             event["basic_attack"] = True
 
 
@@ -921,10 +955,10 @@ def _schedule_guardian_events(
     for trigger_target_id in protected_ids:
         events = scene.incoming.get(trigger_target_id, [])
         for event_index, trigger in enumerate(events):
-            attacker = combatant_by_id.get(str(trigger.get("attacker", "")))
+            attacker = combatant_by_id.get(row_attacker(trigger))
             if attacker is None or attacker.team == holder.team:
                 continue
-            trigger_amount = float(trigger.get("damage", 0.0) or 0.0)
+            trigger_amount = row_damage(trigger)
             if trigger_amount <= 0.0:
                 continue
             trigger_id = str(
@@ -946,7 +980,7 @@ def _schedule_guardian_events(
                         keystone="Guardian",
                         label="Shield",
                         kind="shield",
-                        time=float(trigger.get("time", 0.0) or 0.0),
+                        time=row_time(trigger),
                         rank=TransitionRank.AURA_ARM,
                         event_id=(
                             f"{holder.participant_id}:guardian:{trigger_id}:"
@@ -1014,8 +1048,8 @@ def _sequence_reading_order(event: Mapping[str, Any]) -> tuple[float, int, str]:
     ``action_key`` is that, and the two answer different questions.
     """
     return (
-        float(event.get("time", 0.0) or 0.0),
-        int(event.get("sequence", 0) or 0),
+        row_time(event),
+        row_sequence(event),
         str(event.get("_event_id", "")),
     )
 
@@ -1029,8 +1063,8 @@ def _trigger_reading_order(
     timestamp, and that is a reading order too: no rank takes part.
     """
     return (
-        float(event.get("time", 0.0) or 0.0),
-        0 if str(event.get("target", "")) != holder_id else 1,
+        row_time(event),
+        0 if row_target(event) != holder_id else 1,
         str(event.get("_event_id", "")),
     )
 
@@ -1058,8 +1092,8 @@ def _schedule_aftershock_events(
     for event, cc_kind, _duration in _immobilizing_controls(
         scene.outgoing.get(holder.participant_id, [])
     ):
-        trigger_time = float(event.get("time", 0.0) or 0.0)
-        key = (str(event.get("source_key", "")), round(trigger_time, 9), cc_kind)
+        trigger_time = row_time(event)
+        key = (row_source_key(event), round(trigger_time, 9), cc_kind)
         if not gate.accepts(trigger_time, key):
             continue
         trigger_id = str(event.get("_event_id", ""))
@@ -1074,7 +1108,7 @@ def _schedule_aftershock_events(
                 rank=TransitionRank.DAMAGE,
                 event_id=f"{holder.participant_id}:aftershock:{trigger_id}",
                 trigger_id=trigger_id,
-                sequence=int(event.get("sequence", 0) or 0),
+                sequence=row_sequence(event),
                 duration=effect.duration_seconds,
                 bonus_armor=armor_bonus,
                 bonus_magic_resistance=magic_resistance_bonus,
@@ -1106,14 +1140,14 @@ def _schedule_grasp_events(
         (
             event
             for event in scene.outgoing.get(holder.participant_id, [])
-            if str(event.get("source_key", "")) == effect.breakdown_key
+            if row_source_key(event) == effect.breakdown_key
         ),
         key=_sequence_reading_order,
     )
     gate = TriggerGate(inclusive=False)
     bonus_health = effect.bonus_health(bool(holder.stats.get("is_melee", True)))
     for event in proc_events:
-        trigger_time = float(event.get("time", 0.0) or 0.0)
+        trigger_time = row_time(event)
         if not gate.accepts(trigger_time, trigger_time):
             continue
         trigger_id = str(event.get("_event_id", ""))
@@ -1128,7 +1162,7 @@ def _schedule_grasp_events(
                 rank=TransitionRank.DEBUFF_ARM,
                 event_id=f"{holder.participant_id}:grasp:{trigger_id}",
                 trigger_id=trigger_id,
-                sequence=int(event.get("sequence", 0) or 0),
+                sequence=row_sequence(event),
                 bonus_health=bonus_health,
                 _grasp_permanent_health=True,
                 grasp_bonus_health=bonus_health,
@@ -1163,17 +1197,17 @@ def _schedule_glacial_events(
     for event, cc_kind, cc_duration in _immobilizing_controls(
         scene.outgoing.get(holder.participant_id, [])
     ):
-        target_id = str(event.get("target", ""))
+        target_id = row_target(event)
         target_actor = actor_by_id.get(target_id)
         if target_actor is None or target_actor.team != "enemy":
             continue
-        trigger_time = float(event.get("time", 0.0) or 0.0)
-        key = (str(event.get("source_key", "")), round(trigger_time, 9), cc_kind)
+        trigger_time = row_time(event)
+        key = (row_source_key(event), round(trigger_time, 9), cc_kind)
         if not gate.accepts(trigger_time, key):
             continue
         trigger_id = str(event.get("_event_id", ""))
         activation_time = trigger_time + 1e-9
-        sequence = int(event.get("sequence", 0) or 0)
+        sequence = row_sequence(event)
         zone_duration = effect.zone_duration(cc_duration)
         zone_id = f"{holder.participant_id}:glacial:{trigger_id}"
         zone_fields = {
@@ -1263,13 +1297,13 @@ def _schedule_stormraider_events(
         defaultdict(list)
     )
     for event_index, event in enumerate(scene.outgoing.get(holder.participant_id, [])):
-        target_id = str(event.get("target", ""))
+        target_id = row_target(event)
         target = actors_by_id.get(target_id)
         if target is None or target.team != "enemy":
             continue
         try:
-            event_time = float(event.get("time", 0.0) or 0.0)
-            damage = float(event.get("damage", 0.0) or 0.0)
+            event_time = row_time(event)
+            damage = row_damage(event)
         except (TypeError, ValueError):
             continue
         if not math.isfinite(event_time) or not math.isfinite(damage) or damage <= 0.0:
@@ -1357,7 +1391,7 @@ def _aery_support_templates(
     trigger_effects: Iterable[Mapping[str, Any]],
 ) -> list[dict[str, Any]]:
     """Turn the first accepted ally heal or shield signal into Aery's shield."""
-    if str(result.get("keystone", "")) != "Summon Aery":
+    if result_keystone(result) != "Summon Aery":
         return []
     effect = rune_effects.resolve_keystone("Summon Aery")
     if not isinstance(effect, rune_effects.KeystoneAeryEffect):
@@ -1492,7 +1526,7 @@ def _support_effect_templates(
         attacker.champion_data,
         attacker.level,
         result.get("champion_stats", attacker.stats),
-        list(result.get("cast_timeline", [])),
+        list(result_cast_timeline(result)),
         ability_ranks=request.ability_ranks,
         champion_options=request.champion_options,
     )
@@ -1502,14 +1536,14 @@ def _support_effect_templates(
                 attacker.champion_data,
                 attacker.level,
                 result.get("champion_stats", attacker.stats),
-                list(result.get("cast_timeline", [])),
+                list(result_cast_timeline(result)),
                 ability_ranks=request.ability_ranks,
             )
         )
     templates = []
     state_events = [
-        *result.get("self_state_events", []),
-        *result.get("keystone_state_events", []),
+        *result_self_state_events(result),
+        *result_keystone_state_events(result),
     ]
     for state_index, effect in enumerate(state_events):
         if not isinstance(effect, Mapping):
@@ -1634,7 +1668,7 @@ def _support_effect_templates(
     # passives that trigger off ally heals/shields (Moonstone Renewer) see
     # them.
     applied_pair_defender = _routed_pair_defender_id(pair_defender_id, all_actors)
-    for heal_index, heal_event in enumerate(result.get("self_healing_events", [])):
+    for heal_index, heal_event in enumerate(result_self_healing_events(result)):
         if not isinstance(heal_event, Mapping):
             continue
         if str(heal_event.get("target_scope", "")) not in {
@@ -1720,7 +1754,7 @@ def _support_effect_templates(
             and item_result["damage_events"]
         ):
             kill_time = max(
-                float(event.get("time", 0.0) or 0.0)
+                row_time(event)
                 for event in item_result["damage_events"]
                 if isinstance(event, Mapping)
             )
@@ -1758,7 +1792,7 @@ def _support_effect_templates(
     #  named denials); the heal is the separate E1 self-heal receipt.
     champion_name = str(attacker.champion_data.get("name", ""))
     if champion_name == "Gangplank":
-        for cast_index, cast in enumerate(result.get("cast_timeline", ())):
+        for cast_index, cast in enumerate(result_cast_timeline(result)):
             if str(_row_cast_slot(cast)) != "W":
                 continue
             cast_time = float(_row_cast_time(cast))
@@ -1789,11 +1823,11 @@ def _support_effect_templates(
         # separate authored heal per cast.
         w_casts = [
             cast
-            for cast in result.get("cast_timeline", ())
+            for cast in result_cast_timeline(result)
             if str(_row_cast_slot(cast)) == "W"
         ]
         if w_casts:
-            ferocity_row = (result.get("breakdown") or {}).get("ferocity") or {}
+            ferocity_row = result_breakdown(result).get("ferocity") or {}
             stack_events = ferocity_row.get("stack_events")
             if not isinstance(stack_events, list):
                 raise KeyError(
@@ -1831,7 +1865,7 @@ def _support_effect_templates(
                     }
                 )
     elif champion_name == "Milio":
-        for cast_index, cast in enumerate(result.get("cast_timeline", ())):
+        for cast_index, cast in enumerate(result_cast_timeline(result)):
             if str(_row_cast_slot(cast)) != "R":
                 continue
             cast_time = float(_row_cast_time(cast))
@@ -1907,7 +1941,7 @@ def _support_effect_templates(
         # + 2.5s duration-extension are receipted named-unsupported (no
         # kernel fields) via the module constants; the MS facing/2000-
         # unit condition is prose-only.
-        for cast in result.get("cast_timeline", ()):
+        for cast in result_cast_timeline(result):
             if str(_row_cast_slot(cast)) != "R":
                 continue
             cast_time = float(_row_cast_time(cast))
@@ -2126,14 +2160,14 @@ def _schedule_thorns_events(
                 continue
             for profile in profiles:
                 event = {
-                    "time": float(strike.get("time", 0.0)),
+                    "time": row_time(strike),
                     "damage": thorns_return_damage(profile, holder, striker),
                     "damage_type": profile.damage_type,
                     "source_key": f"thorns_{profile.item_name}",
                     "source": f"{profile.item_name} (Thorns)",
                     "attacker": holder.participant_id,
                     "target": striker.participant_id,
-                    "sequence": int(strike.get("sequence", 0) or 0),
+                    "sequence": row_sequence(strike),
                     "event_precision": "exact",
                     "_event_id": (
                         f"{holder.participant_id}:{striker.participant_id}"
@@ -2143,8 +2177,7 @@ def _schedule_thorns_events(
                     "_reactive": True,
                     "grievous_duration": profile.grievous_duration,
                     "_wound_source": f"{profile.item_name} · Thorns",
-                    "_wound_until": float(strike.get("time", 0.0))
-                    + float(profile.grievous_duration),
+                    "_wound_until": row_time(strike) + float(profile.grievous_duration),
                 }
                 scene.incoming.setdefault(striker.participant_id, []).append(event)
                 scene.outgoing.setdefault(holder.participant_id, []).append(event)
@@ -2165,11 +2198,9 @@ def _schedule_authored_reactive_events(
     known_ids = {str(participant_id) for participant_id in incoming}
     for entries in incoming.values():
         known_ids.update(
-            str(event.get("attacker", "")) for event in entries if event.get("attacker")
+            attacker for event in entries if (attacker := row_attacker(event))
         )
-        known_ids.update(
-            str(event.get("target", "")) for event in entries if event.get("target")
-        )
+        known_ids.update(target for event in entries if (target := row_target(event)))
     for target_id, events in list(incoming.items()):
         for trigger in list(events):
             packets = trigger.get("reactive_packets")
@@ -2183,7 +2214,7 @@ def _schedule_authored_reactive_events(
                 eligible = packet.get("reactive_trigger")
                 if not isinstance(eligible, str) or eligible != trigger_kind:
                     continue
-                target = str(packet.get("target", trigger.get("attacker", "")))
+                target = str(packet.get("target", row_attacker(trigger)))
                 if not target or target not in known_ids:
                     continue
                 try:
@@ -2191,14 +2222,14 @@ def _schedule_authored_reactive_events(
                 except (KeyError, TypeError, ValueError):
                     continue
                 event = {
-                    "time": float(packet.get("time", trigger.get("time", 0.0))),
+                    "time": float(packet.get("time", row_time(trigger))),
                     "damage": amount,
                     "damage_type": str(packet.get("damage_type", "")),
                     "source_key": str(packet.get("source_key", "")),
                     "source": str(packet.get("source", packet.get("source_key", ""))),
                     "attacker": str(packet.get("attacker", target_id)),
                     "target": target,
-                    "sequence": int(trigger.get("sequence", 0) or 0),
+                    "sequence": row_sequence(trigger),
                     "event_precision": packet.get("event_precision", "exact"),
                     "_event_id": f"{trigger_id}:reactive:{index}",
                     "_trigger_event_id": trigger_id,
@@ -2389,7 +2420,7 @@ def _simulate_survival(
     for participant_id, events in incoming.items():
         for original in events:
             event = original
-            attacker_id = str(event.get("attacker", "") or "")
+            attacker_id = row_attacker(event)
             if attacker_id in execution_riders:
                 execution = execution_riders[attacker_id]
                 by_cast = bool(original.get("execute_declared_by_cast"))
@@ -2416,7 +2447,7 @@ def _simulate_survival(
                 redirect_fraction = max(0.0, min(1.0, redirect_fraction))
                 redirect_target = str(event.get("redirect_target", ""))
             if redirect_fraction > 0.0 and redirect_target in states:
-                original_amount = max(0.0, float(event.get("damage", 0.0)))
+                original_amount = max(0.0, row_damage(event))
                 # Knight's Vow redirects pre-mitigation damage.  A pair event
                 # may only expose its post-mitigation value, so recover the
                 # authored raw amount from the event when present, otherwise
@@ -2432,7 +2463,7 @@ def _simulate_survival(
                     if candidate > 0.0 and math.isfinite(candidate):
                         raw_amount = candidate
                     else:
-                        damage_type = str(event.get("damage_type", ""))
+                        damage_type = row_damage_type(event)
                         baseline_key = (
                             "_baseline_effective_armor"
                             if damage_type == "physical"
@@ -2460,10 +2491,10 @@ def _simulate_survival(
                         expanded_incoming[target_id].append(event)
                         continue
 
-                    source = combatant_by_id.get(str(event.get("attacker", "")))
+                    source = combatant_by_id.get(row_attacker(event))
                     protected = combatant_by_id.get(target_id)
                     holder = combatant_by_id.get(redirect_target)
-                    damage_type = str(event.get("damage_type", ""))
+                    damage_type = row_damage_type(event)
                     if source is None or protected is None or holder is None:
                         event["redirect_skipped_reason"] = (
                             "participant_receipt_unavailable"
@@ -2523,9 +2554,7 @@ def _simulate_survival(
                 if event.get("redirect_pre_mitigation_required"):
                     redirected["raw_damage"] = raw_amount * redirect_fraction
                     redirected["redirect_pre_mitigation"] = True
-                    redirected["redirect_attributed_to"] = str(
-                        event.get("attacker", "")
-                    )
+                    redirected["redirect_attributed_to"] = row_attacker(event)
                     redirected["_redirect_original_damage"] = original_amount
                     # The redirected share met the HOLDER's resistance: its
                     # own baseline, and its own share of any declaration the
@@ -2550,7 +2579,7 @@ def _simulate_survival(
                             declared, 1.0 - redirect_fraction
                         )
                 redirected["_sk"] = action_key(
-                    float(redirected.get("time", 0.0)),
+                    row_time(redirected),
                     TransitionRank.REACTIVE,
                     redirect_target,
                     redirected,
@@ -2585,8 +2614,8 @@ def _simulate_survival(
             if (
                 deferral is not None
                 and not event.get("_deferred")
-                and str(event.get("damage_type", "")) in {"physical", "magic"}
-                and float(event.get("damage", 0.0) or 0.0) > 0.0
+                and row_damage_type(event) in {"physical", "magic"}
+                and row_damage(event) > 0.0
                 and "deferred_fraction" not in event
             ):
                 event["deferred_fraction"] = deferral.fraction
@@ -2614,7 +2643,7 @@ def _simulate_survival(
                 deferred_fraction > 0.0
                 and deferred_duration > 0.0
                 and deferred_ticks > 0
-                and float(event.get("damage", 0.0)) > 0.0
+                and row_damage(event) > 0.0
             ):
                 deferred_fraction = min(1.0, deferred_fraction)
                 full_amount = float(event["damage"])
@@ -2645,19 +2674,19 @@ def _simulate_survival(
                 for tick in range(1, deferred_ticks + 1):
                     deferred = {
                         **event,
-                        "time": float(event.get("time", 0.0))
+                        "time": row_time(event)
                         + deferred_duration * tick / deferred_ticks,
                         "damage": tick_amount,
                         "damage_type": "true",
-                        "source_key": f"deferred_{event.get('source_key', 'damage')}",
-                        "source": f"{event.get('source', event.get('source_key', ''))} (deferred)",
+                        "source_key": f"deferred_{row_source_key(event)}",
+                        "source": f"{event.get('source', row_source_key(event))} (deferred)",
                         "_event_id": f"{event.get('_event_id', '')}:deferred:{tick}",
                         "_deferred": True,
                         "_deferred_from": event.get("_event_id"),
                         "_deferred_batch_id": batch_id,
                     }
                     deferred["_sk"] = action_key(
-                        float(deferred.get("time", 0.0)),
+                        row_time(deferred),
                         TransitionRank.DAMAGE,
                         target_id,
                         deferred,
@@ -3581,10 +3610,10 @@ def _score_with_search_context(
             # in the compiler: ``index`` is the per-pair event id and
             # re-numbering the survivors would move every id after the first
             # preview.
-            scan_previewed = dropped_pair_previews(first_result.get("breakdown") or {})
+            scan_previewed = dropped_pair_previews(result_breakdown(first_result))
             support_scan_events = []
-            for index, event in enumerate(first_result.get("damage_events", [])):
-                if str(event.get("source_key", "")) in scan_previewed:
+            for index, event in enumerate(result_damage_events(first_result)):
+                if row_source_key(event) in scan_previewed:
                     continue
                 support_scan_events.append(
                     {
@@ -3705,9 +3734,7 @@ def _score_with_search_context(
             and float(action.time) <= duration
         ]
         main_cast_timeline = (
-            list(first_result.get("cast_timeline", []))
-            if first_result is not None
-            else []
+            list(result_cast_timeline(first_result)) if first_result is not None else []
         )
         grey_heals, grey_shields, grey_summary = _grey_health_receipts(
             str(champion_data.get("name", "")),
@@ -3918,18 +3945,18 @@ def _attacker_outcome(
     pure, may not correct.
     """
     return AttackerOutcome(
-        participant_id=str(identity.get("participant_id", "")),
-        team=str(identity.get("team", "")),
-        champion=str(identity.get("champion", "")),
+        participant_id=breakdown_participant_id(identity),
+        team=breakdown_team(identity),
+        champion=breakdown_champion(identity),
         total_damage=float(total_damage),
-        incoming_damage=float(survival_row.get("health_damage", 0.0))
-        + float(survival_row.get("shield_absorbed", 0.0)),
-        health_damage=survival_row.get("health_damage", 0.0),
-        shield_absorbed=survival_row.get("shield_absorbed", 0.0),
-        effective_health=survival_row.get("effective_health", 0.0),
-        healing_received=survival_row.get("healing_received", 0.0),
-        healing_reduced=survival_row.get("healing_reduced", 0.0),
-        support_shield_received=survival_row.get("support_shield_received", 0.0),
+        incoming_damage=float(survival_health_damage(survival_row))
+        + float(survival_shield_absorbed(survival_row)),
+        health_damage=survival_health_damage(survival_row),
+        shield_absorbed=survival_shield_absorbed(survival_row),
+        effective_health=survival_effective_health(survival_row),
+        healing_received=survival_healing_received(survival_row),
+        healing_reduced=survival_healing_reduced(survival_row),
+        support_shield_received=survival_support_shield_received(survival_row),
         support_value=float(support_value),
         healing_output=float(healing_output),
         survived_window=bool(survival_row.get("survived_window")),
@@ -4425,14 +4452,14 @@ def _pair_fight_view(ctx: _PairCtx, pair: _Pair) -> PairView:
     if cache is not None:
         cache[cache_key] = view
     if pair.attacker.participant_id == "main" and not ctx.ledgers.main_cast_timeline:
-        ctx.ledgers.main_cast_timeline.extend(view.result.get("cast_timeline", []))
+        ctx.ledgers.main_cast_timeline.extend(result_cast_timeline(view.result))
     return view
 
 
 def _fold_pair_view(ctx: _PairCtx, pair: _Pair, view: PairView) -> None:
     """Fold one pair view's events, heals and support packets into the books."""
     ledgers, result = ctx.ledgers, view.result
-    ledgers.coverage_reports.append(result.get("timeline_coverage", {}))
+    ledgers.coverage_reports.append(result_timeline_coverage(result))
     # A view that lives in the cache serves later evaluations, so this one
     # only takes copies (the walk mutates its rows).  A single-use fight's
     # rows are appended directly.
@@ -4450,7 +4477,7 @@ def _fold_pair_view(ctx: _PairCtx, pair: _Pair, view: PairView) -> None:
             duplicate = any(
                 existing.get("actor_wide")
                 and existing.get("source") == template.get("source")
-                and float(existing.get("time", 0.0)) == float(template.get("time", 0.0))
+                and healed_time(existing) == healed_time(template)
                 for existing in attacker_healing
             )
             if duplicate:
@@ -4481,7 +4508,7 @@ def _fold_pair_view(ctx: _PairCtx, pair: _Pair, view: PairView) -> None:
             "champion": pair.attacker.champion_data.get("name", ""),
         }
     )
-    row["total_damage"] += float(result.get("total_damage", 0.0))
+    row["total_damage"] += result_total_damage(result)
     if ctx.request.include_receipt:
         row_sources = row["sources"]
         for source, template in view.source_names.items():
@@ -4506,7 +4533,7 @@ def _fold_self_shield(
         (
             attacker.participant_id,
             str(shield_payload.get("source", "")),
-            float(enriched.get("time", 0.0) or 0.0),
+            row_time(enriched),
         )
         if shield_payload.get("actor_wide")
         else None
@@ -4524,7 +4551,7 @@ def _fold_self_shield(
         # defensive event.
         ctx.ledgers.item_denial_receipts.append(
             {
-                "time": round(float(enriched.get("time", 0.0) or 0.0), 3),
+                "time": round(row_time(enriched), 3),
                 "kind": PacketKind.ITEM_DENIAL.value,
                 "source": str(
                     shield_payload.get("source", "Eclipse (Ever Rising Moon)")
@@ -4540,7 +4567,7 @@ def _fold_self_shield(
         return
     ctx.ledgers.support_effects[attacker.participant_id].append(
         {
-            "time": float(enriched.get("time", 0.0)),
+            "time": row_time(enriched),
             "kind": "shield",
             "amount": shield_amount,
             "duration": shield_duration,
@@ -4648,9 +4675,7 @@ def _schedule_composed_events(
     for ledger in (ledgers.incoming, ledgers.outgoing):
         for participant_id, events in list(ledger.items()):
             ledger[participant_id] = [
-                event
-                for event in events
-                if str(event.get("attacker", "")) not in enemy_ids
+                event for event in events if row_attacker(event) not in enemy_ids
             ]
 
 
@@ -4691,21 +4716,17 @@ def _walk_composition(
         events = [
             event
             for event in ledgers.outgoing[actor.participant_id]
-            if float(event.get("time", 0.0)) <= cutoff
+            if row_time(event) <= cutoff
         ]
         row = ledgers.breakdown[actor.participant_id]
-        row["total_damage"] = round(
-            sum(float(event.get("damage", 0.0)) for event in events), 1
-        )
+        row["total_damage"] = round(sum(row_damage(event) for event in events), 1)
         if not include_receipt:
             # The scoring subset carries damage totals, not per-source rows.
             row["sources"] = {}
             continue
         source_totals: dict[str, float] = defaultdict(float)
         for event in events:
-            source_totals[str(event.get("source_key", ""))] += float(
-                event.get("damage", 0.0)
-            )
+            source_totals[row_source_key(event)] += row_damage(event)
         row["sources"] = {
             source: {
                 "name": row["sources"].get(source, {}).get("name", source),
@@ -4734,35 +4755,25 @@ def _walk_composition(
             support_by_attacker[attacker_id] += applied
             if event.get("kind") == "heal":
                 healing_by_attacker[attacker_id] += applied
-    walk_result = walk_result.projected(
-        outcomes=[
+    outcomes = []
+    for actor in roster.all_actors:
+        # The loop above indexed this defaulting book for every actor, so
+        # each one already has its row here.
+        row = ledgers.breakdown[actor.participant_id]
+        outcomes.append(
             _attacker_outcome(
-                ledgers.breakdown.get(actor.participant_id)
-                or {
-                    "participant_id": actor.participant_id,
-                    "team": actor.team,
-                    "champion": actor.champion_data.get("name", ""),
-                },
-                float(
-                    (ledgers.breakdown.get(actor.participant_id) or {}).get(
-                        "total_damage", 0.0
-                    )
-                ),
+                row,
+                float(breakdown_total_damage(row)),
                 survival[actor.participant_id],
                 support_by_attacker[actor.participant_id],
                 healing_by_attacker[actor.participant_id],
-                sources=list(
-                    (ledgers.breakdown.get(actor.participant_id) or {})
-                    .get("sources", {})
-                    .values()
-                ),
+                sources=list(breakdown_sources(row).values()),
                 utility_outcomes=(
                     utility_by_actor[actor.participant_id] if include_receipt else None
                 ),
             )
-            for actor in roster.all_actors
-        ]
-    )
+        )
+    walk_result = walk_result.projected(outcomes=outcomes)
     return Walked(
         program,
         walk_result,

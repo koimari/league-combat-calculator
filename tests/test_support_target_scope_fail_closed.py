@@ -204,7 +204,12 @@ def test_unknown_scope_template_rejected_before_application(monkeypatch):
     with pytest.raises(ValueError) as exc:
         _attach_support_effects(
             attacker,
-            {"champion_stats": {"health": 2000.0}, "cast_timeline": []},
+            {
+                "champion_stats": {"health": 2000.0},
+                "cast_timeline": [],
+                "self_state_events": [],
+                "keystone_state_events": [],
+            },
             _roster(),
             support_effects,
         )
