@@ -1,8 +1,8 @@
 """The load tier — one negative per forbidden claim shape.
 
-``coverage_evidence`` catches structural impossibility and nothing else
-: a claim whose shape cannot be backed by *anything*, whatever the
-codebase happens to contain.  Every rule it enforces therefore owes a test
+``coverage_evidence`` catches structural impossibility and nothing else: a
+claim whose shape cannot be backed by *anything*, whatever the codebase
+happens to contain.  Every rule it enforces therefore owes a test
 that reaches it, because a validator whose branch no test can trigger is
 indistinguishable from a validator that returns ``None`` — which is the
 failure the claim table exists to catch, one size smaller.

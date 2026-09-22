@@ -2882,13 +2882,12 @@ def test_every_periodic_owner_prices_from_its_declaration_to_the_pair_engines_nu
 ):
     """One owner, every tick: the walk's price is the pair engine's.
 
-        The equivalence this family's retirement rests on, stated per owner
-        because the committed coupled set reaches two of the seven and misses a
-        whole cadence.  For every tick the pair engine authored under this owner's
-        row, the declaration riding it, composed with the holder's own amps and
-        mitigated once, equals the number the pair engine put on that tick -- which
-        is what makes the retirement a re-spelling before it is a re-pricing
-    .
+    The equivalence this family's retirement rests on, stated per owner
+    because the committed coupled set reaches two of the seven and misses a
+    whole cadence.  For every tick the pair engine authored under this owner's
+    row, the declaration riding it, composed with the holder's own amps and
+    mitigated once, equals the number the pair engine put on that tick -- which
+    is what makes the retirement a re-spelling before it is a re-pricing.
     """
     result, amps = _periodic_probe(owner)
     row = next(

@@ -105,18 +105,17 @@ def test_an_owner_whose_behaviour_is_still_engine_code_is_not_compilable(
 ) -> None:
     """The fold fails closed: an absence never becomes a compiled-lane promise.
 
-        Counter 3 reached zero at 3.7-r2, so no real owner takes this branch any
-        more and the frontier cannot supply a subject.  The branch is
-        still live and still load-bearing — the next registry tag anybody adds
-        lands in it before its declaration does — so it is driven synthetically
-    : an owner the registries know, with its rule set emptied.  A test
-        that retired itself the moment the population emptied would leave the
-        fail-closed branch unproven exactly when nothing else covers it.
+    No real owner takes this branch, so the frontier cannot supply a subject.
+    The branch is still live and still load-bearing — the next registry tag
+    anybody adds lands in it before its declaration does — so it is driven
+    synthetically: an owner the registries know, with its rule set emptied.  A
+    test that retired itself the moment the population emptied would leave the
+    fail-closed branch unproven exactly when nothing else covers it.
 
-        ``UNDECLARED_ON_ARRIVAL`` is the exact live population and it is now
-        empty: the four ``ITEM_EFFECTS`` entries the merge brought in from
-        ``main`` are declared.  Pinned as a set rather than as a count so the
-        next registry tag that lands before its declaration fails here.
+    ``UNDECLARED_ON_ARRIVAL`` is the exact live population and it is now
+    empty: every ``ITEM_EFFECTS`` entry is declared.  Pinned as a set rather
+    than as a count so the next registry tag that lands before its declaration
+    fails here.
     """
     owner = "Actualizer"
     assert catalog.registry_entries(owner), "the subject must have a registry entry"
