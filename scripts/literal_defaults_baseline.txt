@@ -34,9 +34,6 @@
 #       One frozen site.  Every bucket states what it licenses here, and a
 #       bucket with no reason in this header is an error.
 #
-# ROW_READS: Reads off an internal breakdown or damage-event row. These rows
-#     have no schema home the way `_damage_event_row`'s mandatory five do; one
-#     row dataclass retires the whole bucket at once.
 # REQUEST_ITEM_STATE: Request-supplied per-item state, not cached data: an
 #     absent key is the item's declared off state, and `ITEM_INPUT_OPTIONS`
 #     owns what that is.
@@ -67,12 +64,6 @@
 #     is that declaration's own statement that it carries no such facet, which
 #     is the shape `ability_atoms.ABILITY_PAYLOAD_SCHEMA` formalises for the
 #     payloads that cross a module boundary.
-# ENGINE_ROW: A row the engine built during this fight: a damage event, a
-#     cast, a heal payment, a stat block `calculate_total_stats` produced.
-#     Same class as ROW_READS, and it retires the same way, one row dataclass
-#     per producer. A build-stat read is *not* in here when a declared
-#     vocabulary covers it: `champions.inputs.champion_stat` is the accessor,
-#     and rune, interpreter and champion formulas all go through it.
 # MODULE_DECLARATION: `getattr(module, "DECLARATION", None)` on a champion
 #     module, its parser, or a compiled part. The absent value is the module
 #     declining to declare an optional contract, which
@@ -562,33 +553,6 @@ CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"healthRegen" 2
 CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"mana" 2
 CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"manaRegen" 2
 CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"perLevel" 3
-ENGINE_ROW|champions/alistar.py|derive_self_healing|dict.get|"stacks" 1
-ENGINE_ROW|champions/alistar.py|derive_self_healing|or-default|"stacks" 1
-ENGINE_ROW|champions/briar.py|derive_self_healing|or-default|"raw_damage" 1
-ENGINE_ROW|champions/camille.py|derive_self_healing|or-default|"raw_damage" 1
-ENGINE_ROW|champions/chogath.py|derive_self_healing|dict.get|"amount" 1
-ENGINE_ROW|champions/chogath.py|derive_self_healing|dict.get|"kills" 1
-ENGINE_ROW|champions/chogath.py|derive_self_healing|or-default|"amount" 1
-ENGINE_ROW|champions/chogath.py|derive_self_healing|or-default|"kills" 1
-ENGINE_ROW|champions/darius.py|derive_self_healing|dict.get|"sequence" 1
-ENGINE_ROW|champions/darius.py|derive_self_healing|or-default|"sequence" 1
-ENGINE_ROW|champions/fiddlesticks.py|derive_self_healing|or-default|"raw_damage" 1
-ENGINE_ROW|champions/mordekaiser.py|derive_self_healing|dict.get|"amount" 1
-ENGINE_ROW|champions/mordekaiser.py|derive_self_healing|or-default|"amount" 1
-ENGINE_ROW|champions/reksai.py|derive_self_healing|dict.get|"amount" 1
-ENGINE_ROW|champions/reksai.py|derive_self_healing|or-default|"amount" 1
-ENGINE_ROW|champions/trundle.py|derive_self_healing|dict.get|"amount" 1
-ENGINE_ROW|champions/trundle.py|derive_self_healing|dict.get|"deaths" 1
-ENGINE_ROW|champions/trundle.py|derive_self_healing|or-default|"amount" 1
-ENGINE_ROW|champions/trundle.py|derive_self_healing|or-default|"deaths" 1
-ENGINE_ROW|champions/trundle.py|derive_self_healing|or-default|"raw_damage" 1
-ENGINE_ROW|champions/vi.py|_denting_stream|dict.get|"E" 1
-ENGINE_ROW|champions/vi.py|_denting_stream|dict.get|"Q" 1
-ENGINE_ROW|champions/vladimir.py|derive_self_healing|or-default|"raw_damage" 1
-ENGINE_ROW|champions/xin_zhao.py|derive_self_healing|or-default|"stacks_required" 1
-ENGINE_ROW|item_coverage.py|require_certified_target_timeline|dict.get|"coarse_sources" 1
-ENGINE_ROW|item_coverage.py|require_certified_target_timeline|dict.get|"complete" 1
-ENGINE_ROW|stats.py|calculate_total_stats|dict.get|"armor_penetration_bonus_percent" 1
 LOADOUT_NAMES|item_effects.py|_cached_sustain_stat|or-default|"name" 1
 LOADOUT_NAMES|item_effects.py|_resolve_damage_effects_uncached|dict.get|"name" 1
 LOADOUT_NAMES|item_effects.py|active_secondary_ad_item_name|dict.get|"name" 1
@@ -662,102 +626,6 @@ REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"eminence_stac
 REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"feast_active_seconds" 1
 REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"shared_riches_gold" 1
 REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"ward_uses" 1
-ROW_READS|damage.py|split_auto_vs_ability|dict.get|"total_damage" 1
-ROW_READS|damage.py|split_by_damage_type|dict.get|"total_damage" 2
-ROW_READS|fight/after/amplifiers.py|_apply_command_amp|or-default|"damage_events" 1
-ROW_READS|fight/after/amplifiers.py|_apply_damage_amplifiers|dict.get|"total_damage" 1
-ROW_READS|fight/after/amplifiers.py|_hypershot_delta_events|dict.get|"damage_type" 1
-ROW_READS|fight/after/amplifiers.py|_hypershot_delta_events|dict.get|"total_damage" 1
-ROW_READS|fight/after/empowered_swings.py|_author_empowered_swing_events|dict.get|"damage" 1
-ROW_READS|fight/after/empowered_swings.py|_author_empowered_swing_events|dict.get|"damage_type" 1
-ROW_READS|fight/after/empowered_swings.py|_author_empowered_swing_events|dict.get|"total_damage" 1
-ROW_READS|fight/after/empowered_swings.py|_empowered_swing_consumers|dict.get|"casts" 1
-ROW_READS|fight/after/empowered_swings.py|_empowered_swing_consumers|dict.get|"slot" 1
-ROW_READS|fight/after/empowered_swings.py|_reattribute_empowered_swings|dict.get|"casts" 1
-ROW_READS|fight/after/empowered_swings.py|_reattribute_empowered_swings|dict.get|"count" 1
-ROW_READS|fight/after/empowered_swings.py|_reattribute_empowered_swings|dict.get|"damage_per_hit" 1
-ROW_READS|fight/after/lethality_windows.py|_apply_temporary_lethality_windows|dict.get|"event_phase" 1
-ROW_READS|fight/after/lethality_windows.py|_apply_temporary_lethality_windows|dict.get|"total_damage" 1
-ROW_READS|fight/after/shield_outcome.py|_resolve_starting_shield_outcome|dict.get|"execute_threshold_ratio" 1
-ROW_READS|fight/after/shield_outcome.py|_resolve_starting_shield_outcome|dict.get|"raw_damage" 1
-ROW_READS|fight/after/shield_outcome.py|_resolve_starting_shield_outcome|dict.get|"total_damage" 1
-ROW_READS|fight/after/shield_outcome.py|_resolve_starting_shield_outcome|or-default|"execute_threshold_ratio" 1
-ROW_READS|fight/after/shield_outcome.py|_resolve_starting_shield_outcome|or-default|"raw_damage" 1
-ROW_READS|fight/after/stored_damage.py|_add_stored_damage|dict.get|"casts" 1
-ROW_READS|fight/after/stored_damage.py|_add_stored_damage|dict.get|"slot" 1
-ROW_READS|fight/after/stored_damage.py|_add_stored_damage|dict.get|"time" 1
-ROW_READS|fight/autos/copied_on_hit.py|_add_copied_stacking_on_hit_packets|dict.get|"packets" 1
-ROW_READS|fight/autos/copied_on_hit.py|_add_copied_stacking_on_hit_packets|dict.get|"time" 1
-ROW_READS|fight/autos/live_health_on_hit.py|_pay_scheduled_live_health_procs|dict.get|"casts" 1
-ROW_READS|fight/autos/spellblade.py|_add_spellblade_damage|dict.get|"casts" 1
-ROW_READS|fight/cast_slots.py|_damaging_cast_times|dict.get|"total_raw" 1
-ROW_READS|fight/items/cast_procs.py|_add_late_phase_proc_damage|dict.get|"event_precision" 1
-ROW_READS|fight/items/eclipse_stack_gate.py|_stacked_champion_proc_times|dict.get|"event_precision" 1
-ROW_READS|fight/items/eclipse_stack_gate.py|_stacked_champion_proc_times|dict.get|"total_damage" 3
-ROW_READS|fight/items/energized_packets.py|_first_damaging_ability_event|dict.get|"event_precision" 1
-ROW_READS|fight/items/energized_packets.py|_first_damaging_ability_event|dict.get|"total_damage" 1
-ROW_READS|fight/items/energized_packets.py|_first_damaging_ability_event|or-default|"total_damage" 1
-ROW_READS|fight/items/muramana.py|_muramana_cast_receipt|dict.get|"total_damage" 1
-ROW_READS|fight/items/muramana.py|_muramana_cast_receipt|or-default|"total_damage" 1
-ROW_READS|fight/ledger/coverage.py|_event_timeline_coverage|dict.get|"casts" 2
-ROW_READS|fight/ledger/coverage.py|_event_timeline_coverage|dict.get|"event_precision" 1
-ROW_READS|fight/ledger/coverage.py|_event_timeline_coverage|dict.get|"total_damage" 1
-ROW_READS|fight/ledger/event_ledger.py|_ordered_damage_events|dict.get|"casts" 1
-ROW_READS|fight/ledger/event_ledger.py|_ordered_damage_events|dict.get|"count" 1
-ROW_READS|fight/ledger/event_ledger.py|_ordered_damage_events|dict.get|"slot" 1
-ROW_READS|fight/ledger/event_ledger.py|_ordered_damage_events|dict.get|"time" 1
-ROW_READS|fight/ledger/event_ledger.py|_ordered_damage_events|dict.get|"total_damage" 1
-ROW_READS|fight/ledger/event_ledger.py|_ordered_damage_events|dict.get|"total_raw" 1
-ROW_READS|fight/ledger/event_ledger.py|_ordered_damage_events|or-default|"total_raw" 1
-ROW_READS|fight/ledger/event_rows.py|_item_proc_precision|dict.get|"casts" 1
-ROW_READS|fight/ledger/event_rows.py|_item_proc_precision|or-default|"casts" 1
-ROW_READS|fight/ledger/event_rows.py|_row_damage_parts|dict.get|"total_damage" 1
-ROW_READS|fight/rotation/dot_ticks.py|_ability_dot_tick_events|dict.get|"casts" 1
-ROW_READS|fight/rotation/dot_ticks.py|_ability_dot_tick_events|dict.get|"total_damage" 1
-ROW_READS|fight/rotation/dot_ticks.py|_author_ability_dot_events|dict.get|"slot" 1
-ROW_READS|fight/rotation/mana_declarations.py|_return_denied_burst_budget|dict.get|"burst_seconds" 1
-ROW_READS|fight/rotation/mana_walk.py|_apply_mana_resource_limits|dict.get|"burst_seconds" 1
-ROW_READS|fight/rotation/mana_walk.py|_apply_mana_resource_limits|dict.get|"window_seconds" 1
-ROW_READS|fight/rotation/mana_walk.py|_resource_ledger_public|dict.get|"bonus_delta" 1
-ROW_READS|fight/rotation/mana_walk.py|_resource_ledger_public|or-default|"bonus_delta" 1
-ROW_READS|fight/rotation/mana_walk.py|_schedule_enlighten|dict.get|"tick" 1
-ROW_READS|fight/rotation/shaped_charge.py|_next_authored_event|dict.get|"event_precision" 1
-ROW_READS|fight/runes/keystone_casts.py|add|dict.get|"cc_duration" 1
-ROW_READS|fight/runes/keystone_casts.py|add|or-default|"cc_duration" 1
-ROW_READS|fight/runes/keystone_ledger_walk.py|_add_keystone_dark_harvest|dict.get|"time" 1
-ROW_READS|fight/runes/keystone_ledger_walk.py|_add_keystone_deathfire|dict.get|"event_precision" 1
-ROW_READS|fight/runes/keystone_ledger_walk.py|_dark_harvest_trigger_event|dict.get|"phase" 1
-ROW_READS|fight/runes/keystone_ledger_walk.py|_deathfire_trigger_events|dict.get|"event_precision" 2
-ROW_READS|fight/runes/keystone_ledger_walk.py|_deathfire_trigger_events|dict.get|"slot" 1
-ROW_READS|fight/runes/keystone_ledger_walk.py|_deathfire_trigger_events|dict.get|"time" 1
-ROW_READS|fight/runes/keystone_ledger_walk.py|emit_until|dict.get|"category" 1
-ROW_READS|fight/runes/keystone_ledger_walk.py|emit_until|dict.get|"source" 1
-ROW_READS|fight/runes/keystone_stacks.py|_add_keystone_conqueror|dict.get|"reason" 1
-ROW_READS|fight/runes/keystone_stacks.py|_add_keystone_conqueror|dict.get|"sequence" 1
-ROW_READS|fight/runes/keystone_stacks.py|_conqueror_trigger_events|dict.get|"phase" 1
-ROW_READS|fight/runes/keystone_stacks.py|_conqueror_trigger_events|dict.get|"slot" 1
-ROW_READS|fight/runes/keystone_stacks.py|_conqueror_trigger_events|dict.get|"time" 1
-ROW_READS|fight/runes/streams.py|_impaired_instance_times|dict.get|"total_raw" 1
-ROW_READS|fight/runes/streams.py|_self_shield_times|dict.get|"time" 1
-ROW_READS|fight/stacks/ashe.py|_add_ashe_focus|dict.get|"slot" 1
-ROW_READS|fight/stacks/ashe.py|_add_ashe_focus|or-default|"auto_attacks" 1
-ROW_READS|fight/stacks/ashe.py|_add_ashe_focus|or-default|"damage_events" 1
-ROW_READS|fight/stacks/ashe.py|_feed_ashe_focus_stack|dict.get|"time" 2
-ROW_READS|fight/stacks/ashe.py|_feed_ashe_focus_stack|or-default|"time" 1
-ROW_READS|fight/stacks/aurelion_sol.py|_add_aurelion_sol_stardust|dict.get|"ordinal" 1
-ROW_READS|fight/stacks/aurelion_sol.py|_add_aurelion_sol_stardust|dict.get|"slot" 1
-ROW_READS|fight/stacks/aurelion_sol.py|_add_aurelion_sol_stardust|dict.get|"time" 1
-ROW_READS|fight/stacks/aurelion_sol.py|_add_aurelion_sol_stardust|or-default|"ordinal" 1
-ROW_READS|fight/stacks/heimerdinger.py|_add_heimerdinger_w_e|dict.get|"raw_damage" 1
-ROW_READS|fight/stacks/rengar.py|_add_rengar_ferocity|dict.get|"detail" 1
-ROW_READS|fight/stacks/rengar.py|_add_rengar_ferocity|dict.get|"ordinal" 1
-ROW_READS|fight/stacks/rengar.py|_add_rengar_ferocity|dict.get|"reason" 1
-ROW_READS|fight/stacks/rengar.py|_add_rengar_ferocity|dict.get|"slot" 2
-ROW_READS|fight/stacks/rengar.py|_add_rengar_ferocity|or-default|"ordinal" 1
-ROW_READS|fight/stacks/rengar.py|_slot_ordinals|dict.get|"ordinal" 1
-ROW_READS|fight/stacks/rengar.py|_slot_ordinals|dict.get|"slot" 1
-ROW_READS|fight/stacks/rengar.py|_slot_ordinals|or-default|"ordinal" 1
-ROW_READS|fight/stacks/senna.py|_add_senna_souls|dict.get|"target" 1
 WIKI_TRAVERSALS|ability_atoms.py|_valid_atom_hash|dict.get|"hash" 1
 WIKI_TRAVERSALS|ability_atoms.py|ranked_ability_atom_value|dict.get|"values" 1
 WIKI_TRAVERSALS|ability_atoms.py|required_ability_atom|dict.get|"evidence" 1
