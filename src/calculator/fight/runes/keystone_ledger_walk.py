@@ -6,6 +6,9 @@ from typing import Any
 
 from ... import rune_effects
 from ...ability_atoms import ability_field, ability_payload
+from ...cast_event_row import cast_slot
+from ...cast_event_row import cast_time as cast_event_time
+from ...damage_event_row import event_phase, event_precision, event_time
 from ...state_lifecycle import TriggerGate
 from ..ledger.event_ledger import _ordered_damage_events
 from ..ledger.event_rows import _row_time
@@ -20,7 +23,7 @@ def _dark_harvest_trigger_event(event: Mapping[str, Any]) -> bool:
     stay outside this threshold scan until they carry a classification."""
     if event.get("pet_damage") or event.get("dark_harvest_eligible"):
         return True
-    return str(event.get("phase", "")) in {"ability", "auto"}
+    return event_phase(event) in {"ability", "auto"}
 
 
 def _add_keystone_dark_harvest(state: FightState, rotation: RotationResult) -> None:
@@ -75,9 +78,7 @@ def _add_keystone_dark_harvest(state: FightState, rotation: RotationResult) -> N
         )
         pending.sort(key=_row_time)
         next_proc = pending[0] if pending else None
-        source_time = (
-            float(next_source.get("time", 0.0)) if next_source is not None else math.inf
-        )
+        source_time = math.inf if next_source is None else event_time(next_source)
         proc_time = float(next_proc["time"]) if next_proc is not None else math.inf
 
         if next_source is not None and source_time <= proc_time:
@@ -168,9 +169,9 @@ def _deathfire_trigger_events(
     ]
     cast_times: dict[str, list[float]] = {}
     for cast in rotation.cast_events:
-        slot = str(cast.get("slot", ""))
+        slot = cast_slot(cast)
         if slot in state.cast_order:
-            cast_times.setdefault(slot, []).append(float(cast.get("time", 0.0)))
+            cast_times.setdefault(slot, []).append(cast_event_time(cast))
 
     triggers: list[dict[str, Any]] = []
     for slot, times in cast_times.items():
@@ -207,7 +208,7 @@ def _deathfire_trigger_events(
                             "damage": sum(float(event["damage"]) for event in events),
                             "event_precision": min(
                                 (
-                                    str(event.get("event_precision", "cast_boundary"))
+                                    event_precision(event) or "cast_boundary"
                                     for event in events
                                 ),
                                 key=lambda value: (value != "exact", value),
@@ -225,7 +226,7 @@ def _deathfire_trigger_events(
                     "damage": sum(float(event["damage"]) for event in cast_events),
                     "event_precision": min(
                         (
-                            str(event.get("event_precision", "cast_boundary"))
+                            event_precision(event) or "cast_boundary"
                             for event in cast_events
                         ),
                         key=lambda value: (value != "exact", value),
@@ -274,7 +275,7 @@ def _add_keystone_deathfire(state: FightState, rotation: RotationResult) -> None
                 state.magic_amp,
             )
             if mitigated > 0.0:
-                source = active_trigger or {}
+                source = active_trigger
                 damage_events.append(
                     {
                         "time": next_tick,
@@ -282,9 +283,17 @@ def _add_keystone_deathfire(state: FightState, rotation: RotationResult) -> None
                         "raw_damage": raw_damage,
                         "damage_type": "magic",
                         "event_precision": "exact",
-                        "trigger_time": float(source.get("time", next_tick)),
-                        "trigger_source": source.get("source", "ability"),
-                        "deathfire_category": source.get("category", "spell_damage"),
+                        # A tick with no active trigger names the ability
+                        # stream it would otherwise have come from.
+                        "trigger_time": (
+                            next_tick if source is None else float(source["time"])
+                        ),
+                        "trigger_source": (
+                            "ability" if source is None else source["source"]
+                        ),
+                        "deathfire_category": (
+                            "spell_damage" if source is None else source["category"]
+                        ),
                         "amplified": amplified,
                     }
                 )
@@ -313,7 +322,7 @@ def _add_keystone_deathfire(state: FightState, rotation: RotationResult) -> None
                 **trigger,
                 "duration_seconds": duration,
                 "new_chain": new_chain,
-                "event_precision": trigger.get("event_precision", "cast_boundary"),
+                "event_precision": trigger["event_precision"],
             }
         )
     if active_start is not None:

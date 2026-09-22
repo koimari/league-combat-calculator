@@ -5,6 +5,9 @@ from collections.abc import Mapping
 from typing import Any, NamedTuple
 
 from ... import rune_effects
+from ...cast_event_row import cast_slot
+from ...cast_event_row import cast_time as cast_event_time
+from ...damage_event_row import event_phase
 from ...item_behavior import AmpChainSlot
 from ...state_lifecycle import TriggerGate
 from ...state_timeline import EventStamp
@@ -202,9 +205,9 @@ def _conqueror_trigger_events(
     ]
     cast_times: dict[str, list[float]] = {}
     for cast in rotation.cast_events:
-        slot = str(cast.get("slot", ""))
+        slot = cast_slot(cast)
         if slot in state.cast_order:
-            cast_times.setdefault(slot, []).append(float(cast.get("time", 0.0)))
+            cast_times.setdefault(slot, []).append(cast_event_time(cast))
 
     triggers: list[dict[str, Any]] = []
     for slot, times in cast_times.items():
@@ -235,7 +238,7 @@ def _conqueror_trigger_events(
     auto_events = [
         event
         for event in detailed
-        if str(event.get("phase", "")) == "auto" and float(event["damage"]) > 0.0
+        if event_phase(event) == "auto" and float(event["damage"]) > 0.0
     ]
     auto_groups: dict[float, list[Mapping[str, Any]]] = {}
     for event in auto_events:
@@ -288,7 +291,7 @@ def _add_keystone_conqueror(state: FightState, rotation: RotationResult) -> None
     for trigger in triggers:
         trigger_time = float(trigger["time"])
         transitions = stack_state.apply_gain(
-            EventStamp(trigger_time, int(trigger.get("sequence", 0))),
+            EventStamp(trigger_time, int(trigger["sequence"])),
             kind=trigger["packet"],
             packet=trigger["packet"],
             meta=trigger,
@@ -327,7 +330,7 @@ def _add_keystone_conqueror(state: FightState, rotation: RotationResult) -> None
             "_event_id": f"main:conqueror:stack:{len(stack_events)}",
         }
         if gain_transition is not None and gain_transition.kind == "gain_denied":
-            stack_event["denied"] = str(detail.get("reason", ""))
+            stack_event["denied"] = str(detail["reason"])
         stack_events.append(stack_event)
         if stacks >= effect.max_stacks and damage > 0.0:
             heal_events.append(

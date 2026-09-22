@@ -7,6 +7,7 @@ from typing import Any
 
 from ... import item_effects, mana_item_schedules, manaflow_ledger
 from ...ability_atoms import ability_field, ability_payload
+from ...event_row_field import required_field
 from ...interpreters import stat_derivation
 from ...item_behavior import ResourceRestoreRule
 from ..autos.swing_schedule import _restore_stream_attack_timestamps, _swings_at_rate
@@ -161,6 +162,17 @@ def _planned_burst_seconds(state: FightState, plan: CastPlan) -> float:
     return total
 
 
+#: One field of a row the mana walk itself wrote: a burst swing, an auto
+#: restore, a mark refund, a manaflow hit receipt, an Enlighten tick detail.
+#: Each producer builds its row as a single dict literal, so an absent field
+#: is that producer changed, never a row that carries no such reading.
+_walk_row_field = partial(
+    required_field,
+    kind="mana walk row",
+    stamper="the walk step that appended it",
+)
+
+
 def _return_denied_burst_budget(
     state: FightState,
     plan: CastPlan,
@@ -179,7 +191,7 @@ def _return_denied_burst_budget(
     count's continuation (they ride their own scheduled times and heap
     order).
     """
-    burst_seconds = float(denied_row.get("burst_seconds", 0.0))
+    burst_seconds = float(_walk_row_field(denied_row, "burst_seconds"))
     normal_rate = state.attack_speed * state.auto_attack_uptime
     if burst_seconds <= 0.0 or normal_rate <= 0.0:
         return

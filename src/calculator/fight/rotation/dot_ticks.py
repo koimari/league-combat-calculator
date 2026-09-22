@@ -5,6 +5,8 @@ from collections.abc import Callable, Sequence
 from typing import Any
 
 from ...ability_atoms import ability_field, ability_payload
+from ...cast_event_row import cast_slot
+from ..ledger.breakdown import source_casts, source_total_damage
 from ..ledger.event_rows import _finite_numeric_receipt, _row_damage_parts, _row_time
 from ..resists import Resists, _mitigate, _resistance_met_fields
 from ..results import RotationResult, StackTimeline
@@ -40,15 +42,20 @@ def _ability_dot_tick_events(
         return None
     if info.get("empowers_next_auto"):
         return None  # the reattributed swing would break the event sum
-    casts = max(0, int(entry.get("casts", 0)))
-    if casts <= 0:
+    casts = source_casts(entry)
+    if casts is None or casts <= 0:
         return None
     parts = _row_damage_parts(entry)
-    if not parts or not math.isclose(
-        sum(amount for _, amount in parts),
-        float(entry.get("total_damage", 0.0)),
-        rel_tol=1e-9,
-        abs_tol=1e-6,
+    priced = source_total_damage(entry)
+    if (
+        priced is None
+        or not parts
+        or not math.isclose(
+            sum(amount for _, amount in parts),
+            priced,
+            rel_tol=1e-9,
+            abs_tol=1e-6,
+        )
     ):
         return None
     events: list[dict[str, float | str]] = []
@@ -94,8 +101,7 @@ def _author_ability_dot_events(state: FightState, rotation: RotationResult) -> N
     """
     times_by_slot: dict[str, list[float]] = {}
     for event in rotation.cast_events:
-        slot = str(event.get("slot", ""))
-        times_by_slot.setdefault(slot, []).append(float(event["time"]))
+        times_by_slot.setdefault(cast_slot(event), []).append(float(event["time"]))
     for key in state.cast_order:
         entry = state.breakdown.get(key)
         info = ability_payload(state.ability_damages, key)

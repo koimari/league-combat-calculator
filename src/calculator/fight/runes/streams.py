@@ -4,6 +4,8 @@ from collections.abc import Mapping
 from typing import TypeVar
 
 from ... import rune_effects
+from ...ability_atoms import ability_field
+from ...damage_event_row import event_time
 from ...trigger_stream import applies_control
 from ..autos.swing_schedule import _auto_attack_timestamps
 from ..cast_control_marker import _declared_cc_marker
@@ -79,7 +81,7 @@ def _impaired_instance_times(
     impairing = {
         slot
         for slot, entry in state.ability_damages.items()
-        if float(entry.get("total_raw", 0.0)) > 0
+        if float(ability_field(entry, "total_raw")) > 0
         and applies_control(
             _declared_cc_marker(entry, roster_target_index=state.roster_target_index)
         )
@@ -110,7 +112,7 @@ def _self_shield_times(state: FightState) -> list[float]:
             continue
         for index, shield in enumerate(shields):
             if index < len(events) and isinstance(shield, Mapping):
-                times.append(float(events[index].get("time", 0.0)))
+                times.append(event_time(events[index]))
     return sorted(times)
 
 

@@ -42,9 +42,11 @@ from .event_row_field import optional_field, required_field
 
 __all__ = [
     "REQUIRED_FIELDS",
+    "event_cc_duration",
     "event_damage",
     "event_damage_type",
     "event_execute_threshold_ratio",
+    "event_phase",
     "event_precision",
     "event_raw_damage",
     "event_source",
@@ -94,3 +96,13 @@ def event_precision(event: Mapping[str, Any]) -> str | None:
 def event_execute_threshold_ratio(event: Mapping[str, Any]) -> float | None:
     """The health share below which this packet executes; ``None`` if it cannot."""
     return optional_field(event, "execute_threshold_ratio", float)
+
+
+def event_phase(event: Mapping[str, Any]) -> str | None:
+    """Which phase it sorts into; ``None`` from a row the lean shape thinned."""
+    return optional_field(event, "phase", str)
+
+
+def event_cc_duration(event: Mapping[str, Any]) -> float | None:
+    """How long its control holds; ``None`` from a packet that applied none."""
+    return optional_field(event, "cc_duration", float)

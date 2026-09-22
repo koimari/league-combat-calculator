@@ -28,6 +28,7 @@ from .mana_declarations import (
     _mark_refund_decl,
     _mark_refund_decl_for_state,
     _return_denied_burst_budget,
+    _walk_row_field,
 )
 
 
@@ -138,7 +139,7 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
                 "kind": "swing",
                 "auto_index": len(ordinary_times) + offset,
                 "arming_key": swing["arming_key"],
-                "burst_seconds": swing.get("burst_seconds", 0.0),
+                "burst_seconds": _walk_row_field(swing, "burst_seconds"),
                 "arming_ordinal": swing["arming_ordinal"],
                 "swing_index": swing["swing_index"],
             }
@@ -585,13 +586,9 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     # otherwise ``mark_undetonated``.
     for mark in pending_marks:
         if not mark["accepted"]:
-            if (
-                mark["time"] + mark.get("window_seconds", 0.0)
-                < state.fight_duration_seconds + _CAST_SCHEDULE_EPS
-            ):
-                mark["reason"] = "mark_expired"
-            else:
-                mark["reason"] = "mark_undetonated"
+            expiry = mark["time"] + _walk_row_field(mark, "window_seconds")
+            closed = expiry < state.fight_duration_seconds + _CAST_SCHEDULE_EPS
+            mark["reason"] = "mark_expired" if closed else "mark_undetonated"
 
     auto_restore_section: dict[str, Any] | None = None
     if auto_restore is not None:
@@ -699,7 +696,7 @@ def _schedule_enlighten(
                 tick.time,
                 0,
                 -3,
-                int(tick.detail.get("tick", 0)),
+                int(_walk_row_field(tick.detail, "tick")),
                 "enlighten_tick",
                 "Lost Chapter",
                 tick.amount,
@@ -754,7 +751,7 @@ def _resource_ledger_public(
             "authored_bonus_mana": round(
                 manaflow.bonus_total
                 - sum(
-                    float(hit.get("bonus_delta", 0.0) or 0.0) for hit in manaflow_hits
+                    float(_walk_row_field(hit, "bonus_delta")) for hit in manaflow_hits
                 ),
                 6,
             ),

@@ -6,6 +6,7 @@ from typing import Any
 
 from ...ability_atoms import ability_field
 from ...ability_spec import AttackClass
+from ...damage_event_row import event_precision
 from ...survival.pricing import AuthoredDeclaration
 from ..ledger.event_rows import (
     _CAST_TIME_RESOLUTION,
@@ -50,8 +51,8 @@ def _next_authored_event(
         if candidate_time + _CAST_TIME_RESOLUTION + 1e-9 < event_time:
             continue
         if candidate_damage > 0.0:
-            precision = str(candidate.get("event_precision", "exact"))
-            return cursor, candidate_time, precision
+            # A packet that states no precision is its own boundary.
+            return cursor, candidate_time, event_precision(candidate) or "exact"
     return cursor, None, None
 
 

@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from ... import rune_effects
+from ...damage_event_row import event_cc_duration
 from ...state_lifecycle import TriggerGate
 from ...trigger_stream import event_triggers, is_immobilizing_event
 from ..autos.swing_schedule import _auto_attack_timestamps
@@ -97,8 +98,8 @@ def _aftershock_trigger_events(
         # normalized token, so this walk never parses ``cc_kind`` itself.
         if not is_immobilizing_event(event):
             return
-        duration = float(event.get("cc_duration", 0.0) or 0.0)
-        if duration <= 0.0:
+        duration = event_cc_duration(event)
+        if duration is None or duration <= 0.0:
             return
         controls = event_triggers(event, kinds=_CONTROL_TRIGGER_ONLY)
         kind = controls[0].cc_kind if controls else ""
