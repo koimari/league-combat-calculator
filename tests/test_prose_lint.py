@@ -117,6 +117,17 @@ _KEPT = 1
 '''
 
 
+#: The three citations that are not a work id: a closed issue, a pull
+#: request, a commit.  Every open issue is closed, so none of them resolves.
+CITATIONS = '''"""Seed."""
+
+# Fixed by issue #12.
+# The shape PR #7 landed.
+# b03bbad9 rewrote the set.
+_KEPT = 1
+'''
+
+
 #: The three doors beside a docstring that publish prose: the note under a
 #: constant, a command's help text, and an assumption string.
 BESIDE_THE_DOCSTRING = '''"""Seed."""
@@ -282,3 +293,16 @@ def test_a_test_file_answers_to_the_pointer_rule_and_to_nothing_else(tmp_path):
     found = scan(root=tmp_path)
     assert len(found["pointer"]) == 1
     assert all(found[kind] == [] for kind in FAILING if kind != "pointer")
+
+
+@pytest.mark.parametrize("scope", ["src", "scripts", "tests"])
+def test_an_issue_a_pull_request_and_a_commit_are_pointers_in_every_scope(
+    tmp_path, scope
+):
+    """A citation answers to the rule that reaches ``tests/``, not to a tense."""
+    for name in ("src", "scripts", "tests"):
+        (tmp_path / name).mkdir()
+    (tmp_path / scope / "seed.py").write_text(CITATIONS, encoding="utf-8")
+    found = scan(root=tmp_path)
+    assert [hit.split(":")[1] for hit in found["pointer"]] == ["3", "4", "5"]
+    assert found["history"] == []
