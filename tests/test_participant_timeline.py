@@ -3870,6 +3870,51 @@ def test_thorns_does_not_fire_for_missed_or_blocked_basic_attack_receipts():
     )
 
 
+def test_composition_schedules_a_grasp_permanent_health_row_per_proc():
+    """``_schedule_composed_events`` runs its last step, over a real fight.
+
+    A step carve once dropped the ``_schedule_grasp_events`` call and both
+    goldens stayed identical, because no sweep scenario holds Grasp of the
+    Undying.  The rows that step authors are a receipt of the procs: one per
+    accepted proc, at the proc's own time, named after the event that armed
+    it.
+    """
+    response = app.test_client().post(
+        "/api/calculate",
+        json={
+            "champion": "Ahri",
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "keystone": "Grasp of the Undying",
+            "include_auto_attacks": True,
+            "fight_duration": 20.0,
+            "auto_attack_uptime": 1.0,
+            "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
+        },
+    )
+    assert response.status_code == 200
+    combat = response.get_json()["combat"]
+    procs = [
+        event
+        for event in combat["events"]
+        if str(event.get("source", "")) == "keystone_Grasp of the Undying"
+    ]
+    assert len(procs) == 4, "the fixture no longer procs Grasp four times"
+    authored = [
+        event
+        for event in combat["support_events"]
+        if event["source"] == "Grasp of the Undying · Permanent health"
+    ]
+    assert [event["time"] for event in authored] == [
+        event["time"] for event in procs
+    ], "a permanent-health row lands at the time of the proc that armed it"
+    assert [event["event_id"] for event in authored] == [
+        f"main:grasp:{event['event_id']}" for event in procs
+    ]
+    assert {event["bonus_health"] for event in authored} == {2.0}
+
+
 def test_redirect_clone_is_mirrored_into_the_public_outgoing_receipt():
     source = _dummy_combatant("source", "enemy", health=100.0)
     protected = _dummy_combatant("protected", "main", health=100.0)
