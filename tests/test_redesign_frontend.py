@@ -87,6 +87,22 @@ def test_onboarding_followup_copy_stays_in_the_text_column(css: str):
     assert block.startswith(".onboarding-step > p { grid-column: 2;")
 
 
+def test_shared_js_loads_before_the_scripts_that_read_it():
+    """A page script that calls ``window.scryglass.onReady`` while it loads
+    binds nothing unless shared.js ran first, so the reader set is derived
+    and every one of them must sit below shared.js in the page."""
+    scripts = ROOT / "static" / "js"
+    index = (ROOT / "templates" / "index.html").read_text(encoding="utf-8")
+    loaded = re.findall(r'<script[^>]*src="/static/js/([^"]+)"', index)
+    readers = [
+        name
+        for name in loaded
+        if "window.scryglass.onReady(" in (scripts / name).read_text(encoding="utf-8")
+    ]
+    assert readers
+    assert all(loaded.index(name) > loaded.index("shared.js") for name in readers)
+
+
 def test_step_editors_stay_mounted_while_collapsed(soup: BeautifulSoup):
     """staleness.js reads #abilityRow at any time, and a collapsed step must
     not drop the state its summary describes."""
