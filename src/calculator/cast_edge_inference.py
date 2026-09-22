@@ -181,13 +181,12 @@ def applies_condition(scan: _EdgeScan, slot: str, cond_token: str) -> bool:
     t = scan.texts[slot]
     if "passive-row(cd=0)" in atoms:
         return False
-    if scan.passive_applies:
-        if cond_token == "stack":
-            return True
-        if cond_token == "mark" and "__mark__" in scan.passive_applies:
-            return True
-        if any(nm != "__mark__" and nm in t for nm in scan.passive_applies):
-            return True
+    if scan.passive_applies and (
+        cond_token == "stack"
+        or (cond_token == "mark" and "__mark__" in scan.passive_applies)
+        or any(nm != "__mark__" and nm in t for nm in scan.passive_applies)
+    ):
+        return True
     if cond_token == "stack":
         return any("stack" in a for a in atoms)
     if cond_token == "mark":
@@ -216,7 +215,8 @@ def _declared_consume_atoms(
             continue
         setup_slot = decl.get("setup_slot")
         if setup_slot:
-            _declared_setup_edge(scan, slot, setup_slot, decl=decl, key=key, role=role)
+            kind = str(decl.get("kind") or _DIRECT_EDGE_KIND.get(role, "mark_consume"))
+            _declared_setup_edge(scan, slot, setup_slot, kind=kind, key=key)
             continue
         kind = str(decl.get("kind") or role)
         cond = str(decl.get("condition") or kind)
@@ -227,13 +227,7 @@ def _declared_consume_atoms(
 
 
 def _declared_setup_edge(
-    scan: _EdgeScan,
-    slot: str,
-    setup_slot: Any,
-    *,
-    decl: Mapping[str, Any],
-    key: str,
-    role: str,
+    scan: _EdgeScan, slot: str, setup_slot: Any, *, kind: str, key: str
 ) -> None:
     """The setup slot a declaration names must cast before its consumer.
 
@@ -242,7 +236,6 @@ def _declared_setup_edge(
     """
     if setup_slot not in scan.corpora or setup_slot == slot:
         return
-    kind = str(decl.get("kind") or _DIRECT_EDGE_KIND.get(role, "mark_consume"))
     scan.add(
         setup_slot,
         slot,
