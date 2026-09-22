@@ -379,6 +379,13 @@ ABILITY_PAYLOAD_SCHEMA: Mapping[str, Mapping[str, Any]] = MappingProxyType(
             {"attack_interval": 0.0, "first_attack_delay": 0.0}
         ),
         "proc_restore": MappingProxyType({"proc_count": 0}),
+        # A kit's carried state for a heal its own parser priced: the count
+        # the user declared and the per-occasion amount.  Each producer
+        # writes it as one dict literal beside the rule that reads it, so
+        # every field is REQUIRED and a rule asks only for its own.
+        "self_heal_state": MappingProxyType(
+            dict.fromkeys(("amount", "deaths", "kills", "stacks"), REQUIRED)
+        ),
         "resource_declaration": MappingProxyType({"atoms": ()}),
         "stored_damage": MappingProxyType(
             {

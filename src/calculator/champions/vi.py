@@ -235,7 +235,7 @@ def _timed_window(ctx: SlotCtx) -> float | None:
 
 
 def _timed_cast_starts(ctx: SlotCtx, duration: float) -> dict[str, list[float]]:
-    """Q/E cast start times, mirroring the engine's shared-hands schedule.
+    """Q and E cast start times; a slot this fight never ranked has none.
 
     One set of hands: Q's charge occupies its cast time, each ability
     recasts when its cooldown — running from the end of the cast — is
@@ -266,7 +266,7 @@ def _timed_cast_starts(ctx: SlotCtx, duration: float) -> dict[str, list[float]]:
             extract_recharge(e_ability, ctx.rank_for("E")), haste
         )
 
-    times: dict[str, list[float]] = {key: [] for key in keys}
+    times: dict[str, list[float]] = {"Q": [], "E": []}
     next_ready = dict.fromkeys(keys, 0.0)
     pending = set(keys)
     now = 0.0
@@ -308,11 +308,9 @@ def _denting_stream(ctx: SlotCtx, duration: float) -> list[tuple[float, int]]:
     if not ctx.option("auto_attacks_only"):
         starts = _timed_cast_starts(ctx, duration)
         q_hit_offset = _q_geometry(ctx)[3]
-        events.extend(
-            (start + q_hit_offset, _ABILITY_HIT) for start in starts.get("Q", ())
-        )
+        events.extend((start + q_hit_offset, _ABILITY_HIT) for start in starts["Q"])
         if rate <= 0 and _is_primary_target(ctx):
-            events.extend((start, _ABILITY_HIT) for start in starts.get("E", ()))
+            events.extend((start, _ABILITY_HIT) for start in starts["E"])
     events.sort()
     return events
 

@@ -123,6 +123,11 @@ def ledger_damage(event: Mapping[str, Any]) -> float:
     return float(_required_ledger_field(event, "damage"))
 
 
+def ledger_sequence(event: Mapping[str, Any]) -> int:
+    """Where the engine placed this packet among those sharing its timestamp."""
+    return int(_required_ledger_field(event, "sequence"))
+
+
 def ledger_pre_mitigation_damage(event: Mapping[str, Any]) -> float:
     """The damage before resistances, or the mitigated figure where the
     packet's own pricing site stamped no pre-mitigation one."""

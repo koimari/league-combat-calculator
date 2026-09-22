@@ -15,7 +15,7 @@ have no engine axis.
 from typing import Any
 
 from .. import healing_helpers as _healing
-from ..ability_atoms import ability_payload
+from ..ability_atoms import ability_field, ability_payload
 from ..damage_event_row import event_time as _row_time
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
@@ -199,7 +199,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     # one of the fight's first damaging hits, in order.
     tribute = ability_payload(ctx.ability_damages, "passive").get("self_heal_state")
     if isinstance(tribute, dict):
-        amount = float(tribute.get("amount", 0.0) or 0.0)
+        amount = float(ability_field(tribute, "amount", form="self_heal_state"))
         healing.extend(
             {
                 "time": _row_time(payment.event),
@@ -210,7 +210,8 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
                 **_healing.trigger_fields(payment.event),
             }
             for payment in _healing.takedown_payments(
-                int(tribute.get("deaths", 0) or 0), ctx.damage_events
+                int(ability_field(tribute, "deaths", form="self_heal_state")),
+                ctx.damage_events,
             )
         )
     return healing

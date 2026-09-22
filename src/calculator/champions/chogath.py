@@ -23,7 +23,7 @@ import re
 from typing import Any
 
 from .. import healing_helpers as _healing
-from ..ability_atoms import ability_payload
+from ..ability_atoms import ability_field, ability_payload
 from ..ability_spec import DamagePart
 from ..damage_event_row import event_time as _row_time
 from .engine import BUFF, SlotCtx, build_parser
@@ -285,7 +285,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     healing: list[dict[str, Any]] = []
     carnivore = ability_payload(ctx.ability_damages, "passive").get("self_heal_state")
     if isinstance(carnivore, dict):
-        amount = float(carnivore.get("amount", 0.0) or 0.0)
+        amount = float(ability_field(carnivore, "amount", form="self_heal_state"))
         healing.extend(
             {
                 "time": _row_time(payment.event),
@@ -296,7 +296,8 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
                 **_healing.trigger_fields(payment.event),
             }
             for payment in _healing.takedown_payments(
-                int(carnivore.get("kills", 0) or 0), ctx.damage_events
+                int(ability_field(carnivore, "kills", form="self_heal_state")),
+                ctx.damage_events,
             )
         )
     return healing

@@ -22,7 +22,7 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from ..ability_atoms import ability_payload
+from ..ability_atoms import ability_field, ability_payload
 from ..ability_prose import CachedSentence
 from ..ability_spec import DamageClass, DamagePart
 from ..damage_event_row import event_time as _row_time
@@ -339,7 +339,11 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         key=lambda payment: _row_time(payment.event),
     )
     carried = ability_payload(ctx.ability_damages, "passive").get("self_heal_state")
-    qw_seen = int(carried.get("stacks", 0) or 0) if isinstance(carried, dict) else 0
+    qw_seen = (
+        int(ability_field(carried, "stacks", form="self_heal_state"))
+        if isinstance(carried, dict)
+        else 0
+    )
     for payment in casts:
         event = payment.event
         qw_seen += 1

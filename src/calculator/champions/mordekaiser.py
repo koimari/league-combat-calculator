@@ -21,7 +21,7 @@ import re
 from typing import Any
 
 from .. import healing_helpers as _healing
-from ..ability_atoms import ability_payload
+from ..ability_atoms import ability_field, ability_payload
 from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import (
@@ -289,7 +289,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     healing: list[dict[str, Any]] = []
     realm = ability_payload(ctx.ability_damages, "R").get("self_heal_state")
     if isinstance(realm, dict):
-        amount = float(realm.get("amount", 0.0) or 0.0)
+        amount = float(ability_field(realm, "amount", form="self_heal_state"))
         healing.extend(
             {
                 "time": cast_time,

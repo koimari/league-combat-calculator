@@ -19,7 +19,7 @@ boundary; Prey Seeker, variant 1, keeps its own certification.
 from typing import Any
 
 from .. import healing_helpers as _healing
-from ..ability_atoms import ability_payload
+from ..ability_atoms import ability_field, ability_payload
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -202,7 +202,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     burrow = ability_payload(ctx.ability_damages, "passive").get("self_heal_state")
     w_casts = _healing.cast_slot_times(ctx.cast_timeline, "W")
     if isinstance(burrow, dict) and w_casts:
-        amount = float(burrow.get("amount", 0.0) or 0.0)
+        amount = float(ability_field(burrow, "amount", form="self_heal_state"))
         if amount > 0.0:
             healing.append(
                 {

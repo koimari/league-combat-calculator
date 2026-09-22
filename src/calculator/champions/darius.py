@@ -509,7 +509,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     for payment in ctx.payments(_healing.HealAnchor.CAST, "Q"):
         event = payment.event
         trigger_time = _row_time(event)
-        trigger_sequence = int(event.get("sequence", 0) or 0)
+        trigger_sequence = _healing.ledger_sequence(event)
 
         def missing_health_heal(
             current_health: float,

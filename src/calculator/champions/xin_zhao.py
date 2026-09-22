@@ -275,7 +275,9 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         ) + heal_ap_ratio * champion_stat(ctx.champion_stats, "ability_power")
         # The module declares the cadence; dividing by it here is what keeps
         # the heal and the damage on one grouping.
-        stacks = max(1, int(determination.get("stacks_required") or 1))
+        stacks = max(
+            1, int(ability_field(determination, "stacks_required", form="on_hit"))
+        )
         for event in _healing.attributed_events(
             ctx.damage_events, lambda source, _event: source == "on_hit_ability_passive"
         ):
