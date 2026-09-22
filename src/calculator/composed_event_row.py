@@ -31,7 +31,7 @@ from collections.abc import Mapping
 from functools import partial
 from typing import Any
 
-from .event_row_field import required_field
+from .event_row_field import optional_field, required_field
 
 __all__ = [
     "COMPOSED_REQUIRED_FIELDS",
@@ -81,8 +81,7 @@ def row_damage_type(event: Mapping[str, Any]) -> str:
 
 def row_raw_damage(event: Mapping[str, Any]) -> float | None:
     """The pre-mitigation damage; ``None`` where the producer priced none."""
-    raw = event.get("raw_damage")
-    return None if raw is None else float(raw)
+    return optional_field(event, "raw_damage", float)
 
 
 def row_source_key(event: Mapping[str, Any]) -> str:

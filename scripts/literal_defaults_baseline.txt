@@ -114,6 +114,7 @@ root|defense_composition.py
 root|economics_data.py
 root|event_row_field.py
 root|fight
+root|fight_receipts.py
 root|fight_request_bounds.py
 root|fight_result_row.py
 root|heal_event_row.py
@@ -208,7 +209,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|97
+er5-tail-ceiling|96
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
@@ -308,6 +309,8 @@ AUTHORED_DECLARATION|champions/zed.py|_death_mark|or-default|"total_raw" 1
 AUTHORED_DECLARATION|champions/zilean.py|parse|or-default|"parts" 1
 AUTHORED_DECLARATION|champions/zoe.py|_spell_thief|dict.get|summoner 1
 AUTHORED_DECLARATION|data_updater.py|_riot_item_descriptions|or-default|"description" 1
+AUTHORED_DECLARATION|fight_receipts.py|_annotate_deathfire_categories|dict.get|"total_raw" 1
+AUTHORED_DECLARATION|fight_receipts.py|_annotate_deathfire_categories|or-default|"total_raw" 1
 AUTHORED_DECLARATION|healing_helpers.py|parsed_rank|dict.get|"rank" 1
 AUTHORED_DECLARATION|healing_helpers.py|parsed_rank|dict.get|slot 1
 AUTHORED_DECLARATION|healing_helpers.py|parsed_rank|or-default|"rank" 1

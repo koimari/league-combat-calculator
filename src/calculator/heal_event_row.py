@@ -11,9 +11,11 @@ and ``healing_reduction_factor``. ``fights/self_healing_events`` (252 rows)
 stamps four, ``time``, ``amount``, ``source`` and ``kind``, and carries
 none of the others.
 
-The three below are the intersection, which is what a caller serving both
-streams may require. ``tests/test_row_stream_census.py`` holds the
-per-stream table for a caller that knows which one it has.
+The three required accessors below are the intersection, which is what a
+caller serving both streams may require. ``tests/test_row_stream_census.py``
+holds the per-stream table for a caller that knows which one it has.
+:func:`healed_category` is the exception and says so in its own docstring:
+neither census measures it, so it answers ``None`` rather than raising.
 
 The accessors below are spelled ``healed_*`` on purpose: ``heal_time`` and
 ``heal_amount`` are already local names in the modules that read these rows,
@@ -28,11 +30,12 @@ from collections.abc import Mapping
 from functools import partial
 from typing import Any
 
-from .event_row_field import required_field
+from .event_row_field import optional_field, required_field
 
 __all__ = [
     "HEAL_REQUIRED_FIELDS",
     "healed_amount",
+    "healed_category",
     "healed_source",
     "healed_time",
 ]
@@ -59,3 +62,8 @@ def healed_amount(event: Mapping[str, Any]) -> float:
 def healed_source(event: Mapping[str, Any]) -> str:
     """The breakdown row this heal belongs to."""
     return str(_required(event, "source"))
+
+
+def healed_category(event: Mapping[str, Any]) -> str | None:
+    """Which recovery family this heal belongs to; neither census measures it."""
+    return optional_field(event, "healing_category", str)

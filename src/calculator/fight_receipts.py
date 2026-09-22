@@ -1,14 +1,25 @@
 """The receipts and display splits attached to a finished fight."""
 
 from collections.abc import Mapping
+from functools import partial
 from typing import Any
 
 from . import item_effects
 from .cast_edge_markers import detect_aoe_cap
 from .damage import split_auto_vs_ability, split_by_damage_type
+from .event_row_field import required_field
 from .fight_params import FightParams
+from .fight_result_row import result_breakdown
+from .heal_event_row import healed_category
 from .healing_reduction import amplifies_recovery, heal_and_shield_power_factor
 from .rune_sustain_events import _saturated_omnivamp_percent
+
+#: The stat block is one dict literal in ``stats.calculate_total_stats``, so
+#: every name below is on every block: absent is a renamed producer key, and
+#: reading it as zero is how a receipt publishes a build it never measured.
+_fight_stat = partial(
+    required_field, kind="champion stat block", stamper="stats.calculate_total_stats"
+)
 
 
 def _attach_engine_receipts(
@@ -36,18 +47,18 @@ def _attach_engine_receipts(
         items,
         params.item_options,
         fight_duration_seconds=params.fight_duration_seconds,
-        is_melee=bool(fight_stats.get("is_melee", True)),
-        bonus_health=float(fight_stats.get("bonus_health", 0.0) or 0.0),
-        bonus_mana=float(fight_stats.get("bonus_mana", 0.0) or 0.0),
-        max_mana=float(fight_stats.get("max_mana", 0.0) or 0.0),
-        total_attack_damage=float(fight_stats.get("attack_damage", 0.0) or 0.0),
-        total_move_speed=float(fight_stats.get("move_speed", 0.0) or 0.0),
-        lethality=float(fight_stats.get("lethality", 0.0) or 0.0),
+        is_melee=bool(_fight_stat(fight_stats, "is_melee")),
+        bonus_health=float(_fight_stat(fight_stats, "bonus_health")),
+        bonus_mana=float(_fight_stat(fight_stats, "bonus_mana")),
+        max_mana=float(_fight_stat(fight_stats, "max_mana")),
+        total_attack_damage=float(_fight_stat(fight_stats, "attack_damage")),
+        total_move_speed=float(_fight_stat(fight_stats, "move_speed")),
+        lethality=float(_fight_stat(fight_stats, "lethality")),
     )
-    auto_row = result.get("breakdown", {}).get("auto_attacks", {})
-    auto_total = (
-        int(auto_row.get("count", 0) or 0) if isinstance(auto_row, Mapping) else 0
-    )
+    # The auto row is the one breakdown key that exists only when the fight
+    # swung: absent is a rotation that never reached a basic attack.
+    auto_row = result_breakdown(result).get("auto_attacks")
+    auto_total = int(auto_row["count"]) if isinstance(auto_row, Mapping) else 0
     rotation_count = max(1, int(params.rotation_count))
     result["auto_attack_schedule"] = {
         "status": (
@@ -70,13 +81,14 @@ def _attach_engine_receipts(
     saturated_omnivamp = _saturated_omnivamp_percent(
         items,
         params.fight_duration_seconds,
-        is_melee=bool(fight_stats.get("is_melee", True)),
+        is_melee=bool(_fight_stat(fight_stats, "is_melee")),
     )
     if saturated_omnivamp:
-        result["champion_stats"] = dict(fight_stats)
-        result["champion_stats"]["omnivamp_percent"] = (
-            result["champion_stats"].get("omnivamp_percent", 0.0) + saturated_omnivamp
+        republished = dict(fight_stats)
+        republished["omnivamp_percent"] = (
+            _fight_stat(republished, "omnivamp_percent") + saturated_omnivamp
         )
+        result["champion_stats"] = republished
 
 
 def _attach_display_splits(result: dict[str, Any]) -> None:
@@ -94,14 +106,12 @@ def _attach_display_splits(result: dict[str, Any]) -> None:
         # Indexed: this iterates result["self_healing_events"], the stream
         # docs/receipts/internal-row-census.json measures at 443 rows over
         # all 173 champions with amount, kind, source and time on every one.
-        # healing_category below is NOT among them and keeps its default.
+        # healing_category is NOT among them, so it reads through the one
+        # optional accessor heal_event_row declares.
         float(event["amount"])
         * (
             heal_power
-            if amplifies_recovery(
-                str(event["kind"]),
-                str(event.get("healing_category", "")),
-            )
+            if amplifies_recovery(str(event["kind"]), healed_category(event) or "")
             else 1.0
         )
         for event in result["self_healing_events"]
