@@ -4,8 +4,16 @@ import math
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, NamedTuple
 
+from ...cast_event_row import cast_slot
+from ...damage_event_row import event_damage, event_damage_type
 from ..cast_control_marker import _declared_cc_marker
 from ..empower_declaration import _empower_hits
+from ..ledger.breakdown import (
+    source_casts,
+    source_damage_per_hit,
+    source_hit_count,
+    source_total_damage,
+)
 from ..ledger.event_rows import _ledger_total, _row_damage_parts
 from ..state import FightState
 
@@ -49,7 +57,11 @@ def _empowered_swing_consumers(
         burst = state.burst_swings
         landed = burst.landed(ability_key) if burst is not None else 0
         hits = _empower_hits(empower)
-        swings = min(landed or row.get("casts", 0) * hits, available)
+        casts = source_casts(row)
+        if not landed and casts is None:
+            # No burst schedule and no cast count: nothing empowers a swing.
+            continue
+        swings = min(landed or casts * hits, available)
         if swings <= 0:
             continue
         declared = burst.by_ability.get(ability_key, ()) if burst is not None else ()
@@ -57,7 +69,7 @@ def _empowered_swing_consumers(
         times = declared or tuple(
             float(event["time"])
             for event in cast_events
-            if str(event.get("slot", "")) == ability_key
+            if cast_slot(event) == ability_key
             for _ in range(hits)
         )
         consumers.append(_EmpoweredSwings(info, row, swings, times[:swings]))
@@ -98,9 +110,10 @@ def _author_empowered_swing_events(
         # authoring part of the row would leave its events short of it.
         return
     own = _row_damage_parts(row)
-    if not math.isclose(
+    priced = source_total_damage(row)
+    if priced is None or not math.isclose(
         sum(amount for _, amount in own),
-        float(row.get("total_damage", 0.0)),
+        priced,
         rel_tol=1e-9,
         abs_tol=1e-6,
     ):
@@ -122,8 +135,8 @@ def _author_empowered_swing_events(
         events.append(
             {
                 "time": time,
-                "damage_type": str(swing.get("damage_type", "physical")),
-                "damage": float(swing.get("damage", 0.0)),
+                "damage_type": event_damage_type(swing),
+                "damage": event_damage(swing),
                 **marker,
             }
         )
@@ -161,9 +174,9 @@ def _reattribute_empowered_swings(
     auto_row = state.breakdown.get("auto_attacks")
     if not auto_row:
         return
-    original_count = auto_row.get("count", 0)
-    per_hit = auto_row.get("damage_per_hit", 0.0)
-    if original_count <= 0 or per_hit <= 0:
+    original_count = source_hit_count(auto_row)
+    per_hit = source_damage_per_hit(auto_row)
+    if original_count is None or per_hit is None or original_count <= 0 or per_hit <= 0:
         return
     consumers = _empowered_swing_consumers(state, original_count, cast_events)
     if not consumers:
@@ -189,7 +202,7 @@ def _reattribute_empowered_swings(
         auto_row["total_damage"] -= moved
         # ``detail`` always wins over the UI's derived "N casts" text, so
         # spell out that the row now includes the attack it consumed.
-        casts = row.get("casts", 0)
+        casts = source_casts(row)
         base = row.get("detail") or f"{casts} cast{'' if casts == 1 else 's'}"
         row["detail"] = f"{base}, incl. basic attack"
 

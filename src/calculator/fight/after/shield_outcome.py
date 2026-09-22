@@ -4,9 +4,11 @@ from collections.abc import Iterable
 from typing import Any
 
 from ... import shield_ledger, shield_pools
+from ...damage_event_row import event_execute_threshold_ratio, event_raw_damage
 from ...survival.pricing import restate_declaration
 from ...survival.transitions import evaluate_live_raw_formula
 from ..config import FightConfig
+from ..ledger.breakdown import source_total_damage
 from ..ledger.pool_walk import _ThresholdHealDrip
 from ..state import FightState
 
@@ -67,9 +69,10 @@ def _resolve_starting_shield_outcome(
             # transition's execute gate (inclusive <=, after the event's
             # own damage) so /api/calculate agrees with the pair/timeline
             # surface (Zeri's Living Battery).
-            ratio = float(event.get("execute_threshold_ratio", 0.0) or 0.0)
+            ratio = event_execute_threshold_ratio(event)
             if (
-                ratio > 0.0
+                ratio is not None
+                and ratio > 0.0
                 and current_health > 0.0
                 and current_health <= pools.max_health * ratio
             ):
@@ -81,8 +84,8 @@ def _resolve_starting_shield_outcome(
             heal_drip.advance_to(pools, event_time)
             remaining = float(event["damage"])
             raw_formula = event.get("raw_formula")
-            raw_damage = float(event.get("raw_damage", 0.0) or 0.0)
-            if callable(raw_formula) and raw_damage > 0.0:
+            raw_damage = event_raw_damage(event)
+            if callable(raw_formula) and raw_damage is not None and raw_damage > 0.0:
                 missing_ratio = max(
                     0.0,
                     min(
@@ -134,9 +137,11 @@ def _resolve_starting_shield_outcome(
                         if declaration is not None:
                             nested["declared"] = declaration
         state.total_damage = sum(
-            float(entry.get("total_damage", 0.0))
+            total
             for entry in state.breakdown.values()
-            if isinstance(entry, dict) and not entry.get("informational")
+            if isinstance(entry, dict)
+            and not entry.get("informational")
+            and (total := source_total_damage(entry)) is not None
         )
 
     absorbed = pools.shield_absorbed

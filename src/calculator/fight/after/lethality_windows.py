@@ -7,6 +7,7 @@ from typing import Any
 from ...ability_atoms import ability_field
 from ...resistance import apply_armor_penetration, apply_resistance
 from ...survival.pricing import restate_declaration
+from ..ledger.breakdown import source_event_phase, source_total_damage
 from ..ledger.event_rows import _finite_numeric_receipt
 from ..state import FightState
 
@@ -101,7 +102,7 @@ def _apply_temporary_lethality_windows(state: FightState) -> None:
                     and abs(event_time - window["trigger_time"]) <= 1e-9
                     and (
                         str(source_key) == window["source_key"]
-                        or str(row.get("event_phase", "")) != "ability"
+                        or source_event_phase(row) != "ability"
                     )
                 )
                 later_event = (
@@ -136,7 +137,8 @@ def _apply_temporary_lethality_windows(state: FightState) -> None:
             for window in active_windows:
                 window["applied_count"] += 1
         if row_delta:
-            row["total_damage"] = float(row.get("total_damage", 0.0)) + row_delta
+            priced = source_total_damage(row)
+            row["total_damage"] = row_delta if priced is None else priced + row_delta
             if "damage_per_hit" in row and row.get("count"):
                 row["damage_per_hit"] = float(row["total_damage"]) / float(row["count"])
             state.total_damage += row_delta

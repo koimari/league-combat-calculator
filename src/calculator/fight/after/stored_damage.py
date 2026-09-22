@@ -4,6 +4,9 @@ from collections.abc import Mapping
 from typing import Any
 
 from ...ability_atoms import ability_field
+from ...cast_event_row import cast_slot
+from ...cast_event_row import cast_time as cast_event_time
+from ..ledger.breakdown import source_casts
 from ..ledger.event_ledger import _ordered_damage_events
 from ..results import RotationResult
 from ..rotation.cast_schedule import _CAST_SCHEDULE_EPS
@@ -27,9 +30,8 @@ def _add_stored_damage(state: FightState, rotation: RotationResult) -> None:
     cast_positions = {slot: index for index, slot in enumerate(state.cast_order)}
     cast_times_by_slot: dict[str, list[float]] = {}
     for cast_event in rotation.cast_events:
-        slot = str(cast_event.get("slot", ""))
-        cast_times_by_slot.setdefault(slot, []).append(
-            float(cast_event.get("time", 0.0))
+        cast_times_by_slot.setdefault(cast_slot(cast_event), []).append(
+            cast_event_time(cast_event)
         )
 
     for slot, ability_info in state.ability_damages.items():
@@ -67,7 +69,8 @@ def _add_stored_damage(state: FightState, rotation: RotationResult) -> None:
         # nothing and still goes coarse.
         reviewed = {"cc_reviewed": True} if ability_info.get("cc_reviewed") else {}
         stored_events: list[dict[str, Any]] = []
-        for start_time in cast_times[: max(0, int(row.get("casts", 0)))]:
+        row_casts = source_casts(row)
+        for start_time in cast_times[: 0 if row_casts is None else max(0, row_casts)]:
             end_time = start_time + duration
             source_damage = 0.0
             for event in source_events:

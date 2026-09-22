@@ -8,6 +8,11 @@ from ...interpreters.interpretation_error import InterpretationError
 from ...item_behavior import AmpChainSlot, Isolation
 from ...trigger_stream import is_immobilizing_event
 from ..cast_slots import _damaging_cast_times
+from ..ledger.breakdown import (
+    source_damage_events,
+    source_damage_type,
+    source_total_damage,
+)
 from ..ledger.event_ledger import _ordered_damage_events
 from ..ledger.event_rows import _CAST_TIME_RESOLUTION
 from ..results import RotationResult, SpellbladeResult
@@ -140,7 +145,8 @@ def _hypershot_delta_events(
             k
             for k in state.cast_order
             if k in state.breakdown
-            and float(state.breakdown[k].get("total_damage", 0.0)) > 0.0
+            and (priced := source_total_damage(state.breakdown[k])) is not None
+            and priced > 0.0
         ),
         None,
     )
@@ -166,7 +172,7 @@ def _hypershot_delta_events(
     )
     if trigger_event_index is not None:
         excluded = {trigger_event_index}
-    elif str(state.breakdown[trigger_key].get("damage_type", "")) != "mixed":
+    elif source_damage_type(state.breakdown[trigger_key]) != "mixed":
         # A first cast split into several ledger events (multi-hit or
         # multi-tick opener) matches no single event.  The accepted cast
         # ledger scopes the trigger cast instead: every trigger-slot event
@@ -276,9 +282,11 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
             if effect.source.is_ability_damage
         )
         amped_base = sum(
-            v.get("total_damage", 0.0)
+            priced
             for k, v in breakdown.items()
-            if isinstance(v, dict) and k in amped_keys
+            if isinstance(v, dict)
+            and k in amped_keys
+            and (priced := source_total_damage(v)) is not None
         )
         # The amplified damage = base * amp, so the amp contribution is
         # base * (amp - 1) / amp  (since base already includes the amp).
@@ -352,7 +360,7 @@ def _apply_command_amp(state: FightState, rotation: RotationResult) -> None:
         float(event["time"])
         for entry in state.breakdown.values()
         if isinstance(entry, dict)
-        for event in entry.get("damage_events") or ()
+        for event in source_damage_events(entry) or ()
         if isinstance(event, dict) and is_immobilizing_event(event)
     )
     if not cc_times:

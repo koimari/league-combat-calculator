@@ -44,6 +44,7 @@ __all__ = [
     "REQUIRED_FIELDS",
     "event_damage",
     "event_damage_type",
+    "event_execute_threshold_ratio",
     "event_precision",
     "event_raw_damage",
     "event_source",
@@ -88,3 +89,8 @@ def event_raw_damage(event: Mapping[str, Any]) -> float | None:
 def event_precision(event: Mapping[str, Any]) -> str | None:
     """How exactly this packet's time is placed; ``None`` where none was stated."""
     return optional_field(event, "event_precision", str)
+
+
+def event_execute_threshold_ratio(event: Mapping[str, Any]) -> float | None:
+    """The health share below which this packet executes; ``None`` if it cannot."""
+    return optional_field(event, "execute_threshold_ratio", float)
