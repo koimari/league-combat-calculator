@@ -1,7 +1,7 @@
 """Pricing an ability's typed damage parts over its casts."""
 
 from collections.abc import Callable, Mapping
-from typing import Any
+from typing import Any, NamedTuple
 
 from ...ability_atoms import ability_field
 from ...ability_spec import DamagePart
@@ -16,6 +16,19 @@ from ..state import FightState
 # A landing instant this close to the fight end still lands: float sums of
 # cast times and offsets reach the boundary a few ulps late.
 _LANDING_EPSILON = 1e-9
+
+
+class PricedParts(NamedTuple):
+    """What one ability's typed parts priced over its casts.
+
+    ``first_part_first_cast`` is the Horizon Focus trigger value for a
+    mixed entry, and every figure here is mitigated but pre-amp.
+    """
+
+    total: float
+    first_part_first_cast: float
+    by_type: dict[str, float]
+    damage_events: list[dict[str, Any]]
 
 
 def _evaluate_cast_parts(
@@ -35,13 +48,9 @@ def _evaluate_cast_parts(
     cc_reviewed: bool = False,
     cc_scope: ControlScope | None = None,
     landed_by: "Callable[[float], float] | None" = None,
-) -> tuple[float, float, dict[str, float], list[dict[str, Any]]]:
+) -> PricedParts:
     """Evaluate an ability's typed damage parts over its casts.
 
-    Returns total mitigated damage pre-amp; the first part's mitigated
-    damage on the first cast (the Horizon Focus trigger value for mixed
-    entries); per-damage-type mitigated totals pre-amp; and any authored
-    absolute hit events.
     Threads running target damage through every part and cast so
     HP-scaled parts see prior hits (Akali R2 after R1, Kog'Maw R shot
     after shot).
@@ -319,7 +328,7 @@ def _evaluate_cast_parts(
             total += mitigated
             by_type[part.damage_type] = by_type.get(part.damage_type, 0.0) + mitigated
             running_damage += mitigated
-    return total, first_part_first_cast, by_type, damage_events
+    return PricedParts(total, first_part_first_cast, by_type, damage_events)
 
 
 def _apply_post_hit_proc(
@@ -354,7 +363,7 @@ def _apply_post_hit_proc(
     parts = tuple(ability_field(spec, "parts", form="post_hit_proc"))
     if not parts:
         return 0.0
-    total, _, by_type, events = _evaluate_cast_parts(
+    priced = _evaluate_cast_parts(
         state,
         parts,
         num_casts,
@@ -363,6 +372,7 @@ def _apply_post_hit_proc(
         cast_times=cast_times,
         pricing=pricing,
     )
+    total = priced.total
     if total <= 0:
         return 0.0
 
@@ -373,7 +383,7 @@ def _apply_post_hit_proc(
         "damage_per_hit": total / num_casts,
         "unit": "procs",
         "total_damage": total,
-        **_damage_type_fields(by_type),
+        **_damage_type_fields(priced.by_type),
     }
     if spec.get("detail"):
         row["detail"] = str(spec["detail"])
@@ -382,8 +392,8 @@ def _apply_post_hit_proc(
         and (part.count <= 1 or part.hit_interval is not None)
         for part in parts
     )
-    if timing_is_authored and events:
-        row["damage_events"] = events
+    if timing_is_authored and priced.damage_events:
+        row["damage_events"] = priced.damage_events
         row["event_phase"] = "proc"
     state.breakdown[row_key] = row
     state.total_damage += total

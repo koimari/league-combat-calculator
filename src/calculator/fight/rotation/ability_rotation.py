@@ -407,12 +407,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             cast_times=cast_times,
             plan=plan,
         )
-        (
-            ability_total,
-            first_part_damage,
-            ability_by_type,
-            ability_events,
-        ) = _evaluate_cast_parts(
+        priced = _evaluate_cast_parts(
             state,
             parts,
             len(cast_times) if state.combat_events is not None else num_casts,
@@ -434,6 +429,10 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             cc_scope=_entry_control_scope(ability_info),
             landed_by=_landed_by,
         )
+        ability_total = priced.total
+        first_part_damage = priced.first_part_first_cast
+        ability_by_type = priced.by_type
+        ability_events = priced.damage_events
         if ability_info.get("cast_while_disabled"):
             # The row states, once, that its damage is not the caster's own
             # action (pets, summons, persistent zones).  Every event it
