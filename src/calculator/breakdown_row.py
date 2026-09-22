@@ -1,9 +1,10 @@
 """The two books one participant's published breakdown row is folded from.
 
-``combat/breakdown`` is one row per participant, and two producers fill it.
-``timeline.records.Ledgers.empty`` opens the ledger half with its default
-factory, so every row in that book carries the identity triple, the running
-total and the per-source map from the moment it exists.
+``combat/breakdown`` is one row per participant, and three producers fill
+it. ``timeline.records.Ledgers.empty`` opens the ledger half with its
+default factory, so every row in that book carries the identity triple, the
+running total and the per-source map from the moment it exists, and
+``program.views.breakdown`` writes the same five on the published side.
 ``program.views.survival.survival_leaves`` writes the survival half in one
 straight-line pass, so every row it returns carries each measure below.
 
@@ -40,8 +41,8 @@ __all__ = [
 
 _ledger = partial(
     required_field,
-    kind="composed breakdown row",
-    stamper="timeline.records.Ledgers.empty",
+    kind="breakdown row",
+    stamper="Ledgers.empty and program.views.breakdown",
 )
 
 _survival = partial(

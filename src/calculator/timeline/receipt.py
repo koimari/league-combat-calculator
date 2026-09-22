@@ -5,6 +5,9 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, MutableMapping
 from typing import Any
 
+from ..breakdown_row import breakdown_total_damage
+from ..composed_event_row import row_target, row_time
+from ..heal_event_row import healed_amount, healed_time
 from ..item_behavior import PacketKind
 from ..program.views import receipt as _receipt_view
 from ..program.walk import ObjectiveFold
@@ -26,7 +29,7 @@ def _annotate_overheal(healing_events: Iterable[MutableMapping[str, Any]]) -> No
     for event in healing_events:
         if event.get("overheal") is not None:
             continue
-        amount = float(event.get("amount", 0.0))
+        amount = healed_amount(event)
         event["overheal"] = max(
             0.0,
             float(event.get("reduced_amount", amount))
@@ -156,7 +159,7 @@ def _self_shield_carrier_denials(
         if event.get("is_ability") and event.get("skipped_reason") != "outside_window":
             ability_packets.setdefault(str(event["attacker"]), []).append(event)
     for packets in ability_packets.values():
-        packets.sort(key=lambda event: float(event.get("time", 0.0) or 0.0))
+        packets.sort(key=row_time)
 
     denials: list[dict[str, Any]] = []
     for rider in support_events:
@@ -169,11 +172,11 @@ def _self_shield_carrier_denials(
         if carrier is None:
             continue
         holder = str(rider.get("attacker", ""))
-        carrier_time = float(carrier.get("time", 0.0) or 0.0)
+        carrier_time = row_time(carrier)
         candidates = [
             event
             for event in ability_packets.get(holder, ())
-            if float(event.get("time", 0.0) or 0.0) >= carrier_time
+            if row_time(event) >= carrier_time
         ]
         if not candidates or any(
             not event.get("skipped_reason") for event in candidates
@@ -223,13 +226,13 @@ def _compose_receipt(
         (event for events in ledgers.outgoing.values() for event in events),
         key=lambda event: event.get("_sk")
         or action_key(
-            float(event.get("time", 0.0)),
+            row_time(event),
             (
                 TransitionRank.REACTIVE
                 if event.get("_reactive")
                 else TransitionRank.DAMAGE
             ),
-            str(event.get("target", "")),
+            row_target(event),
             event,
         ),
     )
@@ -237,7 +240,7 @@ def _compose_receipt(
         (event for events in ledgers.healing.values() for event in events),
         key=lambda event: event.get("_sk")
         or action_key(
-            float(event.get("time", 0.0)),
+            healed_time(event),
             TransitionRank.RECOVERY,
             str(event.get("attacker", "")),
             event,
@@ -307,7 +310,7 @@ def _compose_receipt(
             and walked.survival[actor.participant_id]["survived_window"]
         ),
         focus_damage_before_death=(
-            float(focus_row.get("total_damage", 0.0)) if focus_row else 0.0
+            float(breakdown_total_damage(focus_row)) if focus_row else 0.0
         ),
         focus_support_value=focus_support,
         focus_healing=focus_healing,

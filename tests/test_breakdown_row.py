@@ -28,6 +28,7 @@ from src.calculator.timeline.records import Ledgers
 
 BASELINE = Path("scripts/golden_coupled_baseline.json")
 SURVIVAL_VIEW = Path("src/calculator/program/views/survival.py")
+BREAKDOWN_VIEW = Path("src/calculator/program/views/breakdown.py")
 
 LEDGER_READERS = {
     "participant_id": breakdown_participant_id,
@@ -59,14 +60,14 @@ def _published_rows() -> list[dict]:
     ]
 
 
-def _unconditional_measures() -> set[str]:
-    """Every field the survival writer names outside any ``if``.
+def _unconditional_fields(view: Path, writers: tuple[str, ...]) -> set[str]:
+    """Every field *view* names through *writers* outside any ``if``.
 
     Read off the writer rather than off a corpus, because that is the half
     of the claim a corpus cannot make: a key on every row of one baseline
     could still be conditional on state no scenario reaches.
     """
-    tree = ast.parse(SURVIVAL_VIEW.read_text(encoding="utf-8"))
+    tree = ast.parse(view.read_text(encoding="utf-8"))
     guarded = {
         node
         for branch in ast.walk(tree)
@@ -78,7 +79,7 @@ def _unconditional_measures() -> set[str]:
         for call in ast.walk(tree)
         if isinstance(call, ast.Call)
         and isinstance(call.func, ast.Attribute)
-        and call.func.attr == "measured"
+        and call.func.attr in writers
         and call.args
         and isinstance(call.args[0], ast.Constant)
         and call not in guarded
@@ -103,8 +104,17 @@ class TestTheRequiredSetIsMeasured:
         the whole of that half's producer."""
         assert set(Ledgers.empty().breakdown["main"]) == set(LEDGER_READERS)
 
+    def test_the_published_side_writes_the_same_five_outside_every_branch(self):
+        """The view is the second producer of the ledger half, so a field it
+        made conditional would be absent from a row the factory never held."""
+        assert set(LEDGER_READERS) <= _unconditional_fields(
+            BREAKDOWN_VIEW, ("raw", "measured", "structure")
+        )
+
     def test_the_survival_half_is_written_outside_every_branch(self):
-        assert set(SURVIVAL_READERS) <= _unconditional_measures()
+        assert set(SURVIVAL_READERS) <= _unconditional_fields(
+            SURVIVAL_VIEW, ("measured",)
+        )
 
 
 class TestTheReadersRefuseAnAbsentRequiredKey:
