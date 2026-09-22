@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Validate gate-receipt JSON artifacts against the shared envelope.
 
-``ci/test.sh`` runs this on every receipt it writes under ``build/ci/backend/``
-before the evidence bundle is uploaded.  Exit 0 when every file parses AND validates
-against ``gate_receipt.validate_receipt``; exit 1 otherwise, with per-file
-errors.  Schema validity is deliberately NOT the same as a green gate: a
-``passed: false`` receipt is valid and must keep the job's failure signal,
-while a malformed receipt fails the job even when the gate exited 0.
+``ci/test.sh`` runs this on every receipt it writes under
+``build/ci/backend/`` before the evidence bundle is uploaded.  Exit 0 when
+every file parses AND validates against ``gate_receipt.validate_receipt``;
+exit 1 otherwise, with per-file errors.  Schema validity is deliberately
+NOT the same as a green gate: a ``passed: false`` receipt is valid and must
+keep the job's failure signal, while a malformed receipt fails the job even
+when the gate exited 0.
 
 Usage::
 

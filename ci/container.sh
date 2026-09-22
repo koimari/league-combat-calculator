@@ -2,8 +2,9 @@
 # Local equivalent of tests.yml job: container
 #   docker build, the smoke the workflow ran against the image (health,
 #   non-root user, one calculate, the metrics module present, the
-#   HEALTHCHECK reaching healthy), then trivy when it is installed, the one
-#   check whose absence is never a failure (the workflow runs the action).
+#   HEALTHCHECK reaching healthy), then trivy when it is installed. An
+#   absent trivy is the one skip that never fails: the workflow scans with
+#   the trivy action instead.
 set -o pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.." || exit 1
 # shellcheck source=ci/common.sh
