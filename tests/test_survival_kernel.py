@@ -2389,8 +2389,8 @@ class TestTheLiandryRepriceKeepsTheDeclarationInStep:
             None,
         )
         carried = AuthoredDeclaration(*repriced[0]["declared"])
-        assert carried.swing_composition() is None
-        assert carried.routing_provenance() is None
+        assert carried.swing is None
+        assert carried.routing is None
 
     def test_a_replacement_the_carry_cannot_join_is_refused(self):
         """The second red: a positional carry that cannot say which tick.
@@ -2602,7 +2602,7 @@ def test_a_retired_family_is_declared_by_the_pair_engine_and_priced_by_the_walk(
                     declaration = event.get("declared")
                     assert declaration is not None, key
                     authored = AuthoredDeclaration(*declaration)
-                    routing = authored.routing_provenance()
+                    routing = authored.routing
                     if routing is None:
                         assert authored.rule_id == stamp, key
                     else:
@@ -3528,7 +3528,7 @@ class TestTheBlendIsTheDeterministicReadingAndNotAnAverage:
             declaration = AuthoredDeclaration(
                 "fixture.rule", 100.0, AttackClass.OTHER.value, 50.0
             )[:width]
-            assert AuthoredDeclaration(*declaration).swing_composition() is None
+            assert AuthoredDeclaration(*declaration).swing is None
         packet = DeclaredPacket(100.0, "physical", "fixture.rule")
         assert packet.swing is None
         assert price_declared_packet(

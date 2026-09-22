@@ -448,9 +448,9 @@ def declared_packet_of(
             damage_type, AttackClass(authored.attack_class)
         ),
         effective_resistance=authored.effective_resistance,
-        swing=authored.swing_composition(),
+        swing=authored.swing,
     )
-    routing = authored.routing_provenance()
+    routing = authored.routing
     if routing is None:
         return packet
     # A routing family re-delivered this packet at a second subject, and what

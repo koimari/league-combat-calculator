@@ -150,14 +150,13 @@ class AuthoredDeclaration(NamedTuple):
     effective resistance the packet itself met, the basic-attack swing composition
     it was delivered through, and the route a routing family re-delivered it by.
 
-    It rides the engine's own event, which is why it is a plain tuple on the wire
-    and a named shape here: the ledger has two row spellings, a dict row and a
-    positional light row, and a reader that unpacked the tuple by index in each
-    would be two readers of one declaration.  This is the one home of what those
-    six positions mean; ``program.compile.declared_packet_of`` composes the
-    remaining term, the holder's own amps, on the walk's side.
+    It rides the engine's own event, and the ledger has two row spellings, a dict
+    row and a positional light row: this is the one home of what those six
+    positions mean, so a reader of either takes the field by name.
+    ``program.compile.declared_packet_of`` composes the remaining term, the
+    holder's own amps, on the walk's side.
 
-    The two methods below keep the declaration in step: a site that re-prices an
+    The methods below keep the declaration in step: a site that re-prices an
     already-authored packet restates the declaration riding it, instead of leaving
     behind a magnitude or a mitigation the walk would then price the packet at.
     ``effective_resistance`` is ``None`` for a packet whose ledger published no
@@ -173,24 +172,16 @@ class AuthoredDeclaration(NamedTuple):
     raw_amount: float
     attack_class: str
     effective_resistance: float | None = None
-    swing: tuple | None = None
-    routing: tuple | None = None
-
-    def swing_composition(self) -> BasicAttackSwing | None:
-        """This declaration's swing composition, or ``None`` if none rode it."""
-        return None if self.swing is None else BasicAttackSwing(*self.swing)
-
-    def routing_provenance(self) -> RoutingProvenance | None:
-        """This declaration's route, or ``None`` if it reached its subject directly."""
-        return None if self.routing is None else RoutingProvenance(*self.routing)
+    swing: BasicAttackSwing | None = None
+    routing: RoutingProvenance | None = None
 
     def routed_by(self, routing: RoutingProvenance) -> AuthoredDeclaration:
         """The same declaration, re-delivered at a second subject."""
-        return self._replace(routing=tuple(routing))
+        return self._replace(routing=routing)
 
     def delivered_as_a_swing(self, swing: BasicAttackSwing) -> AuthoredDeclaration:
         """The same declaration, carrying the swing composition it met."""
-        return self._replace(swing=tuple(swing))
+        return self._replace(swing=swing)
 
     def repriced_at(self, effective_resistance: float) -> AuthoredDeclaration:
         """The same declaration, met by a different resistance."""
