@@ -368,7 +368,7 @@ def _lethal_tempo_attack_schedule(
     state: FightState,
     effect: "rune_effects.KeystoneLethalTempoEffect",
     attack_times: list[float] | None = None,
-) -> tuple[list[float], list[int], list[int], list[float]]:
+) -> LethalTempoSchedule:
     """Build Lethal Tempo's stack-sensitive swing and bolt schedule."""
     base_rate = state.attack_speed * state.auto_attack_uptime
     if (
