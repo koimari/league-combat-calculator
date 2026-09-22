@@ -3,7 +3,7 @@
 # Ships only the runtime: src/, static/, templates/, and the data/ cache.
 # vendor/ (the wiki scraper) stays out — patch-day data updates run locally
 # and arrive here as committed changes to data/.
-# .python-version is the version's one home and tests/test_deployment_security.py
+# .python-version is the version's one home and tests/test_ci_homes.py
 # holds this line to it. Tag and digest sit together on a literal FROM, which
 # is the only form Dependabot tracks: behind an ARG the digest stops receiving
 # security bumps (dependabot-core#10190).

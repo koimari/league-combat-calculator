@@ -98,13 +98,15 @@ def test_the_workflow_reads_the_python_version_from_its_one_home():
 
 def test_the_image_runs_the_python_version_the_tests_run():
     """The tag stays spelled out beside the digest on a literal ``FROM``, the
-    only form Dependabot bumps, so it is a reader that must be checked."""
+    only form Dependabot bumps, so it is a reader that must be checked, and
+    the comment above it cites this file, so moving the check dangles it."""
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     reference = re.search(r"^FROM (\S+)$", dockerfile, re.MULTILINE)
     assert reference, "the base image is not one literal FROM"
     assert re.fullmatch(
         rf"python:{re.escape(PYTHON_VERSION)}-slim@sha256:[0-9a-f]{{64}}", reference[1]
     ), reference[1]
+    assert f"tests/{Path(__file__).name}" in dockerfile
 
 
 def test_no_other_config_selects_an_interpreter_version():
