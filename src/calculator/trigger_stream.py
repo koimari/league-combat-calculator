@@ -1863,7 +1863,15 @@ def _validate_pairing(mechanic: str, capability: MechanicCapability) -> None:
 _validate_registry()
 
 
-def _classify_cc(row: Mapping[str, Any]) -> tuple[CcClass, str, bool]:
+class CcReading(NamedTuple):
+    """How one raw row's crowd control reads: the class, the kind, the review."""
+
+    cc_class: CcClass
+    kind: str
+    reviewed: bool
+
+
+def _classify_cc(row: Mapping[str, Any]) -> CcReading:
     """The only place ``cc_kind`` and the raw control flags are read.
 
     Returns the classification consumers branch on, the opaque receipt token
@@ -1888,12 +1896,12 @@ def _classify_cc(row: Mapping[str, Any]) -> tuple[CcClass, str, bool]:
         )
     reviewed = bool(kind) or bool(row.get("cc_reviewed"))
     if kind in IMMOBILIZING_CC_KINDS or row.get("immobilized") or row.get("hard_cc"):
-        return CcClass.IMMOBILIZE, kind, reviewed
+        return CcReading(CcClass.IMMOBILIZE, kind, reviewed)
     if kind == "slow" or row.get("slowed") or row.get("slow"):
-        return CcClass.SLOW, kind, reviewed
+        return CcReading(CcClass.SLOW, kind, reviewed)
     if row.get("crowd_control"):
-        return CcClass.UNCLASSIFIED_CONTROL, kind, reviewed
-    return (CcClass.NONE if kind else CcClass.UNREVIEWED), kind, reviewed
+        return CcReading(CcClass.UNCLASSIFIED_CONTROL, kind, reviewed)
+    return CcReading(CcClass.NONE if kind else CcClass.UNREVIEWED, kind, reviewed)
 
 
 # The three readings this bus gives a field its row did not stamp. A
@@ -1955,7 +1963,7 @@ def event_triggers(
     """
     if not isinstance(row, Mapping):
         return ()
-    cc_class, cc_kind, cc_reviewed = _classify_cc(row)
+    reading = _classify_cc(row)
     if not kinds & _ROW_KINDS:
         return ()
     sequence = _sequence(row.get("sequence"))
@@ -1973,14 +1981,14 @@ def event_triggers(
         "is_ability": bool(row.get("is_ability")),
         "basic_attack": bool(row.get("basic_attack")),
         "reactive": bool(row.get("_reactive")),
-        "cc": cc_class,
-        "cc_kind": cc_kind,
-        "cc_reviewed": cc_reviewed,
+        "cc": reading.cc_class,
+        "cc_kind": reading.kind,
+        "cc_reviewed": reading.reviewed,
     }
     triggers: list[Trigger] = []
     if TriggerKind.DAMAGE in kinds:
         triggers.append(Trigger(kind=TriggerKind.DAMAGE, **shared))
-    if TriggerKind.CC in kinds and cc_class in _CONTROL_CLASSES:
+    if TriggerKind.CC in kinds and reading.cc_class in _CONTROL_CLASSES:
         triggers.append(Trigger(kind=TriggerKind.CC, **shared))
     return tuple(triggers)
 
@@ -2070,12 +2078,12 @@ def authored_triggers(
 
 def is_immobilizing_event(row: Mapping[str, Any]) -> bool:
     """The one immobilize predicate, for callers holding a row not a Trigger."""
-    return _classify_cc(row)[0] is CcClass.IMMOBILIZE
+    return _classify_cc(row).cc_class is CcClass.IMMOBILIZE
 
 
 def applies_control(row: Mapping[str, Any]) -> bool:
     """Whether one raw row applies crowd control of *any* class."""
-    return _classify_cc(row)[0] in _CONTROL_CLASSES
+    return _classify_cc(row).cc_class in _CONTROL_CLASSES
 
 
 @cache

@@ -29,7 +29,7 @@ from dataclasses import dataclass
 from enum import Enum
 from functools import partial
 from types import MappingProxyType
-from typing import Any
+from typing import Any, NamedTuple
 
 from .ability_spec import Disposition, ZeroPolicy
 from .champions.inputs import champion_stat
@@ -1665,15 +1665,21 @@ def leveled_adaptive_damage(
     )
 
 
-def adaptive_formula(
-    name: str, effects: RuneValues
-) -> tuple[Callable[[DamageInputs], float], float, float]:
+class AdaptiveFormula(NamedTuple):
+    """A rune's leveled adaptive pricer, beside the two ratios it reads."""
+
+    price: Callable[[DamageInputs], float]
+    bonus_ad_ratio: float
+    ap_ratio: float
+
+
+def adaptive_formula(name: str, effects: RuneValues) -> AdaptiveFormula:
     """A rune's leveled adaptive pricer, with the two ratios it reads."""
     by_level = required_leveling(name, effects)
     bonus_ad_ratio = effects.number("bonus_ad_ratio")
     ap_ratio = effects.number("ap_ratio")
     pricer = partial(leveled_adaptive_damage, by_level, bonus_ad_ratio, ap_ratio)
-    return pricer, bonus_ad_ratio, ap_ratio
+    return AdaptiveFormula(pricer, bonus_ad_ratio, ap_ratio)
 
 
 def leveled_damage(name: str, effects: RuneValues) -> Callable[[DamageInputs], float]:

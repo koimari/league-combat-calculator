@@ -127,7 +127,7 @@ def _compile_electrocute(entry: Mapping[str, Any]) -> RuneProcEffect:
     """Compile Electrocute: 3 stacks in 3s strike for leveled adaptive damage."""
     name = "Electrocute"
     effects = RuneValues(name, entry.get("effects", {}))
-    raw, bonus_ad_ratio, ap_ratio = adaptive_formula(name, effects)
+    formula = adaptive_formula(name, effects)
     top = RuneValues(name, entry)
 
     return RuneProcEffect(
@@ -138,8 +138,8 @@ def _compile_electrocute(entry: Mapping[str, Any]) -> RuneProcEffect:
         stack_window_seconds=effects.number("stack_window_seconds"),
         cooldown_seconds=top.number("cooldown"),
         proc_delay_seconds=effects.number("proc_delay_seconds"),
-        raw_damage=raw,
-        damage_type=ratio_adaptive_type(bonus_ad_ratio, ap_ratio),
+        raw_damage=formula.price,
+        damage_type=ratio_adaptive_type(formula.bonus_ad_ratio, formula.ap_ratio),
     )
 
 
@@ -242,13 +242,13 @@ def _compile_arcane_comet(entry: Mapping[str, Any]) -> RuneAbilityProcEffect:
     """
     name = "Arcane Comet"
     effects = RuneValues(name, entry.get("effects", {}))
-    minimum, bonus_ad_ratio, ap_ratio = adaptive_formula(name, effects)
+    formula = adaptive_formula(name, effects)
     scaling = effects.value("distance_scaling")
     amp_ratio = _distance_amp_ratio(name, scaling, ARCANE_COMET_ASSUMED_TRAVEL_DISTANCE)
     _certify_comet_leveling_order(name, effects, scaling)
 
     def raw(inputs: DamageInputs) -> float:
-        return minimum(inputs) * (1.0 + amp_ratio)
+        return formula.price(inputs) * (1.0 + amp_ratio)
 
     return RuneAbilityProcEffect(
         rune_name=name,
@@ -259,7 +259,7 @@ def _compile_arcane_comet(entry: Mapping[str, Any]) -> RuneAbilityProcEffect:
         assumed_travel_distance=ARCANE_COMET_ASSUMED_TRAVEL_DISTANCE,
         distance_amp_ratio=amp_ratio,
         raw_damage=raw,
-        damage_type=ratio_adaptive_type(bonus_ad_ratio, ap_ratio),
+        damage_type=ratio_adaptive_type(formula.bonus_ad_ratio, formula.ap_ratio),
     )
 
 

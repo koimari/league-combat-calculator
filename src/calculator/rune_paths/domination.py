@@ -105,7 +105,7 @@ def _compile_taste_of_blood(entry: Mapping[str, Any]) -> RuneHealEffect:
     """
     name = "Taste of Blood"
     effects = RuneValues(name, entry.get("effects", {}))
-    amount, bonus_ad_ratio, ap_ratio = adaptive_formula(name, effects)
+    formula = adaptive_formula(name, effects)
     top = RuneValues(name, entry)
     first, last = _level_span(name, effects)
 
@@ -114,11 +114,11 @@ def _compile_taste_of_blood(entry: Mapping[str, Any]) -> RuneHealEffect:
         trigger=RuneHealTrigger.DAMAGE_DEALT,
         cooldown_seconds=top.number("cooldown"),
         delay_seconds=0.0,
-        amount=amount,
+        amount=formula.price,
         disclosures=(
             f"{name} heals {first:g} at level 1 rising to {last:g} at level "
-            f"18, plus {bonus_ad_ratio * 100:g}% bonus AD and "
-            f"{ap_ratio * 100:g}% AP, once per {top.number('cooldown'):g}s "
+            f"18, plus {formula.bonus_ad_ratio * 100:g}% bonus AD and "
+            f"{formula.ap_ratio * 100:g}% AP, once per {top.number('cooldown'):g}s "
             "cooldown on the fight's own damage events.",
             f"{name} does not trigger at full health, and the pair engine "
             "carries no holder health — so every window that lands damage is "
