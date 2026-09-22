@@ -216,7 +216,7 @@ def _declared_consume_atoms(
             continue
         setup_slot = decl.get("setup_slot")
         if setup_slot:
-            _declared_setup_edge(scan, slot, setup_slot, decl=decl, key=key)
+            _declared_setup_edge(scan, slot, setup_slot, decl=decl, key=key, role=role)
             continue
         kind = str(decl.get("kind") or role)
         cond = str(decl.get("condition") or kind)
@@ -227,7 +227,13 @@ def _declared_consume_atoms(
 
 
 def _declared_setup_edge(
-    scan: _EdgeScan, slot: str, setup_slot: Any, *, decl: Mapping[str, Any], key: str
+    scan: _EdgeScan,
+    slot: str,
+    setup_slot: Any,
+    *,
+    decl: Mapping[str, Any],
+    key: str,
+    role: str,
 ) -> None:
     """The setup slot a declaration names must cast before its consumer.
 
@@ -236,7 +242,6 @@ def _declared_setup_edge(
     """
     if setup_slot not in scan.corpora or setup_slot == slot:
         return
-    role = str(decl.get("role", ""))
     kind = str(decl.get("kind") or _DIRECT_EDGE_KIND.get(role, "mark_consume"))
     scan.add(
         setup_slot,
