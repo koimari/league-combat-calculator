@@ -1,9 +1,10 @@
 """Classify every ER5 tail site by what the evidence already says about it.
 
-The tail is about 1,278 ``x.get(key, <literal>)`` reads, and most of them are
-contracts rather than debt. A raw count says the opposite, so this splits the
-population by the two clauses a machine can answer, leaving a named remainder
-for the three it cannot.
+The tail is every ``x.get(key, <literal>)`` read outside the covered roots,
+and most of them are contracts rather than debt. A raw count says the
+opposite, so this splits the population by the two clauses a machine can
+answer, leaving a named remainder for the three it cannot. The size of each
+class is the receipt this writes, never a number stated here.
 
 ``NOT_A_ROW_FIELD``
     The key is in neither census. It is not a field any stream this repo
