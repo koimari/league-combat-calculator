@@ -57,7 +57,9 @@ def source_total_raw(row: Mapping[str, Any]) -> float | None:
     return optional_field(row, "total_raw", float)
 
 
-def source_damage_events(row: Mapping[str, Any]) -> Sequence[Any] | None:
+def source_damage_events(  # sightline-ok: 1 - the packet shapes a producer may author
+    row: Mapping[str, Any],
+) -> Sequence[Any] | None:
     """The packets it authored, as its producer left them; ``None`` where none."""
     return row.get("damage_events")
 
@@ -65,11 +67,6 @@ def source_damage_events(row: Mapping[str, Any]) -> Sequence[Any] | None:
 def source_event_phase(row: Mapping[str, Any]) -> str | None:
     """Which phase its packets sort into; ``None`` where none was stamped."""
     return optional_field(row, "event_phase", str)
-
-
-def source_detail(row: Mapping[str, Any]) -> str | None:
-    """Its user-visible sentence; ``None`` where its producer wrote none."""
-    return optional_field(row, "detail", str)
 
 
 def source_hit_count(row: Mapping[str, Any]) -> int | None:

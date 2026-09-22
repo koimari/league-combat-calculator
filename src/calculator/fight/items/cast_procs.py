@@ -1,11 +1,9 @@
 """The row a cooldown-gated item proc publishes."""
 
-from functools import partial
 from typing import Any
 
 from ... import item_effects
 from ...ability_spec import AttackClass
-from ...event_row_field import required_field
 from ...survival.pricing import AuthoredDeclaration
 from ..resists import _mitigate, _resistance_met_fields
 from ..results import RotationResult
@@ -16,15 +14,6 @@ from .proc_triggers import (
     _ability_damage_proc_triggers,
     _champion_damage_proc_triggers,
     _damage_threshold_trigger_time,
-)
-
-#: One field of a completed stack pair's proc event. The gate builds every
-#: one of them as a single dict literal, so an absent field is that builder
-#: changed rather than a pair whose timing was never certified.
-_proc_event_field = partial(
-    required_field,
-    kind="stack-gated proc event",
-    stamper="eclipse_stack_gate._stacked_champion_proc_times",
 )
 
 
@@ -342,10 +331,11 @@ def _add_late_phase_proc_damage(state: FightState, rotation: RotationResult) -> 
                             # The shield arms on the SAME proc event it
                             # rides: its time and event precision are the
                             # completed pair's (P3 package 3C).
-                            "time": float(_proc_event_field(event, "time")),
-                            "event_precision": str(
-                                _proc_event_field(event, "event_precision")
-                            ),
+                            # Both are indexed, not defaulted: the gate
+                            # builds every proc event as one dict literal
+                            # carrying each of them.
+                            "time": float(event["time"]),
+                            "event_precision": str(event["event_precision"]),
                         }
                     )
             breakdown[source.breakdown_key]["damage_events"] = stack_events

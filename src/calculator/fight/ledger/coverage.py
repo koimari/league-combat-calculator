@@ -6,7 +6,6 @@ from typing import Any, NamedTuple
 
 from ... import item_effects
 from ...ability_atoms import ability_field, ability_payload
-from ...damage_event_row import event_precision
 from ...interpreters import ally_packet, threshold_defense
 from ...item_behavior import PacketKind, PacketTrigger, Recipients
 from ...survival.actions import event_timestamp
@@ -54,7 +53,7 @@ def _event_timeline_coverage(
                 if (
                     not has_boundary
                     and isinstance(event, dict)
-                    and event_precision(event) == "cast_boundary"
+                    and event.get("event_precision") == "cast_boundary"
                 ):
                     has_boundary = True
         if has_boundary:

@@ -3,13 +3,11 @@
 from typing import Any
 
 from ...ability_atoms import ability_field
-from ...cast_event_row import cast_ordinal, cast_slot
 from ...champions.shared_option_keys import RENGAR_FEROCITY
 from ...state_timeline import EventStamp
 from ...timed_stacks import TimedStackState
 from ..autos.swing_schedule import _restore_stream_attack_timestamps
 from ..config import _seeded_option_stacks
-from ..ledger.breakdown import source_detail
 from ..results import CastPlan, FerocityTimeline, RotationResult
 from ..state import FightState
 
@@ -132,9 +130,9 @@ def _build_ferocity_timeline(
 def _slot_ordinals(rotation: RotationResult, slot: str) -> list[int]:
     """The accepted-cast ordinals of one basic-ability slot."""
     return [
-        cast_ordinal(event) - 1
+        int(event["ordinal"]) - 1
         for event in rotation.cast_events
-        if cast_slot(event) == slot
+        if str(event["slot"]) == slot
     ]
 
 
@@ -153,7 +151,7 @@ def _add_rengar_ferocity(state: FightState, rotation: RotationResult) -> None:
     stack = timeline.stack
     rule = stack.rule
     cast_events = [
-        event for event in rotation.cast_events if cast_slot(event) in {"Q", "W", "E"}
+        event for event in rotation.cast_events if str(event["slot"]) in {"Q", "W", "E"}
     ]
     # P3 package 3V fail-closed: a requested cast slot that is not one of
     # the champion's known slots authors a named denial receipt instead of
@@ -203,7 +201,7 @@ def _add_rengar_ferocity(state: FightState, rotation: RotationResult) -> None:
                 "slot": event.get("slot"),
                 "ordinal": event.get("ordinal"),
                 "empowered": timeline.cast_empowered(
-                    cast_slot(event), cast_ordinal(event) - 1
+                    str(event["slot"]), int(event["ordinal"]) - 1
                 ),
             }
             for event in cast_events
@@ -234,8 +232,8 @@ def _add_rengar_ferocity(state: FightState, rotation: RotationResult) -> None:
         info = state.ability_damages.get(slot)
         row = state.breakdown.get(slot)
         if isinstance(row, dict):
-            row_detail = source_detail(row)
-            detail = "" if row_detail is None else row_detail
+            row_detail = row.get("detail")
+            detail = "" if row_detail is None else str(row_detail)
         elif info is not None:
             detail = str(ability_field(info, "detail"))
         else:
