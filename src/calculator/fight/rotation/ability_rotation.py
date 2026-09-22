@@ -1,4 +1,8 @@
-"""Resolving the cast schedule, admitting it against resources, then pricing every cast."""
+"""Resolving the cast schedule, admitting it against resources, then pricing every cast.
+
+``cast_slot.py`` took the four per-slot steps: the forced swings, the authored
+controls, the carried item on-hits and the target debuff left behind.
+"""
 
 from dataclasses import replace
 from typing import Any

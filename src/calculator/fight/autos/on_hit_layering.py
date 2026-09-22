@@ -1,8 +1,10 @@
-"""The one on-hit authoring site.
+"""The on-hit effects every hit carries, and the two ways an ability joins them.
 
-Two of the ways a champion ability joins the on-hit system are authored
-here.  A cast-armed window is ``empower_windows`` and an ability that
-applies the build's item on-hits is ``on_hit_stream``.
+``live_health_on_hit.py`` took the two on-hits priced against the target's
+decayed health: the current-health walk down the swings and the
+schedule-gated procs.  Two of the ways a champion ability joins the on-hit
+system are authored here.  A cast-armed window is ``empower_windows`` and
+an ability that applies the build's item on-hits is ``on_hit_stream``.
 
 **Case 1 — Stack acceleration** (e.g. Vayne W Silver Bolts):
     Abilities that build stacks per auto and proc on reaching N stacks.
