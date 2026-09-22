@@ -271,6 +271,52 @@ class TestFailClosedIdentityAndMetadata:
         )
         assert "damage_events" not in row
 
+    def test_a_total_no_arithmetic_made_withholds_the_item(self) -> None:
+        """``float(True)`` is ``1.0``: a breakdown row stamped with something
+        no fight step computed withholds Eclipse behind its named reason
+        rather than pricing the cast at a point of damage."""
+        state = SimpleNamespace(
+            breakdown={"Q": {"total_damage": True}},
+            ability_damages={"Q": _direct("Q")},
+            num_auto_attacks=0,
+            roster_target_index=0,
+            cast_order=["Q"],
+        )
+        rotation = SimpleNamespace(
+            cast_events=(
+                {
+                    "time": 0.0,
+                    "slot": "Q",
+                    "cast_id": "Q:1",
+                    "target_id": "target:0",
+                },
+            ),
+            control_events=(),
+            forced_basic_attacks=0,
+        )
+
+        assert _stacked_champion_proc_times(state, rotation, _eclipse_effect()) is None
+
+    def test_a_swing_row_total_no_arithmetic_made_withholds_the_item(self) -> None:
+        """The same stamp on the auto-attack row, which the gate reads on a
+        second path once the casts are walked."""
+        state = SimpleNamespace(
+            breakdown={"auto_attacks": {"total_damage": "600"}},
+            ability_damages={},
+            num_auto_attacks=1,
+            roster_target_index=0,
+            cast_order=[],
+            hail_attack_times=[0.5],
+            lethal_attack_times=[],
+            spellblade_attack_speed_percent=0.0,
+            spellblade_proc_times=(),
+        )
+        rotation = SimpleNamespace(
+            cast_events=(), control_events=(), forced_basic_attacks=0
+        )
+
+        assert _stacked_champion_proc_times(state, rotation, _eclipse_effect()) is None
+
     def test_missing_target_identity_has_named_denial(self) -> None:
         state = SimpleNamespace(
             breakdown={"Q": {"total_damage": 100.0}},

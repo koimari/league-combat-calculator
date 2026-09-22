@@ -10,7 +10,7 @@ from ...damage_event_row import event_precision
 from ...trigger_stream import applies_control
 from ..autos.swing_schedule import _auto_attack_timestamps
 from ..empower_declaration import _empower_hits
-from ..ledger.breakdown import source_total_damage
+from ..ledger.breakdown import source_total_damage, source_total_damage_is_malformed
 from ..ledger.event_rows import _finite_numeric_receipt, _item_proc_precision
 from ..results import RotationResult
 from ..rotation.shaped_charge import _next_authored_event
@@ -151,6 +151,8 @@ def _stacked_champion_proc_times(
         row = state.breakdown.get(slot)
         if not isinstance(row, Mapping):
             continue
+        if source_total_damage_is_malformed(row):
+            return None
         raw_damage = source_total_damage(row)
         if raw_damage is not None and math.isfinite(raw_damage) and raw_damage > 0.0:
             ability_info = state.ability_damages.get(slot)
@@ -364,28 +366,24 @@ def _stacked_champion_proc_times(
     if state.num_auto_attacks > 0 and len(swing_times) != state.num_auto_attacks:
         return None
     auto_row = state.breakdown.get("auto_attacks")
-    auto_damage = (
-        source_total_damage(auto_row) if isinstance(auto_row, Mapping) else None
-    )
-    if (
-        state.num_auto_attacks > 0
-        and auto_damage is not None
-        and math.isfinite(auto_damage)
-        and auto_damage > 0.0
-    ):
-        offset = len(triggers)
-        target_id = f"target:{state.roster_target_index}"
-        for index, time in enumerate(swing_times):
-            add_trigger(
-                _EclipseStackTrigger(
-                    time=time,
-                    phase=1,
-                    sequence=offset + index,
-                    precision="exact",
-                    target_id=target_id,
-                    application_id=f"auto:{index + 1}",
+    if state.num_auto_attacks > 0 and isinstance(auto_row, Mapping):
+        if source_total_damage_is_malformed(auto_row):
+            return None
+        auto_damage = source_total_damage(auto_row)
+        if auto_damage is not None and math.isfinite(auto_damage) and auto_damage > 0.0:
+            offset = len(triggers)
+            target_id = f"target:{state.roster_target_index}"
+            for index, time in enumerate(swing_times):
+                add_trigger(
+                    _EclipseStackTrigger(
+                        time=time,
+                        phase=1,
+                        sequence=offset + index,
+                        precision="exact",
+                        target_id=target_id,
+                        application_id=f"auto:{index + 1}",
+                    )
                 )
-            )
 
     triggers.sort(key=lambda row: (row.time, row.phase, row.sequence))
     # The stack/trigger timing is kernel-owned (state_lifecycle): the gate

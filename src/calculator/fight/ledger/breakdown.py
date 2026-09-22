@@ -38,8 +38,28 @@ def _is_auto_stream_key(key: str) -> bool:
 
 
 def source_total_damage(row: Mapping[str, Any]) -> float | None:
-    """The mitigated damage this source dealt; ``None`` from an informational row."""
+    """The mitigated damage this source dealt; ``None`` from an informational
+    row.  A stamp that is not a number is refused by name rather than
+    coerced: ``float(True)`` is ``1.0``, which would price a broken row at a
+    point of damage, and ``float("x")`` raises naming neither row nor key."""
+    if source_total_damage_is_malformed(row):
+        raise ValueError(
+            f"a breakdown row stamped total_damage={row['total_damage']!r}; "
+            "every fight step that prices a row computes that total "
+            f"arithmetically, so this row ({sorted(row)}) came from a "
+            "producer that broke"
+        )
     return optional_field(row, "total_damage", float)
+
+
+def source_total_damage_is_malformed(row: Mapping[str, Any]) -> bool:
+    """Whether the row stamped a total :func:`source_total_damage` refuses.
+    The question a caller that withholds its own item asks first, so a
+    producer break costs that item and not the whole request."""
+    if "total_damage" not in row:
+        return False
+    value = row["total_damage"]
+    return isinstance(value, bool) or not isinstance(value, (int, float))
 
 
 def source_damage_type(row: Mapping[str, Any]) -> str | None:
