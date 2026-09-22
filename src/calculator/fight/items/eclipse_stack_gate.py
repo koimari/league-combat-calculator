@@ -6,9 +6,11 @@ from dataclasses import dataclass
 from typing import Any, NamedTuple
 
 from ... import item_effects
+from ...damage_event_row import event_precision
 from ...trigger_stream import applies_control
 from ..autos.swing_schedule import _auto_attack_timestamps
 from ..empower_declaration import _empower_hits
+from ..ledger.breakdown import source_total_damage
 from ..ledger.event_rows import _finite_numeric_receipt, _item_proc_precision
 from ..results import RotationResult
 from ..rotation.shaped_charge import _next_authored_event
@@ -149,10 +151,8 @@ def _stacked_champion_proc_times(
         row = state.breakdown.get(slot)
         if not isinstance(row, Mapping):
             continue
-        raw_damage = row.get("total_damage", 0.0)
-        if isinstance(raw_damage, bool) or not isinstance(raw_damage, (int, float)):
-            return None
-        if math.isfinite(float(raw_damage)) and float(raw_damage) > 0.0:
+        raw_damage = source_total_damage(row)
+        if raw_damage is not None and math.isfinite(raw_damage) and raw_damage > 0.0:
             ability_info = state.ability_damages.get(slot)
             if isinstance(ability_info, Mapping) and (
                 ability_info.get("dot_duration") is not None
@@ -187,7 +187,9 @@ def _stacked_champion_proc_times(
                             forced_attack_events.append(
                                 (
                                     candidate_time,
-                                    str(candidate.get("event_precision", "exact")),
+                                    # A swing packet that states no precision
+                                    # is its own boundary: it IS the hit.
+                                    event_precision(candidate) or "exact",
                                     target_id,
                                     f"{cast_id}:forced:{len(forced_attack_events) + 1}",
                                 )
@@ -301,7 +303,10 @@ def _stacked_champion_proc_times(
             if not isinstance(slot, str):
                 return None
             row = state.breakdown.get(slot)
-            if not isinstance(row, Mapping) or float(row.get("total_damage", 0.0)) <= 0:
+            if not isinstance(row, Mapping):
+                continue
+            slot_priced = source_total_damage(row)
+            if slot_priced is None or slot_priced <= 0:
                 continue
             # A forced-attack row whose own ``basic_attack`` flag IS the
             # swing receipt (Jayce Hyper Charge, Blitzcrank Power Fist)
@@ -360,25 +365,27 @@ def _stacked_champion_proc_times(
         return None
     auto_row = state.breakdown.get("auto_attacks")
     auto_damage = (
-        auto_row.get("total_damage", 0.0) if isinstance(auto_row, Mapping) else 0.0
+        source_total_damage(auto_row) if isinstance(auto_row, Mapping) else None
     )
-    if state.num_auto_attacks > 0:
-        if isinstance(auto_damage, bool) or not isinstance(auto_damage, (int, float)):
-            return None
-        if math.isfinite(float(auto_damage)) and float(auto_damage) > 0.0:
-            offset = len(triggers)
-            target_id = f"target:{state.roster_target_index}"
-            for index, time in enumerate(swing_times):
-                add_trigger(
-                    _EclipseStackTrigger(
-                        time=time,
-                        phase=1,
-                        sequence=offset + index,
-                        precision="exact",
-                        target_id=target_id,
-                        application_id=f"auto:{index + 1}",
-                    )
+    if (
+        state.num_auto_attacks > 0
+        and auto_damage is not None
+        and math.isfinite(auto_damage)
+        and auto_damage > 0.0
+    ):
+        offset = len(triggers)
+        target_id = f"target:{state.roster_target_index}"
+        for index, time in enumerate(swing_times):
+            add_trigger(
+                _EclipseStackTrigger(
+                    time=time,
+                    phase=1,
+                    sequence=offset + index,
+                    precision="exact",
+                    target_id=target_id,
+                    application_id=f"auto:{index + 1}",
                 )
+            )
 
     triggers.sort(key=lambda row: (row.time, row.phase, row.sequence))
     # The stack/trigger timing is kernel-owned (state_lifecycle): the gate

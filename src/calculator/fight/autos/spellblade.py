@@ -10,6 +10,7 @@ from ...ability_spec import AttackClass
 # bare ``spellblade`` here would name the interpreter inside the step the
 # engine already calls spellblade.
 from ...survival.pricing import AuthoredDeclaration
+from ..ledger.breakdown import source_casts
 from ..ledger.event_rows import _damage_type_fields
 from ..resists import _mitigate, _resistance_met_fields
 from ..results import AutoAttackResult, OnHitResult, RotationResult, SpellbladeResult
@@ -239,7 +240,9 @@ def _add_spellblade_damage(
             ratio = ability_field(info, "spellblade_true_ratio")
             if ratio > 0:
                 converted_ratio = max(converted_ratio, ratio)
-                converted += state.breakdown.get(key, {}).get("casts", 0)
+                row = state.breakdown.get(key)
+                row_casts = None if row is None else source_casts(row)
+                converted += 0 if row_casts is None else row_casts
         converted = min(converted, result.procs)
         converted_per_proc = raw_sb * converted_ratio + result.damage_per_proc * (
             1.0 - converted_ratio

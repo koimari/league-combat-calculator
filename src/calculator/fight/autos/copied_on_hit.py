@@ -1,15 +1,26 @@
 """One on-hit application copied onto a second subject."""
 
 from collections.abc import Sequence
+from functools import partial
 from typing import Any
 
 from ...ability_spec import AttackClass
+from ...event_row_field import required_field
 from ...interpreters import secondary_target
 from ...survival.pricing import AuthoredDeclaration, BasicAttackSwing, RoutingProvenance
 from ..resists import _mitigate
 from ..results import OnHitResult, OnHitShare, RotationResult, SpellbladeResult
 from ..state import FightState, _damage_inputs
 from .decaying_health_walk import DecayingTarget
+
+#: One field of a copied chain packet. Both producers build it as one dict
+#: literal and fill its per-type shares in the same pass, so an absent field
+#: is that builder changed, never a packet that copied nothing.
+_copied_field = partial(
+    required_field,
+    kind="copied chain packet",
+    stamper="fight.items.secondary_delivery",
+)
 
 
 def _bolt_declaration(
@@ -248,12 +259,12 @@ def _add_copied_stacking_on_hit_packets(
                 prior_copied_damage = sum(
                     sum(
                         float(amount)
-                        for amount in candidate.get("packets", {}).values()
+                        for amount in _copied_field(candidate, "packets").values()
                         if isinstance(amount, (int, float))
                     )
                     for candidate in copied_events
                     if candidate is not event
-                    and float(candidate.get("time", 0.0)) <= swing_time + 1e-9
+                    and float(_copied_field(candidate, "time")) <= swing_time + 1e-9
                 )
                 target_current_health = max(
                     0.0,

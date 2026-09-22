@@ -7,6 +7,7 @@ from typing import Any
 
 from ...ability_atoms import ability_field
 from ...state_lifecycle import InstanceCadence
+from ..ledger.breakdown import source_total_damage
 from ..ledger.event_rows import (
     _CAST_TIME_RESOLUTION,
     _finite_numeric_receipt,
@@ -56,10 +57,8 @@ def _muramana_cast_receipt(
     # checked against below, which withheld the whole row.  Either fact
     # showing damage is a damaging cast; only both showing none is not.
     row = breakdown.get(slot)
-    priced = (
-        float(row.get("total_damage", 0.0) or 0.0) if isinstance(row, Mapping) else 0.0
-    )
-    if priced <= 0.0 and not any(
+    priced = source_total_damage(row) if isinstance(row, Mapping) else None
+    if (priced is None or priced <= 0.0) and not any(
         part.amount > 0.0 or part.hp_scaled_damage is not None for part in parts
     ):
         return _MuramanaCastReceipt(slot, 0.0, None, None, 0, None, "")

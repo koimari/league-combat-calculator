@@ -4,7 +4,9 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from ... import item_effects
+from ...damage_event_row import event_precision
 from ..autos.decaying_health_walk import DecayingTarget
+from ..ledger.breakdown import source_total_damage
 from ..ledger.event_rows import _finite_numeric_receipt, _row_time
 from ..resists import _mitigate
 from ..results import RotationResult
@@ -50,11 +52,11 @@ def _first_damaging_ability_event(
                     )
                     event_time = _finite_numeric_receipt(first.get("time"))
                     if event_time is not None:
-                        event_precision = str(
-                            first.get("event_precision", "cast_boundary")
-                        )
-                        return event_time, event_precision
-            if float(row.get("total_damage", 0.0) or 0.0) > 0.0:
+                        # A packet whose producer stated no precision is not
+                        # certified past its own ability's cast boundary.
+                        return event_time, event_precision(first) or "cast_boundary"
+            priced = source_total_damage(row)
+            if priced is not None and priced > 0.0:
                 return cast_time, "ability_cast_instance"
     return None
 

@@ -6,6 +6,7 @@ from typing import Any
 
 from ...ability_atoms import ability_field
 from ..cast_slots import slot_cast_start
+from ..ledger.breakdown import source_casts
 from ..resists import Resists, _resistance_met_fields
 from ..results import AutoAttackResult, OnHitResult
 from ..state import FightState, _damage_inputs
@@ -200,7 +201,9 @@ def _pay_scheduled_live_health_procs(
                 )
             )
         elif "proc_window" in on_hit_data:
-            if breakdown.get(ability_key, {}).get("casts", 0) < 1:
+            cast_row = breakdown.get(ability_key)
+            row_casts = None if cast_row is None else source_casts(cast_row)
+            if row_casts is None or row_casts < 1:
                 continue  # rider exists only after the ability is cast
             # The window opens at the slot's first cast (Master Yi E
             # after Q and W's cast times), and the triggering auto
