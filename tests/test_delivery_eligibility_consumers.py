@@ -554,7 +554,11 @@ class TestKernelStateWiring:
         class Combatant:
             participant_id = "enemy:Braum"
             level = 18
+            # A build stat block is what ``stats.calculate_total_stats``
+            # writes, so every name it stamps is present: the kernel reads
+            # ``health`` for the shield pools and refuses a block without it.
             stats = {
+                "health": 2000.0,
                 "armor": 50.0,
                 "magic_resistance": 40.0,
                 "bonus_armor": 0.0,
