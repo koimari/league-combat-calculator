@@ -30,6 +30,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from enum import Enum
 
 from .identity import PIdx
 
@@ -38,44 +39,41 @@ from .identity import PIdx
 # ---------------------------------------------------------------------------
 
 
-@dataclass(frozen=True, slots=True)
-class SelfOnly:
-    """The authoring participant, and nobody else."""
+class RouteScope(Enum):
+    """A route the context alone answers, carrying no payload of its own.
 
+    ``HOLDER`` is distinct from ``SELF_ONLY`` because an ally-authored
+    support packet's *author* and its *holder* are the same participant only
+    when the ally owns the effect; a shared aura is authored per subject.
 
-@dataclass(frozen=True, slots=True)
-class Holder:
-    """The participant holding the item or rune that authored the event.
+    ``PAIR_DEFENDER`` is the fail-closed answer for an unreviewed
+    crowd-control scope: one cone stun is delivered to the defender the
+    rotation was actually run against, which is a claim about one fight
+    rather than about the roster.
 
-    Distinct from :class:`SelfOnly` because an ally-authored support packet's
-    *author* and its *holder* are the same participant only when the ally is
-    the one who owns the effect; a shared aura is authored per subject.
+    ``TRIGGER_TARGET`` is the member that replaces the first-defender scan:
+    the subjects come from the trigger, so a mark that hit two enemies routes
+    to two enemies and a mark that hit one routes to one, instead of both
+    routing to roster slot zero because the scan stopped there.
+
+    ``ALL_OPPONENTS`` and ``ALL_ALLIES`` are the two members whose empty
+    answer is legal, an empty roster being the answer.
     """
 
-
-@dataclass(frozen=True, slots=True)
-class PairDefender:
-    """The single defender of the pair fight this event was priced in.
-
-    The fail-closed answer for an unreviewed crowd-control scope: one cone
-    stun is delivered to the defender the rotation was actually run against,
-    which is a claim about one fight rather than about the roster.
-    """
-
-
-@dataclass(frozen=True, slots=True)
-class AllOpponents:
-    """Every participant on the other side, empty roster included."""
-
-
-@dataclass(frozen=True, slots=True)
-class AllAllies:
-    """Every ally except the author."""
-
-
-@dataclass(frozen=True, slots=True)
-class SelfAndAllAllies:
-    """The author and every ally — the ordinary team-wide support shape."""
+    #: The authoring participant, and nobody else.
+    SELF_ONLY = "self_only"
+    #: The participant holding the item or rune that authored the event.
+    HOLDER = "holder"
+    #: The single defender of the pair fight this event was priced in.
+    PAIR_DEFENDER = "pair_defender"
+    #: Every participant on the other side, empty roster included.
+    ALL_OPPONENTS = "all_opponents"
+    #: Every ally except the author.
+    ALL_ALLIES = "all_allies"
+    #: The author and every ally, the ordinary team-wide support shape.
+    SELF_AND_ALL_ALLIES = "self_and_all_allies"
+    #: Whoever the triggering event reached.
+    TRIGGER_TARGET = "trigger_target"
 
 
 @dataclass(frozen=True, slots=True)
@@ -104,41 +102,15 @@ class ExplicitTargets:
     targets: tuple[PIdx, ...]
 
 
-@dataclass(frozen=True, slots=True)
-class TriggerTarget:
-    """Whoever the triggering event reached.
+RoutePolicy = RouteScope | OneAlly | SelfAndOneAlly | ExplicitTargets
 
-    The policy that replaces the first-defender scan: the subjects come from
-    the trigger, so a mark that hit two enemies routes to two enemies and a
-    mark that hit one routes to one — instead of both routing to roster slot
-    zero because the scan stopped there.
-    """
-
-
-RoutePolicy = (
-    SelfOnly
-    | Holder
-    | PairDefender
-    | AllOpponents
-    | AllAllies
-    | SelfAndAllAllies
-    | OneAlly
-    | SelfAndOneAlly
-    | ExplicitTargets
-    | TriggerTarget
-)
-
-ROUTE_POLICIES: tuple[type, ...] = (
-    SelfOnly,
-    Holder,
-    PairDefender,
-    AllOpponents,
-    AllAllies,
-    SelfAndAllAllies,
-    OneAlly,
-    SelfAndOneAlly,
-    ExplicitTargets,
-    TriggerTarget,
+#: Every member of the closed union, named. The seven scopes carry no
+#: payload and are enum members; the three that do are records.
+ROUTE_POLICIES: tuple[str, ...] = (
+    *(scope.name for scope in RouteScope),
+    OneAlly.__name__,
+    SelfAndOneAlly.__name__,
+    ExplicitTargets.__name__,
 )
 
 
@@ -175,9 +147,14 @@ class ResolvedRoute:
 # ---------------------------------------------------------------------------
 
 
+def _policy_name(policy: object) -> str:
+    """One policy's own name, whether it is a scope member or a record."""
+    return policy.name if isinstance(policy, RouteScope) else type(policy).__name__
+
+
 def unroutable_event(policy: RoutePolicy, reason: str) -> ValueError:
     """*policy* and the *reason* its context cannot answer it, both named."""
-    return ValueError(f"{type(policy).__name__} cannot be resolved: {reason}")
+    return ValueError(f"{_policy_name(policy)} cannot be resolved: {reason}")
 
 
 @dataclass(frozen=True, slots=True)
@@ -226,27 +203,21 @@ def resolve_route(  # pylint: disable=too-many-return-statements
     what makes this function total rather than merely long.
     """
     match policy:
-        case SelfOnly():
+        case RouteScope.SELF_ONLY:
             return _checked(policy, (ctx.author,), roster_size)
-        case Holder():
+        case RouteScope.HOLDER:
             return _checked(policy, (ctx.holder,), roster_size)
-        case PairDefender():
+        case RouteScope.PAIR_DEFENDER:
             if ctx.pair_defender is None:
                 raise unroutable_event(policy, "the context names no pair defender")
             return _checked(policy, (ctx.pair_defender,), roster_size)
-        case AllOpponents():
+        case RouteScope.ALL_OPPONENTS:
             return _checked(policy, ctx.opponents, roster_size)
-        case AllAllies():
+        case RouteScope.ALL_ALLIES:
             return _checked(policy, ctx.allies, roster_size)
-        case SelfAndAllAllies():
+        case RouteScope.SELF_AND_ALL_ALLIES:
             return _checked(policy, (ctx.author, *ctx.allies), roster_size)
-        case OneAlly():
-            return _checked(policy, (policy.ally,), roster_size)
-        case SelfAndOneAlly():
-            return _checked(policy, (ctx.author, policy.ally), roster_size)
-        case ExplicitTargets():
-            return _checked(policy, policy.targets, roster_size)
-        case TriggerTarget():
+        case RouteScope.TRIGGER_TARGET:
             if not ctx.trigger_subjects:
                 raise unroutable_event(
                     policy,
@@ -254,10 +225,16 @@ def resolve_route(  # pylint: disable=too-many-return-statements
                     "subject routes to no subject rather than to roster slot zero",
                 )
             return _checked(policy, ctx.trigger_subjects, roster_size)
+        case OneAlly():
+            return _checked(policy, (policy.ally,), roster_size)
+        case SelfAndOneAlly():
+            return _checked(policy, (ctx.author, policy.ally), roster_size)
+        case ExplicitTargets():
+            return _checked(policy, policy.targets, roster_size)
         case _:
             raise TypeError(
-                f"{type(policy).__name__} is not a RoutePolicy; the union is closed "
-                f"({', '.join(member.__name__ for member in ROUTE_POLICIES)})"
+                f"{_policy_name(policy)} is not a RoutePolicy; the union is closed "
+                f"({', '.join(ROUTE_POLICIES)})"
             )
 
 
@@ -272,20 +249,14 @@ def resolve(
 
 __all__ = [
     "ROUTE_POLICIES",
-    "AllAllies",
-    "AllOpponents",
     "ExplicitTargets",
-    "Holder",
     "OneAlly",
-    "PairDefender",
     "ResolvedRoute",
     "RouteAnnotation",
     "RouteContext",
     "RoutePolicy",
-    "SelfAndAllAllies",
+    "RouteScope",
     "SelfAndOneAlly",
-    "SelfOnly",
-    "TriggerTarget",
     "resolve",
     "resolve_route",
 ]

@@ -44,7 +44,7 @@ class SingleTarget:
     """One subject: the defender this cast's fight was actually resolved against.
 
     A claim about one fight rather than about the roster, which is why it
-    resolves to :class:`route.PairDefender` and not to an opponent scan.
+    resolves to :data:`route.RouteScope.PAIR_DEFENDER`, not an opponent scan.
     """
 
 
@@ -142,9 +142,9 @@ def scope_policy(scope: CcScope) -> route.RoutePolicy:
     """
     match scope:
         case SingleTarget():
-            return route.PairDefender()
+            return route.RouteScope.PAIR_DEFENDER
         case MultiTarget():
-            return route.AllOpponents()
+            return route.RouteScope.ALL_OPPONENTS
         case Unreviewed():
             raise ValueError(
                 f"{scope.ability} has an unreviewed crowd-control scope and "

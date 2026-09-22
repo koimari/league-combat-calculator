@@ -25,8 +25,13 @@ class TestTheVocabularyIsClosed:
 
     def test_scope_policy_is_total_over_the_registry(self):
         """Every reviewed member resolves; the unreviewed one raises."""
-        assert scope.scope_policy(scope.SingleTarget()) == route.PairDefender()
-        assert scope.scope_policy(scope.MultiTarget(cap=3)) == route.AllOpponents()
+        assert (
+            scope.scope_policy(scope.SingleTarget()) == route.RouteScope.PAIR_DEFENDER
+        )
+        assert (
+            scope.scope_policy(scope.MultiTarget(cap=3))
+            == route.RouteScope.ALL_OPPONENTS
+        )
         with pytest.raises(ValueError, match="unreviewed crowd-control scope"):
             scope.scope_policy(scope.Unreviewed(ability="Syndra E"))
 
@@ -50,7 +55,7 @@ class TestTheShippedDefault:
     def test_unreviewed_reads_as_single_target_on_the_pair_defender(self):
         reviewed, _ = scope.reviewed_scope(scope.Unreviewed(ability="Syndra E"))
         assert reviewed == scope.SingleTarget()
-        assert scope.scope_policy(reviewed) == route.PairDefender()
+        assert scope.scope_policy(reviewed) == route.RouteScope.PAIR_DEFENDER
 
     def test_the_default_arrives_with_a_disclosure_naming_the_ability(self):
         _, disclosures = scope.reviewed_scope(scope.Unreviewed(ability="Syndra E"))
@@ -90,7 +95,7 @@ class TestTheMarkRidesTheTrigger:
         )
         assert reached == (2,)
         marked = route.resolve_route(
-            route.TriggerTarget(),
+            route.RouteScope.TRIGGER_TARGET,
             route.RouteContext(author=0, holder=0, trigger_subjects=reached),
             roster_size=4,
         )
@@ -104,7 +109,7 @@ class TestTheMarkRidesTheTrigger:
         )
         assert reached == (2, 3)
         marked = route.resolve_route(
-            route.TriggerTarget(),
+            route.RouteScope.TRIGGER_TARGET,
             route.RouteContext(author=0, holder=0, trigger_subjects=reached),
             roster_size=4,
         )
@@ -113,7 +118,7 @@ class TestTheMarkRidesTheTrigger:
     def test_a_mark_whose_trigger_reached_nobody_routes_to_nobody(self):
         with pytest.raises(ValueError, match="cannot be resolved"):
             route.resolve_route(
-                route.TriggerTarget(),
+                route.RouteScope.TRIGGER_TARGET,
                 route.RouteContext(author=0, holder=0, trigger_subjects=()),
                 roster_size=4,
             )

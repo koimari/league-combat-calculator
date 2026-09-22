@@ -22,26 +22,26 @@ CTX = route.RouteContext(
 )
 
 
+POLICIES: tuple[route.RoutePolicy, ...] = (
+    *route.RouteScope,
+    route.OneAlly(1),
+    route.SelfAndOneAlly(1),
+    route.ExplicitTargets((1, 2)),
+)
+
+
 class TestResolutionIsTotal:
     """Every member of the closed union has a branch, and nothing else does."""
 
     def test_the_union_has_ten_members(self) -> None:
         assert len(route.ROUTE_POLICIES) == 10
+        assert len(POLICIES) == 10
 
-    @pytest.mark.parametrize("policy_type", route.ROUTE_POLICIES)
+    @pytest.mark.parametrize("policy", POLICIES)
     def test_every_policy_resolves_or_names_why_it_cannot(
-        self, policy_type: type
+        self, policy: route.RoutePolicy
     ) -> None:
         """No member falls through to a default — the failure mode being closed."""
-        policy = (
-            policy_type(1)
-            if policy_type in (route.OneAlly, route.SelfAndOneAlly)
-            else (
-                policy_type((1, 2))
-                if policy_type is route.ExplicitTargets
-                else policy_type()
-            )
-        )
         assert isinstance(route.resolve_route(policy, CTX, roster_size=ROSTER), tuple)
 
     def test_a_type_outside_the_union_raises(self) -> None:
@@ -55,16 +55,16 @@ class TestEachPolicyDeliversWhatItNames:
     @pytest.mark.parametrize(
         ("policy", "subjects"),
         [
-            (route.SelfOnly(), (0,)),
-            (route.Holder(), (0,)),
-            (route.PairDefender(), (3,)),
-            (route.AllOpponents(), (3, 4)),
-            (route.AllAllies(), (1, 2)),
-            (route.SelfAndAllAllies(), (0, 1, 2)),
+            (route.RouteScope.SELF_ONLY, (0,)),
+            (route.RouteScope.HOLDER, (0,)),
+            (route.RouteScope.PAIR_DEFENDER, (3,)),
+            (route.RouteScope.ALL_OPPONENTS, (3, 4)),
+            (route.RouteScope.ALL_ALLIES, (1, 2)),
+            (route.RouteScope.SELF_AND_ALL_ALLIES, (0, 1, 2)),
             (route.OneAlly(2), (2,)),
             (route.SelfAndOneAlly(2), (0, 2)),
             (route.ExplicitTargets((4,)), (4,)),
-            (route.TriggerTarget(), (3, 4)),
+            (route.RouteScope.TRIGGER_TARGET, (3, 4)),
         ],
     )
     def test_the_policy_delivers_its_subjects(
@@ -80,13 +80,15 @@ class TestFailClosed:
         """Never roster slot zero, which is what the deleted scan returned."""
         ctx = route.RouteContext(author=0, holder=0, trigger_subjects=())
         with pytest.raises(ValueError) as caught:
-            route.resolve_route(route.TriggerTarget(), ctx, roster_size=ROSTER)
+            route.resolve_route(
+                route.RouteScope.TRIGGER_TARGET, ctx, roster_size=ROSTER
+            )
         assert "roster slot zero" in str(caught.value)
 
     def test_a_pair_policy_with_no_pair_defender_raises(self) -> None:
         ctx = route.RouteContext(author=0, holder=0)
         with pytest.raises(ValueError, match="no pair defender"):
-            route.resolve_route(route.PairDefender(), ctx, roster_size=ROSTER)
+            route.resolve_route(route.RouteScope.PAIR_DEFENDER, ctx, roster_size=ROSTER)
 
     @pytest.mark.parametrize("slot", [-1, ROSTER, ROSTER + 3])
     def test_a_subject_outside_the_roster_raises(self, slot: int) -> None:
@@ -97,20 +99,25 @@ class TestFailClosed:
     def test_an_empty_opponent_roster_is_a_legal_empty_answer(self) -> None:
         """Emptiness is legal only where the policy's own docstring says so."""
         ctx = route.RouteContext(author=0, holder=0, opponents=())
-        assert route.resolve_route(route.AllOpponents(), ctx, roster_size=ROSTER) == ()
+        assert (
+            route.resolve_route(route.RouteScope.ALL_OPPONENTS, ctx, roster_size=ROSTER)
+            == ()
+        )
 
 
 class TestAnnotationsCannotRoute:
     """A disclosure qualifies a number; it never decides who receives one."""
 
     def test_an_annotation_has_no_resolution_branch(self) -> None:
-        assert route.RouteAnnotation not in route.ROUTE_POLICIES
+        assert "RouteAnnotation" not in route.ROUTE_POLICIES
 
     def test_annotations_ride_the_resolved_route(self) -> None:
         note = route.RouteAnnotation("aura_range", "assumes every enemy in range")
         ctx = route.RouteContext(
             author=0, holder=0, opponents=(3, 4), annotations=(note,)
         )
-        resolved = route.resolve(route.AllOpponents(), ctx, roster_size=ROSTER)
+        resolved = route.resolve(
+            route.RouteScope.ALL_OPPONENTS, ctx, roster_size=ROSTER
+        )
         assert resolved.subjects == (3, 4)
         assert resolved.annotations == (note,)

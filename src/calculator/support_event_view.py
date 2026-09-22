@@ -173,7 +173,7 @@ def _cc_mark_subjects(
     Two resolutions, in the order the decision is actually made.  The
     ability's reviewed :mod:`program.scope` says how wide the control is and
     therefore *who the trigger reached*; the mark then rides that trigger
-    through :class:`program.route.TriggerTarget`, which is what makes a mark
+    through :data:`program.route.RouteScope.TRIGGER_TARGET`, which makes a mark
     that hit one enemy route to one and a mark that hit two route to two,
     instead of both routing to roster slot zero.
 
@@ -202,7 +202,7 @@ def _cc_mark_subjects(
         scope_policy(scope), context, roster_size=len(all_actors)
     )
     marked = program_route.resolve_route(
-        program_route.TriggerTarget(),
+        program_route.RouteScope.TRIGGER_TARGET,
         replace(context, trigger_subjects=reached),
         roster_size=len(all_actors),
     )

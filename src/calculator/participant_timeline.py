@@ -631,7 +631,7 @@ def _routed_pair_defender_id(
     The caller supplies the defender — it is the pair the engine result
     actually came from, which the caller has in hand — and this resolves it
     through :func:`program.route.resolve_route` under
-    :class:`program.route.PairDefender`, so the subject is bounded against
+    :data:`program.route.RouteScope.PAIR_DEFENDER`, so it is bounded against
     the roster and an id the roster does not hold raises
     ``program.route.unroutable_event`` instead of quietly addressing
     somebody else's state.
@@ -653,11 +653,11 @@ def _routed_pair_defender_id(
     subject = slots.get(pair_defender_id)
     if subject is None:
         raise program_route.unroutable_event(
-            program_route.PairDefender(),
+            program_route.RouteScope.PAIR_DEFENDER,
             f"{pair_defender_id!r} is not a participant of this roster",
         )
     resolved = program_route.resolve_route(
-        program_route.PairDefender(),
+        program_route.RouteScope.PAIR_DEFENDER,
         program_route.RouteContext(
             author=subject, holder=subject, pair_defender=subject
         ),
