@@ -49,10 +49,12 @@ Ledger observation contract (the only adapter difference):
 
 from __future__ import annotations
 
+from ..event_row_field import build_stat_field, required_field
 from ..heal_event_row import healed_source
 import math
 from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
+from functools import partial
 from typing import Any, NamedTuple, Protocol
 
 from .. import shield_ledger, shield_pools
@@ -102,6 +104,18 @@ from .typed_action import ActionKind, LiveProbe, SurvivalAction
 #: applied revive can never disagree about who owns the window.
 _DEFAULT_REVIVE_SOURCE = "Guardian Angel (Rebirth)"
 
+#: One field of an entry this kernel itself armed into a participant state: a
+#: damage modifier, an on-hit magic bonus, a Ragnarok window, a downtime
+#: interval, a Guardian damage record. Every writer of each builds it as one
+#: dict literal in this module, so an absent field is that writer changed.
+#: A slot the state *declares* and a transition has not yet written is the
+#: other shape and is read with its own default, not through this.
+_armed_field = partial(
+    required_field,
+    kind="armed kernel state entry",
+    stamper="the transition in this module that armed it",
+)
+
 
 class SurvivalLedger(Protocol):
     """The observation adapter every walk drives.
@@ -141,6 +155,15 @@ class SurvivalLedger(Protocol):
     def schedule_heal(self, heal_event: dict[str, Any], recipient_id: str) -> None: ...
 
 
+#: One field of a cached item's Grievous Wounds profile, every one of which
+#: its producer builds as a single dict literal.
+_wound_profile_field = partial(
+    required_field,
+    kind="healing-reduction profile",
+    stamper="healing_reduction.healing_reduction_profiles",
+)
+
+
 def resolve_grievous(
     profiles: tuple[dict[str, Any], ...], damage_type: str
 ) -> tuple[float, float, tuple[str, ...]] | None:
@@ -154,14 +177,17 @@ def resolve_grievous(
     matching = matching_healing_reduction(profiles, damage_type) if profiles else ()
     if not matching:
         return None
-    strongest = min(matching, key=lambda profile: float(profile.get("factor", 1.0)))
+    strongest = min(
+        matching, key=lambda profile: float(_wound_profile_field(profile, "factor"))
+    )
     labels = tuple(
-        f"{profile.get('item', '')} · {profile.get('source', '')}"
+        f"{_wound_profile_field(profile, 'item')} · "
+        f"{_wound_profile_field(profile, 'source')}"
         for profile in matching
     )
     return (
-        float(strongest.get("factor", 1.0)),
-        float(strongest.get("duration", 0.0)),
+        float(_wound_profile_field(strongest, "factor")),
+        float(_wound_profile_field(strongest, "duration")),
         labels,
     )
 
@@ -193,7 +219,7 @@ def participant_pools(combatant: CombatantFacts) -> shield_pools.ShieldPools:
         getattr(combatant, "request", None), "current_health", None
     )
     return shield_pools.build_pools(
-        max(0.0, float(combatant.stats.get("health", 0.0))),
+        max(0.0, float(build_stat_field(combatant.stats, "health"))),
         starting_health=(
             None if starting_health is None else max(0.0, float(starting_health))
         ),
@@ -1114,7 +1140,9 @@ def trigger_defy(ctx: TransitionContext, target_id: str, event_time: float) -> N
         duration_value = max(0.0, float(defenses.defy_heal_duration))
         ticks = int(defenses.defy_heal_ticks)
         heal_ratio = max(0.0, float(defenses.defy_heal_bonus_ad_ratio))
-        bonus_ad = max(0.0, float(holder.stats.get("bonus_attack_damage", 0.0)))
+        bonus_ad = max(
+            0.0, float(build_stat_field(holder.stats, "bonus_attack_damage"))
+        )
         if duration_value <= 0.0 or ticks <= 0 or heal_ratio <= 0.0 or bonus_ad <= 0.0:
             continue
         total_heal = bonus_ad * heal_ratio
@@ -1428,8 +1456,8 @@ def _apply_revive(
         )
     for interval in reversed(state["action_downtime_intervals"]):
         if (
-            interval.get("kind") == "death"
-            and float(interval.get("end", 0.0)) >= ctx.duration - 1e-9
+            _armed_field(interval, "kind") == "death"
+            and float(_armed_field(interval, "end")) >= ctx.duration - 1e-9
         ):
             interval["end"] = float(action.time)
             break
@@ -1651,6 +1679,16 @@ def _guardian_skip(ctx: TransitionContext, action: SurvivalAction, reason: str) 
     ctx.ledger.skip(action, reason)
 
 
+#: One field of the Guardian candidate packet. Its one producer passes all
+#: nine into one `_reactive_candidate` call, and `_guardian_reactive` off the
+#: same call is what routes a packet here at all.
+_guardian_field = partial(
+    required_field,
+    kind="Guardian candidate packet",
+    stamper="participant_timeline._schedule_guardian_events",
+)
+
+
 def _apply_guardian_shield(
     ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
 ) -> bool:
@@ -1662,7 +1700,7 @@ def _apply_guardian_shield(
     the same shield to the other protected participant.
     """
     event = action.event or {}
-    owner_id = str(event.get("_guardian_owner_id", ""))
+    owner_id = str(_guardian_field(event, "_guardian_owner_id"))
     owner_index = ctx.index_of.get(owner_id)
     if owner_index is None:
         _guardian_skip(ctx, action, "guardian_owner_unavailable")
@@ -1672,7 +1710,7 @@ def _apply_guardian_shield(
         _guardian_skip(ctx, action, "guardian_owner_dead")
         return False
 
-    activation_id = str(event.get("_guardian_activation_id", ""))
+    activation_id = str(_guardian_field(event, "_guardian_activation_id"))
     if not activation_id:
         _guardian_skip(ctx, action, "guardian_activation_unavailable")
         return False
@@ -1687,16 +1725,18 @@ def _apply_guardian_shield(
         if action.time < owner_state["guardian_cooldown_until"] - 1e-9:
             _guardian_skip(ctx, action, "guardian_cooldown")
             return False
-        threshold = max(0.0, float(event.get("_guardian_threshold", 0.0) or 0.0))
+        threshold = max(0.0, float(_guardian_field(event, "_guardian_threshold")))
         current_damage = max(
-            0.0, float(event.get("_guardian_trigger_amount", 0.0) or 0.0)
+            0.0, float(_guardian_field(event, "_guardian_trigger_amount"))
         )
-        window = max(0.0, float(event.get("_guardian_window_seconds", 0.0) or 0.0))
+        window = max(0.0, float(_guardian_field(event, "_guardian_window_seconds")))
         cutoff = action.time - window
         prior_damage = sum(
-            float(record.get("amount", 0.0) or 0.0)
+            float(_armed_field(record, "amount"))
             for record in owner_state["guardian_damage_history"]
-            if cutoff - 1e-9 <= float(record.get("time", 0.0)) <= action.time + 1e-9
+            if cutoff - 1e-9
+            <= float(_armed_field(record, "time"))
+            <= action.time + 1e-9
         )
         target_pools = state["pools"]
         current_shields = sum(
@@ -1713,16 +1753,22 @@ def _apply_guardian_shield(
         pending = {
             "applied_targets": set(),
             "trigger_time": float(action.time),
-            "trigger_event_id": str(event.get("_guardian_trigger_event_id", "")),
+            "trigger_event_id": str(
+                _guardian_field(event, "_guardian_trigger_event_id")
+            ),
         }
         owner_state["guardian_pending_shields"][activation_id] = pending
-        cooldown = max(0.0, float(event.get("_guardian_cooldown_seconds", 0.0) or 0.0))
+        cooldown = max(0.0, float(_guardian_field(event, "_guardian_cooldown_seconds")))
         owner_state["guardian_cooldown_until"] = action.time + cooldown
         owner_state["guardian_trigger_events"].append(
             {
                 "time": round(float(action.time), 3),
-                "trigger_event_id": str(event.get("_guardian_trigger_event_id", "")),
-                "trigger_target": str(event.get("_guardian_trigger_target", "")),
+                "trigger_event_id": str(
+                    _guardian_field(event, "_guardian_trigger_event_id")
+                ),
+                "trigger_target": str(
+                    _guardian_field(event, "_guardian_trigger_target")
+                ),
                 "damage_window": round(prior_damage + current_damage, 6),
                 "threshold": round(threshold, 6),
                 "lethal": bool(lethal),
@@ -1756,7 +1802,9 @@ def _apply_guardian_shield(
         expires_at=round(expires_at, 3),
         guardian_triggered={
             "owner": owner_id,
-            "trigger_event_id": str(event.get("_guardian_trigger_event_id", "")),
+            "trigger_event_id": str(
+                _guardian_field(event, "_guardian_trigger_event_id")
+            ),
             "activation_id": activation_id,
             "cooldown_until": round(owner_state["guardian_cooldown_until"], 3),
         },
@@ -2178,7 +2226,7 @@ def _apply_cleanse(
     )
     state["crowd_control_intervals"] = kept_cc
     state["crowd_control_until"] = max(
-        (float(interval.get("end", 0.0) or 0.0) for interval in kept_cc),
+        (float(_armed_field(interval, "end")) for interval in kept_cc),
         default=0.0,
     )
     heal_entry = _cleanse_heal_entry(action, declaration)
@@ -2238,7 +2286,7 @@ def _cast_blocking_downtime(
     return [
         row
         for row in state["action_downtime_intervals"]
-        if str(row.get("kind", "")) in CAST_BLOCKING_CONTROL_KINDS
+        if str(_armed_field(row, "kind")) in CAST_BLOCKING_CONTROL_KINDS
         and interval_active(row, activation)
         and row not in state["crowd_control_intervals"]
     ]
@@ -3071,7 +3119,7 @@ def _apply_crowd_control(
         ragnarok
         and profile.blocking
         and not profile.unknown
-        and float(action.time) < float(ragnarok.get("until", 0.0))
+        and float(action.time) < float(_armed_field(ragnarok, "until"))
         and _hostile(ctx, action)
     ):
         blocked_row = {
@@ -3196,7 +3244,7 @@ def _modifier_applies(
     holder = modifier["holder"]
     if holder >= 0 and holder == action.attacker:
         return False
-    source_participant = str(modifier.get("source_participant", ""))
+    source_participant = str(_armed_field(modifier, "source_participant"))
     if source_participant and source_participant != source_id:
         return False
     if damage_class_of(action) not in modifier["damage_classes"]:
@@ -3218,7 +3266,7 @@ def _apply_cross_participant_modifiers(
     active_modifiers = [
         modifier
         for modifier in state["active_damage_modifiers"]
-        if float(modifier.get("until", 0.0)) > action.time
+        if float(_armed_field(modifier, "until")) > action.time
     ]
     state["active_damage_modifiers"] = active_modifiers
     # Resolved only when some armed modifier actually restricts its source.
@@ -3234,7 +3282,7 @@ def _apply_cross_participant_modifiers(
     for modifier in list(active_modifiers):
         if not _modifier_applies(modifier, action, source_id):
             continue
-        resistance_key = str(modifier.get("resistance_type", ""))
+        resistance_key = str(_armed_field(modifier, "resistance_type"))
         reduction_key = (
             "armor_reduction_percent"
             if resistance_key == "armor"
@@ -3284,7 +3332,9 @@ def _apply_cross_participant_modifiers(
             continue
         if modifier.get("damage_reduction"):
             before = max(0.0, amount)
-            reduction = min(before, max(0.0, float(modifier.get("reduction", 0.0))))
+            reduction = min(
+                before, max(0.0, float(_armed_field(modifier, "reduction")))
+            )
             amount = before - reduction
             ctx.ledger.write(
                 action,
@@ -3296,7 +3346,10 @@ def _apply_cross_participant_modifiers(
             if modifier.get("next_event_only"):
                 active_modifiers.remove(modifier)
         else:
-            factor = max(0.0, float(modifier.get("multiplier", 1.0) or 1.0))
+            # A zero multiplier is an unset one, the same reading
+            # `survival/compile.unrepresentable_modifier_receipt` takes.
+            declared = _armed_field(modifier, "multiplier")
+            factor = max(0.0, float(declared or 1.0))
             before = max(0.0, amount)
             amount = before * factor
             ctx.ledger.write(
@@ -3316,12 +3369,12 @@ def _apply_source_on_hit_magic(
     active_on_hit = [
         bonus
         for bonus in source_state["active_on_hit_magic"]
-        if float(bonus.get("until", 0.0)) > action.time
+        if float(_armed_field(bonus, "until")) > action.time
     ]
     source_state["active_on_hit_magic"] = active_on_hit
     if action.basic_attack or action.source_key == "auto_attacks" or action.is_ability:
         for bonus in list(active_on_hit):
-            raw_bonus = max(0.0, float(bonus.get("amount", 0.0) or 0.0))
+            raw_bonus = max(0.0, float(_armed_field(bonus, "amount")))
             if raw_bonus <= 0.0:
                 continue
             effective_mr = action.baseline_effective_mr or 0.0
