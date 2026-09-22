@@ -3244,7 +3244,10 @@ def _modifier_applies(
     holder = modifier["holder"]
     if holder >= 0 and holder == action.attacker:
         return False
-    source_participant = str(_armed_field(modifier, "source_participant"))
+    # Read the way the caller reads it two frames up, with one argument: a
+    # modifier that names no source restricts none, and the doubles in
+    # tests/test_modifier_classes.py declare none on purpose.
+    source_participant = modifier.get("source_participant")
     if source_participant and source_participant != source_id:
         return False
     if damage_class_of(action) not in modifier["damage_classes"]:
