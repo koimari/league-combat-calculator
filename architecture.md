@@ -177,7 +177,7 @@ Each owner above resolves to one file per idea. These are the leaves they hold:
 | `bis_candidates.py` | which items a BIS search ranks, for which subject, in which order |
 | `bis_objective.py` | what BIS optimises for, and how one candidate folds into that number |
 | `cast_order_overrides.py` | the champions whose cast order is asserted by hand, and the reason each one is |
-| `cast_edge_markers.py` | the parsed-text markers and slot corpus a cast edge or an AoE cap is read out of |
+| `cast_edge_markers.py` | the parsed-text markers and slot corpus a cast edge or an AoE cap is read out of, and `_EdgeScan`, the record its inference steps share |
 | `cast_edge_inference.py` | the twelve edge kinds inferred from a champion's own rows |
 | `cast_edge_resolution.py` | declared edges merged over inferred ones, and the topological order they admit |
 | `ability_dps_matrix.py` | the per-champion level-by-build DPS matrix, and the ability ranking read off it |

@@ -334,8 +334,8 @@ class _ConditionFan(NamedTuple):
 
     Three consume atoms are the same rule under three names, so they are one
     function over three rows rather than three near-identical bodies.
-    ``edge_kind`` is the edge the pairing emits — ``detonation_consume``
-    emits ``detonate`` — and ``verb``/``what`` are the two halves of its
+    ``edge_kind`` is the edge the pairing emits: ``detonation_consume``
+    emits ``detonate``.  ``verb`` and ``what`` are the two halves of its
     rationale sentence.
     """
 
