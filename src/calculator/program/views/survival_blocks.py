@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from ...event_row_field import optional_field
 from ..precision import round_field
 from ..walk import SurvivalFold
 from .leaf import LeafBlock
@@ -34,11 +35,14 @@ def _combat_state_blocks(
         round_field("force_of_nature.stacks_until", state["force_stacks_until"]),
     )
     inner.structure("events", list(state["force_stack_events"]))
+    # The two dynamic resist grants are written by the ramp that armed them,
+    # so a state where neither ramped carries neither key and the block
+    # publishes the zero that is the reading.
     inner.measured(
         "dynamic_bonus_magic_resistance",
         round_field(
             "force_of_nature.dynamic_bonus_magic_resistance",
-            float(state.get("dynamic_bonus_magic_resistance", 0.0) or 0.0),
+            optional_field(state, "dynamic_bonus_magic_resistance", float) or 0.0,
         ),
     )
     jaksho: dict[str, Any] = {}
@@ -50,14 +54,14 @@ def _combat_state_blocks(
         "dynamic_bonus_armor",
         round_field(
             "jaksho.dynamic_bonus_armor",
-            float(state.get("dynamic_bonus_armor", 0.0) or 0.0),
+            optional_field(state, "dynamic_bonus_armor", float) or 0.0,
         ),
     )
     inner.measured(
         "dynamic_bonus_magic_resistance",
         round_field(
             "jaksho.dynamic_bonus_magic_resistance",
-            float(state.get("dynamic_bonus_magic_resistance", 0.0) or 0.0),
+            optional_field(state, "dynamic_bonus_magic_resistance", float) or 0.0,
         ),
     )
 

@@ -146,7 +146,10 @@ root|program/sums.py
 root|program/tagged.py
 root|program/views/__init__.py
 root|program/views/breakdown.py
+root|program/views/dispositions.py
 root|program/views/leaf.py
+root|program/views/survival.py
+root|program/views/survival_blocks.py
 root|program/views/tdd.py
 root|program/views/view_tag.py
 root|public_response.py
@@ -211,7 +214,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|94
+er5-tail-ceiling|91
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1

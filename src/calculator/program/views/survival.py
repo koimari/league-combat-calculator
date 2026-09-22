@@ -325,10 +325,7 @@ def survival_leaves(
             "damage_deferral_fraction",
             round_field(
                 "damage_deferral_fraction",
-                float(
-                    getattr(combatants[index].defenses, "damage_deferral_fraction", 0.0)
-                    or 0.0
-                ),
+                float(combatants[index].defenses.damage_deferral_fraction),
             ),
         )
         leaf.measured(
@@ -364,15 +361,12 @@ def survival_leaves(
             # *absence* is the statement for every roster without one.
             leaf.measured(
                 "grey_health_stored",
-                round_field(
-                    "grey_health_stored", float(grey.get("grey_health_stored", 0.0))
-                ),
+                round_field("grey_health_stored", float(grey["grey_health_stored"])),
             )
             leaf.measured(
                 "grey_health_consumed",
                 round_field(
-                    "grey_health_consumed",
-                    float(grey.get("grey_health_consumed", 0.0)),
+                    "grey_health_consumed", float(grey["grey_health_consumed"])
                 ),
             )
             leaf.raw("grey_health_source", str(grey["source"]))

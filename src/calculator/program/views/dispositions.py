@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ...ability_spec import Disposition
+from ...event_row_field import optional_field
 from ...quantity import Measured, Quantity, StructuralZero, Withheld
 from .view_tag import UnrankableNumber, ViewTag
 
@@ -74,7 +75,7 @@ def published_quantity(
         raise UnrankableNumber(surface, "a number no entry names", [path]) from None
     disposition = entry.get("disposition")
     if disposition == Disposition.WITHHELD.value:
-        receipts = tuple(entry.get("receipts") or ())
+        receipts = optional_field(entry, "receipts", tuple) or ()
         if not receipts:
             # ``Withheld`` refuses a receiptless refusal at construction, and
             # that raise is a bare ``ValueError`` from the vocabulary leaf.
@@ -89,7 +90,7 @@ def published_quantity(
             )
         return Withheld(receipts=receipts)
     if disposition == Disposition.STRUCTURAL_ZERO.value:
-        reason = str(entry.get("reason") or "")
+        reason = optional_field(entry, "reason", str) or ""
         if not reason.strip():
             # The same door, one disposition over: a declared zero with no
             # declaration is an ordinary zero, and ``StructuralZero`` says so

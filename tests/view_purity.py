@@ -128,8 +128,12 @@ UNRESOLVED_ALLOWED = frozenset(
         "enumerate",
         "float",
         "get",
-        "getattr",
         "int",
+        # ``event_row_field.optional_field``'s caster, called through its own
+        # parameter, reached since the survival blocks and the dispositions
+        # reader stopped defaulting a row field with a literal.  Every caller
+        # passes ``float``, ``str``, ``list`` or ``tuple``, all of them here.
+        "read",
         "isinstance",
         "items",
         "len",
