@@ -1879,7 +1879,7 @@ def _classify_cc(row: Mapping[str, Any]) -> tuple[CcClass, str, bool]:
     "no control" and a stun at once is a semantics question this module does
     not rule.
     """
-    kind = str(row.get("cc_kind", "") or "").lower().strip()
+    kind = _text(row.get("cc_kind")).lower().strip()
     if kind and kind not in CC_KIND_VOCABULARY:
         raise ValueError(
             f"cc_kind {kind!r} is not in CC_KIND_VOCABULARY "
@@ -1896,6 +1896,10 @@ def _classify_cc(row: Mapping[str, Any]) -> tuple[CcClass, str, bool]:
     return (CcClass.NONE if kind else CcClass.UNREVIEWED), kind, reviewed
 
 
+# The three readings this bus gives a field its row did not stamp. A
+# result-list entry carries only what its own producer wrote, and
+# tests/test_trigger_stream.py drives four-key rows through here on purpose,
+# so none of the three may refuse one.
 def _float(value: Any) -> float:
     """A row field as a finite float, with an absent/garbage field as 0.0."""
     try:
@@ -1903,6 +1907,11 @@ def _float(value: Any) -> float:
     except (TypeError, ValueError):
         return 0.0
     return parsed if math.isfinite(parsed) else 0.0
+
+
+def _text(value: Any) -> str:
+    """A row field as text, with an absent or empty field as ``""``."""
+    return str(value or "")
 
 
 #: A Trigger's ``sequence`` for a row that authored none.  ``0`` is a real
@@ -1952,15 +1961,15 @@ def event_triggers(
     sequence = _sequence(row.get("sequence"))
     shared = {
         "time": _float(row.get("time")),
-        "source_key": str(row.get("source_key", "") or ""),
-        "event_id": str(row.get("_event_id", "") or ""),
-        "attacker_id": str(row.get("attacker", "") or ""),
-        "target_id": str(row.get("target", "") or ""),
+        "source_key": _text(row.get("source_key")),
+        "event_id": _text(row.get("_event_id")),
+        "attacker_id": _text(row.get("attacker")),
+        "target_id": _text(row.get("target")),
         "sequence": _NO_SEQUENCE if sequence is None else sequence,
-        "ability_instance": str(row.get("ability_instance", "") or ""),
+        "ability_instance": _text(row.get("ability_instance")),
         "damage": max(0.0, _float(row.get("damage"))),
         "raw_damage": max(0.0, _float(row.get("raw_damage"))),
-        "damage_type": str(row.get("damage_type", "") or ""),
+        "damage_type": _text(row.get("damage_type")),
         "is_ability": bool(row.get("is_ability")),
         "basic_attack": bool(row.get("basic_attack")),
         "reactive": bool(row.get("_reactive")),
@@ -1980,15 +1989,15 @@ def _takedown_trigger(row: Any) -> Trigger | None:
     """One explicit takedown receipt as a Trigger; never a kill inferred."""
     if not isinstance(row, Mapping):
         return None
-    if row.get("time") is None or not str(row.get("target", "") or ""):
+    if row.get("time") is None or not _text(row.get("target")):
         return None
     return Trigger(
         kind=TriggerKind.TAKEDOWN,
         time=_float(row.get("time")),
-        source_key=str(row.get("source_key", "") or ""),
-        event_id=str(row.get("_event_id", "") or ""),
-        attacker_id=str(row.get("attacker", "") or ""),
-        target_id=str(row.get("target", "") or ""),
+        source_key=_text(row.get("source_key")),
+        event_id=_text(row.get("_event_id")),
+        attacker_id=_text(row.get("attacker")),
+        target_id=_text(row.get("target")),
         sequence=_NO_SEQUENCE,
         ability_instance="",
         damage=0.0,
