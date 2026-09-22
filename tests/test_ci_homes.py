@@ -110,7 +110,7 @@ def test_the_image_runs_the_python_version_the_tests_run():
 def test_no_other_config_selects_an_interpreter_version():
     """A fifth home would drift silently; these spellings are how one starts."""
     selectors = re.compile(
-        r"python:\d+\.\d+|--python[= ]\d+\.\d+"
+        r"python:\d+\.\d+|--python[= ]\\?[\"']?\d+\.\d+"
         r"|^\s*(?:python-version|requires-python|target-version)\s*[:=]",
         re.MULTILINE,
     )
