@@ -197,7 +197,6 @@ from .support_event_view import resolve_knights_vow_tether
 from .survival import (
     EVENT_SLOTS,
     SUPPORT_RANK_KEY,
-    ActionKind,
     PlatingWindow,
     ReceiptLedger,
     RegenerationWindow,
@@ -217,7 +216,11 @@ from .survival import (
 from .survival import (
     resolve_grievous as _grievous_pack,
 )
-from .timeline.grey_health import _apply_grey_health, _grey_health_receipts
+from .timeline.grey_health import (
+    _apply_grey_health,
+    _grey_action_records,
+    _grey_health_receipts,
+)
 from .timeline.receipt import _compose_receipt
 from .timeline.records import (
     GreySubject,
@@ -3682,61 +3685,13 @@ def _score_with_search_context(
         str(champion_data.get("name", "")) in GREY_HEALTH_RULE_CHAMPIONS
         and enemy_actors
     ):
-        sig_actions = panel.sig.actions
-        # Auto-attack packets expose no ``raw_damage`` (the engine emits it
-        # only for authored ability hits), so the compiled rows carry a zero
-        # there; mirror the ordered ledger's ``raw_damage or damage``
-        # fallback so both paths price Mordekaiser's pre-mitigation term
-        # identically.
-        in_records = [
-            (
-                float(action.time),
-                float(action.amount),
-                (
-                    float(action.raw_damage)
-                    if float(action.raw_damage) > 0.0
-                    else float(action.amount)
-                ),
-            )
-            for action in sig_actions
-            if action.kind in (ActionKind.PLAIN_DAMAGE, ActionKind.DAMAGE)
-            and action.subject == 0
-            and float(action.time) <= duration
-        ]
-        in_records.extend(
-            (
-                float(action.time),
-                float(action.amount),
-                (
-                    float(action.raw_damage)
-                    if float(action.raw_damage) > 0.0
-                    else float(action.amount)
-                ),
-            )
-            for action in fresh.actions
-            if action.kind in (ActionKind.PLAIN_DAMAGE, ActionKind.DAMAGE)
-            and action.subject == 0
-            and float(action.time) <= duration
-        )
-        out_records = [
-            (
-                float(action.time),
-                float(action.amount),
-                (
-                    float(action.raw_damage)
-                    if float(action.raw_damage) > 0.0
-                    else float(action.amount)
-                ),
-            )
-            for action in fresh.actions
-            if action.kind in (ActionKind.PLAIN_DAMAGE, ActionKind.DAMAGE)
-            and action.attacker == 0
-            and float(action.time) <= duration
-        ]
+        in_records = _grey_action_records(panel.sig.actions, duration, taken=True)
+        in_records.extend(_grey_action_records(fresh.actions, duration, taken=True))
+        out_records = _grey_action_records(fresh.actions, duration, taken=False)
         main_cast_timeline = (
             list(result_cast_timeline(first_result)) if first_result is not None else []
         )
-        grey_heals, grey_shields, grey_summary = _grey_health_receipts(
+        receipts = _grey_health_receipts(
             str(champion_data.get("name", "")),
             champion_data,
             level,
@@ -3749,18 +3704,26 @@ def _score_with_search_context(
             ability_ranks=params.ability_ranks,
             champion_options=params.champion_options,
         )
-        for index, (heal_time, source, amount) in enumerate(grey_heals):
+        for index, heal in enumerate(receipts.heals):
             aidx = fresh.next_aidx
             fresh.next_aidx += 1
             fresh.actions.append(
-                grey_health_heal_action(heal_time, source, amount, index, aidx=aidx)
+                grey_health_heal_action(
+                    heal.time, heal.source, heal.amount, index, aidx=aidx
+                )
             )
-        for index, (grant_time, source, amount, window) in enumerate(grey_shields):
+        grey_summary = receipts.summary
+        for index, shield in enumerate(receipts.shields):
             aidx = fresh.next_aidx
             fresh.next_aidx += 1
             fresh.actions.append(
                 grey_health_shield_action(
-                    grant_time, source, amount, window, index=index, aidx=aidx
+                    shield.time,
+                    shield.source,
+                    shield.amount,
+                    shield.window,
+                    index=index,
+                    aidx=aidx,
                 )
             )
 

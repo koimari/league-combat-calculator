@@ -12,7 +12,13 @@ from ..champions.skill_orders import get_ability_rank
 from ..champions.slot_extract import extract_named
 from ..composed_event_row import row_damage, row_raw_damage, row_time
 from ..healing import GREY_HEALTH_RULE_CHAMPIONS
-from ..survival import SUPPORT_RANK_KEY, TransitionRank, action_key
+from ..survival import (
+    SUPPORT_RANK_KEY,
+    ActionKind,
+    SurvivalAction,
+    TransitionRank,
+    action_key,
+)
 from .grey_rates import (
     _LOCKE_W_AUTO_RECAST_SECONDS,
     _LOCKE_W_CONSUME_HEAL_RATIO,
@@ -41,7 +47,14 @@ from .grey_rates import (
     _press_thick_skin,
     _pyke_store_ratio,
 )
-from .records import GreySubject, Ledgers
+from .records import (
+    GreyDamage,
+    GreyHeal,
+    GreyReceipts,
+    GreyShield,
+    GreySubject,
+    Ledgers,
+)
 
 
 # pylint: disable=too-many-arguments
@@ -52,35 +65,26 @@ def _grey_health_receipts(
     level: int,
     stats: Mapping[str, float],
     *,
-    incoming: list[tuple[float, float, float]],
-    outgoing: Iterable[tuple[float, float, float]],
+    incoming: list[GreyDamage],
+    outgoing: Iterable[GreyDamage],
     cast_timeline: Iterable[Mapping[str, Any]],
     duration: float,
     enemy_count: int,
     ability_ranks: Mapping[str, int] | None = None,
     champion_options: Mapping[str, Any] | None = None,
-) -> tuple[
-    list[tuple[float, str, float]],
-    list[tuple[float, str, float, float]],
-    dict[str, float | str],
-]:
+) -> GreyReceipts:
     """Author the grey-health consumes for one grey-health main champion.
 
-    ``incoming``/``outgoing`` are ``(time, post_mitigation,
-    pre_mitigation)`` damage records for damage the main TAKES (its
-    defenders' pair packets) and DEALS within the fight window.  Returns
-    ``(consume_heals, consume_shields, summary)`` — a heal is ``(time,
-    source, amount)``, a shield adds its duration — and the summary
-    carries the ``grey_health_stored`` pool, the ``grey_health_consumed``
-    total, and a ``source`` label for the receipt.  The pool accumulates
+    ``incoming``/``outgoing`` are the damage the main TAKES (its defenders'
+    pair packets) and DEALS within the fight window.  The pool accumulates
     the sourced ratio of post-mitigation incoming damage (Mordekaiser also
     stores from pre-mitigation damage taken and from post-mitigation
     damage dealt), capped per champion.  Only Tahm Kench's E active pays a
     pool as a shield, and only when its option is on.
     """
     name = str(champion_name)
-    heals: list[tuple[float, str, float]] = []
-    shields: list[tuple[float, str, float, float]] = []
+    heals: list[GreyHeal] = []
+    shields: list[GreyShield] = []
 
     def _slot_rank(slot: str) -> int:
         if ability_ranks and slot in ability_ranks:
@@ -95,10 +99,10 @@ def _grey_health_receipts(
             _PYKE_P_STORE_FLAT_CAP + _PYKE_P_STORE_BONUS_AD_CAP_RATIO * bonus_ad,
             _PYKE_P_STORE_MAX_HEALTH_CAP_RATIO * max_health,
         )
-        pool = min(cap, ratio * sum(post for _t, post, _pre in incoming))
+        pool = min(cap, ratio * sum(row.post_mitigation for row in incoming))
         # Out-of-vision consume: vision is a boundary the 1v1 ledger does
         # not model, so the 100% heal is documented, not authored.
-        return (
+        return GreyReceipts(
             heals,
             shields,
             {
@@ -120,16 +124,16 @@ def _grey_health_receipts(
         consumed = 0.0
         for cast_time in w_casts:
             window = sum(
-                post
-                for event_time, post, _pre in incoming
-                if cast_time - _RENGAR_W_STORE_WINDOW_SECONDS <= event_time <= cast_time
+                row.post_mitigation
+                for row in incoming
+                if cast_time - _RENGAR_W_STORE_WINDOW_SECONDS <= row.time <= cast_time
             )
             amount = _RENGAR_W_STORE_RATIO * _RENGAR_W_CONSUME_HEAL_RATIO * window
             if amount > 0.0 and cast_time <= duration:
-                heals.append((cast_time, "Battle Roar (grey health)", amount))
+                heals.append(GreyHeal(cast_time, "Battle Roar (grey health)", amount))
                 consumed += amount
-        stored = _RENGAR_W_STORE_RATIO * sum(post for _t, post, _pre in incoming)
-        return (
+        stored = _RENGAR_W_STORE_RATIO * sum(row.post_mitigation for row in incoming)
+        return GreyReceipts(
             heals,
             shields,
             {
@@ -150,7 +154,7 @@ def _grey_health_receipts(
         ability = _grey_ability(champion_data, "E")
         pool = min(
             _TAHM_E_STORE_CAP_RATIO * max_health,
-            ratio * sum(post for _t, post, _pre in incoming),
+            ratio * sum(row.post_mitigation for row in incoming),
         )
         consumed = 0.0
         # The E ACTIVE, when the module's option turns it on: each press
@@ -160,22 +164,23 @@ def _grey_health_receipts(
         cooldown = _grey_cooldown(ability, e_rank, stats)
         if _declared_option(name, champion_options, TAHM_KENCH_GREY_SHIELD):
             banked, press_time = 0.0, None
-            for event_time, post, _pre in sorted(incoming):
-                if press_time is not None and event_time >= press_time:
+            for row in sorted(incoming):
+                if press_time is not None and row.time >= press_time:
                     banked = _press_thick_skin(shields, press_time, banked, duration)
                     last_press, press_time = press_time, press_time + cooldown
                 banked = min(
-                    _TAHM_E_STORE_CAP_RATIO * max_health, banked + ratio * post
+                    _TAHM_E_STORE_CAP_RATIO * max_health,
+                    banked + ratio * row.post_mitigation,
                 )
                 if press_time is None:
-                    press_time = event_time
+                    press_time = row.time
             if press_time is not None:
                 banked = _press_thick_skin(shields, press_time, banked, duration)
                 last_press = press_time
             residual = banked
             consumed = pool - residual
         if residual > 0.0 and incoming:
-            last_damage_time = max(event_time for event_time, _post, _pre in incoming)
+            last_damage_time = max(row.time for row in incoming)
             consume_time = last_damage_time + _TAHM_E_OUT_OF_COMBAT_SECONDS
             # "While Thick Skin is not on cooldown, and after 4 seconds
             # without taking damage": a press inside the window blocks the
@@ -185,9 +190,11 @@ def _grey_health_receipts(
                 restore = _grey_level_ratio(ability, "Max Health Damage", level)
                 amount = restore * residual
                 if amount > 0.0:
-                    heals.append((consume_time, "Thick Skin (grey health)", amount))
+                    heals.append(
+                        GreyHeal(consume_time, "Thick Skin (grey health)", amount)
+                    )
                     consumed += amount
-        return (
+        return GreyReceipts(
             heals,
             shields,
             {
@@ -210,10 +217,10 @@ def _grey_health_receipts(
         max_health = max(0.0, float(stats.get("health", 0.0) or 0.0))
         cap = _MORDE_W_STORE_CAP_RATIO * max_health
         dealt_total = _MORDE_W_STORE_DEALT_RATIO * sum(
-            post for _t, post, _pre in outgoing
+            row.post_mitigation for row in outgoing
         )
         taken_total = _MORDE_W_STORE_TAKEN_PRE_RATIO * sum(
-            pre for _t, _post, pre in incoming
+            row.pre_mitigation for row in incoming
         )
         pool = min(cap, dealt_total + taken_total)
         w_casts = sorted(
@@ -225,18 +232,20 @@ def _grey_health_receipts(
         if w_casts:
             w1_time = w_casts[0]
             dealt_up_to = _MORDE_W_STORE_DEALT_RATIO * sum(
-                post for event_time, post, _pre in outgoing if event_time <= w1_time
+                row.post_mitigation for row in outgoing if row.time <= w1_time
             )
             taken_up_to = _MORDE_W_STORE_TAKEN_PRE_RATIO * sum(
-                pre for event_time, _post, pre in incoming if event_time <= w1_time
+                row.pre_mitigation for row in incoming if row.time <= w1_time
             )
             shield_amount = min(cap, dealt_up_to + taken_up_to)
             recast_time = w1_time + _MORDE_W_RECAST_AVAILABLE_SECONDS
             amount = heal_ratio * shield_amount
             if amount > 0.0 and recast_time <= duration:
-                heals.append((recast_time, "Indestructible (grey health)", amount))
+                heals.append(
+                    GreyHeal(recast_time, "Indestructible (grey health)", amount)
+                )
                 consumed = amount
-        return (
+        return GreyReceipts(
             heals,
             shields,
             {
@@ -282,23 +291,25 @@ def _grey_health_receipts(
                 cap,
                 _LOCKE_W_STORE_RATIO
                 * sum(
-                    post
-                    for event_time, post, _pre in incoming
-                    if window_start <= event_time <= window_end
+                    row.post_mitigation
+                    for row in incoming
+                    if window_start <= row.time <= window_end
                 ),
             )
             consume_time = cast_time + _LOCKE_W_AUTO_RECAST_SECONDS
             amount = _LOCKE_W_CONSUME_HEAL_RATIO * stored
             if amount > 0.0 and consume_time <= duration:
-                heals.append((consume_time, "Soul Ignition (grey health)", amount))
+                heals.append(
+                    GreyHeal(consume_time, "Soul Ignition (grey health)", amount)
+                )
                 consumed += amount
-        return (
+        return GreyReceipts(
             heals,
             shields,
             {
                 "grey_health_stored": min(
                     cap,
-                    _LOCKE_W_STORE_RATIO * sum(post for _t, post, _pre in incoming),
+                    _LOCKE_W_STORE_RATIO * sum(row.post_mitigation for row in incoming),
                 ),
                 "grey_health_consumed": consumed,
                 "source": (
@@ -316,7 +327,7 @@ def _grey_health_receipts(
         # duo's damage sink; dismount at zero and the remount restore are a
         # revive-boundary pattern (like Aatrox's ghost atom) and are NOT
         # implemented.  No heal is authored; the module documents it.
-        return (
+        return GreyReceipts(
             heals,
             shields,
             {
@@ -329,7 +340,7 @@ def _grey_health_receipts(
                 ),
             },
         )
-    return (
+    return GreyReceipts(
         heals,
         shields,
         {
@@ -340,12 +351,37 @@ def _grey_health_receipts(
     )
 
 
-def _grey_damage_record(event: Mapping[str, Any]) -> tuple[float, float, float]:
-    """One ``(time, post_mitigation, pre_mitigation)`` record; a packet priced
-    with no pre-mitigation figure banks the post-mitigation one for both."""
+def _grey_damage_record(event: Mapping[str, Any]) -> GreyDamage:
+    """One banked packet, read off a priced event row."""
     damage = row_damage(event)
     raw = row_raw_damage(event)
-    return (row_time(event), damage, damage if raw is None else raw)
+    return GreyDamage(row_time(event), damage, damage if raw is None else raw)
+
+
+def _grey_action_records(
+    actions: Iterable[SurvivalAction], duration: float, *, taken: bool
+) -> list[GreyDamage]:
+    """The same packets, read off the compiled actions the score walk applies.
+
+    An auto-attack action carries no ``raw_damage`` (the engine stamps it
+    only for authored ability hits), so a zero there banks the
+    post-mitigation figure for both, the fallback the ordered ledger takes.
+    """
+    return [
+        GreyDamage(
+            float(action.time),
+            float(action.amount),
+            (
+                float(action.raw_damage)
+                if float(action.raw_damage) > 0.0
+                else float(action.amount)
+            ),
+        )
+        for action in actions
+        if action.kind in (ActionKind.PLAIN_DAMAGE, ActionKind.DAMAGE)
+        and (action.subject if taken else action.attacker) == 0
+        and float(action.time) <= duration
+    ]
 
 
 def _apply_grey_health(
@@ -372,7 +408,7 @@ def _apply_grey_health(
     main_outgoing = [
         event for event in ledgers.outgoing["main"] if row_time(event) <= duration
     ]
-    grey_heals, grey_shields, grey_summary = _grey_health_receipts(
+    receipts = _grey_health_receipts(
         main_name,
         subject.champion_data,
         subject.level,
@@ -385,10 +421,11 @@ def _apply_grey_health(
         ability_ranks=params.ability_ranks,
         champion_options=params.champion_options,
     )
-    for index, (heal_time, source, amount) in enumerate(grey_heals):
+    for index, heal in enumerate(receipts.heals):
+        source = heal.source
         heal_event: dict[str, Any] = {
-            "time": float(heal_time),
-            "amount": float(amount),
+            "time": float(heal.time),
+            "amount": float(heal.amount),
             "source": source,
             "kind": "champion_ability",
             "attacker": "main",
@@ -396,7 +433,7 @@ def _apply_grey_health(
             "_grey_health": True,
         }
         heal_event["_sk"] = action_key(
-            float(heal_time),
+            float(heal.time),
             TransitionRank.RECOVERY,
             "main",
             heal_event,
@@ -404,22 +441,22 @@ def _apply_grey_health(
         ledgers.healing["main"].append(heal_event)
     ledgers.support_effects["main"].extend(
         {
-            "time": float(grant_time),
+            "time": float(shield.time),
             "kind": "shield",
-            "amount": float(amount),
-            "duration": float(window),
-            "source": source,
-            "source_key": source,
+            "amount": float(shield.amount),
+            "duration": float(shield.window),
+            "source": shield.source,
+            "source_key": shield.source,
             "attacker": "main",
             "target": "main",
             "target_scope": "self",
             "target_policy": "self",
-            "_event_id": f"main:grey:{source}:shield:{index}",
+            "_event_id": f"main:grey:{shield.source}:shield:{index}",
             # Grey health is banked by damage already taken, so the
             # barrier this press raises arms after it.
             SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,
         }
-        for index, (grant_time, source, amount, window) in enumerate(grey_shields)
+        for index, shield in enumerate(receipts.shields)
     )
     for taken, events in ((True, main_incoming), (False, main_outgoing)):
         for event in events:
@@ -434,4 +471,4 @@ def _apply_grey_health(
             )
             if receipt is not None and receipt > 0.0:
                 event["grey_health_stored"] = round(receipt, 6)
-    return grey_summary
+    return receipts.summary

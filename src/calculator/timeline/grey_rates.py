@@ -10,6 +10,7 @@ from ..champions.inputs import declared_option_defaults
 from ..champions.skill_orders import get_ability_rank
 from ..champions.slot_extract import extract_cooldown
 from ..composed_event_row import row_damage, row_raw_damage
+from .records import GreyShield
 
 # ─────────────────────────────────────────────────────────────────────────
 # Grey-health primitive (E8a)
@@ -225,7 +226,7 @@ def _grey_cooldown(
 
 
 def _press_thick_skin(
-    shields: list[tuple[float, str, float, float]],
+    shields: list[GreyShield],
     press_time: float,
     banked: float,
     duration: float,
@@ -238,7 +239,7 @@ def _press_thick_skin(
     if banked <= 0.0 or press_time > duration:
         return banked
     shields.append(
-        (
+        GreyShield(
             press_time,
             "Thick Skin (grey health)",
             banked,

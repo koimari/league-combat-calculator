@@ -114,6 +114,47 @@ class GreySubject(NamedTuple):
     enemy_count: int
 
 
+class GreyDamage(NamedTuple):
+    """One packet the grey pool banks from, on both sides of mitigation.
+
+    A packet priced with no pre-mitigation figure banks the post-mitigation
+    one for both, so ``pre_mitigation`` is never below ``post_mitigation``.
+    """
+
+    time: float
+    post_mitigation: float
+    pre_mitigation: float
+
+
+class GreyHeal(NamedTuple):
+    """One grey-health consume, paid back as a heal."""
+
+    time: float
+    source: str
+    amount: float
+
+
+class GreyShield(NamedTuple):
+    """One grey-health consume paid as a shield, with the seconds it holds."""
+
+    time: float
+    source: str
+    amount: float
+    window: float
+
+
+class GreyReceipts(NamedTuple):
+    """What one champion's grey pool paid out, and the summary it publishes.
+
+    ``summary`` carries the ``grey_health_stored`` pool, the
+    ``grey_health_consumed`` total, and a ``source`` label for the receipt.
+    """
+
+    heals: list[GreyHeal]
+    shields: list[GreyShield]
+    summary: dict[str, float | str]
+
+
 class Walked(NamedTuple):
     """What the survival walk hands the published receipt."""
 
