@@ -1031,7 +1031,7 @@ CC_KIND_READERS = {
 _KEY_ARGUMENT = {"get": 0} | {
     name: [*inspect.signature(reader).parameters].index("field")
     for name, reader in vars(event_row_field).items()
-    if inspect.isfunction(reader) and "field" in inspect.signature(reader).parameters
+    if callable(reader) and "field" in inspect.signature(reader).parameters
 }
 
 
