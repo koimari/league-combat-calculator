@@ -11,27 +11,25 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   `--jobs=4` on pylint.
 - **A test that mutates shared state races the CI's `pytest -n auto` workers, and
   only there.** A gate needing a dirty world builds it in `tmp_path`, scan roots
-  being parameters (`zero_policy_frontier(root=...)`). A gate needing a clean
-  world `monkeypatch`es every member of its table, derived from the table, not a
-  hand-listed subset. Never `.clear()` a process-wide cache; `cold_memo` lends a
-  cold one.
+  being parameters. A gate needing a clean world `monkeypatch`es every member of
+  its table, derived from the table, not a hand-listed subset. Never `.clear()` a
+  process-wide cache; `cold_memo` lends a cold one.
 - **A test that leaves `src.app` state changed decides it for every later test on
   the same xdist worker**, as whole-file cascades green serially and on rerun. The
   autouse `_process_state_is_given_back` fails the test that moved a surface
   `tests/process_state.py` names. Borrow shared config through
   `tests/app_config.py` or `monkeypatch.setitem`: `config.get(key)` cannot tell
-  absent from `None`, so a hand-rolled restore deletes a `None`-valued key and
-  Flask's read of `PROPAGATE_EXCEPTIONS` raises.
+  absent from `None`, so a hand restore deletes a `None`-valued key and Flask's
+  read of `PROPAGATE_EXCEPTIONS` raises.
 - **A full-suite run is untrustworthy while another process edits `src/`.** A test
   reading a module's source off disk sees new bytes while the import holds the old
   module, so phantom failures appear and vanish on re-run. Gate after every writer
-  stops, or against a `git archive HEAD` copy, the safe way to read the branch
-  base from a worktree.
+  stops, or against a `git archive HEAD` copy.
 - **CI's pylint gate is a score (`--fail-under=9`), so an undefined name passes it
   at 9.70.** `--fail-on=E0601,E0602,E0102` fails on those families whatever the
-  score. The 13 other E-class messages are false: `E0401` vendor-path imports,
-  `E1101` on a NamedTuple `_replace` and on `re.Pattern[str].search`. Read the
-  output for `: E[0-9]`, never the score.
+  score. The other E-class messages are false, `E0401` vendor-path imports and
+  `E1101` on a NamedTuple `_replace`. Read the output for `: E[0-9]`, never the
+  score.
 - **A bare `# pylint: disable=` at column 0 is a module-scope block disable running
   to end of file**, not a decoration on the next `def`, so dropping one token can
   surface messages in every later function. Measure with
@@ -43,16 +41,12 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   `@ability_slot` decorates is never called by name.
 - **Parallel workers pass alone and fail together.** A helper one adds meets the
   rules another owns only after the merge, and one calls positionally a helper
-  another made keyword-only. Re-run the suite before trusting a worker's zero.
-- **`pull_request` CI never runs while the PR is CONFLICTING.** GitHub cannot
-  build the merge ref, so a PR behind `main` shows only Vercel checks. Catch up
-  with `main` first, then read CI.
+  another made keyword-only. Re-run the suite before trusting a zero.
 - **A tracked-data guard is armed by its own test, and by any bare glob.**
   `tracked_data_lint.Readers.in_tree` harvests `tests/`, so a receipt name in a
-  fixture makes the guard cover it: generate absent names with `uuid4`. A glob
-  counts as a reader only where it pins past the suffix (`names_a_family`), a
-  docstring mention not at all. Read tracked files with `git ls-files`, never
-  `rglob`, which races a scratch file under xdist.
+  fixture makes the guard cover it: generate absent names with `uuid4`. Read
+  tracked files with `git ls-files`, never `rglob`, which races a scratch file
+  under xdist.
 - **A codemod over `tests/test_*.py` eats the file you just wrote the new tests
   into**, and one walking its own home wrote an import of itself into itself.
   Refuse the destination by name, and stage the hand-written change first so
@@ -63,102 +57,106 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   `test_<module>.py` or `test_<module>_*.py`.
 - **A test that reads source text, not behaviour, breaks on a rewrite that
   changes nothing.** A phrase matched in a module's `__doc__` with a plain `in`
-  fails once the rewrite rewraps it, and `test_champion_options.py` and
-  `test_derived_champion_options.py` grep a module's source for an option key's
-  literal, so typing that key turns them red. Keep a cited phrase on one line, and
-  teach both scans the name.
+  fails once a rewrite rewraps it, and `test_champion_options.py` and
+  `test_derived_champion_options.py` grep a module's source for an option key
+  literal, so typing that key reds them. Keep a cited phrase on one line.
 - **A whole-row equality pin is an encoded home that a grep for the field name
   cannot find.** The closer is an AST scan of `tests/` for a dict literal inside a
   `Compare` carrying a `key` and a `label` entry. Re-run it whenever an OPTIONS
   field moves.
 - **A pytest `-p` plugin proves what collection would otherwise hide**, loading
   before collection imports the test module, so it can wrap the callee or stub an
-  absent resource's probe. Filter `at 0x[0-9A-Fa-f]+` out of any digest. Read a
-  live refusal message that way rather than guessing it: a `match=` pattern is a
-  regex, so an unescaped version number is a new RUF043, and on a `KeyError`
-  `match` runs against the message's repr, where an anchored `^` never fires.
+  absent resource's probe. Read a live refusal message that way: a `match=` pattern
+  is a regex, so an unescaped version number is a new RUF043, and on a `KeyError`
+  it runs against the message repr, where an anchored `^` never fires.
 - **Deleting a test breaks two distant pins.** `tests/test_coverage_claims.py`
-  names real pytest node ids as fixtures, and retiring a file can strand its
-  module on `test_architecture.FRONT_DOOR_FRONTIER`, which asserts set equality
-  both ways. Run both after any deletion, and give a module a real front door when
-  a script already reads it.
-- **A guard reached through a requested fixture is reached**, so
-  `scripts/resource_markers.py` follows both edges where a call-graph-only scan
-  left 14 node-guarded tests unmarked. Its other silent pass was
+  names real pytest node ids as fixtures, and retiring a file can strand its module
+  on `test_architecture.FRONT_DOOR_FRONTIER`, which asserts set equality both ways.
+  Run both after any deletion.
+- **A test can be invalidated by a change naming none of its symbols.**
+  `tests/test_er5_tail_triage.py` gates a receipt whose contents are a tree scan,
+  so no grep over `tests/` for a touched symbol, module stem or pinned string
+  reaches it. Run every `--check` and every regenerator after the last commit, not
+  a selection derived from the diff.
+- **A guard reached through a requested fixture is reached**, so a call-graph-only
+  scan left 14 node-guarded tests unmarked. Its other silent pass was
   `any(path.glob(pattern) for path in dirs)`, true because a generator is truthy.
-- **A gate's name and docstring are not evidence that its body pins anything, and
-  a lint claiming a published set has to be measured against the runtime, never
-  against its own walk.** `prose_lint`'s assumption rule keyed on the binding
-  shape `ASSUMPTIONS = ...`, so it missed `extend`, `+=` and two shared tuples,
-  capped 566 strings that publish nothing, and printed zero with 343 published
-  strings over the cap. Import the module, read the attribute, and diff the reader
-  against it.
+- **A lint's green is evidence only against what it actually walks.**
+  `prose_lint`'s assumption rule keyed on a binding shape and printed zero with 343
+  published strings over the cap, so measure a claimed set against the runtime:
+  import the module, read the attribute, diff the reader against it. Ask the same
+  of scopes and exemptions. An `EVIDENCE` hatch scoped to the LINE excused every
+  rule on that line, and `issue #N` filed under the tense rule was invisible in the
+  one scope that rule skips, so 101 sites sat under a green gate. Classify a token
+  by what ANSWERS it: a citation is answered by stating the fact, `pointer`'s
+  remedy, not by rewriting a tense.
 - **`scripts/literal_defaults_baseline.txt` has no regenerator and keys each row
   by the enclosing function and its occurrence count**, so a rename inside a
   covered function turns the gate red and retiring two of four sites under one row
   leaves it stale. It is LF here: read with `newline=""`.
   `tests/test_literal_defaults.py` names every row to drop.
 - **An exception class no `except` names can still be load-bearing, and a deleted
-  type check is a deleted refusal.** `@app.errorhandler(E)` dispatches on the
-  type, a factory raises one through a variable so an `ast.Raise` scan counts
-  zero, a receipt writes `type(error).__name__`, and an `error_code` reaches the
-  API body. Folding two classes widens every test that pinned either, so a
-  surviving pin matches the message, not the type. Dropping `typed_payload` left
-  four interpreters answering a foreign rule with `AttributeError`, red only in
-  the concept-named `tests/test_interpreter_refusals.py` that no per-module
-  selection reaches. A table pinned by identity (`INTERPRETERS[key] is <fn>`)
-  cannot take a guard wrapper: the proof goes inside the stored callable.
+  type check is a deleted refusal.** `@app.errorhandler(E)` dispatches on the type,
+  a factory raises one through a variable so an `ast.Raise` scan counts zero, and
+  an `error_code` reaches the API body. Folding two classes widens every test that
+  pinned either, so a surviving pin matches the message, not the type. Dropping
+  `typed_payload` left four interpreters answering a foreign rule with
+  `AttributeError`, red only in `tests/test_interpreter_refusals.py`, which no
+  per-module selection reaches. A table pinned by identity cannot take a guard
+  wrapper: the proof goes inside the stored callable.
 - **A reference count cannot tell slop from a load-bearing symbol, and a re-grep
   skipping `scripts/` misses a live caller**: cutting
   `patch_identity.client_patch` left `scripts/patch_update.py` unable to import.
   Check every `ImportFrom` under `src/`, `tests/` and `scripts/` against the names
-  the diff removes. A revert switch holding one value, a Protocol unrelated
-  dataclasses satisfy, a disambiguating alias and a gate-read index all read as
-  dead: count the reason.
+  the diff removes. A revert switch on one value, a Protocol unrelated dataclasses
+  satisfy, a disambiguating alias and a gate-read index all read as dead: count the
+  reason.
 
 ## Goldens and receipts
 
 - **Two zeros move the coupled golden with no number changing.**
   `LeafWriter.publish` gives a `float` leaf a disposition entry and an `int` leaf
   none, so `sum()` over an empty generator and over one `0.0` term publish
-  different leaf sets: keep the membership filter and the value read separate.
-  `public_response` skips a row with no damage, no amount and no `detail`, so a
-  `detail` on a zero row makes it appear.
+  different leaf sets: keep the membership filter and the value read apart.
+  `public_response` skips a row with no damage, amount or `detail`.
 - **Two key orders are numeric, one is not.** Compiled slot order is Q,W,E,R,P
   while `REQUIRED_CHAMPION_SLOTS` is P,Q,W,E,R, and the ledger replays insertion
   order for float sums, so reordering either is a numeric change. A breakdown
   entry's own key order is replayed nowhere, but `src/app.py` sets
   `json.sort_keys = False`, so a published dict's key order is the API's bytes:
-  rebuild a receipt in receipt order, never by appending aliases. A JSON-safe copy
-  recurses into mappings, which group terms, and copies sequences, which are
-  values (Bard's tuple `stock_tiers`).
+  rebuild a receipt in receipt order, never by appending aliases.
 - **A replaced reader applying a cap the old one skipped can move a golden by one
   ULP even when the two formulas are algebraically equal**, since
   `min(5 * (a + b), 5a + 5b)` is not bit-identical in float. Check the arithmetic
   before assuming a re-enabled clamp is free.
 - **`scripts/golden_coupled_exact.json` is not a `golden_snapshot.py compare`
   target.** `tests/test_golden_snapshot.py` consumes it through `rebuild_for`, so
-  the compare CLI reports about 11 diffs on a green tree, including on `main`. The
-  pinned targets are `golden_baseline.json` and `golden_coupled_baseline.json`.
+  the compare CLI reports about 11 diffs on a green tree. The pinned targets are
+  `golden_baseline.json` and `golden_coupled_baseline.json`.
 - **A pure refactor leaves `git diff` on receipts empty, and two regenerators only
   re-stamp provenance.** `repin_corpus` and
-  `capture_coverage_classification.py capture` rewrite `sha` and `git_head` with
-  no value change. Revert those two rather than committing a stamp.
-  `golden_snapshot.py capture` refuses outright while `src/` differs from HEAD,
-  since the recorded `src_tree_sha` would name a tree it did not read, so a
-  behaviour fix is two commits.
+  `capture_coverage_classification.py capture` rewrite `sha` and `git_head` with no
+  value change: revert those rather than commit a stamp. `golden_snapshot.py
+  capture` refuses outright while `src/` differs from HEAD, so a behaviour fix is
+  two commits.
 - **A field read with a literal default is the rule-5 failure shape, inside a
   raise message too.** `program/compile` reading a published raw as
   `row.get("raw_damage", 0.0)` held 172 coupled-golden raw leaves at zero, and
   `scripts/literal_defaults.py` counts one in a message like one on a live path.
   Read the stamp or refuse.
+- **Both rule-5 scanners resolve only a LITERAL key, so a dispatch table can
+  conceal a site instead of retiring it.** `result.get("damage_events", [])` became
+  `result.get(key, [])` when eight arms folded into one keyed table, and the
+  receipt fell by one with the default still live: measure a codemod against the
+  receipt, not against the site count its own blindness produces.
+  `literal_defaults.py` also labels a licensing bucket nondeterministically, so
+  diff two trees with the bucket stripped.
 - **An assumption string is published, classified and pinned, so its wording is
   data**, as is a `note` inside a receipt. `certainty.classify_assumption` scans
   substrings, so `assumed` carries the ESTIMATE marker `assum` and a reword empties
   that module's class set. A packet module's text has three homes and only
-  `assumption_overrides=` is its own; `static/reviewed-packets.json` moves 76
-  `PACKET_SHA256` pins. Where one constant feeds an assumption and a golden-pinned
-  `detail` (Mel's execute boundary), split the assumption, never the constant.
+  `assumption_overrides=` is its own. Where one constant feeds an assumption and a
+  golden-pinned `detail`, split the assumption, never the constant.
 - **A cached-data defect is escalated to a receipt, never hand-edited away**,
   because `data/` has one writer and the next pull reverts the edit.
   `docs/receipts/escalated-defects-cached-data.json` holds the open entries and
@@ -166,14 +164,11 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 - **Three gates pin a name, so moving what they name turns them red.**
   `receipt_walk_schedule.py` resolves Amendment P by the dotted strings
   `program.events.Defer` and `Execute`, so `program/events.py` keeps `RIDER_KINDS`
-  and the rider classes. `behavior_frontier.py` pins counter-2 exclusions by
-  symbol per module, so drop the row and regenerate with `--write`; it also diffs
-  the tree against its committed receipt both ways, so a debt that FALLS reds
-  `--check`, and the branch that retires the sites owns the `--write`. Measure a
-  base by scanning a `git archive <sha> src` copy through `scan(root=...)`, never
-  by running the gate in a worktree against the shared receipt.
-  `docs/receipts/er5-tail-triage.json` counts `x.get(key, literal)` sites under
-  `src/`, regenerated by `python scripts/tail_site_triage.py write`.
+  and the rider classes. `behavior_frontier.py` pins counter-2 exclusions by symbol
+  per module, and diffs the tree against its receipt both ways, so a debt that
+  FALLS reds `--check` and the branch retiring the sites owns the `--write`.
+  Measure a base by scanning a `git archive <sha> src` copy through
+  `scan(root=...)`, never in a worktree against the shared receipt.
 
 ## Engine and pricing
 
@@ -194,10 +189,6 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   It is not a drop-in for a `random.random` patch forcing a crit COUNT: that
   branch blends crit and non-crit at expected value and sets `natural_crit` False,
   so `num_crits` is 0 and a crit-only rider publishes no row.
-- **A section-numbered citation into an append-only log is a second home for every
-  number it quotes, and it drifts silently.** One was stale in two of its six
-  Eclipse number groups against `item_effects.py`, with no way for the test naming
-  it as source of truth to notice. Cite the accessor key.
 - **A reader placed before the schedule installers calls
   `_restore_stream_attack_timestamps`, never `_auto_attack_timestamps`.** At that
   point the hail and lethal attack times are empty and the spellblade speedup is
@@ -213,28 +204,24 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 - **Which writer produced a file decides its newlines on this CRLF tree.**
   `sed -i` in Git-Bash strips CRLF, so a bulk edit goes through a byte-preserving
   script: read with `newline=""`, write with `newline="\r\n"`, and assert
-  `b.replace(b"\r\n", b"").count(b"\n") == 0`. `Path.write_text`
-  re-emits `\n` as `\r\n`; a rewriter opening with `newline=""` and the Write tool
-  both write LF. Commit that and let `autocrlf` normalize.
+  `b.replace(b"\r\n", b"").count(b"\n") == 0`. A rewriter opening with `newline=""`
+  and the Write tool both write LF: commit that and let `autocrlf` normalize.
 - **A bad path in a pytest argument list is silent.** A written file list reaches
-  `xargs pytest` as `tests/x.py\r`, reported as "file or directory not found", so
-  pipe through `tr -d '\r'`, and a `"\n".join(...)` list joins an appended path to
-  its last entry. With one bad path `pytest -n 4` prints "no tests ran" and names
-  none: check the collected count against the file count.
+  `xargs pytest` as `tests/x.py\r`, so pipe through `tr -d '\r'`, and a
+  `"\n".join(...)` list joins an appended path to its last entry. With one bad path
+  `pytest -n 4` prints "no tests ran" and names none: check the collected count
+  against the file count.
 - **A parameters-to-record codemod turns `del <param>` into `del ctx.<field>`**,
   which raises `FrozenInstanceError` at runtime and is invisible to `ast.parse`,
   black and pylint. Scan for `ast.Delete` over every rewritten function; where
   `del` only silenced `unused-argument` the statement goes.
 - **Codemod bites around `ast` and black.** `ast` ends a parenthesized implicit
-  concatenation inside the parentheses, and `end_col_offset` is a UTF-8 BYTE
-  offset, so splice on the encoded line before the call's own closing bracket. An
-  inserted import lands inside a `from .x import (` block unless you skip to its
-  closing paren, and `extract_modules` writes imports in its own order, so
-  `ruff check --select I001 --fix` every file it wrote. Deleting a span leaves the
-  wrong blank-line count around a module-level `def`, and an empty class when it
-  takes the last method: run `black -q` and re-parse after each. Black keeps a
-  magic trailing comma, so emit `from .x import a, b, c` on one line, and it
-  cannot join a concatenation. Count declarations, not lines.
+  concatenation inside the parens and `end_col_offset` is a UTF-8 BYTE offset, so
+  splice on the encoded line before the call's closing bracket. An inserted import
+  lands inside a `from .x import (` block unless you skip to its closing paren, and
+  `extract_modules` writes its own order, so `ruff check --select I001 --fix` every
+  file it wrote. A deleted span leaves the wrong blank-line count around a
+  module-level `def`: `black -q` and re-parse after each.
 - **`ruff check --fix --select I001` over a directory also sorts pre-existing
   unsorted blocks in files the pass never touched**, and import order is numeric
   here, so revert those. The tree is not at zero on I001, so judge a branch by the
@@ -247,20 +234,34 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   `<<'PY'` heredoc reaches Python as a backslash and the letter n, so an
   exact-string match finds nothing. Build such strings from `chr(92)` and
   `chr(10)`, and assert the match count.
+- **A rebase over code that moved is silent in both directions.** Git offers the
+  pre-split body as the incoming hunk, so taking the parked side resurrects the
+  dead original at the old home, and an edit whose target moved merges cleanly into
+  the surrounding lines and lands nowhere, which no branch-to-branch diff shows.
+  Resolve per hunk at the new home, then re-run the OWNING GATE over the merged
+  tree, the only thing that sees a dropped edit.
+  `git merge-tree --write-tree --name-only <base> <branch>` prints the squashed
+  conflict list in seconds; the per-commit stop count is higher, which is normal.
+- **`black --check` passes over the docstring its own re-indent mangled.** A
+  parenthetical cut from the START of a wrapped sentence leaves a line holding a
+  bare `.` or opening `: `, and `fix_docstring` re-bases the whole body deeper, an
+  RST block quote. After a deletional codemod over docstrings, probe every one in
+  the touched files for a body line indented past the opening quote, or matching
+  `^[,.;:!?)]\s`; strip exactly one `#` first, or a Sphinx `#:` comment reports 200
+  false positives. Better, make the codemod refuse the line it would orphan.
 - **Two cached-data quirks the vendored parser owns.** A Windows filename cannot
   hold a colon, so `data_updater.py` monkey-patches `download_soup` to strip them,
-  and the local copy patches the `nvalues=None` crash on Heimerdinger, Sona,
-  Karma and Nidalee.
+  and the local copy patches the `nvalues=None` crash on Heimerdinger, Sona, Karma
+  and Nidalee.
 - **Parallel sessions share one `.git`, and their worktrees live under
   `.claude/worktrees/`.** Anything that `rglob`s the checkout, such as
   `behavior_frontier.scan()`, sees every worker's copy, so index from the `src/`,
   `tests/`, `scripts/` and `docs/` roots, and verify `git merge-base` against the
   intended base. `git checkout -- <dir>` discards another session's edits and
   `git stash` is one stack across worktrees, so detach onto the base commit
-  instead. Take a held branch with `git checkout --ignore-other-worktrees` and
-  move its ref with
+  instead. Move a held branch's ref with
   `git update-ref refs/heads/<name> <new> <old>`, a compare-and-swap `git branch -f`
-  refuses. Here `git rm skill.md` also removes `SKILL.md`.
+  refuses.
 - **`sorted()` over `Path` folds case on Windows.** Two receipts sorting
   differently on Linux and Windows gave `declared_exact_moves` a
   platform-dependent winner. Sort on `path.name` or an explicit key wherever order
@@ -268,22 +269,20 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 - **`data/atoms/manifest.json` `source_ref` digests hash LF bytes.** The corpus is
   generated on Linux and this checkout is CRLF, so a test hashing
   `path.read_bytes()` raw disagrees here and agrees on CI: hash with `\r\n`
-  normalized to `\n`. The CommunityDragon bins under `data/bin/characters` are
-  tracked, so the champions domain resolves locally; regenerate `data/atoms` on
-  Linux only.
+  normalized to `\n`, and regenerate `data/atoms` on Linux only.
 - **The simply-elegant hooks measure against the main checkout, not your
   worktree.** Per-file `pyproject.toml` exemptions resolve there, so an edit under
   `.claude/worktrees/<name>/` reports them as errors, and the file-length hook
   reports growth on an edit that shrinks the file. It also blocks any addition to
   a file past the 500-line cap: put the new thing in the small sibling that owns
-  the idea, or give lines back in the same edit. Confirm a hit with
-  `lint_gate.py --tree .` from the worktree and add no marker.
-- **A Bash task that times out and is moved to the background re-runs its whole
-  command when it resumes.** A one-shot patch script left on disk ran again an
-  hour later and clobbered `static/js/scoreboard.js`, so edit with the Edit tool
-  or an exact-string script deleted right after. A `re.S` regex over an optional
-  docblock is the same trap in one step, swallowing the file from its first
-  docblock to the target.
+  the idea, give lines back in the same edit, or where neither is possible, a
+  residue docstring being in the residue by definition, take the hit. Confirm a hit
+  with `lint_gate.py --tree .` from the worktree and add no marker.
+- **A Bash task that times out and moves to the background re-runs its whole
+  command when it resumes.** A one-shot patch script left on disk ran again an hour
+  later and clobbered `static/js/scoreboard.js`, so edit with the Edit tool or an
+  exact-string script deleted right after. A `re.S` regex over an optional docblock
+  is the same trap in one step.
 - **Three ruff autofixes bite on this tree.** F401 strips an accidental re-export
   (`healing_helpers` over three `slotlib` functions 33 modules read as
   `_healing.x`) and a test's front-door import the architecture test counts.
@@ -297,61 +296,66 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   class never had.
 - **Sightline counts move in both directions after a record or leaf extraction,
   with no duplication added.** #14 counts typed signatures only, so extracting
-  `SlotCtx` typed a 13-function clump and took the anchor from
-  `slot_extract.extract_named`; #55 reports a six-positional signature once its
-  siblings stop sharing the shape; #2 reads the parameter's annotation, so a guard
-  copied from an `object`-taking sibling is a finding. Dissolve them on the record.
+  `SlotCtx` typed a 13-function clump and moved the anchor; #55 reports a
+  six-positional signature once its siblings stop sharing the shape; #2 reads the
+  parameter's annotation, so a guard copied from an `object`-taking sibling is a
+  finding. Dissolve them on the record.
 - **Sightline #11 normalizes names and literals and has a floor of five
   statements**, the length of a uniform dispatch prologue, so a wrapper differing
-  only in its regex is still a clone and `ctx.damage_events, ctx.cast_timeline`
-  crossed the floor where the bare names did not. A record, a `partial` binding or
-  returning a comprehension instead of extending a list dissolves a group where
-  one shared helper does not. The plugin's ruff wants `x.get("k") or ()` (FURB110)
-  where the rule-5 lint reads an or-default: bind first, then iterate.
+  only in its regex is still a clone. A record, a `partial` binding or returning a
+  comprehension instead of extending a list dissolves a group where one shared
+  helper does not. The plugin's ruff wants `x.get("k") or ()` (FURB110) where the
+  rule-5 lint reads an or-default: bind first, then iterate.
 - **A codemod that writes files with Python bypasses the per-edit hook entirely**,
   and `sightline gate . --files` skips the repo-scope rules, so a cross-file #11
   and a per-function #35 pass every edit gate. Only `--full` sees them, so run it
-  per commit rather than once at the end. One added import can be the whole
-  finding: `champions/heimerdinger.py` at nine internal imports goes to ten and
-  #27 fires, so a new leaf goes into one its readers already import.
+  per commit. One added import can be the whole finding, nine internal imports
+  going to ten under #27, so a new leaf goes into one its readers already import.
+- **Both tree lints resolve config and suppressions against what is on disk, so a
+  count quoted in a doc is not a base.** Run ruff and `sightline gate . --full` on
+  a `git archive <base>` copy and on the branch, and diff the ROW LISTS, file plus
+  rule, never the totals. Archive the whole tree: a `src`-only copy raises three
+  extra `#56 referenced only by tests`.
 - **Two prose gates, one per language.** `comment_lint.lint_prose` reads every
   changed `.md` whole, banning em dashes, task markers and history phrases outside
   fenced blocks and `prose-ok` lines, so one edit to a file carrying the debt
-  clears that whole file, and most tracked markdown still carries them.
-  `scripts/prose_lint.py` caps a
-  docstring at its function's body span, uncapped on a class, so shrinking a body
-  fails an untouched docstring, and it scans itself.
+  clears that whole file. `scripts/prose_lint.py` caps a docstring at its
+  function's body span, uncapped on a class, so shrinking a body fails an untouched
+  docstring, and it scans itself.
 - **The worktree isolation guard refuses any Bash command whose git use it cannot
   statically prove stays inside the worktree.** Heredocs, `git ... | xargs`, brace
-  groups, `$(...)` arithmetic, a redirect on `git show` and a `python -c` naming
-  git in a data literal all read as too complex. Use plain single commands, short
-  `python -c` one-liners and `git commit -F <path>`.
+  groups, a redirect on `git show` and a `python -c` naming git in a data literal
+  all read as too complex. Use plain single commands and `git commit -F <path>`.
 - **MSYS2 paths are not Windows paths.** `/tmp/x` and `/proc/meminfo` cannot be
   opened by Windows python, and MSYS2's `/proc/meminfo` carries no `MemAvailable`,
-  so read memory with `psutil.virtual_memory()`. A scan rooted at a Git-Bash
-  `/tmp` path resolves
-  against the current drive and reports every counter zero rather than failing,
-  so take temp paths from `tempfile.gettempdir()`.
+  so read memory with `psutil.virtual_memory()`. A scan rooted at a Git-Bash `/tmp`
+  path resolves against the current drive and reports every counter zero rather
+  than failing: take temp paths from `tempfile.gettempdir()`.
 - **Dependabot's docker ecosystem does not resolve `FROM ${ARG}`.** An ARG-defined
   base image silently stops receiving digest and security bumps, and Dependabot
   closes its own update PRs against it (dependabot-core#10190). Keep the pin on a
   literal `FROM image:tag@sha256:...`.
 - **`scripts/extract_modules.py` check mode refuses a checked-in assignment
-  record**, reporting "not a unit of" the source because the split already landed.
-  The records are review evidence, never a replay input.
-- **A split moves what the tree says about a module, not just its code.**
-  `tests/coverage_resolver.resolve_packet_source` reads the SOURCE of the module a
+  record**, reporting "not a unit of" the source because the split landed. The
+  records are review evidence, never a replay input.
+- **A split or rename moves what the tree SAYS about a module, not only its code,
+  and its blast radius is not the files its diff touches.**
+  `tests/coverage_resolver.resolve_packet_source` reads the source of the module a
   claim names, so a moved `_packet(source=...)` reds the claim unless
-  `trigger_stream.CAPABILITIES[...].impl` moves with it; an autouse
-  `monkeypatch.setattr(<module>, ...)` names an object no repointer follows, so
-  grep it before splitting; and the er5 tail ceiling counts uncovered MODULES, so
-  a six-way split raises it with no debt added.
-- **A rename's blast radius is not the files its diff touches.** A
-  `monkeypatch.setattr(module, "oldname", ...)` and an attribute read sit in files
-  the diff never opens, so sweep `.<oldname>` and `"<oldname>"` over `src/`,
-  `tests/` and `scripts/`. Dropping an alias's underscore can rebind it to another
-  module's same name: `_coalesce_darius_q_heals` collided with the `survival`
-  function the module imports plainly.
+  `trigger_stream.CAPABILITIES[...].impl` moves with it. An autouse
+  `monkeypatch.setattr(module, "oldname", ...)` and a plain attribute read sit in
+  files no diff opens, so sweep `.<oldname>` and `"<oldname>"` over `src/`,
+  `tests/` and `scripts/` first. Dropping an alias's underscore can rebind it to
+  another module's same name.
+- **A split leaf inherits its parent's `.get(key, literal)` reads and loses their
+  credit.** `tail_site_triage` calls a site TOLERANCE_CONTRACT when a
+  `tests/test_*.py` naming malformed or withheld imports the READING module, so 29
+  reads moved out from under the 22 tests covering `participant_timeline` and
+  turned CANDIDATE. Pay that with a contract test in the leaf's own suite, imported
+  as `from src.calculator.<pkg>.<module> import X`, the one form its scan resolves.
+  The er5 tail ceiling counts uncovered MODULES, so a split raises it with no debt
+  added.
+
 ## Frontend and vision
 
 - **Two V8 deoptimizations live in `fingerprint`'s pixel loop.** An expando
@@ -366,13 +370,11 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   header `page.wait_for_function` needs a function, `"() => ..."`.
 - **The scoreboard reader is tuned at 24 to 36 px portraits (`PORTRAIT.min`).** A
   480p frame puts portraits at about 18px and `scoreboard_corpus.py scan` reads
-  nothing, so scan the 1080p stream; `readScoreboard` resamples a larger anchor to
-  `PORTRAIT.typical`. A read that misses rows in one browser and not another is
-  the input's scale: rescale through `scoreboard_corpus.py read` rather than
-  chasing color management.
-- **`yt-dlp --download-sections` stalls on YouTube DASH streams here**, writing
-  nothing for minutes. Download the whole stream once and cut frames with
-  `scoreboard_corpus.py grab`.
+  nothing, so scan the 1080p stream. A read that misses rows in one browser and not
+  another is the input's scale: rescale through `scoreboard_corpus.py read` rather
+  than chasing color management.
+- **`yt-dlp --download-sections` stalls on YouTube DASH streams here.** Download
+  the whole stream once and cut frames with `scoreboard_corpus.py grab`.
 - **The page carries two escapers over three consumer files.**
   `static/js/scoreboard.js` calls `escapeHtml` and defines it nowhere, resolving
   `app.js`'s top-level `const` through the classic-script global scope, so it gets
@@ -397,7 +399,7 @@ champion it bit.
   resolver cannot attribute them. Aurelion Sol Q, Bard P, Heimerdinger W and E,
   K'Sante W, Quinn P, Vladimir E, Yasuo and Yone Q3, Zeri P emit the
   `FAILURE TO PARSE MODIFIER` spam during a pull. Each needs a champion module for
-  its mechanic, which is where the fix belongs.
+  its mechanic.
 - **`CachedSentence.match` searches each effect description separately and returns
   the first hit**, where a joining reader can match across two and an indexing one
   pins which effect answers. Probe every conversion, printing per effect what
@@ -408,12 +410,11 @@ champion it bit.
   writes "of Taric's maximum health", costing nothing only because the ceiling
   equals five per-charge heals. A green golden proves a fix moved nothing, never
   that the reader was reading.
-- **A module constant equal to a cached number is a second home for it.** Read
-  the cache instead, through `extract_cast_time` for a cast time. A published
-  option `state` receipt is built at import and cannot read the cache, so it
-  declares the SOURCE by name (`first_time_source`), not the value.
-  `extract_cast_time` reads only the first segment of a scaled `castTime`, so a
-  two-part sentence stays a literal quoting it.
+- **A module constant equal to a cached number is a second home for it.** Read the
+  cache instead, through `extract_cast_time` for a cast time. A published option
+  `state` receipt is built at import and cannot read the cache, so it declares the
+  SOURCE by name, not the value. `extract_cast_time` reads only the first segment
+  of a scaled `castTime`, so a two-part sentence stays a literal quoting it.
 - **Six OPTIONS rows have no source site**, because `packet_parsers._variant_slot`
   generates `{slot}_variant` for Nidalee, Rek'Sai, Rell, Skarner and Swain. Build
   an option census from `get_champion_module_contract(name).options`, never from
@@ -446,11 +447,10 @@ champion it bit.
   swap reaches `data/atoms/v2/naafiri.atoms.v2.json` too.
 - **A summarized fetch of a rendered champion page garbles progression tables and
   invents rules.** Bard's meep tiers came back invented against the game's 1 to 9
-  meeps at 0/10/30/50/65/80/90/95/100, and Cassiopeia's page returned a "cannot
-  buy boots" restriction it does not state. Fetch
+  meeps at 0/10/30/50/65/80/90/95/100, and Cassiopeia's page returned a "cannot buy
+  boots" restriction it does not state. Fetch
   `Template:Data_<Champion>/<Ability>?action=raw` and read its
-  `{{pp|values|breakpoints}}` calls verbatim. Numbers cross-check against the
-  champion JSON and rules do not, so a fetched rule needs the game file.
+  `{{pp|values|breakpoints}}` calls verbatim. A fetched rule needs the game file.
 - **The wiki's item-interaction notes are hypotheses, not ground truth.** Azir's
   soldier attacks apply spellblade, Energized and Kraken at 50%, and Sundered Sky
   not at all, against a note claiming Energized "stacks but is not consumed".
@@ -500,16 +500,15 @@ champion it bit.
 - **An empowered swing belongs on the ability's row in every fight mode.**
   `damage.py::_reattribute_empowered_swings` moves
   `casts x hits x auto_damage_per_hit` onto the ability row, so
-  `breakdown["auto_attacks"]["count"]` means plain attacks and a reader wanting
-  the true attack count adds the empowering abilities' `casts x hits` back.
-  On-hit, proc and stacking-DoT rows are deliberately left alone.
+  `breakdown["auto_attacks"]["count"]` means plain attacks and a reader wanting the
+  true attack count adds the empowering abilities' `casts x hits` back. On-hit,
+  proc and stacking-DoT rows are left alone.
 - **An empowered attack that REPLACES the swing rides `auto_attack_conversion`,
   never an added damage row.** Pricing Sylas P's 130% AD + 30% AP as a bonus row
   invents roughly one auto per swing and mitigates the real swing against armor
-  instead of magic resistance. The module supplies the remainder,
-  `bonus_raw = 1.30 x AD + 0.30 x AP - AD`; a ratio at or above 100% AD is the
-  tell.
-- **A recast has the same cast count as its parent** (Ambessa Q2).
+  instead of magic resistance. The module supplies the remainder; a ratio at or
+  above 100% AD is the tell.
+- **A recast has the same cast count as its parent.**
 - **Any ability whose damage keeps ticking after the cast declares
   `dot_duration`**, its tick tail in seconds, or item burns end early (Cassiopeia
   Q and W against Blackfire Torch). A zone DoT uses the same duration its damage
@@ -541,13 +540,12 @@ champion it bit.
   E, Malignance) must reach negative resistance, where `raw x 100 / (100 + R)`
   amplifies, so floor at `min(0.0, input)`. Percent reduction must skip an
   already-negative resistance, since multiplying a negative by `(1 - pct)` gives
-  resistance back. Route every `* (1 -` and `max(..., 0)` on a resistance through
-  the shared helper.
+  resistance back. Route both through the shared helper.
 - **An ability that applies on-hit effects must apply ITEM on-hits**, and share
   ONE hit sequence with the autos so counter-gated items advance and fire from
   either source, at the effectiveness of the hit that landed the Nth stack
   (Bel'Veth Q and E). An item's trigger class is the registry's `counter_trigger`
-  key, which owns the closed On-Attacking list.
+  key.
 - **Cap the triggering events, never the resolution.** A burn or DoT tail lit
   inside the fight resolves in full, `count_damage_after_fight_end` being the one
   switch over that, so a `min(..., fight_duration)` on resolved damage is the
@@ -555,17 +553,15 @@ champion it bit.
   produces zero golden diffs.
 - **A silent zero comes from a missing key.** A champion module never
   `.get(..., default)`s a stats key: Akshan E read a `bonus_attack_speed_percent`
-  key nothing writes and priced its term at 0, so a missing stats key raises or
-  comes from `stats.py`. A wiki unit absent from `_SIMPLE_UNITS` in
-  `champions/scaling.py` falls to `0.0` and drops the term, as "% of maximum
-  health" against "% maximum health" zeroed Rumble W: add the alias.
+  key nothing writes and priced its term at 0. A wiki unit absent from
+  `_SIMPLE_UNITS` in `champions/scaling.py` falls to `0.0` and drops the term, as
+  "% of maximum health" against "% maximum health" zeroed Rumble W: add the alias.
 - **An option-presence test is a champion-identity gate written wrong, and it
   fails silently both ways.** A rename leaves
   `if "stardust_stacks" not in state.champion_options: return` never firing, so a
   whole ledger vanishes with every number unchanged, and a key two champions
   declare (`w_charge`) fires K'Sante's walk on an Irelia fight. Every key read
-  outside its own module lives in `champions/shared_option_keys.py`, and
-  `tests/test_shared_option_keys.py` fails on a literal option read elsewhere.
+  outside its own module lives in `champions/shared_option_keys.py`.
 - **Never expose a per-ability override of a value another system derives.**
   `hemorrhage_stacks_override` let Darius R read 5 stacks while the
   `StackTimeline` kept Noxian Might off, underpricing every slot. Take ONE input
@@ -586,4 +582,4 @@ champion it bit.
   cooldowns from cast end with ties broken by cast order, so other abilities' cast
   times displace a spam spell: Cassiopeia's 0.75s E fits about 3 casts in 3
   seconds, not 5. Check a new champion's timed cast counts against
-  `duration / (cast_time + cd)` and expect displacement.
+  `duration / (cast_time + cd)`.
