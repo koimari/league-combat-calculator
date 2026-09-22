@@ -292,7 +292,7 @@ class Venom:
     duration: float
 
 
-def _walk_fields(
+def _walk_fields(  # pylint: disable=too-many-arguments
     owners: Sequence[str],
     payload_type: type,
     *,

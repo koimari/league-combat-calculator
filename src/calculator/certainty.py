@@ -245,6 +245,7 @@ def _global_option_estimate(
     )
 
 
+# pylint: disable-next=too-many-arguments,too-many-positional-arguments
 def _slot_certainty(
     slot: str,
     options: Iterable[Mapping[str, Any]],

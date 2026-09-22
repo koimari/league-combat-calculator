@@ -48,7 +48,7 @@ def _axis_index(values: list[Any], rank: int, level: int | None) -> int:
     return min(axis - 1, len(values) - 1)
 
 
-def sum_modifiers(
+def sum_modifiers(  # pylint: disable=too-many-arguments
     leveling: dict[str, Any],
     rank: int,
     stats: dict[str, float] | None = None,
@@ -102,7 +102,7 @@ def sum_modifiers(
     return total
 
 
-def extract_named(
+def extract_named(  # pylint: disable=too-many-arguments
     ability: dict[str, Any],
     attribute: str,
     rank: int,

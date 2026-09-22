@@ -147,7 +147,7 @@ def _active_seconds_for(attacker: Any, item_name: str) -> float:
     )
 
 
-def _packet(
+def _packet(  # pylint: disable=too-many-arguments
     *,
     attacker: Any,
     target: Any,

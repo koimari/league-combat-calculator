@@ -468,7 +468,7 @@ def calculate_total_stats(
     return result
 
 
-def resolve_pre_combat_stats(
+def resolve_pre_combat_stats(  # pylint: disable=too-many-arguments
     champion_data: dict[str, Any],
     level: int,
     items: list[dict[str, Any]],

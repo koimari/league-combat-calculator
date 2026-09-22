@@ -242,7 +242,7 @@ class PairView:
         self.event_id_by_aidx: dict[int, str] = {}
 
 
-def _enriched_damage_event(
+def _enriched_damage_event(  # pylint: disable=too-many-arguments
     row: Mapping[str, Any],
     attacker_id: str,
     defender_id: str,
@@ -2190,7 +2190,7 @@ def grey_health_heal_action(
     )
 
 
-def grey_health_shield_action(
+def grey_health_shield_action(  # pylint: disable=too-many-arguments
     grant_time: float,
     source: str,
     amount: float,

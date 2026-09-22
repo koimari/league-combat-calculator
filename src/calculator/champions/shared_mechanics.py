@@ -75,7 +75,7 @@ def per_level_row(
     )
 
 
-def reduced_secondary_hits(
+def reduced_secondary_hits(  # pylint: disable=too-many-arguments
     ctx: SlotCtx,
     ability: dict[str, Any],
     rank_value: int,
@@ -124,7 +124,7 @@ def reduced_secondary_hits(
     return entry
 
 
-def ticked_channel(
+def ticked_channel(  # pylint: disable=too-many-arguments
     ctx: SlotCtx,
     ability: dict[str, Any],
     rank_value: int,
@@ -191,7 +191,7 @@ def multi_pass_damage(
     return ranked_slot(body)
 
 
-def empowered_auto_entry(
+def empowered_auto_entry(  # pylint: disable=too-many-arguments
     ability: dict[str, Any],
     rank_value: int,
     dmg_type: str,

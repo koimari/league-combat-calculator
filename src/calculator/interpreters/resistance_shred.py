@@ -220,7 +220,7 @@ def shred_rules(
     )
 
 
-def _resolve_slot(
+def _resolve_slot(  # pylint: disable=too-many-arguments
     owners: Sequence[str],
     resistance: Resistance,
     lane: EngineLane,
@@ -265,7 +265,7 @@ def resolve_slot(
     return _resolve_slot(owners, resistance, EngineLane.PAIR_ENGINE, facts=facts)
 
 
-def walk_slot(
+def walk_slot(  # pylint: disable=too-many-arguments
     owners: Sequence[str],
     resistance: Resistance,
     *,

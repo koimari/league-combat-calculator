@@ -65,7 +65,7 @@ _self_heal_field = partial(
 )
 
 
-def resolve_ledger_inputs(
+def resolve_ledger_inputs(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     params: "FightParams",
     champion_data: Mapping[str, Any],
     items: Iterable[dict[str, Any]],

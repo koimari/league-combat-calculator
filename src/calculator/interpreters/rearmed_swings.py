@@ -142,7 +142,7 @@ def _merged_schedule(
 _SWING_EPSILON = 1e-12
 
 
-def swing_times(  # pylint: disable=too-many-locals
+def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
     schedule: SwingSchedule,
     *,
     attack_speed: float,

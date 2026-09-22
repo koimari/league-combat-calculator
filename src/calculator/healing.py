@@ -75,7 +75,7 @@ def self_heal_rule_owner(champion_name: str) -> ChampionSlotOwner | None:
     return ChampionSlotOwner(champion=champion_name, slot=SELF_HEAL_RULE_SLOT)
 
 
-def derive_self_healing(
+def derive_self_healing(  # pylint: disable=too-many-arguments
     champion_data: dict[str, Any],
     champion_stats: dict[str, float],
     ability_damages: dict[str, dict[str, Any]],
