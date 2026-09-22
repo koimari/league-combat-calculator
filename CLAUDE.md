@@ -69,7 +69,7 @@ baseline with every diff explained in the commit.
 and `rules-off`, each with its reason beside it. Run the tree gate with
 `python <plugin>/hooks/lint_gate.py --tree . --statistics`. Neither suite is at
 zero, and both counts may only fall: a new finding in a file you touched is a
-regression. Ruff reports 128 findings, almost all in `tests/`, and
+regression. Ruff reports 127 findings, almost all in `tests/`, and
 `sightline gate . --full` reports 22 blocking above `.sightline-baseline`, under
 #27, #56, #37, #32, #14, #24 and #11. The baseline holds only what is deferred
 with a reason, today 59 entries under #27 (53), #14 (3) and #11 (3);
