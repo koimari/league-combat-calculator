@@ -47,7 +47,7 @@ Contract pinned (typed source-backed values):
   with equal results, and run_fight score-only totals equal the full fight.
   The takedown-scan predicates (TAKEDOWN_SCAN_SUPPORT_ITEMS /
   has_event_scan_support_items) keep dict rows for a Cryptbloom holder so
-  the score walk can read the takedown synthesis (issue #169).
+  the score walk can read the takedown synthesis.
 * Public output: support_events heal packets expose source/amount/time/
   trigger/duration/cooldown/target_scope; item_coverage wording "Life From
   Death is a post-takedown heal." with optimizer_eligible True (stats_only
@@ -345,7 +345,7 @@ def test_required_effect_value_fails_loud_for_cryptbloom():
 def test_takedown_scan_predicates_keep_dict_rows():
     """The optimizer's score-only tuple ledger cannot carry the per-event
     view the takedown synthesis reads, so a Cryptbloom holder keeps dict
-    rows (issue #169): the pipeline predicate and the support-item sets
+    rows: the pipeline predicate and the support-item sets
     pin that exclusion."""
     assert frozenset({CRYPTBLOOM}) == TAKEDOWN_SCAN_SUPPORT_ITEMS
     assert has_takedown_scan_support_items([{"name": CRYPTBLOOM}]) is True

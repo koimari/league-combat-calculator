@@ -1,4 +1,4 @@
-"""The swing-stream gate holds the scan to its pinned frontier (issue #329).
+"""The swing-stream gate holds the scan to its pinned frontier.
 
 A cached slot that puts damage on every basic attack, or carries a Bonus
 Attack Speed row, publishes a swing key or sits on the frontier with its

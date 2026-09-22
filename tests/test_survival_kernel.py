@@ -490,7 +490,7 @@ def test_enemy_actor_wide_heal_keeps_main_pair_copy_with_allies():
 
 def test_secondary_target_allocation_matches_receipt_composition():
     """Every compiled pair fight must carry the same ordered roster-target
-    allocation the receipt composition sets (issue #169): a cleave item's
+    allocation the receipt composition sets: a cleave item's
     secondary-target branch prices against the second enemy identically on
     both paths.  Ravenous Hydra also holds omnivamp, so this pins the
     allocation together with compiled vamp healing."""
@@ -521,7 +521,7 @@ def test_secondary_target_allocation_matches_receipt_composition():
 
 
 def test_vamp_candidate_rides_compiled_walk():
-    """Lifesteal/omnivamp builds compile (issue #169): compiled heal actions
+    """Lifesteal/omnivamp builds compile: compiled heal actions
     carry ``healing_category`` so the vamp carve-outs — the received-healing
     multiplier exemption and Bloodthirster's ichor conversion — match the
     receipt walk exactly."""

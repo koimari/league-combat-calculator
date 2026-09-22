@@ -381,7 +381,7 @@ class TestTheReceiptProjection:
 
 
 class TestTheActorWideHealSkip:
-    """The keep-first ``[main, *allies]`` rule (issue #169).
+    """The keep-first ``[main, *allies]`` rule.
 
     An enemy attacker's ordered pair list starts at the main, so the walk
     always keeps its main-pair copy of an actor-wide heal.  The ally-pair
@@ -423,7 +423,7 @@ class TestTheCompiledHealCarriesItsGateFields:
     builder stamps is a heal one walk applies and the other drops: without
     ``cast_while_disabled`` the compiled walk blocks Gangplank's Remove
     Scurvy exactly when the receipt walk applies it, and without the cleanse
-    pair a heal that rides a cleanse loses the truncation (issue #226).
+    pair a heal that rides a cleanse loses the truncation.
     """
 
     @staticmethod

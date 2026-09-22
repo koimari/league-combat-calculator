@@ -1,4 +1,4 @@
-"""Item atomizer per-effect correctness (issue #140).
+"""Item atomizer per-effect correctness.
 
 The item domain of the unified Atomizer must:
 - classify every passive/active from its OWN fragment text (never a

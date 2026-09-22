@@ -3,7 +3,7 @@
 The atomizer is the single way to atomize anything numerical (items,
 abilities, runes, economics, stats, champions) across sessions.  These
 tests pin the Atom contract and the per-effect independence rule that the
-old item atomizer violated (issue #140).
+old item atomizer violated.
 """
 
 from pathlib import Path

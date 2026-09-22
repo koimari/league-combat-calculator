@@ -96,7 +96,7 @@ def _process_state_is_given_back():
     leaked = process_state.restore_and_report(before)
     assert not leaked, (
         "this test left shared process state changed, which decides it for "
-        "every later test on the same xdist worker (issue #263) -- borrow it "
+        "every later test on the same xdist worker -- borrow it "
         f"through tests/app_config.py or monkeypatch instead: {leaked}"
     )
 

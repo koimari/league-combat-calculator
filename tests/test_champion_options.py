@@ -242,7 +242,7 @@ class TestOptionsDeclarationValidity:
 
 
 class TestRotationDeclarations:
-    """Every OPTIONS entry carries typed rotation semantics (issue #145).
+    """Every OPTIONS entry carries typed rotation semantics.
 
     The rotation resolver builds its setup/consume edges FROM these
     declarations, so an unclassified option is a contract failure: a

@@ -268,7 +268,7 @@ def test_the_minion_row_is_named_after_the_declaration() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Target-class adjudication: per clause, never per item (issue #236)
+# Target-class adjudication: per clause, never per item
 # ---------------------------------------------------------------------------
 
 

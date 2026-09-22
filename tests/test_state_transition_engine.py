@@ -124,7 +124,7 @@ def test_compiler_fails_closed_on_overheal_to_shield():
 
 
 def test_compiler_carries_vamp_healing_category():
-    """A vamp heal compiles with its category intact (issue #169), so the
+    """A vamp heal compiles with its category intact, so the
     kernel's carve-outs — the received-healing multiplier exemption and the
     ichor conversion — read the same field either adapter supplies."""
     compiler = _WalkCompiler()

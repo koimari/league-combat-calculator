@@ -148,7 +148,7 @@ def test_load_item_atoms_validates_atom_row_shape(tmp_path):
 
 
 def test_item_receipt_reads_current_unified_atoms():
-    """Regression fixture (issue #163): item 1001 reads its live unified atoms."""
+    """Regression fixture: item 1001 reads its live unified atoms."""
     objects = br.load_item_atoms()
     assert "1001" in objects, "unified item atoms must cover item 1001"
     receipt = br.item_receipt("1001", {"name": "Boots"})
@@ -241,7 +241,7 @@ def test_failure_publishes_no_partial_tree(patched):
 
 
 # ---------------------------------------------------------------------------
-# Real-data regression (issue #163)
+# Real-data regression
 # ---------------------------------------------------------------------------
 
 

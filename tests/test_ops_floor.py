@@ -89,8 +89,8 @@ def test_sentry_captures_route_500(monkeypatch, fake_sentry):
         raise RuntimeError("p0b deliberate boom")
 
     # The shared scenario boundary owns champion loading for the
-    # calculate path (issue #138), so the break is injected there.  The app
-    # imports the canonical ``src.calculator`` package (issue #164), so that
+    # calculate path, so the break is injected there.  The app
+    # imports the canonical ``src.calculator`` package, so that
     # module object is the one the route executes.
     import src.calculator.scenario as calculator_scenario
 

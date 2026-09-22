@@ -26,16 +26,18 @@ every packet module is out of an AST's reach.
 
 A seventh, ``pointer``, is prose citing the project's own history -- a
 numbered work phase, a dated decision, a runbook rule, a review stage, a
-named unit of work -- where the reason itself belongs.  A hit is allowed
-when the same line names a repository path that resolves *and* holds the
-citation, which is what keeps ``docs/receipts/campaign-stages.json``
-citable while an unrelated path rescues nothing.  ``EVIDENCE`` -- a wiki
-URL or a game file, cited for a number -- answers for a tense and never for
-a citation, so it exempts ``history`` alone.  It is the one
-rule that reaches ``TESTS_SCOPE`` as well as ``TARGETS``, and the one that
-reads every string a module states rather than computes: a docstring, the
-note under a constant, a command's help text, and published assumption
-text.
+named unit of work, an issue, a pull request, a commit -- where the reason
+itself belongs.  Every citation lives on this rule and ``history`` holds
+the tenses alone, because a citation is answered by stating the fact and a
+tense by rewriting the sentence.  A hit is allowed when the same line names
+a repository path that resolves *and* holds the citation, which is what
+keeps ``docs/receipts/campaign-stages.json`` citable while an unrelated
+path rescues nothing.  ``EVIDENCE`` -- a wiki URL or a game file, cited for
+a number -- answers for a tense and never for a citation, so it exempts
+``history`` alone.  It is the one rule that reaches ``TESTS_SCOPE`` as well
+as ``TARGETS``, and the one that reads every string a module states rather
+than computes: a docstring, the note under a constant, a command's help
+text, and published assumption text.
 
 An eighth, ``unsourced_constant``, reports a module-level numeric literal under
 ``CHAMPIONS_SCOPE`` whose provenance nothing states: a citation, a cached field
@@ -85,14 +87,14 @@ EVIDENCE = re.compile(
     re.IGNORECASE,
 )
 HISTORY = re.compile(
-    r"\bretired\b|\bused to\b|\bpreviously\b|\b(?-i:legacy)\b|\bno longer\b"
-    r"|\b(?:issue|PR) #\d+"
-    r"|\b(?<!\{)(?=[0-9a-f]*[a-f])(?=[0-9a-f]*\d)(?:[0-9a-f]{7,8}|[0-9a-f]{40})\b",
+    r"\bretired\b|\bused to\b|\bpreviously\b|\b(?-i:legacy)\b|\bno longer\b",
     re.IGNORECASE,
 )
 POINTER = re.compile(
     r"\bAmendment\b|\bRuling\b|\b[DR]-\d{1,3}\b|\bD\d{1,2}\b|\bCP\d"
-    r"|\bPhase \d|\bwave \d|\bslice\b|\bcampaign\b",
+    r"|\bPhase \d|\bwave \d|\bslice\b|\bcampaign\b"
+    r"|\b(?:issue|PR) #\d+"
+    r"|\b(?<!\{)(?=[0-9a-f]*[a-f])(?=[0-9a-f]*\d)(?:[0-9a-f]{7,8}|[0-9a-f]{40})\b",
     re.IGNORECASE,
 )
 BANNER = re.compile(r"^# -{5,}$")

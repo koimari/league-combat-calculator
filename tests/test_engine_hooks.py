@@ -77,7 +77,7 @@ def test_guardian_angel_keeps_item_source(champion_data):
 
 
 def test_taric_q_prose_heal_deferred_to_the_e1_rule(champion_data):
-    """Taric Q is owned by the E1 self-heal rule (issue #143).
+    """Taric Q is owned by the E1 self-heal rule.
 
     The scanner must NOT emit a heal packet for the slot: the rule prices
     the sourced per-charge stock (25 + 15% AP + 1% max HP per charge) and

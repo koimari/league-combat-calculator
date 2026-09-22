@@ -110,7 +110,7 @@ Sibling owners: the Gunmetal Greaves precedent is pinned in
 boundary shape); the Doran's Helm and Ionian Boots precedents in
 ``tests/test_dorans_helm_minion_damage.py`` (3M) and
 ``tests/test_ionian_boots_summoner_haste.py`` (3N); the kernel score==
-receipt contract in ``tests/test_survival_kernel.py`` (issue #137).  The
+receipt contract in ``tests/test_survival_kernel.py``.  The
 E8d champion-revive interface is pinned in ``tests/test_revive_and_ally_support_events.py`` /
 ``tests/test_engine_hooks.py``.  Existing regression surface touching
 this item (kept green, disjoint, quoted in section 13):

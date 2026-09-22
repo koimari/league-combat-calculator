@@ -1096,7 +1096,7 @@ def test_compiled_score_path_stages_the_heal_cleanse_packet():
     """The action-downtime truncation is a shared-kernel transition, so the
     compiled score path stages Purify rather than falling back: the marker
     pair the kernel dispatches on rides the compiled action, and a plain heal
-    carries neither (issue #226)."""
+    carries neither."""
     assert (
         unrepresentable_template_receipt(
             {"kind": "heal", "amount": 100.0, "cleanse": True}

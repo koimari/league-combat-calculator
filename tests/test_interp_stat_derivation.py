@@ -564,7 +564,7 @@ def test_the_channel_declaration_is_not_counted_as_runtime_behaviour() -> None:
 
 # ── F-2's four arrivals ───────────────────────────────────────────────────
 #
-# The entries `main` brought in with no rule compiler (issue #211).  Two send
+# The entries `main` brought in with no rule compiler.  Two send
 # a sourced number to a channel this fight model never runs, and the other
 # two are ordinary members of shapes the family already had.  Every case pins
 # the declaration's numbers against the typed accessors the engine reads,
@@ -575,7 +575,7 @@ CHANNEL_MINION_HOLDERS = ("Doran's Helm", "Tear of the Goddess")
 RESTORE_HOLDER = "Lost Chapter"
 # Every Slay carrier, read off the registry rather than listed, so a third
 # one arriving under a spelling of its own fails here instead of passing
-# unnoticed (issue #233).
+# unnoticed.
 SLAY_HOLDERS = tuple(
     sorted(
         name
@@ -715,7 +715,7 @@ def test_the_slay_declaration_is_what_the_engines_omnivamp_accessor_pays(
 
 
 def test_every_registry_entry_compiles_at_least_one_rule() -> None:
-    """Counter 3, as a test rather than as a receipt (issue #211).
+    """Counter 3, as a test rather than as a receipt.
 
     The four entries the merge brought in undeclared are declared, and the
     population is read live so a fifth arriving undeclared fails here.

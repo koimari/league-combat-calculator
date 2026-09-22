@@ -19,7 +19,7 @@ def test_item_umbrella_audit_has_no_unexplained_runtime_gaps():
 
 
 def test_item_umbrella_audit_emits_the_gate_receipt_envelope():
-    """The umbrella receipt carries the shared envelope (issue #139)."""
+    """The umbrella receipt carries the shared envelope."""
     from scripts.gate_receipt import SCHEMA_VERSION, validate_receipt
 
     receipt = run_audit()

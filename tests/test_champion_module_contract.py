@@ -1,4 +1,4 @@
-"""Champion modules are the single runtime and review authority (issue #161)."""
+"""Champion modules are the single runtime and review authority."""
 
 import ast
 from pathlib import Path

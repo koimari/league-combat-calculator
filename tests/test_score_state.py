@@ -15,7 +15,7 @@ Four properties, and each is a refusal or a promise the walk depends on:
   reach the same slot, everything else is dropped, and the slot is the
   action's own ``aidx`` — which is what lets ``survival.accumulate`` replay
   the per-attacker sums in the legacy float-addition order.
-* **Its capability flags are what make the hot loop cheap** (issue #171).
+* **Its capability flags are what make the hot loop cheap**.
   The kernel reads them to skip building kwargs the ledger would discard,
   so a flag flipped to ``True`` silently costs every action a ``round``.
 * **Trigger linkage is write-once and fails closed.**  An unmarked trigger

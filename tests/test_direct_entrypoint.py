@@ -6,7 +6,7 @@ from pathlib import Path
 
 #: A guard against a wedged child, not a budget: the import costs 0.85 s on an
 #: idle box and 5-15 s while ``pytest -n auto`` has all sixteen cores busy, so a
-#: cap sized for the idle number fails under the suite that runs it (issue #263).
+#: cap sized for the idle number fails under the suite that runs it.
 HANG_GUARD_SECONDS = 120
 
 

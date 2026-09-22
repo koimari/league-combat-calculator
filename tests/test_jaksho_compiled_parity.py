@@ -110,7 +110,7 @@ Contract under test (current runtime facts, verified before pinning):
   ``awaiting P3-3R ...``.
 
 Sibling owners: the compiled-vs-receipt contract lives in
-``tests/test_survival_kernel.py`` (issue #137); the Force of Nature 3Q
+``tests/test_survival_kernel.py``; the Force of Nature 3Q
 matrix shape in ``tests/test_force_of_nature_compiled_parity.py`` (this
 file mirrors its fixtures/helpers); the kernel-typed declaration consumer
 in ``tests/test_state_lifecycle_consumers.py``; the stack-machine

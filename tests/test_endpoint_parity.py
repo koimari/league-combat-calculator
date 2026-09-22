@@ -1,4 +1,4 @@
-"""Endpoint parity for the shared scenario boundary (issue #138).
+"""Endpoint parity for the shared scenario boundary.
 
 / api / calculate, /api/optimize, and /api/bis must validate the same
 scenario fields with the same 400/404 messages, run the same item coverage

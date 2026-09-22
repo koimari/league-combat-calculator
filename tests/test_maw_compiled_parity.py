@@ -128,7 +128,7 @@ Coordinator ambiguities surfaced by this matrix (see the reply):
   row itself is absent today).
 
 Sibling owners: the compiled-vs-receipt kernel contract lives in
-``tests/test_survival_kernel.py`` (issue #137); the 3Q/3S matrix shapes
+``tests/test_survival_kernel.py``; the 3Q/3S matrix shapes
 in ``tests/test_force_of_nature_compiled_parity.py`` and
 ``tests/test_knights_vow_compiled_parity.py``; the Lifeline family
 regression surface in ``tests/test_opening_mitigation_and_lifeline.py`` (threshold trigger +

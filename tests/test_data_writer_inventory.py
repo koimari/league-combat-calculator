@@ -1,4 +1,4 @@
-"""Enforce the data-ownership registry (issue #141).
+"""Enforce the data-ownership registry.
 
 No cwd-relative Path("data literals may remain, and the three tracked
 runtime caches may only be written by data_updater through

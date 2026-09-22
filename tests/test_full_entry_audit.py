@@ -232,7 +232,7 @@ def test_expected_effects_names_every_item_branch_and_champion_slot():
 
 
 def test_full_entry_audit_emits_the_gate_receipt_envelope():
-    """The audit receipt carries the shared envelope (issue #139)."""
+    """The audit receipt carries the shared envelope."""
     from scripts.gate_receipt import SCHEMA_VERSION, validate_receipt
 
     report = audit.audit(champions=[], items=[], query_tool=__file__)

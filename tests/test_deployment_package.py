@@ -1,4 +1,4 @@
-"""Deployment-package contract for the beta metrics scorecard (issue #144).
+"""Deployment-package contract for the beta metrics scorecard.
 
 The production artifact (``.vercelignore`` / Dockerfile) ships only ``src/``,
 ``data/``, ``static/``, ``templates/`` plus root manifests — ``scripts/`` is
@@ -146,7 +146,7 @@ if scripts_spec is not None:
     assert not any(package_root in value.parents for value in locations), "scripts must not ship"
 # Importing src.app first mirrors the production entrypoint; every route
 # dependency must then resolve from the packaged artifact alone under the
-# single ``src.*`` namespace (issue #164).
+# single ``src.*`` namespace.
 import src.app
 {imports}
 print("ALL-IMPORTS-OK")

@@ -1,4 +1,4 @@
-"""Gate receipt schema contract (issue #139)."""
+"""Gate receipt schema contract."""
 
 import json
 import re

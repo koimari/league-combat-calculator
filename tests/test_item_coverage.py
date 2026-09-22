@@ -217,7 +217,7 @@ def test_representative_item_classifications(item_name, expected_status):
 
 
 def test_every_slay_carrier_publishes_the_omnivamp_grant_in_its_reason():
-    """Slay is one declaration, so both carriers name it (issue #233).
+    """Slay is one declaration, so both carriers name it.
 
     Immortal Path's entry is tagged for its amp, so the omnivamp reaches
     the coverage ladder only through the shared
