@@ -22,6 +22,7 @@ from types import MappingProxyType, SimpleNamespace
 
 import pytest
 
+from src.calculator import event_row_field
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator import trigger_stream as ts
 from src.calculator.ability_spec import Authority, DamagePart, Disposition
@@ -1025,10 +1026,13 @@ CC_KIND_READERS = {
 }
 
 
-#: Where the key sits in a call that reads one. ``get`` takes it first; the
-#: typed row readers take the row first and the field second, and a scan that
-#: only knew ``get`` went blind the day a module read its rows through them.
-_KEY_ARGUMENT = {"get": 0, "optional_field": 1, "required_field": 2}
+#: Where the key sits in a call that reads one: ``get`` takes it first, and a
+#: typed reader takes it at its own ``field`` parameter, off the live signature.
+_KEY_ARGUMENT = {"get": 0} | {
+    name: [*inspect.signature(reader).parameters].index("field")
+    for name, reader in vars(event_row_field).items()
+    if inspect.isfunction(reader) and "field" in inspect.signature(reader).parameters
+}
 
 
 def cc_kind_readers(sources: Mapping[str, str] | None = None) -> dict[str, frozenset]:
@@ -1038,11 +1042,7 @@ def cc_kind_readers(sources: Mapping[str, str] | None = None) -> dict[str, froze
         tree = ast.parse(text)
         for node in ast.walk(tree):
             if isinstance(node, ast.Call) and node.args:
-                name = (
-                    node.func.attr
-                    if isinstance(node.func, ast.Attribute)
-                    else getattr(node.func, "id", "")
-                )
+                name = getattr(node.func, "attr", "") or getattr(node.func, "id", "")
                 index = _KEY_ARGUMENT.get(name, len(node.args))
                 key = node.args[index] if index < len(node.args) else None
                 reads = isinstance(key, ast.Constant) and key.value == "cc_kind"
