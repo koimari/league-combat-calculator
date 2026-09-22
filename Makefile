@@ -1,9 +1,9 @@
 # Local CI runner for the calculator.
 #
-# Mirrors .github/workflows/tests.yml job for job so a change is proven on
-# this machine before it is pushed, and the repo does not depend on GitHub
-# Actions to know its own state. See docs/ci-local.md for the mapping from
-# each workflow job and step to the target below.
+# Each target runs the ci/ script that .github/workflows/tests.yml runs for
+# the same job, so a change is proven on this machine before it is pushed and
+# the repo does not depend on GitHub Actions to know its own state. See
+# docs/ci-local.md for the mapping from each workflow job to the target below.
 #
 # Usage:
 #   make ci-fast             # pre-push loop: UI gates, black, golden compares

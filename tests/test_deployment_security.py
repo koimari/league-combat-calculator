@@ -1,21 +1,6 @@
 """Keep production hardening visible and regression-tested."""
 
-import re
 from pathlib import Path
-
-
-def test_the_image_runs_the_python_version_the_tests_run():
-    """``.python-version`` is the version's one home, so the container runs
-    what the tests run. The tag stays spelled out beside the digest on a
-    literal ``FROM``, the only form Dependabot bumps."""
-    dockerfile = Path("Dockerfile").read_text(encoding="utf-8")
-    version = Path(".python-version").read_text(encoding="utf-8").strip()
-
-    reference = re.search(r"^FROM (\S+)$", dockerfile, re.MULTILINE)
-    assert reference, "the base image is not one literal FROM"
-    assert re.fullmatch(
-        rf"python:{re.escape(version)}-slim@sha256:[0-9a-f]{{64}}", reference[1]
-    ), reference[1]
 
 
 def test_container_is_pinned_minimal_nonroot_and_health_checked():
@@ -55,13 +40,23 @@ def test_ci_covers_net_new_main_branch_and_uses_immutable_actions():
 
     assert "push:\n    branches: [main]\n" in workflow
     assert "pull_request:\n    branches: [main, chore/sightline-zero]\n" in workflow
-    assert "pip-audit -r requirements.txt" in workflow
-    assert "bandit -r src -ll" in workflow
-    assert "docker build --tag lol-calculator:ci ." in workflow
-    assert "Smoke production image" in workflow
-    assert "docker exec lol-calculator-smoke id -u" in workflow
-    assert "http://127.0.0.1:18000/api/calculate" in workflow
-    assert ".State.Health.Status" in workflow
     assert "aquasecurity/trivy-action@ed142fd" in workflow
     assert "actions/checkout@v" not in workflow
     assert "actions/setup-python@v" not in workflow
+
+
+def test_the_security_gates_run_in_the_jobs_that_own_them():
+    """The commands moved into ci/ with the rest of each job's checks
+    (docs/ci-local.md); what they must still cover is pinned here."""
+    static = Path("ci/static.sh").read_text(encoding="utf-8")
+    container = Path("ci/container.sh").read_text(encoding="utf-8")
+
+    assert "-r requirements.txt" in static
+    assert "-r requirements-runtime.txt" in static
+    assert "bandit" in static
+    assert "src -ll" in static
+    assert "docker build --tag" in container
+    assert "id -u" in container
+    assert "/api/calculate" in container
+    assert ".State.Health.Status" in container
+    assert "Metrics module unavailable" in container

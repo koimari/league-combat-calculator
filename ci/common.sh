@@ -52,7 +52,14 @@ ci_fail() {
   echo "$(_ci_color 31 FAIL) - $*"
 }
 
+# LCC_CI_STRICT=1 turns every skip into a failure. The workflow sets it: a
+# hosted runner installs every tool, so a skip there is a gate that silently
+# did not run, and a green job that checked nothing is worse than a red one.
 ci_skip() {
+  if [ "${LCC_CI_STRICT:-0}" = "1" ]; then
+    ci_fail "$* [LCC_CI_STRICT: a skip is a failure here]"
+    return
+  fi
   CI_SKIP_COUNT=$((CI_SKIP_COUNT + 1))
   CI_SKIPPED_NAMES+=("$*")
   echo "$(_ci_color 33 SKIP) - $*"
@@ -86,34 +93,41 @@ require_tool() {
   return 1
 }
 
-# The repo's pinned interpreter. LCC_CI_PYTHON overrides it; the default is
-# the checkout's own .venv, which every gate in CLAUDE.md already assumes.
+# The repo's pinned interpreter. LCC_CI_PYTHON overrides it, by path or by
+# name on PATH (the workflow passes the interpreter setup-python installed);
+# the default is the checkout's own .venv, which every gate in CLAUDE.md
+# already assumes.
 ci_require_python() {
   local candidate
+  local resolved
   local main_root
   # A linked worktree (.claude/worktrees/<name>) has no venv of its own;
   # the main checkout's .venv serves every worktree of the same repo.
   main_root="$(cd "$(git -C "$CI_ROOT" rev-parse --git-common-dir)/.." 2>/dev/null && pwd)"
-  for candidate in "${LCC_CI_PYTHON:-}" "$CI_ROOT/.venv/bin/python" "${main_root:+$main_root/.venv/bin/python}"; do
-    if [ -n "$candidate" ] && [ -x "$candidate" ]; then
-      CI_PY="$candidate"
-      export CI_PY
-      return 0
-    fi
+  for candidate in "${LCC_CI_PYTHON:-}" "$CI_ROOT/.venv" "${main_root:+$main_root/.venv}"; do
+    [ -n "$candidate" ] || continue
+    for resolved in "$candidate" "$candidate/bin/python" "$candidate/Scripts/python"; do
+      resolved="$(command -v "$resolved" 2>/dev/null)" || continue
+      if [ -f "$resolved" ]; then
+        CI_PY="$resolved"
+        export CI_PY
+        return 0
+      fi
+    done
   done
-  ci_skip "Python venv not found at $CI_ROOT/.venv: create it with: uv venv --python 3.14 .venv && uv pip install --python .venv/bin/python -r requirements.txt"
+  ci_skip "Python venv not found at $CI_ROOT/.venv: create it with: uv venv --python \"\$(cat .python-version)\" .venv && uv pip install --python .venv/bin/python -r requirements.txt"
   return 1
 }
 
-# ci_python_tool <name>: the venv's copy of a console tool (pytest, black,
-# pylint, pip-audit, bandit) so the versions requirements.txt pins are the
-# ones that run.
+# ci_python_tool <name>: the interpreter's own copy of a console tool (pytest,
+# black, pylint, pip-audit, bandit) so the versions requirements.txt pins are
+# the ones that run. Scripts/ is where a Windows venv puts them.
 ci_python_tool() {
   local tool="$1"
-  local venv_dir
-  venv_dir="$(dirname "$(dirname "$CI_PY")")"
-  if [ -x "$venv_dir/bin/$tool" ]; then
-    printf '%s' "$venv_dir/bin/$tool"
+  local bin_dir
+  bin_dir="$(dirname "$CI_PY")"
+  if [ -x "$bin_dir/$tool" ]; then
+    printf '%s' "$bin_dir/$tool"
     return 0
   fi
   return 1
