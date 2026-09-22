@@ -268,7 +268,7 @@ UNGOVERNED_MEMOS: dict[str, MemoGovernance] = {
 _CHAMPION_MEMO_DEFERRAL = (
     "champions/ is not swept for data-version keying; identity-keyed "
     "with a strong reference and re-verified on every hit, so the residual "
-    "hazard is an in-place mutation of a cached ability dict — issue #212"
+    "hazard is an in-place mutation of a cached ability dict"
 )
 
 # Emptied wholesale when the registry they derive from is rebuilt, so the

@@ -1278,7 +1278,7 @@ def run_full(
 
     packets = reviewed_packet_report(axword_source=axword_source, wiki_db=wiki_db)
     if not packets["clean"]:
-        print("\nFAIL: reviewed packets are not current (issue #134):", flush=True)
+        print("\nFAIL: reviewed packets are not current:", flush=True)
         for problem in packets["problems"]:
             print(f"  - {problem}", flush=True)
         print(
