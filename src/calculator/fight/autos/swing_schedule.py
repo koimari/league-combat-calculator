@@ -2,6 +2,7 @@
 
 import math
 from collections.abc import Iterable
+from typing import NamedTuple
 
 from ... import rune_effects
 from ...attack_windows import AttackSpeedWindow, attack_times_for_windows
@@ -269,9 +270,26 @@ class _HailStacks:
         return False
 
 
+class HailSchedule(NamedTuple):
+    """When Hail's swings land, which of them it empowered, and when it armed."""
+
+    times: list[float]
+    active_indexes: list[int]
+    activation_times: list[float]
+
+
+class LethalTempoSchedule(NamedTuple):
+    """When Lethal Tempo's swings land, and the stack state each one saw."""
+
+    times: list[float]
+    bolt_indexes: list[int]
+    stack_counts: list[int]
+    activation_times: list[float]
+
+
 def _hail_attack_schedule(
     state: FightState, effect: "rune_effects.KeystoneHailOfBladesEffect"
-) -> tuple[list[float], list[int], list[float]]:
+) -> HailSchedule:
     """Build Hail's timed swing window and active attack indexes.
 
     The first completed attack activates Hail and benefits from it. Each
@@ -286,7 +304,7 @@ def _hail_attack_schedule(
         or effect.initial_stacks <= 0
         or effect.stack_duration_seconds <= 0.0
     ):
-        return [], [], []
+        return HailSchedule([], [], [])
 
     bonus_percent = effect.bonus_attack_speed_percent(state.is_melee)
     active_rate = (
@@ -296,7 +314,7 @@ def _hail_attack_schedule(
         * state.auto_attack_uptime
     )
     if active_rate <= 0.0:
-        return [], [], []
+        return HailSchedule([], [], [])
 
     times: list[float] = []
     active_indexes: list[int] = []
@@ -317,7 +335,7 @@ def _hail_attack_schedule(
             next_time = current + base_interval
         current = next_time
 
-    return times, active_indexes, hail.activation_times
+    return HailSchedule(times, active_indexes, hail.activation_times)
 
 
 def _prepare_hail_attack_schedule(state: FightState) -> None:
@@ -325,11 +343,11 @@ def _prepare_hail_attack_schedule(state: FightState) -> None:
     effect = state.keystone_effect
     if not isinstance(effect, rune_effects.KeystoneHailOfBladesEffect):
         return
-    times, active_indexes, activation_times = _hail_attack_schedule(state, effect)
-    state.hail_attack_times = tuple(times)
-    state.hail_active_attack_indices = tuple(active_indexes)
-    state.hail_activation_times = tuple(activation_times)
-    _install_swing_count(state, len(times))
+    schedule = _hail_attack_schedule(state, effect)
+    state.hail_attack_times = tuple(schedule.times)
+    state.hail_active_attack_indices = tuple(schedule.active_indexes)
+    state.hail_activation_times = tuple(schedule.activation_times)
+    _install_swing_count(state, len(schedule.times))
 
 
 def _lethal_tempo_stacks_at(
@@ -360,7 +378,7 @@ def _lethal_tempo_attack_schedule(
         or effect.stack_duration_seconds <= 0.0
         or effect.expiry_step_seconds <= 0.0
     ):
-        return [], [], [], []
+        return LethalTempoSchedule([], [], [], [])
 
     # A schedule this walk generates is laid down below, at the rate each
     # attack's own stack count sets; only a caller's schedule is read here.
@@ -400,11 +418,11 @@ def _lethal_tempo_attack_schedule(
             if rate <= 0.0:
                 break
             current += 1.0 / rate
-        return times, bolt_indexes, stack_counts, activation_times
+        return LethalTempoSchedule(times, bolt_indexes, stack_counts, activation_times)
 
     for attack_time in times:
         swing(attack_time)
-    return times, bolt_indexes, stack_counts, activation_times
+    return LethalTempoSchedule(times, bolt_indexes, stack_counts, activation_times)
 
 
 def _prepare_lethal_tempo_attack_schedule(state: FightState) -> None:
@@ -412,14 +430,12 @@ def _prepare_lethal_tempo_attack_schedule(state: FightState) -> None:
     effect = state.keystone_effect
     if not isinstance(effect, rune_effects.KeystoneLethalTempoEffect):
         return
-    times, bolt_indexes, stack_counts, activation_times = _lethal_tempo_attack_schedule(
-        state, effect
-    )
-    state.lethal_attack_times = tuple(times)
-    state.lethal_bolt_attack_indices = tuple(bolt_indexes)
-    state.lethal_stack_counts = tuple(stack_counts)
-    state.lethal_activation_times = tuple(activation_times)
-    _install_swing_count(state, len(times))
+    schedule = _lethal_tempo_attack_schedule(state, effect)
+    state.lethal_attack_times = tuple(schedule.times)
+    state.lethal_bolt_attack_indices = tuple(schedule.bolt_indexes)
+    state.lethal_stack_counts = tuple(schedule.stack_counts)
+    state.lethal_activation_times = tuple(schedule.activation_times)
+    _install_swing_count(state, len(schedule.times))
 
 
 def _auto_attack_timestamps(state: FightState) -> list[float]:
@@ -456,16 +472,12 @@ def _restore_stream_attack_timestamps(state: FightState) -> list[float]:
         return list(state.lethal_attack_times)
     effect = state.keystone_effect
     if isinstance(effect, rune_effects.KeystoneHailOfBladesEffect):
-        times, _active_indexes, _activation_times = _hail_attack_schedule(state, effect)
-        if times:
-            return list(times)
+        times = _hail_attack_schedule(state, effect).times
     elif isinstance(effect, rune_effects.KeystoneLethalTempoEffect):
-        times, _bolt_indexes, _stack_counts, _activation_times = (
-            _lethal_tempo_attack_schedule(state, effect)
-        )
-        if times:
-            return list(times)
-    return _base_auto_attack_timestamps(state)
+        times = _lethal_tempo_attack_schedule(state, effect).times
+    else:
+        times = []
+    return list(times) if times else _base_auto_attack_timestamps(state)
 
 
 def _apply_spellblade_attack_speed(

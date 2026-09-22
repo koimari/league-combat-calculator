@@ -296,12 +296,11 @@ def _add_keystone_lethal_tempo(state: FightState, rotation: RotationResult) -> N
         activation_times = list(state.lethal_activation_times)
         carrier = "ambient basic attacks"
     elif forced_times:
-        (
-            attack_times,
-            bolt_indexes,
-            stack_counts,
-            activation_times,
-        ) = _lethal_tempo_attack_schedule(state, effect, forced_times)
+        schedule = _lethal_tempo_attack_schedule(state, effect, forced_times)
+        attack_times = schedule.times
+        bolt_indexes = schedule.bolt_indexes
+        stack_counts = schedule.stack_counts
+        activation_times = schedule.activation_times
         carrier = "forced basic attacks"
     else:
         state.notes.append(
