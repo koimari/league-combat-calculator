@@ -33,8 +33,7 @@ class PurchaseSearch:
 
     # A search context is a deliberate value bag; splitting it would spread
     # one run's state across parallel argument lists.
-    # pylint: disable=too-many-instance-attributes,too-many-arguments
-    # pylint: disable=too-many-positional-arguments,too-many-locals
+    # pylint: disable=too-many-instance-attributes,too-many-arguments,too-many-locals
 
     def __init__(
         self,
