@@ -12,7 +12,7 @@
   "fight/autos/swing_profile.py is one module the roster does not name (map B section S10c): _find_auto_attack_override, _basic_attack_true_rider, _on_hit_effectiveness, _auto_swing_bonus_ad. Folded into simulation.py they would make a 637-line module holding symbols five other modules read, which is a new #27 finding.",
   "_damaging_cast_times goes to fight/cast_slots.py and _item_proc_precision with _CERTIFIED_CAST_PRECISIONS to fight/ledger/event_rows.py: both are read from three or four subpackages, and both maps call them kernel symbols with no section of their own.",
   "FerocityTimeline goes to fight/results.py, not stacks/rengar.py: FightState annotates it and stacks/rengar.py builds it.",
-  "fight/ledger/breakdown.py holds only _is_auto_stream_key, because the brief keeps split_auto_vs_ability and split_by_damage_type in the residue and two rune modules read the predicate. No external reader imports _is_auto_stream_key, so nothing repoints.",
+  "fight/ledger/breakdown.py takes only _is_auto_stream_key from this source, because the brief keeps split_auto_vs_ability and split_by_damage_type in the residue and two rune modules read the predicate. No external reader imports _is_auto_stream_key, so nothing repoints. What else the file holds is its own module's business: it is the fight package's breakdown-row home and now carries the readers onto that row.",
   "single_proc_on_hits: step 2 prices these items from catalog declarations, so the one function this file moved whole is two loops, first_auto_strikes.py and stacking_strikes.py, and the entry above names them."
  ],
  "string_annotations_that_stay_strings": {
