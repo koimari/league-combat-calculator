@@ -9,9 +9,9 @@
  * "scryglass:result" event app.js publishes whenever it displays a result,
  * whose detail is that receipt — no extra API calls, no wrapper around the
  * app's own request, and no ordering against app.js.  shared.js is the one
- * script it loads after, for the page's HTML escaper.  It renders into the
- * optional #eventOrderPanel mount point (templates/index.html) and stays
- * hidden when no rotation receipt exists.
+ * script it loads after, for the page's escaper and DOM helpers.  It renders
+ * into the optional #eventOrderPanel mount point (templates/index.html) and
+ * stays hidden when no rotation receipt exists.
  */
 (function () {
   "use strict";
@@ -19,10 +19,7 @@
   var MOUNT_ID = "eventOrderPanel";
   var latest = null;
   var escapeHtml = window.scryglass.escapeHtml;
-
-  function byId(id) {
-    return document.getElementById(id);
-  }
+  var byId = window.scryglass.byId;
 
   function fmtTime(value) {
     var number = Number(value);
@@ -158,13 +155,8 @@
   }
 
   installResultListener();
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", function () {
-      installObserver();
-      if (latest) render(latest);
-    });
-  } else {
+  window.scryglass.onReady(function () {
     installObserver();
     if (latest) render(latest);
-  }
+  });
 })();

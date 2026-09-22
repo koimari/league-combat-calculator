@@ -1,10 +1,11 @@
 /* STALE badge — patch-day trust indicator (P3).
 
- * Self-contained module: reads /api/staleness (the patch-regression report
- * comparing the wiki cache against the game files) and patches the DOM with
- * visible "STALE · PATCH x.y" badges when the selected champion or any
- * selected item is stale.  It never modifies app.js; it observes the DOM so
- * badges stay correct as app.js re-renders slots and champion selections.
+ * Reads /api/staleness (the patch-regression report comparing the wiki cache
+ * against the game files) and patches the DOM with visible "STALE · PATCH
+ * x.y" badges when the selected champion or any selected item is stale.  It
+ * never modifies app.js; it observes the DOM so badges stay correct as app.js
+ * re-renders slots and champion selections, and it takes its start signal
+ * from shared.js.
  */
 (function () {
   "use strict";
@@ -157,9 +158,5 @@
       });
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
+  window.scryglass.onReady(init);
 })();

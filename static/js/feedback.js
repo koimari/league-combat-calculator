@@ -21,16 +21,13 @@
   var MOUNT_ID = "feedbackWidget";
   var RESULT_AREA_SELECTOR = ".canvas";
   var escapeHtml = window.scryglass.escapeHtml;
+  var byId = window.scryglass.byId;
   var STATE = {
     action: null,
     loadout: null,
     champion: null,
     busy: false,
   };
-
-  function byId(id) {
-    return document.getElementById(id);
-  }
 
   function one(selector, root) {
     return (root || document).querySelector(selector);
@@ -346,9 +343,5 @@
     });
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
+  window.scryglass.onReady(init);
 })();
