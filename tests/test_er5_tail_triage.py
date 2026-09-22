@@ -98,6 +98,10 @@ def test_a_censused_key_on_a_non_row_receiver_is_not_a_candidate():
     triage over-reports the work by roughly a factor of two.
     """
     assert triage._receiver('champion_data.get("name", "")') == "champion_data"
+    assert (
+        triage._receiver('pair.attacker.champion_data.get("name", "")')
+        == "champion_data"
+    )
     assert triage._receiver('getattr(action, "time", 0.0)') is None
     assert "champion_data" in triage.NON_ROW_RECEIVERS
     assert _committed()["totals"]["NOT_A_ROW_RECEIVER"] > 50

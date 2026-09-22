@@ -70,15 +70,16 @@ INTERNAL_CENSUS = REPO_ROOT / "docs" / "receipts" / "internal-row-census.json"
 #: survive input it did not build. Clause 5 in a form a scan can see.
 TOLERANCE_WORDS = ("malformed", "withhold", "partial", "unnamed", "invalid")
 
-#: Receivers that are not published rows, whatever the key is called. A key
-#: like ``name`` is universal on three streams AND on every champion_data and
-#: item dict in the tree, so matching on the key alone marked dozens of
-#: unrelated reads as convertible. The census speaks for rows; these are
-#: cached domain objects and typed records, and nothing here licenses them.
+#: Receivers that are not published rows, whatever the key is called, matched
+#: on the receiver's last attribute, so ``pair.attacker.champion_data`` is a
+#: ``champion_data``. A key like ``name`` is universal on three streams AND on
+#: every champion_data and item dict in the tree, so matching on the key alone
+#: marked dozens of unrelated reads as convertible. The census speaks for rows;
+#: these are cached domain objects and typed records, and nothing here
+#: licenses them.
 NON_ROW_RECEIVERS = frozenset(
     {
         "champion_data",
-        "actor.champion_data",
         "item",
         "stats",
         "atom",
@@ -191,9 +192,9 @@ def _tolerance_modules() -> set[str]:
 
 
 def _receiver(expression: str) -> str | None:
-    """What the read is against; ``None`` when it is not a dict read at all."""
+    """The last attribute the read is against; ``None`` for no dict read."""
     match = re.match(r"^([A-Za-z_][\w.\[\]\"\']*)\.get\(", expression)
-    return match.group(1) if match else None
+    return match.group(1).rsplit(".", 1)[-1] if match else None
 
 
 def triage() -> dict[str, Any]:
