@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Literal
 
 from .champions import get_champion_module_contract
@@ -161,6 +161,48 @@ class _Edge:
         if self.kind == "recast":
             return f"{self.consume} is the recast of {self.setup} — {self.cite}"
         return self.cite
+
+
+@dataclass(slots=True)
+class _EdgeScan:
+    """One champion's slot corpora, the atoms read off them, and the edges so far.
+
+    The inference steps share this rather than closing over a dozen locals, so
+    a step is a named function over a named subject.  ``apply_atoms``,
+    ``passive_applies`` and ``consume_atoms`` are filled by their own steps in
+    order, and ``edges`` keeps insertion order because the deduplication at the
+    end keeps the first citation of each edge.
+    """
+
+    slots: list[str]
+    corpora: dict[str, dict[str, list[str]]]
+    infos: dict[str, Any]
+    texts: dict[str, str]
+    atexts: dict[str, str]
+    slot_by_name: dict[str, str]
+    apply_atoms: dict[str, list[str]] = field(default_factory=dict)
+    passive_applies: list[str] = field(default_factory=list)
+    consume_atoms: dict[str, list[tuple[str, str, str]]] = field(default_factory=dict)
+    edges: list[_Edge] = field(default_factory=list)
+
+    def add(self, setup: str, consume: str, kind: str, cite: str) -> None:
+        """Record one edge, unless either end is a slot with no corpus."""
+        if setup != consume and setup in self.corpora and consume in self.corpora:
+            self.edges.append(_Edge(setup, consume, kind, cite))
+
+    def slot_from_name(self, name: str) -> str | None:
+        """The slot a prose ability name refers to, by prefix on either side."""
+        name = name.strip().lower()
+        if name in self.slot_by_name:
+            return self.slot_by_name[name]
+        for key, slot in self.slot_by_name.items():
+            if key.startswith(name) or name.startswith(key):
+                return slot
+        return None
+
+    def has_consume_role(self, slot: str, roles: tuple[str, ...]) -> bool:
+        """Whether *slot* carries any consume atom of one of *roles*."""
+        return any(role in roles for role, _, _ in self.consume_atoms[slot])
 
 
 def _slot_corpus(

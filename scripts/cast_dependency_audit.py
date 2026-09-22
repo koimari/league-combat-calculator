@@ -176,60 +176,62 @@ class AuditDerivationError(RuntimeError):
 
 
 def apply_marker_keys(source: str | None = None) -> tuple[str, ...]:
-    """The parsed-entry keys the resolver's apply-atom loop reads, sorted.
+    """The parsed-entry keys the resolver's apply-atom step reads, sorted.
 
     This is the marker surface ``authored_marker_reach`` is measured over.
-    It is derived from ``detect_setup_consume_edges``'s own body: the loop
-    filling ``apply_atoms`` is located by its assignment target, and every
-    string key it reads off a parsed entry is a marker.  A read added to
-    that loop grows this set on the commit that adds it, which is what makes
-    "a newly read key with no negative test fails the audit" enforceable.
+    It is derived from the inference module's own body: the builder is
+    located by following the ``apply_atoms[slot] = <builder>(...)``
+    assignment, and every string key it reads off a parsed entry is a
+    marker.  A read added to that builder grows this set on the commit that
+    adds it, which is what makes "a newly read key with no negative test
+    fails the audit" enforceable.
     """
     text = source if source is not None else RESOLVER_SOURCE.read_text(encoding="utf-8")
-    loop = _apply_atom_loop(ast.parse(text))
-    if loop is None:
+    tree = ast.parse(text)
+    step = _apply_atom_step(tree)
+    if step is None:
         raise AuditDerivationError(
-            "the apply-atom loop in detect_setup_consume_edges could not be "
-            "located: the audit derives the marker surface from the "
-            "assignment to apply_atoms[...] and will not fall back to a "
-            "hand-written list"
+            "the apply-atom builder could not be located: the audit follows "
+            "the assignment to apply_atoms[...] to the function that fills "
+            "it, and will not fall back to a hand-written list"
         )
     keys: set[str] = set()
-    for node in ast.walk(loop):
+    for node in ast.walk(step):
         keys.update(_entry_key_reads(node))
     if not keys:
         raise AuditDerivationError(
-            "the apply-atom loop reads no parsed-entry key, which cannot be "
-            "true of a working detector"
+            "the apply-atom builder reads no parsed-entry key, which cannot "
+            "be true of a working detector"
         )
     return tuple(sorted(keys))
 
 
-def _apply_atom_loop(tree: ast.AST) -> ast.For | None:
-    """The ``for`` statement whose body assigns ``apply_atoms[...]``."""
+def _apply_atom_step(tree: ast.AST) -> ast.FunctionDef | None:
+    """The function the ``apply_atoms[slot] = ...`` assignment fills the slot from."""
+    builders = {
+        node.value.func.id
+        for node in ast.walk(tree)
+        if _assigns_apply_atoms(node)
+        and isinstance(node.value, ast.Call)
+        and isinstance(node.value.func, ast.Name)
+    }
     for node in ast.walk(tree):
-        if not isinstance(node, ast.FunctionDef):
-            continue
-        if node.name != "detect_setup_consume_edges":
-            continue
-        for statement in ast.walk(node):
-            if isinstance(statement, ast.For) and any(
-                _assigns_apply_atoms(inner) for inner in statement.body
-            ):
-                return statement
+        if isinstance(node, ast.FunctionDef) and node.name in builders:
+            return node
     return None
 
 
-def _assigns_apply_atoms(node: ast.stmt) -> bool:
-    """Whether *node* is the ``apply_atoms[slot] = atoms`` assignment."""
+def _assigns_apply_atoms(node: ast.AST) -> bool:
+    """Whether *node* assigns one slot's entry in an ``apply_atoms`` mapping."""
     if not isinstance(node, ast.Assign) or len(node.targets) != 1:
         return False
     target = node.targets[0]
-    return (
-        isinstance(target, ast.Subscript)
-        and isinstance(target.value, ast.Name)
-        and target.value.id == "apply_atoms"
-    )
+    if not isinstance(target, ast.Subscript):
+        return False
+    owner = target.value
+    if isinstance(owner, ast.Attribute):
+        return owner.attr == "apply_atoms"
+    return isinstance(owner, ast.Name) and owner.id == "apply_atoms"
 
 
 def _entry_key_reads(node: ast.AST) -> set[str]:

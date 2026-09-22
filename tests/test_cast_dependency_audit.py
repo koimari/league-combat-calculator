@@ -441,13 +441,13 @@ class TestMarkerSurfaceIsDerived:
         """The derivation follows the resolver, not a list kept beside it."""
         source = _resolver_source().replace(
             'if info.get("on_hit"):',
-            'if info.get("__probe_marker__"):\n            pass\n        if info.get("on_hit"):',
+            'if info.get("__probe_marker__"):\n        pass\n    if info.get("on_hit"):',
             1,
         )
         assert "__probe_marker__" in apply_marker_keys(source)
 
-    def test_a_missing_loop_raises_instead_of_publishing_an_empty_surface(self) -> None:
-        source = _resolver_source().replace("apply_atoms[s] = atoms", "pass")
+    def test_a_missing_step_raises_instead_of_publishing_an_empty_surface(self) -> None:
+        source = _resolver_source().replace("scan.apply_atoms[s] =", "_dropped =")
         with pytest.raises(AuditDerivationError):
             apply_marker_keys(source)
 

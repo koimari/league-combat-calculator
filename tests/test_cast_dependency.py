@@ -58,6 +58,8 @@ ROOT = Path(__file__).resolve().parent.parent
 LEAF = ROOT / "src" / "calculator" / "cast_dependency.py"
 #: The modules the cast-order derivation is spelled across: the entry point,
 #: the markers a row is read with, the inference, the merge and the fitted rule.
+#: The one module the edge-kind vocabulary is emitted from.
+INFERENCE = ROOT / "src" / "calculator" / "cast_edge_inference.py"
 RESOLVER_SOURCES = tuple(
     ROOT / "src" / "calculator" / f"{stem}.py"
     for stem in (
@@ -101,20 +103,30 @@ def _resolver_source() -> str:
 
 
 def _detector_edge_kinds() -> tuple[set[str], int]:
-    """Every edge kind ``detect_setup_consume_edges`` can emit, from source.
+    """Every edge kind the inference module can emit, from source.
 
-    ``add(setup, consume, kind, cite)`` is the detector's one edge
+    ``scan.add(setup, consume, kind, cite)`` is the detector's one edge
     constructor, so its third positional argument is the whole emittable
-    vocabulary.  Returns the literal kinds and the number of call sites
-    whose kind is computed rather than written down.
+    vocabulary.  The three condition pairings share one body and take their
+    kind from a ``_ConditionFan`` row, so those rows' second argument is read
+    too.  Returns the literal kinds and the number of call sites whose kind
+    is neither.
     """
-    detector = _resolver_function("detect_setup_consume_edges")
+    detector = ast.parse(INFERENCE.read_text(encoding="utf-8"))
     kinds: set[str] = set()
     dynamic = 0
     for node in ast.walk(detector):
         if not isinstance(node, ast.Call):
             continue
-        if not isinstance(node.func, ast.Name) or node.func.id != "add":
+        func = node.func
+        if isinstance(func, ast.Name) and func.id == "_ConditionFan":
+            row = node.args
+            assert len(row) == 4, f"unexpected fan arity at line {node.lineno}"
+            kinds.add(str(row[1].value))
+            continue
+        if not isinstance(func, ast.Attribute) or func.attr != "add":
+            continue
+        if not isinstance(func.value, ast.Name) or func.value.id != "scan":
             continue
         assert len(node.args) == 4, f"unexpected add() arity at line {node.lineno}"
         kind = node.args[2]
@@ -258,13 +270,14 @@ class TestVocabularies:
         """
         emitted, dynamic = _detector_edge_kinds()
         assert emitted == set(INFERRED_EDGE_KINDS)
-        assert dynamic == 1, (
-            "a second dynamically-computed edge kind entered the detector; "
-            "its value population needs the assertion below"
+        assert dynamic == 2, (
+            "a third dynamically-computed edge kind entered the detector; the "
+            "two known ones are the declaration pass-through asserted below "
+            "and the condition fan, whose rows this derivation already reads"
         )
 
-    def test_the_one_dynamic_kind_stays_inside_the_vocabulary(self) -> None:
-        """The detector's single non-constant kind is a verbatim pass-through.
+    def test_the_declared_dynamic_kind_stays_inside_the_vocabulary(self) -> None:
+        """The detector's declaration-fed kind is a verbatim pass-through.
 
         A module OPTIONS rotation declaration carrying ``setup_slot`` hands
         its own ``kind`` straight to ``add(...)``, so the emittable set is
