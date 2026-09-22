@@ -1,5 +1,6 @@
 """Keep production hardening visible and regression-tested."""
 
+import re
 from pathlib import Path
 
 
@@ -47,16 +48,27 @@ def test_ci_covers_net_new_main_branch_and_uses_immutable_actions():
 
 def test_the_security_gates_run_in_the_jobs_that_own_them():
     """The commands moved into ci/ with the rest of each job's checks
-    (docs/ci-local.md); what they must still cover is pinned here."""
+    (docs/ci-local.md); what they must still cover is pinned here, in the
+    spelling each script's ``run_step`` label uses."""
     static = Path("ci/static.sh").read_text(encoding="utf-8")
     container = Path("ci/container.sh").read_text(encoding="utf-8")
 
-    assert "-r requirements.txt" in static
-    assert "-r requirements-runtime.txt" in static
-    assert "bandit" in static
-    assert "src -ll" in static
-    assert "docker build --tag" in container
-    assert "id -u" in container
+    assert "pip-audit -r requirements.txt" in static
+    assert "pip-audit -r requirements-runtime.txt" in static
+    assert "bandit -r src -ll" in static
+    assert 'docker build --tag "$IMAGE" .' in container
+    assert 'docker exec "$NAME" id -u' in container
     assert "/api/calculate" in container
     assert ".State.Health.Status" in container
     assert "Metrics module unavailable" in container
+
+
+def test_the_image_the_container_job_builds_is_the_one_trivy_scans():
+    """Two homes that must agree: the tag ci/container.sh builds and the
+    ``image-ref`` the scan action reads, two steps later in the workflow."""
+    container = Path("ci/container.sh").read_text(encoding="utf-8")
+    workflow = Path(".github/workflows/tests.yml").read_text(encoding="utf-8")
+
+    image = re.search(r'^IMAGE="(\S+)"', container, re.MULTILINE)
+    assert image, "ci/container.sh names no image"
+    assert f"image-ref: {image[1]}" in workflow
