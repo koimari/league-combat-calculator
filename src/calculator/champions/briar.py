@@ -553,7 +553,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         lambda source: source.startswith("stacking_dot_"),
     ):
         event = payment.event
-        dealt = float(event.get("raw_damage", _row_damage(event)) or 0.0)
+        dealt = _healing.ledger_pre_mitigation_damage(event)
         amount = 0.25 * dealt
         if amount > 0.0:
             healing.append(

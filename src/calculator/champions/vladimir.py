@@ -26,7 +26,6 @@ from ..ability_atoms import (
 )
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from ..damage_event_row import event_damage as _row_damage
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -404,7 +403,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     ):
         # Pre-mitigation damage per the wiki ("30% of the pre-mitigation
         # damage dealt"); the engine exposes it as event["raw_damage"].
-        dealt = float(event.get("raw_damage", _row_damage(event)) or 0.0)
+        dealt = _healing.ledger_pre_mitigation_damage(event)
         _healing.heal_from_damage(healing, event, 0.30 * dealt, "Sanguine Pool")
     # Hemoplague (R): flat heal per infected champion, reduced for later
     # targets (wiki: "Heal: 150 / 250 / 350 (+ 70% AP)" and

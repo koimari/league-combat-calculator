@@ -25,6 +25,11 @@ The accessors below take the INTERSECTION, because the callers that adopted
 them serve both streams. A caller that knows which stream it holds may
 require more, and ``tests/test_row_stream_census.py`` is the table to check
 before doing so.
+
+``raw_damage`` is the one field outside that intersection with an accessor,
+and it takes the optional form for exactly the reason above: a reader that
+serves both streams gets ``None`` from a fight row and says for itself what
+it prices without a pre-mitigation number.
 """
 
 from __future__ import annotations
@@ -33,12 +38,13 @@ from collections.abc import Mapping
 from functools import partial
 from typing import Any
 
-from .event_row_field import required_field
+from .event_row_field import optional_field, required_field
 
 __all__ = [
     "REQUIRED_FIELDS",
     "event_damage",
     "event_damage_type",
+    "event_raw_damage",
     "event_source",
     "event_time",
 ]
@@ -71,3 +77,8 @@ def event_damage_type(event: Mapping[str, Any]) -> str:
 def event_source(event: Mapping[str, Any]) -> str:
     """The breakdown row this packet belongs to."""
     return str(_required(event, "source"))
+
+
+def event_raw_damage(event: Mapping[str, Any]) -> float | None:
+    """The pre-mitigation damage; ``None`` where this row's walk priced none."""
+    return optional_field(event, "raw_damage", float)

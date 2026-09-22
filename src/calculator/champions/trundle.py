@@ -16,7 +16,6 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_atoms import ability_payload
-from ..damage_event_row import event_damage as _row_damage
 from ..damage_event_row import event_time as _row_time
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
@@ -188,7 +187,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     for event in _healing.attributed_events(
         ctx.damage_events, lambda source, _event: source == "R"
     ):
-        dealt = float(event.get("raw_damage", _row_damage(event)) or 0.0)
+        dealt = _healing.ledger_pre_mitigation_damage(event)
         _healing.heal_from_damage(
             healing, event, dealt, "Subjugate", link_to_damage=False
         )

@@ -325,7 +325,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     )
     for payment in ctx.payments(_healing.HealAnchor.CAST, "W"):
         event = payment.event
-        raw = float(event.get("raw_damage", _row_damage(event)) or 0.0)
+        raw = _healing.ledger_pre_mitigation_damage(event)
         post = _row_damage(event)
         outer_raw = max(0.0, raw - base_raw)
         amount = outer_raw * (post / raw) if raw > 0.0 else 0.0

@@ -23,6 +23,7 @@ from functools import partial
 from typing import Any
 
 from .cast_event_row import cast_time as cast_event_time
+from .damage_event_row import event_raw_damage
 from .event_row_field import required_field
 
 # The event source a heal rule reads: a slot letter, a set of source keys,
@@ -120,6 +121,13 @@ def ledger_time(event: Mapping[str, Any]) -> float:
 def ledger_damage(event: Mapping[str, Any]) -> float:
     """The mitigated damage it dealt; ``0.0`` is a real reading, absent is not."""
     return float(_required_ledger_field(event, "damage"))
+
+
+def ledger_pre_mitigation_damage(event: Mapping[str, Any]) -> float:
+    """The damage before resistances, or the mitigated figure where the
+    packet's own pricing site stamped no pre-mitigation one."""
+    raw = event_raw_damage(event)
+    return ledger_damage(event) if raw is None else raw
 
 
 def attributed_events(
