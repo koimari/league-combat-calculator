@@ -1050,7 +1050,7 @@ _RATCHETED_ZERO_POLICY_SECTIONS = {
 def _zero_policy_failures(
     committed: Mapping[str, Any], fresh: Mapping[str, Any]
 ) -> list[str]:
-    """The zero-policy half of the gate: one refusal, two per-key ratchets.
+    """The zero-policy half of the gate: one refusal, two ratchets, one equality.
 
     Fails closed on every path.  A receipt with the section deleted, a
     missing total, or a non-integer where a count belongs is a failure, not
@@ -1112,6 +1112,14 @@ def _zero_policy_failures(
                     f"grew from {recorded!r} to {measured} "
                     f"({ZERO_POLICY_ISSUE})"
                 )
+
+    # The ratchets refuse growth; equality refuses a shrink the receipt lacks.
+    failures.extend(
+        f"zero-policy frontier: the receipt's {section} does not match the tree; "
+        "run --write"
+        for section in ("totals", *_RATCHETED_ZERO_POLICY_SECTIONS)
+        if committed_zero.get(section) != fresh_zero[section]
+    )
     return failures
 
 

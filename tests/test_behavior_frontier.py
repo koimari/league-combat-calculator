@@ -417,13 +417,36 @@ def test_a_new_hand_built_entry_fails_the_gate() -> None:
     assert any("hand_built_entries grew" in failure for failure in failures)
 
 
-def test_shrinking_a_population_is_not_a_failure() -> None:
-    """The ratchet is non-growing, not equality: migrating one is progress."""
+def test_a_shrunk_population_is_a_stale_receipt_not_a_growth() -> None:
+    """Migrating a site is progress, and the branch migrating it owns the --write."""
     report = behavior_frontier.scan()
     committed = behavior_frontier.build_receipt(report)
     committed["zero_policy_frontier"]["totals"]["produced_fallbacks"] += 5
     failures = behavior_frontier.check(report, committed)
-    assert not any("produced_fallbacks" in failure for failure in failures)
+    assert not any("grew" in failure for failure in failures)
+    assert failures == (
+        "zero-policy frontier: the receipt's totals does not match the tree; "
+        "run --write",
+    )
+
+
+def test_a_retired_site_fails_check_until_the_receipt_is_rewritten(
+    tmp_path,
+) -> None:
+    """``--check`` and the equality test above agree on a stale receipt.
+
+    Real source, not a seam: deleting a module that holds a hand-built entry
+    from a copy of the champion tree retires its population, which
+    ``--check`` against the committed receipt must refuse.
+    """
+    champions = tmp_path / "champions"
+    shutil.copytree(behavior_frontier.CHAMPIONS_ROOT, champions)
+    assert behavior_frontier.main(["--check"], champions_root=champions) == 0
+    module = sorted(_receipt()["zero_policy_frontier"]["hand_built_entries_by_module"])[
+        0
+    ]
+    (champions / module).unlink()
+    assert behavior_frontier.main(["--check"], champions_root=champions) == 1
 
 
 def test_the_scan_finds_a_planted_fallback_and_a_planted_entry(tmp_path) -> None:
