@@ -10,6 +10,7 @@ from ..cast_event_row import cast_time as _row_cast_time
 from ..champions.shared_option_keys import TAHM_KENCH_GREY_SHIELD
 from ..champions.skill_orders import get_ability_rank
 from ..champions.slot_extract import extract_named
+from ..composed_event_row import row_damage, row_raw_damage, row_time
 from ..healing import GREY_HEALTH_RULE_CHAMPIONS
 from ..survival import SUPPORT_RANK_KEY, TransitionRank, action_key
 from .grey_rates import (
@@ -340,12 +341,11 @@ def _grey_health_receipts(
 
 
 def _grey_damage_record(event: Mapping[str, Any]) -> tuple[float, float, float]:
-    """One ``(time, post_mitigation, pre_mitigation)`` grey-health record."""
-    return (
-        float(event.get("time", 0.0)),
-        float(event.get("damage", 0.0) or 0.0),
-        float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0),
-    )
+    """One ``(time, post_mitigation, pre_mitigation)`` record; a packet priced
+    with no pre-mitigation figure banks the post-mitigation one for both."""
+    damage = row_damage(event)
+    raw = row_raw_damage(event)
+    return (row_time(event), damage, damage if raw is None else raw)
 
 
 def _apply_grey_health(
@@ -367,14 +367,10 @@ def _apply_grey_health(
     params = subject.params
     duration = params.fight_duration_seconds
     main_incoming = [
-        event
-        for event in ledgers.incoming["main"]
-        if float(event.get("time", 0.0)) <= duration
+        event for event in ledgers.incoming["main"] if row_time(event) <= duration
     ]
     main_outgoing = [
-        event
-        for event in ledgers.outgoing["main"]
-        if float(event.get("time", 0.0)) <= duration
+        event for event in ledgers.outgoing["main"] if row_time(event) <= duration
     ]
     grey_heals, grey_shields, grey_summary = _grey_health_receipts(
         main_name,

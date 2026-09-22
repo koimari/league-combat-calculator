@@ -22,6 +22,7 @@ from src.calculator.composed_event_row import (
     row_attacker,
     row_damage,
     row_damage_type,
+    row_raw_damage,
     row_sequence,
     row_source_key,
     row_target,
@@ -150,6 +151,13 @@ class TestTheReadersRefuseAnAbsentRequiredKey:
         assert row_sequence(ROW) == 3
         assert row_attacker(ROW) == "main"
         assert row_target(ROW) == "enemy1"
+
+    def test_the_optional_reader_answers_none_rather_than_a_number(self):
+        """``raw_damage`` is on about four fifths of published rows, so its
+        absence is a real answer the caller has to state a reading for."""
+        assert row_raw_damage(ROW) is None
+        assert row_raw_damage({**ROW, "raw_damage": 0.0}) == 0.0
+        assert row_raw_damage({**ROW, "raw_damage": 180.0}) == 180.0
 
     @pytest.mark.parametrize("field", ["time", "damage", "sequence"])
     def test_zero_is_a_reading_and_not_an_absence(self, field):

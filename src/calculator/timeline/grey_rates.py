@@ -9,6 +9,7 @@ from typing import Any
 from ..champions.inputs import declared_option_defaults
 from ..champions.skill_orders import get_ability_rank
 from ..champions.slot_extract import extract_cooldown
+from ..composed_event_row import row_damage, row_raw_damage
 
 # ─────────────────────────────────────────────────────────────────────────
 # Grey-health primitive (E8a)
@@ -278,11 +279,11 @@ def _grey_health_event_receipt(
         if not incoming:
             return None
         ratio = _pyke_store_ratio(stats, enemy_count)
-        return ratio * max(0.0, float(event.get("damage", 0.0) or 0.0))
+        return ratio * max(0.0, row_damage(event))
     if name == "Rengar":
         if not incoming:
             return None
-        return _RENGAR_W_STORE_RATIO * max(0.0, float(event.get("damage", 0.0) or 0.0))
+        return _RENGAR_W_STORE_RATIO * max(0.0, row_damage(event))
     if name == "Tahm Kench":
         if not incoming:
             return None
@@ -291,15 +292,19 @@ def _grey_health_event_receipt(
             ability_rank = max(1, int(get_ability_rank("E", level, name)))
         rank_row = _TAHM_E_STORE_MULTI_RANK if enemy_count >= 2 else _TAHM_E_STORE_RANK
         ratio = rank_row[min(ability_rank, len(rank_row)) - 1]
-        return ratio * max(0.0, float(event.get("damage", 0.0) or 0.0))
+        return ratio * max(0.0, row_damage(event))
     if name == "Mordekaiser":
-        damage = max(0.0, float(event.get("damage", 0.0) or 0.0))
+        damage = max(0.0, row_damage(event))
         if incoming:
-            raw = max(0.0, float(event.get("raw_damage", damage) or 0.0))
-            return _MORDE_W_STORE_TAKEN_PRE_RATIO * raw
+            # A packet priced with no pre-mitigation figure banks the
+            # post-mitigation one, which is all that row states.
+            raw = row_raw_damage(event)
+            return _MORDE_W_STORE_TAKEN_PRE_RATIO * max(
+                0.0, damage if raw is None else raw
+            )
         return _MORDE_W_STORE_DEALT_RATIO * damage
     if name == "Locke":
         if not incoming:
             return None
-        return _LOCKE_W_STORE_RATIO * max(0.0, float(event.get("damage", 0.0) or 0.0))
+        return _LOCKE_W_STORE_RATIO * max(0.0, row_damage(event))
     return None

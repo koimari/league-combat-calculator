@@ -19,6 +19,10 @@ Two committed corpora fix it, and neither is this module's own reading:
 A field the composition's own schedulers stamp but neither census names --
 ``_event_id``, ``_sk``, ``ability_instance`` -- is read with its own default
 here rather than required, because no committed corpus speaks for it.
+
+``raw_damage`` is the one field with an accessor and no requirement: the
+publisher measures it at 1,365 of 1,706 rows, so it gets the optional form
+and each caller states what it does without one.
 """
 
 from __future__ import annotations
@@ -34,6 +38,7 @@ __all__ = [
     "row_attacker",
     "row_damage",
     "row_damage_type",
+    "row_raw_damage",
     "row_sequence",
     "row_source_key",
     "row_target",
@@ -72,6 +77,12 @@ def row_damage(event: Mapping[str, Any]) -> float:
 def row_damage_type(event: Mapping[str, Any]) -> str:
     """Which resistance the packet met."""
     return str(_required(event, "damage_type"))
+
+
+def row_raw_damage(event: Mapping[str, Any]) -> float | None:
+    """The pre-mitigation damage; ``None`` where the producer priced none."""
+    raw = event.get("raw_damage")
+    return None if raw is None else float(raw)
 
 
 def row_source_key(event: Mapping[str, Any]) -> str:
