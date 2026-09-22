@@ -377,3 +377,34 @@ class TestCastHeals:
         assert all(heal["amount_formula"] is formula for heal in heals)
         assert heals[0]["kind"] == "champion_ability"
         assert heals[0]["_trigger_source"] == "W"
+
+
+class TestTheLedgerEventReaders:
+    """Six champion heal rules read their trigger packet through these two,
+    so what each answers is what those rules pay on."""
+
+    def test_a_packet_that_stamped_a_raw_number_heals_on_it(self) -> None:
+        event = {**_damage_event(1.0), "raw_damage": 180.0}
+        assert _healing.ledger_pre_mitigation_damage(event) == 180.0
+
+    def test_a_packet_with_no_raw_number_heals_on_what_it_dealt(self) -> None:
+        """``raw_damage`` is on most packets and not all, and a rule reading
+        it straight would heal nothing on the rest."""
+        assert _healing.ledger_pre_mitigation_damage(_damage_event(1.0)) == 100.0
+
+    def test_the_sequence_reads_as_the_int_the_engine_placed(self) -> None:
+        assert _healing.ledger_sequence({**_damage_event(1.0), "sequence": 4}) == 4
+
+    @pytest.mark.parametrize(
+        ("field", "reader"),
+        [
+            ("damage", _healing.ledger_pre_mitigation_damage),
+            ("sequence", _healing.ledger_sequence),
+        ],
+    )
+    def test_an_absent_stamp_is_refused_by_name(self, field, reader) -> None:
+        event = {
+            key: value for key, value in _damage_event(1.0).items() if key != field
+        }
+        with pytest.raises(ValueError, match=field):
+            reader(event)
