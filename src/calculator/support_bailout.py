@@ -14,6 +14,7 @@ from .ability_atoms import (
     required_ranked_attribute_atom,
 )
 from .champions import renata_bailout_authority
+from .event_row_field import build_stat_field
 from .item_behavior import PacketKind
 
 # P1-Renata-W: every Bailout number below is read from one of these typed
@@ -141,7 +142,7 @@ def _bailout_ramp_metadata(
     """
     atom_key = str(champion_data.get("key") or champion_data.get("name", ""))
     champion_label = str(champion_data.get("name", ""))
-    ability_power = float(stats.get("ability_power", 0.0) or 0.0)
+    ability_power = float(build_stat_field(stats, "ability_power"))
     metadata: dict[str, Any] = {}
     atoms: list[dict[str, Any]] = []
     for field_name, attribute in _BAILOUT_RAMP_ATTRIBUTES:
