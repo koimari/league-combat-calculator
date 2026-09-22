@@ -41,7 +41,6 @@ def _fight(
     enemy: str = _ENEMY,
     enemy_items: list[str] | None = None,
 ) -> dict:
-    # pylint: disable=too-many-arguments
     payload = {
         "champion": champion,
         "level": 18,

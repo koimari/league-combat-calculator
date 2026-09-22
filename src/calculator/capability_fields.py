@@ -7,7 +7,7 @@ from typing import Any
 
 # The descriptor is deliberately explicit: each public capability has a
 # payload key, browser state path, control token, and availability metadata.
-def _field(  # pylint: disable=too-many-arguments
+def _field(
     *,
     payload_field: str,
     state_path: str | None = None,

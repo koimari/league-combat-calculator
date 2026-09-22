@@ -150,7 +150,7 @@ def from_loadout(
     )
 
 
-def main_combatant(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def main_combatant(
     champion_data: dict[str, Any],
     level: int,
     items: list[dict[str, Any]],

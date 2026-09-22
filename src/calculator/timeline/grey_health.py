@@ -57,7 +57,6 @@ from .records import (
 )
 
 
-# pylint: disable=too-many-arguments
 # pylint: disable=too-many-locals,too-many-branches,too-many-statements
 def _grey_health_receipts(
     champion_name: str,

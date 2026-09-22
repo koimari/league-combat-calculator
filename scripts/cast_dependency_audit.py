@@ -581,7 +581,7 @@ def _record_markers(
             cc_contract[(name, slot)] = str(error)
 
 
-def _record_merge(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def _record_merge(
     name: str,
     state: str,
     declarations: Sequence[CastDependency],
@@ -634,7 +634,7 @@ def _has_prefix(rows: Iterable[str], prefix: str) -> bool:
     return any(row.startswith(prefix) for row in rows)
 
 
-def _record_routes(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def _record_routes(
     name: str,
     champion_data: Mapping[str, Any],
     parsed: Mapping[str, Any],
@@ -686,7 +686,7 @@ def _record_routes(  # pylint: disable=too-many-arguments,too-many-positional-ar
             routes[key].add("custom_order_refusal")
 
 
-def _derived_order(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def _derived_order(
     name: str,
     parsed: Mapping[str, Any],
     champion_data: Mapping[str, Any],

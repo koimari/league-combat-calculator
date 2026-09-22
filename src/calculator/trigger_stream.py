@@ -631,7 +631,7 @@ _KNIGHTS_VOW_IMPL = "item_support_effects.schedule_knights_vow"
 _DECLARED_PRICE_IMPL = "survival.transitions.apply_declared_price"
 
 
-def _walk_item(  # pylint: disable=too-many-arguments
+def _walk_item(
     mechanic: str,
     item: str,
     packet_source: str | RiderDelivery,

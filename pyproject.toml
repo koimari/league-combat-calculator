@@ -43,6 +43,15 @@ excludes = ["vendor"]  # external code (CLAUDE.md rule 1)
 # contract is a table of callables.
 rules-off = [26]
 
+# Arity has one owner, and it is sightline above: #23 counts a signature's
+# parameters and #55 its positional ones, over the whole tree, naming the shape
+# the parameters recur in rather than a threshold. Pylint asking the same
+# question bought per-function disables and no finding sightline did not
+# already make. Its locals count stays on: nothing else measures a body's
+# working set, and a check with no owner is worse than a check with two.
+[tool.pylint.messages_control]
+disable = ["too-many-arguments", "too-many-positional-arguments"]
+
 # The simply-elegant house comment standard, minus the rules this tree answers
 # elsewhere: a module or function docstring carries the "why" (traps, sources,
 # contracts) as prose, and scripts/prose_lint.py bounds src/ and scripts/ docstrings
