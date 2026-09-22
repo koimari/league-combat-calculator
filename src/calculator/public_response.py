@@ -298,12 +298,12 @@ def _primary(key: str, results: list[dict[str, Any]]) -> object:
 
 def _any_true(key: str, results: list[dict[str, Any]]) -> object:
     """OR one published boolean across targets."""
-    return any(result.get(key, False) for result in results)
+    return any(result[key] for result in results)
 
 
 def _concat(key: str, results: list[dict[str, Any]]) -> object:
     """Concatenate one ordered per-target stream."""
-    return [event for result in results for event in result.get(key, [])]
+    return [event for result in results for event in result[key]]
 
 
 def _concat_stamped(key: str, results: list[dict[str, Any]]) -> object:
@@ -315,13 +315,13 @@ def _concat_stamped(key: str, results: list[dict[str, Any]]) -> object:
     return [
         dict(event, target_index=target_index)
         for target_index, result in enumerate(results)
-        for event in result.get(key, [])
+        for event in result[key]
     ]
 
 
 def _summed(key: str, results: list[dict[str, Any]]) -> object:
     """Total one published number across targets."""
-    return round(sum(float(result.get(key, 0.0)) for result in results), 1)
+    return round(sum(float(result[key]) for result in results), 1)
 
 
 def _summed_measure(
