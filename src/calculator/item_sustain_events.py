@@ -4,15 +4,36 @@ from .damage_event_row import (
     event_damage as _row_damage,
     event_time as _row_time,
 )
+from .event_row_field import optional_field, required_field
 from .heal_event_row import healed_amount, healed_time
 import math
 from collections.abc import Mapping
+from functools import partial
 from typing import Any
 
 from . import resource_events
 from .interpreters.sustain import declared_sustain
 from .item_behavior import PostMitigationHealRule, ResourceDrainRule
 from .item_stat_block import get_item_stats
+
+#: One field of the Eternity heal row the mana ledger projects.
+_catalyst_field = partial(
+    required_field,
+    kind="catalyst Eternity heal row",
+    stamper="mana_item_schedules.CatalystHealRow.public",
+)
+#: One field of the auto-attack uptime receipt; all four arms stamp it.
+_schedule_field = partial(
+    required_field,
+    kind="auto-attack uptime receipt",
+    stamper="auto_attack_policy.resolve_auto_attack_policy",
+)
+
+
+# The tolerance tests/test_item_sustain.py drives: an empty `champion_stats`.
+def _partial_stat(stats: Mapping[str, Any], field: str) -> float:
+    """One build stat off a block a caller may have handed empty."""
+    return float(stats[field] or 0.0) if field in stats else 0.0
 
 
 def _item_self_healing_events(
@@ -38,10 +59,7 @@ def _item_self_healing_events(
     if duration is None:
         schedule = result.get("auto_attack_schedule")
         if isinstance(schedule, Mapping):
-            try:
-                duration = float(schedule.get("window_seconds", 0.0))
-            except (TypeError, ValueError):
-                duration = 0.0
+            duration = float(_schedule_field(schedule, "window_seconds"))
         else:
             duration = max(
                 (
@@ -108,7 +126,7 @@ def _item_self_healing_events(
     # can be certified without inventing a starting-mana assumption.
     drain = declared_sustain(item_names, ResourceDrainRule)
     if drain is not None:
-        max_mana = float(stats.get("max_mana", 0.0) or 0.0)
+        max_mana = _partial_stat(stats, "max_mana")
         remaining = float(result.get("resource_remaining", 0.0) or 0.0)
         can_only_heal = max_mana <= 0.0 or remaining >= max_mana - 1e-9
         if can_only_heal and duration > 0.0:
@@ -164,7 +182,8 @@ def _item_self_healing_events(
         # presence answers the question even when the ledger row carries no
         # ``kind`` (a unit-level ledger built without the fight's identity).
         mana_account = isinstance(ledger_section, Mapping) and (
-            str(ledger_section.get("kind", "")) == resource_events.RESOURCE_KIND_MANA
+            optional_field(ledger_section, "kind", str)
+            == resource_events.RESOURCE_KIND_MANA
             or isinstance(ledger_section.get("catalyst"), Mapping)
         )
         if not mana_account:
@@ -179,7 +198,7 @@ def _item_self_healing_events(
             notes = result.get("notes")
             if isinstance(notes, list):
                 kind = (
-                    str(ledger_section.get("kind", ""))
+                    optional_field(ledger_section, "kind", str) or ""
                     if isinstance(ledger_section, Mapping)
                     else ""
                 )
@@ -223,9 +242,9 @@ def _item_self_healing_events(
                         "amount": amount,
                         "source": "Catalyst of Aeons (Eternity)",
                         "kind": "item_proc",
-                        "_trigger_source": str(heal.get("slot", "cast")),
+                        "_trigger_source": str(_catalyst_field(heal, "slot")),
                         "_trigger_time": event_time,
-                        "_trigger_sequence": int(heal.get("ordinal", 1) or 1) - 1,
+                        "_trigger_sequence": int(_catalyst_field(heal, "ordinal")) - 1,
                     }
                 )
 
@@ -244,9 +263,7 @@ def _item_self_healing_events(
         item_stats = get_item_stats(item if isinstance(item, dict) else dict(item))
         item_regen_flat += float(item_stats["health_regen_flat"])
         item_regen_percent += float(item_stats["health_regen_percent"])
-    base_regen_per_second = (
-        float(stats.get("base_health_regen_per_five", 0.0) or 0.0) / 5.0
-    )
+    base_regen_per_second = _partial_stat(stats, "base_health_regen_per_five") / 5.0
     item_regen = (
         (base_regen_per_second * (1.0 + item_regen_percent / 100.0))
         + item_regen_flat / 5.0
