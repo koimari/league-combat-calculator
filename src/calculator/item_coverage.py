@@ -865,7 +865,7 @@ def require_certified_target_timeline(
     coarse source would mis-time the trigger.  This runs after the fight so
     the error can name the exact uncertified sources instead of guessing.
     """
-    if bool(timeline_coverage.get("complete", False)):
+    if bool(timeline_coverage["complete"]):
         return
     conditional = next(
         (
@@ -877,7 +877,7 @@ def require_certified_target_timeline(
     )
     if conditional is None:
         return
-    coarse = [str(source) for source in timeline_coverage.get("coarse_sources", [])]
+    coarse = [str(source) for source in timeline_coverage["coarse_sources"]]
     named = ", ".join(coarse) if coarse else "at least one damage source"
     verb = "is" if len(coarse) <= 1 else "are"
     raise ValueError(

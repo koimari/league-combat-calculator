@@ -67,6 +67,11 @@ def source_event_phase(row: Mapping[str, Any]) -> str | None:
     return optional_field(row, "event_phase", str)
 
 
+def source_detail(row: Mapping[str, Any]) -> str | None:
+    """Its user-visible sentence; ``None`` where its producer wrote none."""
+    return optional_field(row, "detail", str)
+
+
 def source_hit_count(row: Mapping[str, Any]) -> int | None:
     """How many swings it counts; ``None`` off the auto-attack stream."""
     return optional_field(row, "count", int)

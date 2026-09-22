@@ -4,11 +4,15 @@ from collections.abc import Iterable, Mapping
 from typing import Any, NamedTuple
 
 from ...ability_atoms import ability_field, ability_payload
+from ...cast_event_row import cast_slot
+from ...cast_event_row import cast_time as cast_event_time
 from ...champions.ashe import ASHE_FOCUS_STACK_RULE
 from ...champions.shared_option_keys import ASHE_FOCUS_ACTIVE, ASHE_FOCUS_STACKS
+from ...damage_event_row import event_time
 from ...state_timeline import EventStamp
 from ...timed_stacks import TimedStackState
 from ..config import _seeded_option_stacks, declared_option_default
+from ..ledger.breakdown import source_damage_events
 from ..results import RotationResult
 from ..state import FightState
 from .account import StackEvent, _resource_ledger, _stack_receipt_row
@@ -70,10 +74,10 @@ def _feed_ashe_focus_stack(
         )
 
     events: list[tuple[float, str, int]] = []
-    events.extend((float(cast.get("time", 0.0)), "consume", 0) for cast in q_casts)
+    events.extend((cast_event_time(cast), "consume", 0) for cast in q_casts)
     for index, swing in enumerate(swings):
         if isinstance(swing, Mapping):
-            events.append((float(swing.get("time", 0.0) or 0.0), "gain", index + 1))
+            events.append((event_time(swing), "gain", index + 1))
     events.sort(
         key=lambda entry: (entry[0], 0 if entry[1] == "consume" else 1, entry[2])
     )
@@ -187,10 +191,9 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
         return
     seeded = _seeded_option_stacks(option, "champion", "Ashe", ASHE_FOCUS_STACKS)
     stack = TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=seeded)
-    swings = (state.breakdown.get("auto_attacks") or {}).get("damage_events") or []
-    q_casts = [
-        event for event in rotation.cast_events if str(event.get("slot", "")) == "Q"
-    ]
+    auto_row = state.breakdown.get("auto_attacks")
+    swings = [] if not auto_row else (source_damage_events(auto_row) or [])
+    q_casts = [event for event in rotation.cast_events if cast_slot(event) == "Q"]
     walk = _feed_ashe_focus_stack(
         stack,
         swings,

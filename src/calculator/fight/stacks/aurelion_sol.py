@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from ...cast_event_row import cast_ordinal, cast_slot
+from ...cast_event_row import cast_time as cast_event_time
 from ...champions.shared_option_keys import AURELION_SOL_STARDUST_STACKS
 from ..config import _seeded_option_stacks
 from ..results import RotationResult
@@ -41,17 +43,15 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
     # The accepted stream: one Q burst vs the champion target per full
     # second of channel (timed) or 3 per Q cast (one-rotation/auto-only),
     # mirroring the module's _channel_window semantics from state fields.
-    q_casts = [
-        event for event in rotation.cast_events if str(event.get("slot", "")) == "Q"
-    ]
+    q_casts = [event for event in rotation.cast_events if cast_slot(event) == "Q"]
     timed = not (state.one_rotation or state.auto_attacks_only)
     bursts_per_cast = (
         int(state.fight_duration_seconds) if timed else _Q_BURSTS_PER_CHANNEL
     )
     if q_casts and bursts_per_cast > 0:
         for cast in q_casts:
-            cast_time = float(cast.get("time", 0.0))
-            ordinal = int(cast.get("ordinal", 0) or 0)
+            cast_time = cast_event_time(cast)
+            ordinal = cast_ordinal(cast)
             for burst_index in range(bursts_per_cast):
                 account.add(
                     StackEvent(

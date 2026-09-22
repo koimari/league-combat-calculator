@@ -56,7 +56,8 @@ def _add_senna_souls(
                 reason="",
                 fields={
                     "event": "takedown",
-                    "target": shield_outcome.get("target", "target"),
+                    # The one modelled subject: the outcome names no other.
+                    "target": "target",
                     "event_time": round(kill_time, 3),
                 },
             )

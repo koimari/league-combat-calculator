@@ -7,6 +7,7 @@ from ...champions.shared_option_keys import (
     HEIMERDINGER_GRENADE_UPGRADE,
     HEIMERDINGER_ROCKETS,
 )
+from ...damage_event_row import event_raw_damage
 from ..results import RotationResult
 from ..state import FightState
 from .account import StackEvent, _resource_ledger, _StackAccount
@@ -51,10 +52,13 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
         if events:
             for index, event in enumerate(events, start=1):
                 event_time = float(event["time"])
+                raw = event_raw_damage(event)
                 account.add(
                     StackEvent(
                         "hit",
-                        float(event.get("raw_damage", 0.0)),
+                        # A packet its producer priced no pre-mitigation
+                        # figure for counts the hit at nothing.
+                        0.0 if raw is None else raw,
                         event_time,
                         f"{slot.lower()}_part",
                         accepted=True,

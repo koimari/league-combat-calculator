@@ -408,9 +408,9 @@ def calculate_total_stats(
         "lethality": lethality,
         "flat_armor_penetration": flat_armor_pen,
         "armor_penetration_percent": final_armor_pen_percent,
-        "armor_penetration_bonus_percent": total_item_stats.get(
-            "armor_penetration_bonus_percent", 0.0
-        ),
+        "armor_penetration_bonus_percent": total_item_stats[
+            "armor_penetration_bonus_percent"
+        ],
         "critical_strike_chance": total_item_stats["critical_strike_chance"],
         "max_mana": round(total_mana),
         "bonus_mana": round(pool_bonus_mana),
