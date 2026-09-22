@@ -94,6 +94,7 @@ FIGHT_STEPS_WITHOUT_A_FRONT_DOOR = (
     "fight.autos.copied_on_hit",
     "fight.autos.double_shot",
     "fight.autos.first_auto_strikes",
+    "fight.autos.live_health_on_hit",
     "fight.autos.on_hit_healing",
     "fight.autos.on_hit_layering",
     "fight.autos.simulation",

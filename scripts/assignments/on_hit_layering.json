@@ -1,0 +1,18 @@
+{
+ "source": "src/calculator/fight/autos/on_hit_layering.py",
+ "modules": [
+  {
+   "path": "src/calculator/fight/autos/live_health_on_hit.py",
+   "docstring": "The on-hits that read the target's live health: the current-health walk down the swings, and the schedule-gated procs.",
+   "defs": [
+    "_swing_event_row",
+    "_pay_current_health_on_hit",
+    "_pay_scheduled_live_health_procs"
+   ]
+  }
+ ],
+ "decisions": [
+  "The two live-health steps go together because both price one proc at the health the procs before it left, and both stamp their rows onto the same authored swing times.",
+  "`_swing_event_row` goes with them rather than staying behind: it is the row stamp both steps and the residue's static-strike rows use, and a residue-private helper a moved step reads is a cycle."
+ ]
+}

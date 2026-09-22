@@ -49,12 +49,11 @@ from typing import Any
 
 from ... import item_effects
 from ...ability_atoms import ability_field
-from ..cast_slots import slot_cast_start
 from ..items.energized_packets import _first_auto_damage_by_auto_for_health_walk
 from ..ledger.event_ledger import _ordered_damage_events
 from ..ledger.event_rows import _damage_type_fields
 from ..mitigation import _crit_scaled_raw
-from ..resists import Resists, _mitigate, _resistance_met_fields
+from ..resists import _mitigate
 from ..results import (
     CHAMPION_PRODUCER_PREFIX,
     AbilityItemApplication,
@@ -64,71 +63,22 @@ from ..results import (
     RotationResult,
 )
 from ..state import FightState, _damage_inputs
-from .decaying_health_walk import (
-    AutoSwings,
-    _simulate_current_health_on_hit,
-    _simulate_hp_scaled_on_hit_procs,
-)
 from .empower_windows import (
     _add_empower_window_on_hit,
     _declared_slot_stacks,
     _on_hit_declaration,
     _uniform_swing_schedule,
 )
-from .on_hit_stream import (
-    _ability_applied_on_hit_damage,
-    _calculate_phantom_hits,
-    _schedule_cooldown_procs,
+from .live_health_on_hit import (
+    _pay_current_health_on_hit,
+    _pay_scheduled_live_health_procs,
+    _swing_event_row,
 )
+from .on_hit_stream import _ability_applied_on_hit_damage, _calculate_phantom_hits
 from .swing_profile import _on_hit_effectiveness
 from ...champions.armed_procs import armed_swing_times, declared_rule
 from ..rotation.cast_resource_lockout import lockout_empowered_swings
 from .swing_schedule import _auto_attack_timestamps
-
-
-def _swing_event_row(
-    times: list[float],
-    damages: list[float],
-    damage_type: str,
-    *,
-    declarations: list[tuple[Any, ...]] | None = None,
-    raws: list[float] | None = None,
-    resists: Resists | None = None,
-) -> dict[str, Any]:
-    """Row fields authoring one typed event per (time, damage) pair.
-
-    ``declarations`` is one per event for a row the walk prices itself, and
-    ``None`` for a row delivered as the pair engine's own price.  ``raws`` is
-    one per event for a row whose caller priced each application from its own
-    pre-mitigation magnitude, and ``None`` where the caller states none, which
-    the receipt reads as a refusal rather than as a number.  Both ride through
-    the sort beside their own damage rather than being stamped afterwards: the
-    events are ordered by time, and an application's magnitude belongs to the
-    application, not to the position it lands in.  ``resists`` is what the
-    caller mitigated against; one row is one damage class, so its whole
-    schedule met one resistance.
-    """
-    declared = declarations or [None] * len(damages)
-    stated = raws or [None] * len(damages)
-    met = {} if resists is None else _resistance_met_fields(damage_type, resists)
-    ordered = sorted(
-        zip(times, damages, declared, stated, strict=False),
-        key=lambda packet: float(packet[0]),
-    )
-    return {
-        "event_phase": "auto",
-        "damage_events": [
-            {
-                "time": time,
-                "damage": damage,
-                "damage_type": damage_type,
-                **({} if declaration is None else {"declared": declaration}),
-                **({} if raw is None else {"raw_damage": raw}),
-                **met,
-            }
-            for time, damage, declaration, raw in ordered
-        ],
-    }
 
 
 def _pay_ability_phantom_on_hits(
@@ -773,70 +723,15 @@ def _layer_on_hit_effects(
         effectiveness=on_hit_effectiveness,
     )
     if current_health_effect is not None and num_auto_attacks > 0:
-        (
-            current_health_total,
-            current_health_hits,
-            current_health_hit_damages,
-        ) = _simulate_current_health_on_hit(
+        on_hit_total += _pay_current_health_on_hit(
+            state,
+            autos,
+            result,
             effect=current_health_effect,
-            base_inputs=_damage_inputs(state),
-            swings=AutoSwings(
-                target_health=state.target_health,
-                num_auto_attacks=num_auto_attacks,
-                auto_damage_per_hit=autos.auto_damage_per_hit,
-                other_on_hit_per_hit=result.static_on_hit_per_hit,
-                resists=resists,
-                magic_amp=magic_amp,
-            ),
-            phantom_hit_autos=result.phantom_hit_autos,
-            double_hit_all=autos.double_shot_info is not None,
+            application_times=application_times,
             effectiveness=on_hit_effectiveness,
             first_auto_damage_by_auto=first_auto_damage_by_auto,
         )
-        result.current_health_on_hit_avg = (
-            current_health_total / current_health_hits
-            if current_health_hits > 0
-            else 0.0
-        )
-        result.current_health_damage_type = current_health_effect.source.damage_type
-        on_hit_total += current_health_total
-
-        source = current_health_effect.source
-        mechanic = source.previewed_mechanic()
-        breakdown[source.breakdown_key] = {
-            "name": source.display_name,
-            "count": current_health_hits,
-            "damage_per_hit": result.current_health_on_hit_avg,
-            "total_damage": current_health_total,
-            "damage_type": source.damage_type,
-            # A preview like the static strikes above author, and the one of
-            # the eight whose applications do not share a magnitude: the
-            # declaration on each event below is that application's own raw
-            # value, and the row's is their sum rather than an average
-            # multiplied back up.
-            "pair_preview_of": mechanic,
-            "declared": _on_hit_declaration(
-                mechanic,
-                sum(proc.raw for proc in current_health_hit_damages),
-            ),
-        }
-        # The simulation walks the same application order the swing
-        # schedule authored, so its per-hit values stamp one event each.
-        if application_times and len(current_health_hit_damages) == len(
-            application_times
-        ):
-            breakdown[source.breakdown_key].update(
-                _swing_event_row(
-                    application_times,
-                    [proc.mitigated for proc in current_health_hit_damages],
-                    source.damage_type,
-                    declarations=[
-                        _on_hit_declaration(mechanic, proc.raw)
-                        for proc in current_health_hit_damages
-                    ],
-                    resists=resists,
-                )
-            )
 
     # Scheduled live-health on-hits ride the fight's auto timeline and
     # read the target's decayed current HP per proc. Three schedules:
@@ -852,92 +747,14 @@ def _layer_on_hit_effects(
     # static_on_hit_per_hit (spellblade doubling and the BoRK simulation
     # must not re-apply it).
     if num_auto_attacks > 0:
-        autos_per_second = state.attack_speed * state.auto_attack_uptime
-        # Both proc schedules read the same authored swing times that stamp
-        # their events; the uniform fallback only covers an unresolvable
-        # schedule, whose rows stay coarse anyway.
-        proc_schedule = swing_times or (
-            [i / autos_per_second for i in range(num_auto_attacks)]
-            if autos_per_second > 0
-            else []
+        on_hit_total = _pay_scheduled_live_health_procs(
+            state,
+            autos,
+            result,
+            swing_times=swing_times,
+            effectiveness=on_hit_effectiveness,
+            running_damage=on_hit_total,
         )
-        for ability_key, ability_info in state.ability_damages.items():
-            on_hit_data = ability_info.get("on_hit")
-            if not on_hit_data:
-                continue
-            if "proc_cooldown" in on_hit_data:
-                proc_autos = _schedule_cooldown_procs(
-                    proc_schedule, on_hit_data["proc_cooldown"]
-                )
-            elif "missing_health_amp" in on_hit_data:
-                # A range-gated rider on the basic-attack stream: it rides
-                # every swing inside the gate, and ``max_procs`` is how many
-                # of them the request says land there.
-                gated = ability_field(on_hit_data, "max_procs", form="on_hit")
-                proc_autos = list(
-                    range(
-                        num_auto_attacks
-                        if gated is None
-                        else min(num_auto_attacks, int(gated))
-                    )
-                )
-            elif "proc_window" in on_hit_data:
-                if breakdown.get(ability_key, {}).get("casts", 0) < 1:
-                    continue  # rider exists only after the ability is cast
-                # The window opens at the slot's first cast (Master Yi E
-                # after Q and W's cast times), and the triggering auto
-                # always fits a positive window: the first swing at or
-                # after the cast procs even when the window closes first.
-                start = slot_cast_start(state, ability_key)
-                end = start + on_hit_data["proc_window"]
-                proc_autos = [
-                    index
-                    for index, time in enumerate(proc_schedule)
-                    if start <= time < end
-                ] or [
-                    index for index, time in enumerate(proc_schedule) if time >= start
-                ][
-                    :1
-                ]
-            else:
-                continue
-            if not proc_autos:
-                continue
-            proc_damages = _simulate_hp_scaled_on_hit_procs(
-                on_hit_data,
-                AutoSwings(
-                    target_health=state.target_health,
-                    num_auto_attacks=num_auto_attacks,
-                    auto_damage_per_hit=autos.auto_damage_per_hit,
-                    other_on_hit_per_hit=result.static_on_hit_per_hit
-                    + result.current_health_on_hit_avg,
-                    resists=resists,
-                    magic_amp=magic_amp,
-                ),
-                proc_autos=proc_autos,
-                effectiveness=on_hit_effectiveness,
-            )
-            proc_total = sum(proc_damages)
-            on_hit_total += proc_total
-            proc_damage_type = ability_field(on_hit_data, "damage_type", form="on_hit")
-            breakdown[f"on_hit_ability_{ability_key}"] = {
-                "name": on_hit_data.get("name", f"{ability_key} (on-hit)"),
-                "count": len(proc_autos),
-                "damage_per_hit": proc_total / len(proc_autos),
-                "total_damage": proc_total,
-                "damage_type": proc_damage_type,
-                "unit": "procs",
-            }
-            if swing_times:
-                # Each proc rides one specific swing — stamp its time.
-                breakdown[f"on_hit_ability_{ability_key}"].update(
-                    _swing_event_row(
-                        [swing_times[i] for i in proc_autos],
-                        proc_damages,
-                        proc_damage_type,
-                        resists=resists,
-                    )
-                )
 
     state.total_damage += on_hit_total
     return result
