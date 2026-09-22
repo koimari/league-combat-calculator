@@ -455,17 +455,13 @@ def _auto_attack_timestamps(state: FightState) -> list[float]:
 def _restore_stream_attack_timestamps(state: FightState) -> list[float]:
     """The swing schedule the readers that run before the installers ride.
 
-    ``_auto_restore_schedule`` runs BEFORE ``_prepare_hail_attack_schedule``
-    and ``_prepare_lethal_tempo_attack_schedule`` install their stack-sensitive
-    schedules, so reading ``state.hail_attack_times`` /
-    ``state.lethal_attack_times`` here would fall back to the uniform base
-    schedule.  This resolves the same schedule those installers compute, which
-    depends only on ``state.attack_speed``, ``state.auto_attack_uptime``,
-    ``state.fight_duration_seconds`` and the keystone effect, so recomputing is
-    side-effect free.  Populated schedule fields are preferred outright.  Lich
-    Bane's proc-timed speedup is not resolved at this point in the pipeline
-    (``_prepare_spellblade_attack_schedule`` needs the priced rotation), so it
-    is not mirrored here, matching the champion module's ASSUMPTIONS."""
+    ``_auto_restore_schedule`` runs BEFORE the Hail and Lethal Tempo
+    installers, so ``state.hail_attack_times`` and
+    ``state.lethal_attack_times`` are still empty and reading them would
+    answer the uniform base schedule.  Recomputing the installers' own
+    schedule is side-effect free.  Lich Bane's proc-timed speedup needs the
+    priced rotation and is not resolved yet, which is what the champion
+    module's ASSUMPTIONS state."""
     if state.hail_attack_times:
         return list(state.hail_attack_times)
     if state.lethal_attack_times:
