@@ -1,0 +1,23 @@
+{# The skin the three public legal pages share.  It stays inline: the
+   pages are reachable before login and the auth gate redirects every
+   /static request, so a linked sheet would leave them unstyled for the
+   only visitors who see them (src/app.py _enforce_authentication). -#}
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; background: #121212; color: #f1f1f1;
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  }
+  a { color: #d8b14c; }
+  .shell { max-width: 760px; margin: 0 auto; padding: 56px 24px 80px; }
+  .eyebrow {
+    margin: 0 0 12px; font: 600 12px/1.2 ui-monospace, monospace;
+    letter-spacing: .16em; text-transform: uppercase; color: #c5120b;
+  }
+  h1 { margin: 0 0 24px; font-size: 34px; letter-spacing: -.02em; }
+  h2 { margin: 28px 0 8px; font-size: 19px; }
+  p { margin: 0 0 14px; color: #b8b8b8; }
+  ul { margin: 0 0 14px; padding-left: 20px; color: #b8b8b8; }
+  li { margin-bottom: 6px; }
+</style>

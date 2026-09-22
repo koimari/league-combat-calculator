@@ -55,13 +55,6 @@ def _source():
     return APP_JS.read_text(encoding="utf-8")
 
 
-def _inline_css():
-    soup = _soup()
-    style = soup.find("style")
-    assert style is not None
-    return style.get_text()
-
-
 # ---------------------------------------------------------------------------
 # First-run overlay renders on a fresh session
 # ---------------------------------------------------------------------------

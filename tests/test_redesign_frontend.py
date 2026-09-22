@@ -82,10 +82,9 @@ def test_the_screen_is_a_rail_beside_a_canvas(soup: BeautifulSoup, css: str):
     assert "grid-template-columns: var(--rail-width)" in block
 
 
-def test_onboarding_followup_copy_stays_in_the_text_column(soup: BeautifulSoup):
-    inline_css = "\n".join(style.get_text() for style in soup.select("head style"))
-    assert ".onboarding-step > p" in inline_css
-    assert "grid-column: 2" in inline_css
+def test_onboarding_followup_copy_stays_in_the_text_column(css: str):
+    block = css[css.index(".onboarding-step > p") :]
+    assert block.startswith(".onboarding-step > p { grid-column: 2;")
 
 
 def test_step_editors_stay_mounted_while_collapsed(soup: BeautifulSoup):
