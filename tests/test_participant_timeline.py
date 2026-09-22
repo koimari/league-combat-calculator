@@ -3288,6 +3288,9 @@ def _thorns_combatant(
             "health": health,
             "magic_resistance": magic_resistance,
             "bonus_armor": bonus_armor,
+            # The zero penetration every expected number below already assumes.
+            "magic_penetration_flat": 0.0,
+            "magic_penetration_percent": 0.0,
         },
         defenses=defenses,
     )

@@ -7,6 +7,7 @@ champion-agnostic fight engine; data fetching remains with each consumer.
 
 from collections.abc import Iterable, Mapping
 from dataclasses import replace
+from functools import partial
 from typing import Any
 
 from .auto_attack_policy import (
@@ -29,11 +30,17 @@ from .champions.shared_option_keys import (
 from .combat_events import combat_event_contract, event_receipt
 from .damage import calculate_fight_damage
 from .data_registry import data_version
+from .event_row_field import build_stat_field, optional_field, required_field
 from .fight_params import FightParams
 from .fight_receipts import (
     _annotate_deathfire_categories,
     _attach_display_splits,
     _attach_engine_receipts,
+)
+from .fight_result_row import (
+    result_breakdown,
+    result_cast_timeline,
+    result_damage_events,
 )
 from .healing import derive_self_healing, self_heal_rule_owner
 from .interpreters.crit_profile import declared_crit_profile
@@ -47,6 +54,15 @@ from .rune_sustain_events import (
     _rune_self_healing_events,
 )
 from .self_state_effects import derive_self_state_effects
+
+#: One field of the self-heal stream ``run_fight`` assembles and sorts. Every
+#: row of it carries these three, which ``tests/test_row_stream_census.py``
+#: measures on the published ``fights/self_healing_events``.
+_self_heal_field = partial(
+    required_field,
+    kind="self-heal event",
+    stamper="every producer run_fight sorts together",
+)
 
 
 def resolve_ledger_inputs(  # pylint: disable=too-many-arguments,too-many-positional-arguments
@@ -72,7 +88,7 @@ def resolve_ledger_inputs(  # pylint: disable=too-many-arguments,too-many-positi
         ability_damages=ability_damages,
         rune_page=params.rune_page,
         fight_duration_seconds=params.fight_duration_seconds,
-        is_melee=bool(fight_stats.get("is_melee", True)),
+        is_melee=bool(build_stat_field(fight_stats, "is_melee")),
         target_threshold_health_heal=params.target_threshold_health_heal,
     )
 
@@ -362,7 +378,7 @@ def run_fight(
             for event in params.combat_events
             if event.caster_id == params.event_actor_id
         ]
-        for cast in result.get("cast_timeline", ()):
+        for cast in result_cast_timeline(result):
             authored = next(
                 (
                     event
@@ -381,15 +397,15 @@ def run_fight(
                 )
     result["self_state_events"] = derive_self_state_effects(
         ability_damages,
-        list(result.get("cast_timeline", [])),
+        list(result_cast_timeline(result)),
     )
     keystone_state_events: list[dict[str, Any]] = []
-    fleet_row = result.get("breakdown", {}).get("keystone_Fleet Footwork")
+    fleet_row = result_breakdown(result).get("keystone_Fleet Footwork")
     if isinstance(fleet_row, Mapping) and isinstance(
         fleet_row.get("movement_events"), list
     ):
         keystone_state_events.extend(fleet_row["movement_events"])
-    conqueror_row = result.get("breakdown", {}).get("keystone_Conqueror")
+    conqueror_row = result_breakdown(result).get("keystone_Conqueror")
     if isinstance(conqueror_row, Mapping) and isinstance(
         conqueror_row.get("stack_events"), list
     ):
@@ -401,7 +417,7 @@ def run_fight(
     # cast sequence; ``rationale`` explains the combo.
     result["rotation"] = build_rotation_receipt(
         cast_order=list(params.cast_order or []),
-        cast_timeline=list(result.get("cast_timeline", [])),
+        cast_timeline=list(result_cast_timeline(result)),
         rule=resolved_rotation_rule,
         certified_order=(
             resolved_certified_order if resolved_rotation_rule is None else None
@@ -421,8 +437,8 @@ def run_fight(
         champion_data,
         fight_stats,
         ability_damages,
-        list(result.get("damage_events", [])),
-        cast_timeline=list(result.get("cast_timeline", [])),
+        list(result_damage_events(result)),
+        cast_timeline=list(result_cast_timeline(result)),
         fight_duration_seconds=params.fight_duration_seconds,
     )
     result["self_healing_events"] = sorted(
@@ -431,10 +447,10 @@ def run_fight(
         + _item_self_healing_events(result, items, params.fight_duration_seconds)
         + _rune_self_healing_events(result, params.rune_page),
         key=lambda event: (
-            float(event.get("time", 0.0)),
-            str(event.get("kind", "")),
-            str(event.get("source", "")),
-            int(event.get("_trigger_sequence", 0)),
+            float(_self_heal_field(event, "time")),
+            str(_self_heal_field(event, "kind")),
+            str(_self_heal_field(event, "source")),
+            optional_field(event, "_trigger_sequence", int) or 0,
         ),
     )
     if score_only:
