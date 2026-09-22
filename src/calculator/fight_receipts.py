@@ -1,25 +1,17 @@
 """The receipts and display splits attached to a finished fight."""
 
 from collections.abc import Mapping
-from functools import partial
 from typing import Any
 
 from . import item_effects
 from .cast_edge_markers import detect_aoe_cap
 from .damage import split_auto_vs_ability, split_by_damage_type
-from .event_row_field import required_field
+from .event_row_field import build_stat_field as _fight_stat
 from .fight_params import FightParams
 from .fight_result_row import result_breakdown
 from .heal_event_row import healed_category
 from .healing_reduction import amplifies_recovery, heal_and_shield_power_factor
 from .rune_sustain_events import _saturated_omnivamp_percent
-
-#: The stat block is one dict literal in ``stats.calculate_total_stats``, so
-#: every name below is on every block: absent is a renamed producer key, and
-#: reading it as zero is how a receipt publishes a build it never measured.
-_fight_stat = partial(
-    required_field, kind="champion stat block", stamper="stats.calculate_total_stats"
-)
 
 
 def _attach_engine_receipts(

@@ -25,6 +25,7 @@ from src.calculator.participant_timeline import (
 )
 from src.calculator.program.compile import PairFight, WalkSlots
 from src.calculator.stats import calculate_total_stats
+from tests.fight_result_stub import fight_result
 
 _APHELIOS_ITEMS = [
     get_item_by_name(name)
@@ -100,9 +101,8 @@ def test_compiler_fails_closed_on_overheal_to_shield():
     """A self-heal packet carrying the Severum transition raises the named
     error with a receipt naming the transition and source."""
     compiler = _WalkCompiler()
-    result = {
-        "damage_events": [],
-        "self_healing_events": [
+    result = fight_result(
+        self_healing_events=[
             {
                 "time": 1.0,
                 "amount": 100.0,
@@ -112,7 +112,7 @@ def test_compiler_fails_closed_on_overheal_to_shield():
                 "overheal_shield_duration": 30.0,
             }
         ],
-    }
+    )
     with pytest.raises(UncompilableActionError) as exc:
         compiler.add_engine_result(
             PairFight(result, "main", "enemy:X", 0),
@@ -128,9 +128,8 @@ def test_compiler_carries_vamp_healing_category():
     kernel's carve-outs — the received-healing multiplier exemption and the
     ichor conversion — read the same field either adapter supplies."""
     compiler = _WalkCompiler()
-    result = {
-        "damage_events": [],
-        "self_healing_events": [
+    result = fight_result(
+        self_healing_events=[
             {
                 "time": 1.0,
                 "amount": 50.0,
@@ -138,7 +137,7 @@ def test_compiler_carries_vamp_healing_category():
                 "healing_category": "vamp",
             }
         ],
-    }
+    )
     compiler.add_engine_result(
         PairFight(result, "main", "enemy:X", 0),
         WalkSlots(0, 1, {}, 10.0, {}, []),
@@ -189,8 +188,8 @@ def test_compiler_fails_closed_on_stat_buff_template():
 
 def test_compiler_fails_closed_on_execute_threshold_damage():
     compiler = _WalkCompiler()
-    result = {
-        "damage_events": [
+    result = fight_result(
+        damage_events=[
             {
                 "time": 1.0,
                 "sequence": 0,
@@ -202,8 +201,7 @@ def test_compiler_fails_closed_on_execute_threshold_damage():
                 "execute_source": "The Collector",
             }
         ],
-        "self_healing_events": [],
-    }
+    )
     with pytest.raises(UncompilableActionError) as exc:
         compiler.add_engine_result(
             PairFight(result, "main", "enemy:X", 0),

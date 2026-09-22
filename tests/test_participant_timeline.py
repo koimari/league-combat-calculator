@@ -2862,6 +2862,7 @@ def _dummy_combatant(
     health: float = 100.0,
     healing_received_multiplier: float = 1.0,
     items: tuple[dict, ...] = (),
+    armor: float = 0.0,
 ) -> Combatant:
     defenses = StartingDefenses(
         magic_shield=0.0,
@@ -2875,7 +2876,21 @@ def _dummy_combatant(
         champion_data={"name": participant_id},
         level=1,
         items=items,
-        stats={"health": health},
+        # A dummy carries no resistance and no penetration, which is a
+        # reading and not an absence: `calculate_total_stats` stamps each of
+        # these on every real block, so the readers require them.
+        stats={
+            "health": health,
+            "armor": armor,
+            "bonus_armor": 0.0,
+            "magic_resistance": 0.0,
+            "bonus_magic_resistance": 0.0,
+            "flat_armor_penetration": 0.0,
+            "armor_penetration_percent": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
+            "magic_penetration_flat": 0.0,
+            "magic_penetration_percent": 0.0,
+        },
         defenses=defenses,
     )
 
@@ -3763,24 +3778,9 @@ def test_survival_walk_redirects_an_authored_damage_fraction_to_holder():
 
 
 def test_knights_vow_redirect_reprices_pre_mitigation_damage_for_holder_resistance():
-    source = replace(
-        _dummy_combatant("source", "enemy"),
-        stats={
-            "health": 100.0,
-            "flat_armor_penetration": 0.0,
-            "armor_penetration_percent": 0.0,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-        },
-    )
-    protected = replace(
-        _dummy_combatant("protected", "main"),
-        stats={"health": 100.0, "armor": 0.0},
-    )
-    holder = replace(
-        _dummy_combatant("holder", "main"),
-        stats={"health": 100.0, "armor": 100.0},
-    )
+    source = _dummy_combatant("source", "enemy")
+    protected = _dummy_combatant("protected", "main")
+    holder = _dummy_combatant("holder", "main", armor=100.0)
     event = {
         "time": 0.0,
         "damage": 100.0,

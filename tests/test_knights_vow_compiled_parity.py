@@ -265,6 +265,7 @@ def _combatant(
             "bonus_magic_resistance": 0.0,
             "flat_armor_penetration": 0.0,
             "armor_penetration_percent": 0.0,
+            "armor_penetration_bonus_percent": 0.0,
             "magic_penetration_flat": 0.0,
             "magic_penetration_percent": 0.0,
             "is_melee": False,

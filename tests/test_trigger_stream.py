@@ -1025,6 +1025,12 @@ CC_KIND_READERS = {
 }
 
 
+#: Where the key sits in a call that reads one. ``get`` takes it first; the
+#: typed row readers take the row first and the field second, and a scan that
+#: only knew ``get`` went blind the day a module read its rows through them.
+_KEY_ARGUMENT = {"get": 0, "optional_field": 1, "required_field": 2}
+
+
 def cc_kind_readers(sources: Mapping[str, str] | None = None) -> dict[str, frozenset]:
     """Every ``(module, symbol)`` that reads ``cc_kind`` off a raw row."""
     found: dict[str, set[str]] = {}
@@ -1032,17 +1038,14 @@ def cc_kind_readers(sources: Mapping[str, str] | None = None) -> dict[str, froze
         tree = ast.parse(text)
         for node in ast.walk(tree):
             if isinstance(node, ast.Call) and node.args:
-                first = node.args[0]
                 name = (
                     node.func.attr
                     if isinstance(node.func, ast.Attribute)
                     else getattr(node.func, "id", "")
                 )
-                reads = (
-                    name == "get"
-                    and isinstance(first, ast.Constant)
-                    and first.value == "cc_kind"
-                )
+                index = _KEY_ARGUMENT.get(name, len(node.args))
+                key = node.args[index] if index < len(node.args) else None
+                reads = isinstance(key, ast.Constant) and key.value == "cc_kind"
             elif isinstance(node, ast.Subscript):
                 reads = (
                     isinstance(node.slice, ast.Constant)

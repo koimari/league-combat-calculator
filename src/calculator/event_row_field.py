@@ -9,6 +9,7 @@ does without one; no reader here ever substitutes a value of its own.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from functools import partial
 from typing import Any
 
 
@@ -30,3 +31,14 @@ def optional_field[T](
 ) -> T | None:
     """The field only some producers of this row stamp, ``None`` where none did."""
     return None if (value := event.get(field)) is None else read(value)
+
+
+#: One field of a champion's build stats.  ``stats.calculate_total_stats``
+#: builds the block as a single dict literal, so every name it writes is on
+#: every block: an absent one is a renamed producer key, not a build without
+#: the stat.  (``champions.inputs.champion_stat`` is the other reader of this
+#: block and the other contract: it serves a champion module's DECLARED
+#: default, where this refuses.)
+build_stat_field = partial(
+    required_field, kind="champion stat block", stamper="stats.calculate_total_stats"
+)

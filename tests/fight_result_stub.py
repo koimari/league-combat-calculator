@@ -1,13 +1,14 @@
-"""One display-mode fight result, the shape ``serialize_fight_result`` reads.
+"""One display-mode fight result, at rest, for the suites that build one.
 
-Three suites drive the public serializers over a hand-built result, and
-built in three places the shape drifted: one stub carried 30 of the 31 keys
-``pipeline.run_fight`` stamps outside score mode, and the serializer read the
-missing one through a literal default, so nothing failed. It is one builder
-here, and each caller overrides only what its own assertion is about.
+Several suites drive the public serializer and the roster compiler over a
+hand-built result, and built in each of them the shape drifted: one stub
+carried 30 of the 31 keys ``pipeline.run_fight`` stamps outside score mode,
+and the serializer read the missing one through a literal default, so
+nothing failed. It is one builder here, and each caller overrides only what
+its own assertion is about.
 
-Nothing pins this list: the serializer does. Every field it reads is
-required, so a result short one key raises naming it, and this stub is
+Nothing pins this list: its readers do. Every field they read is required of
+a display-mode result, so one short a key raises naming it, and this stub is
 checked by every test that passes it in.
 """
 
@@ -18,6 +19,9 @@ def fight_result(**overrides: Any) -> dict[str, Any]:
     """A result carrying every field the display path publishes, all at rest."""
     return {
         "champion_stats": {},
+        # Read by the roster compiler rather than by the serializer, and
+        # stamped by the same producer, so one stub answers both.
+        "control_events": [],
         "total_damage": 0.0,
         "health_damage": 0.0,
         "shield_absorbed": 0.0,

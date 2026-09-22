@@ -36,6 +36,7 @@ from src.calculator.program.views.view_tag import ViewTag
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival.event_slots import EVENT_SLOTS
 from src.calculator.trigger_stream import CAPABILITIES, Authority, Engine
+from tests.fight_result_stub import fight_result
 
 HOLDER = "Jax"
 ALLY = "Lulu"
@@ -211,8 +212,8 @@ def _one_dropped_preview_mechanic():
 
 def _engine_result_with_a_preview_row():
     """One pair fight holding a previewed row between two delivered ones."""
-    return {
-        "breakdown": {
+    return fight_result(
+        breakdown={
             "Q": {"total_damage": 100.0},
             "preview_row": {
                 "total_damage": 40.0,
@@ -220,7 +221,7 @@ def _engine_result_with_a_preview_row():
             },
             "W": {"total_damage": 60.0},
         },
-        "damage_events": [
+        damage_events=[
             {
                 "time": 0.0,
                 "sequence": 0,
@@ -243,9 +244,7 @@ def _engine_result_with_a_preview_row():
                 "damage": 60.0,
             },
         ],
-        "self_healing_events": [],
-        "timeline_coverage": {},
-    }
+    )
 
 
 def _compile_engine_result():

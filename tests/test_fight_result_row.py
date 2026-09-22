@@ -13,6 +13,7 @@ from src.calculator.fight_result_row import (
     FIGHT_RESULT_REQUIRED_FIELDS,
     result_breakdown,
     result_cast_timeline,
+    result_control_events,
     result_damage_events,
     result_keystone,
     result_keystone_state_events,
@@ -31,6 +32,7 @@ CHAMPIONS = ("Ahri", "Jinx", "Aatrox", "Garen", "Soraka", "Yasuo")
 READERS = {
     "damage_events": result_damage_events,
     "cast_timeline": result_cast_timeline,
+    "control_events": result_control_events,
     "self_healing_events": result_self_healing_events,
     "self_state_events": result_self_state_events,
     "keystone_state_events": result_keystone_state_events,
@@ -43,6 +45,7 @@ READERS = {
 RESULT = {
     "damage_events": [],
     "cast_timeline": [],
+    "control_events": [],
     "self_healing_events": [],
     "self_state_events": [],
     "keystone_state_events": [],
@@ -104,7 +107,6 @@ class TestTheRequiredSetIsMeasured:
             "auto_attack_policy",
             "auto_attack_schedule",
             "champion_stats",
-            "control_events",
             "effective_armor",
             "effective_mr",
             "item_state_receipts",

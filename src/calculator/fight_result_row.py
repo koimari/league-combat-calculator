@@ -24,6 +24,7 @@ __all__ = [
     "FIGHT_RESULT_REQUIRED_FIELDS",
     "result_breakdown",
     "result_cast_timeline",
+    "result_control_events",
     "result_damage_events",
     "result_keystone",
     "result_keystone_state_events",
@@ -37,6 +38,7 @@ __all__ = [
 FIGHT_RESULT_REQUIRED_FIELDS = (
     "breakdown",
     "cast_timeline",
+    "control_events",
     "damage_events",
     "keystone",
     "keystone_state_events",
@@ -60,6 +62,13 @@ def result_damage_events(  # sightline-ok: 1 - three row shapes, one key
 def result_cast_timeline(result: Mapping[str, Any]) -> Sequence[Mapping[str, Any]]:
     """Every cast the rotation placed, in cast order."""
     return _required(result, "cast_timeline")
+
+
+def result_control_events(
+    result: Mapping[str, Any],
+) -> Sequence[Mapping[str, Any]]:
+    """Every crowd-control application the fight landed, in engine order."""
+    return _required(result, "control_events")
 
 
 def result_self_healing_events(

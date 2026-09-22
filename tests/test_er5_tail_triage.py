@@ -1,13 +1,13 @@
 """The ER5 tail, split by what the evidence already decides about it.
 
-A raw count of ``x.get(key, <literal>)`` reads says the tail is about 1,278
+A raw count of ``x.get(key, <literal>)`` reads says the tail is that many
 defects. The measured finding is the opposite: most are
 contracts. ``scripts/tail_site_triage.py`` makes that checkable by
 answering the two clauses a machine can, and this pins the split so the
 count cannot be quoted as a debt figure again.
 
-The ratio is the point. Roughly half the tail reads keys that are not row
-fields at all, a third sits in modules whose suites pin them tolerating
+The ratio is the point. Three fifths of the tail reads keys that are not row
+fields at all, a quarter sits in modules whose suites pin them tolerating
 malformed input, and what is left is small enough for a person to read.
 """
 
@@ -36,10 +36,14 @@ def test_the_tail_is_mostly_not_convertible_at_all():
     Asserted as a share rather than a number so it survives the tail
     shrinking, and asserted in both directions so neither an empty scan nor
     a runaway one passes.
+
+    The floor is on the scan and not on the debt: a module joining the
+    covered roots takes its whole site count out of this population, so a
+    fixed total would turn red for the work it is measuring.
     """
     totals = _committed()["totals"]
     total = sum(totals.values())
-    assert total > 1000
+    assert total > 100
     unconvertible = sum(
         totals[bucket]
         for bucket in ("NOT_A_ROW_FIELD", "NOT_A_ROW_RECEIVER", "TOLERANCE_CONTRACT")

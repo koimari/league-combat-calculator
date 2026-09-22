@@ -54,6 +54,16 @@ from ..cast_event_row import cast_slot as _row_cast_slot
 from ..cast_event_row import cast_time as _row_cast_time
 from ..defensive_effects import armed_revive
 from ..delivery_facts import CombatantFacts
+from ..event_row_field import build_stat_field as _stat
+from ..event_row_field import optional_field
+from ..fight_result_row import result_breakdown as _row_breakdown
+from ..fight_result_row import result_cast_timeline as _row_cast_timeline
+from ..fight_result_row import result_control_events as _row_control_events
+from ..fight_result_row import result_damage_events as _row_damage_events
+from ..fight_result_row import result_self_healing_events as _row_self_heals
+from ..fight_result_row import result_timeline_coverage as _row_timeline_coverage
+from ..fight_result_row import result_total_damage as _row_total_damage
+from ..heal_event_row import healed_amount, healed_category, healed_source, healed_time
 from ..healing_reduction import amplifies_recovery
 from ..interpreters.part_amp import StaticHolderAmps
 from ..item_effects import ThornsEffect
@@ -306,12 +316,14 @@ def _without_pair_previews(
     if not previewed:
         return result
     removed = sum(
-        float(result_breakdown[source].get("total_damage", 0.0) or 0.0)
+        # 126 of 24,860 engine breakdown rows carry no ``total_damage``: a
+        # row that priced an amount, or one published for its detail alone.
+        optional_field(result_breakdown[source], "total_damage", float) or 0.0
         for source in previewed
     )
     return {
         **result,
-        "total_damage": float(result.get("total_damage", 0.0)) - removed,
+        "total_damage": _row_total_damage(result) - removed,
         "breakdown": {
             source: entry
             for source, entry in result_breakdown.items()
@@ -352,7 +364,7 @@ def is_authored_ability_event(event: Mapping[str, Any]) -> bool:
     """Identify a champion cast without treating passive/proc rows as casts."""
     if "is_ability" in event:
         return bool(event["is_ability"])
-    return str(event.get("source_key", "")) in _CAST_SLOTS
+    return optional_field(event, "source_key", str) in _CAST_SLOTS
 
 
 def ability_instance_for_event(
@@ -368,9 +380,9 @@ def ability_instance_for_event(
     """
     if not is_authored_ability_event(event):
         return None
-    slot = str(event.get("source_key", ""))
+    slot = optional_field(event, "source_key", str) or ""
     try:
-        event_time = float(event.get("time", 0.0))
+        event_time = optional_field(event, "time", float) or 0.0
     except (TypeError, ValueError):
         return None
     candidates = [
@@ -381,7 +393,7 @@ def ability_instance_for_event(
     ]
     if not candidates:
         return f"{slot}:{trigger_time_key(event_time)}"
-    cast = max(candidates, key=lambda row: float(row.get("time", 0.0)))
+    cast = max(candidates, key=_row_cast_time)
     ordinal = cast.get("ordinal")
     return (
         f"{slot}:{ordinal}"
@@ -888,7 +900,7 @@ class WalkCompiler:
         heal_dedup = slots.heal_dedup
         id_strings = slots.id_strings
         suppress_actor_wide_heals = slots.suppress_actor_wide_heals
-        result_breakdown = result.get("breakdown") or {}
+        result_breakdown = _row_breakdown(result)
         previewed = pair_preview_sources(result_breakdown)
         # A preview the walk *re-prices* keeps its packet on both paths: the
         # pair engine's number leaves the total either way, but a re-priced
@@ -961,7 +973,7 @@ class WalkCompiler:
             )
             if value is not None
         }
-        cast_timeline = result.get("cast_timeline") or ()
+        cast_timeline = _row_cast_timeline(result)
         if not isinstance(cast_timeline, list):
             cast_timeline = ()
         # **Two row shapes, one reader.**  The engine publishes its damage
@@ -987,7 +999,7 @@ class WalkCompiler:
         # below carry no ``time``/``source_key`` dict keys, so a light result
         # that did declare heals would link every one of them to nothing and
         # compile a fight whose heals silently vanished.
-        heals = result.get("self_healing_events", [])
+        heals = _row_self_heals(result)
         if light and heals:
             raise ValueError(
                 f"{attacker_id} published a tuple damage ledger and "
@@ -1009,7 +1021,7 @@ class WalkCompiler:
         # ledger) never builds it.
         aidx_by_key: dict[tuple[str, float, int], int] | None = {} if heals else None
         aidx_by_source_time: dict[tuple[str, float], list[int]] = defaultdict(list)
-        for index, row in enumerate(result.get("damage_events", [])):
+        for index, row in enumerate(_row_damage_events(result)):
             if light:
                 # The positional layout is declared once, in
                 # ``ledger_projection.LightRow``; naming it here costs one
@@ -1026,7 +1038,7 @@ class WalkCompiler:
                     # order-irrelevant only while every engine event carries
                     # its per-fight sequence.
                     raise ValueError(
-                        f"{attacker_id} damage event {row.get('source_key', '')!r} "
+                        f"{attacker_id} damage event {row.get('source_key')!r} "
                         "has no sequence; the walk's tie-break order would depend "
                         "on event-id numbering"
                     )
@@ -1070,7 +1082,11 @@ class WalkCompiler:
                 wound_damage = row["damage"]
                 damage = max(0.0, wound_damage)
                 raw_formula = row.get("raw_formula")
-                raw_damage = float(row.get("raw_damage", 0.0) or 0.0)
+                # The published pre-mitigation figure, on some rows and not
+                # others (1,365 of the 1,706 the receipt view is handed).
+                # Zero prices no raw and no live formula, which is what a
+                # row that published none of it says.
+                raw_damage = optional_field(row, "raw_damage", float) or 0.0
                 declaration = row.get("declared")
                 source = str(row.get("source", source_key))
                 # The two delivery facts an engine row does not always spell
@@ -1093,8 +1109,8 @@ class WalkCompiler:
                 immobilized = is_immobilizing_event(row) or bool(
                     row.get("crowd_control")
                 )
-                cc_kind = str(row.get("cc_kind", ""))
-                cc_duration = max(0.0, float(row.get("cc_duration", 0.0) or 0.0))
+                cc_kind = optional_field(row, "cc_kind", str) or ""
+                cc_duration = max(0.0, optional_field(row, "cc_duration", float) or 0.0)
                 skillshot = bool(row.get("skillshot"))
                 area_damage = bool(row.get("area_damage"))
                 damage_over_time = bool(row.get("damage_over_time"))
@@ -1227,7 +1243,7 @@ class WalkCompiler:
         # control application as its own row, and one action is staged per
         # row: compiling the fight without them would give the walk a roster
         # nobody could be immobilized in.
-        for control_index, raw_event in enumerate(result.get("control_events", ())):
+        for control_index, raw_event in enumerate(_row_control_events(result)):
             if "sequence" not in raw_event:
                 # Same refusal as the damage loop above: pair-local event ids
                 # stay order-irrelevant only while every engine row carries
@@ -1235,7 +1251,7 @@ class WalkCompiler:
                 # tie-break at zero.
                 raise ValueError(
                     f"{attacker_id} control event "
-                    f"{raw_event.get('source_key', '')!r} has no sequence; the "
+                    f"{raw_event.get('source_key')!r} has no sequence; the "
                     "walk's tie-break order would depend on event-id numbering"
                 )
             # Cast grouping: the cast id IS ``slot:ordinal``, which is exactly
@@ -1257,7 +1273,10 @@ class WalkCompiler:
                 "ability_instance": instance,
                 **baseline_fields,
             }
-            time_value = float(event.get("time", 0.0))
+            # The control stream is 18 rows across the whole coupled set,
+            # far too thin to license a fail-closed read, so what a row does
+            # not spell stays optional here.
+            time_value = optional_field(event, "time", float) or 0.0
             event["_sk"] = (
                 time_value,
                 control_phase,
@@ -1266,7 +1285,9 @@ class WalkCompiler:
                 order_b,
                 defender_id,
                 event["_event_id"],
-                str(event.get("source", event.get("source_key", ""))),
+                str(
+                    event.get("source", optional_field(event, "source_key", str) or "")
+                ),
             )
             if staging:
                 actions_append(
@@ -1298,17 +1319,19 @@ class WalkCompiler:
                 heal_receipt = unrepresentable_heal_receipt(event)
                 if heal_receipt is not None:
                     raise UncompilableActionError(
-                        receipt=heal_receipt,
-                        source=str(
-                            event.get("source", event.get("source_key", "heal"))
-                        ),
+                        receipt=heal_receipt, source=healed_source(event)
                     )
             trigger = aidx_by_key.get(heal_trigger_key(event), -1)
             if trigger < 0:
+                # The two stamps the trigger linkage reads are the
+                # composition's own, on a heal that rode a packet and on no
+                # other, so an unlinked heal answers the empty key here.
                 candidates = aidx_by_source_time.get(
                     (
-                        str(event.get("_trigger_source", "")),
-                        trigger_time_key(event.get("_trigger_time", 0.0)),
+                        optional_field(event, "_trigger_source", str) or "",
+                        trigger_time_key(
+                            optional_field(event, "_trigger_time", float) or 0.0
+                        ),
                     ),
                     [],
                 )
@@ -1324,15 +1347,12 @@ class WalkCompiler:
                     # fail closed rather than guess which one to keep.
                     raise UncompilableActionError(
                         receipt="actor_wide_heal_trigger_link",
-                        source=str(event.get("source", "")),
+                        source=healed_source(event),
                     )
                 if suppress_actor_wide_heals:
                     continue
-                dedup_key = (
-                    str(event.get("source", "")),
-                    float(event.get("time", 0.0)),
-                )
-                amount = max(0.0, float(event.get("amount", 0.0)))
+                dedup_key = (healed_source(event), healed_time(event))
+                amount = max(0.0, healed_amount(event))
                 kept = heal_dedup.get(dedup_key)
                 if kept is not None:
                     if kept != amount:
@@ -1341,17 +1361,17 @@ class WalkCompiler:
                         # the receipt walk, which owns the keep-first rule.
                         raise UncompilableActionError(
                             receipt="actor_wide_heal_copies_disagree",
-                            source=str(event.get("source", "")),
+                            source=healed_source(event),
                         )
                     continue
                 heal_dedup[dedup_key] = amount
             aidx = self.next_aidx
             self.next_aidx += 1
-            time_value = float(event.get("time", 0.0))
+            time_value = healed_time(event)
             # The engine authors per-champion flat heals at the full value
             # because a pair fight cannot see the roster; a defender past the
             # first uses the sourced reduced amount (Vladimir's Hemoplague).
-            amount = max(0.0, float(event.get("amount", 0.0)))
+            amount = max(0.0, healed_amount(event))
             later_amount = event.get("_later_target_amount")
             if defender_index > 0 and later_amount is not None:
                 amount = max(0.0, float(later_amount))
@@ -1367,7 +1387,7 @@ class WalkCompiler:
                 order_b,
                 attacker_id,
                 heal_event_id,
-                str(event.get("source", event.get("source_key", ""))),
+                healed_source(event),
             )
             if not staging:
                 enriched_heal = {
@@ -1402,15 +1422,20 @@ class WalkCompiler:
                     aidx=aidx,
                     amount=amount,
                     amount_formula=event.get("amount_formula"),
-                    healing_category=str(event.get("healing_category", "")),
+                    healing_category=healed_category(event) or "",
                     amplified_recovery=amplifies_recovery(
-                        str(event.get("kind", "")),
-                        str(event.get("healing_category", "")),
+                        # `kind` is on every fights row and on 909 combat
+                        # rows it is not, so the intersection reader has no
+                        # accessor for it: tests/test_heal_event_row.py pins
+                        # exactly that split.
+                        optional_field(event, "kind", str) or "",
+                        healed_category(event) or "",
                     ),
                     temporary_health_duration=(
                         max(
                             0.0,
-                            float(event.get("temporary_health_duration", 0.0) or 0.0),
+                            optional_field(event, "temporary_health_duration", float)
+                            or 0.0,
                         )
                         if event.get("overheal_to_temporary_health")
                         else 0.0
@@ -1418,8 +1443,8 @@ class WalkCompiler:
                     overheal_to_temporary_health=bool(
                         event.get("overheal_to_temporary_health")
                     ),
-                    source_key=str(event.get("source_key", "")),
-                    source=str(event.get("source", event.get("source_key", ""))),
+                    source_key=optional_field(event, "source_key", str) or "",
+                    source=healed_source(event),
                     event_slot=slot_of(heal_event_id),
                     sequence=event.get("sequence"),
                     # The declared exemption from the walk's attacker
@@ -1433,10 +1458,10 @@ class WalkCompiler:
                     # (Mikael's Purify), read where ``add_support_templates``
                     # reads it.
                     cleanse=bool(event.get("cleanse")),
-                    cleanse_item=str(event.get("cleanse_item", "") or ""),
+                    cleanse_item=optional_field(event, "cleanse_item", str) or "",
                 )
             )
-        self.coverage.append(result.get("timeline_coverage", {}))
+        self.coverage.append(_row_timeline_coverage(result))
 
     def add_support_templates(
         self,
@@ -1444,11 +1469,20 @@ class WalkCompiler:
         attacker_i: int,
         index_of: Mapping[str, int],
     ) -> None:
-        """Compile one attacker's resolved support packets."""
+        """Compile one attacker's resolved support packets.
+
+        Every field below is read as optional and for one reason: a support
+        packet is an AUTHORED declaration, from ``ally_packet_shape._packet``,
+        a champion module's ally effects or Lulu's own deriver, and an absent
+        key is that author saying the packet carries no such facet.  The book
+        is 70 rows across the whole coupled set, which is far too thin to
+        license a fail-closed read of anything but ``target``.
+        """
         for template in templates:
             target_id = str(template["target"])
             subject_i = index_of[target_id]
-            kind = str(template.get("kind", ""))
+            kind = optional_field(template, "kind", str) or ""
+            source = optional_field(template, "source", str) or ""
             # Fail closed on any resolved support template the score kernel
             # cannot stage: kinds outside the staged set (stat buffs, on-hit
             # magic, temporary health, movement), timed shields (duration >
@@ -1457,10 +1491,7 @@ class WalkCompiler:
             # dropping it.
             template_receipt = unrepresentable_template_receipt(template)
             if template_receipt is not None:
-                raise UncompilableActionError(
-                    receipt=template_receipt,
-                    source=str(template.get("source", "")),
-                )
+                raise UncompilableActionError(receipt=template_receipt, source=source)
             if template.get("_trigger_event_id") is not None:
                 # A support author *does* emit a trigger link: the
                 # Everlasting branch in ``item_support_effects`` stamps
@@ -1478,8 +1509,7 @@ class WalkCompiler:
                 # ``TestTheSupportTriggerLinkRaise`` rather than left here
                 # to go stale the way the sentence this replaced did.
                 raise UncompilableActionError(
-                    receipt="support_trigger_link",
-                    source=str(template.get("source", "")),
+                    receipt="support_trigger_link", source=source
                 )
             # When this packet arms and what it becomes are both read from
             # the classifiers the receipt adapter reads, never from a kind
@@ -1499,7 +1529,8 @@ class WalkCompiler:
             priority = support_transition_rank(template)
             aidx = self.next_aidx
             self.next_aidx += 1
-            time_value = float(template.get("time", 0.0))
+            time_value = optional_field(template, "time", float) or 0.0
+            category = optional_field(template, "healing_category", str) or ""
             self.actions.append(
                 SurvivalAction(
                     sort_key=action_key(time_value, priority, target_id, template),
@@ -1516,15 +1547,14 @@ class WalkCompiler:
                     subject=subject_i,
                     attacker=attacker_i,
                     aidx=aidx,
-                    amount=max(0.0, float(template.get("amount", 0.0))),
-                    healing_category=str(template.get("healing_category", "")),
-                    amplified_recovery=amplifies_recovery(
-                        str(template.get("kind", "")),
-                        str(template.get("healing_category", "")),
+                    amount=max(0.0, optional_field(template, "amount", float) or 0.0),
+                    healing_category=category,
+                    amplified_recovery=amplifies_recovery(kind, category),
+                    source_key=optional_field(template, "source_key", str) or "",
+                    source=source,
+                    event_slot=EVENT_SLOTS.slot(
+                        optional_field(template, "_event_id", str) or ""
                     ),
-                    source_key=str(template.get("source_key", "")),
-                    source=str(template.get("source", "")),
-                    event_slot=EVENT_SLOTS.slot(str(template.get("_event_id", ""))),
                     sequence=template.get("sequence"),
                     # The typed facts a barrier carries into the shield
                     # ledger.  They read the same template fields
@@ -1532,18 +1562,22 @@ class WalkCompiler:
                     # two builders must produce the same tuple from one
                     # dict, and a field only one of them stamps is a
                     # mechanic one walk applies and the other drops.
-                    duration=max(0.0, float(template.get("duration", 0.0) or 0.0)),
+                    duration=max(
+                        0.0, optional_field(template, "duration", float) or 0.0
+                    ),
                     duration_set="duration" in template,
-                    shield_pool=str(template.get("shield_pool", "") or ""),
+                    shield_pool=optional_field(template, "shield_pool", str) or "",
                     crowd_control_immunity_while_shield=bool(
                         template.get("crowd_control_immunity_while_shield")
                     ),
-                    crowd_control_immunity_source=str(
-                        template.get("crowd_control_immunity_source", "") or ""
+                    crowd_control_immunity_source=(
+                        optional_field(template, "crowd_control_immunity_source", str)
+                        or ""
                     ),
                     requires_holder_health_ratio=max(
                         0.0,
-                        float(template.get("requires_holder_health_ratio", 0.0) or 0.0),
+                        optional_field(template, "requires_holder_health_ratio", float)
+                        or 0.0,
                     ),
                     requires_existing_shield=bool(
                         template.get("requires_existing_shield")
@@ -1556,7 +1590,8 @@ class WalkCompiler:
                     ),
                     temporary_health_duration=max(
                         0.0,
-                        float(template.get("temporary_health_duration", 0.0) or 0.0),
+                        optional_field(template, "temporary_health_duration", float)
+                        or 0.0,
                     ),
                     # The cleanse dispatch's own inputs, read off the same
                     # template fields ``action_from_event`` reads: the marker
@@ -1565,8 +1600,8 @@ class WalkCompiler:
                     # self-cast activation dispatches on, and the caster gate
                     # a blocked cast is receipted through.
                     cleanse=bool(template.get("cleanse")),
-                    cleanse_item=str(template.get("cleanse_item", "") or ""),
-                    cleanse_group=str(template.get("cleanse_group", "") or ""),
+                    cleanse_item=optional_field(template, "cleanse_item", str) or "",
+                    cleanse_group=optional_field(template, "cleanse_group", str) or "",
                     utility_kind=kind if kind in UTILITY_KINDS else "",
                     cast_blocked_by_attacker_control=bool(
                         template.get("cast_blocked_by_attacker_control")
@@ -1606,7 +1641,7 @@ class WalkCompiler:
         second arming by *one* holder is a re-arm the kernel's own window
         refresh already owns.
         """
-        source = str(template.get("source", ""))
+        source = optional_field(template, "source", str) or ""
         declared = arming_stacking().get(source)
         if declared is not None and declared[1] is HolderStacking.IDEMPOTENT_AURA:
             raise UncompilableActionError(
@@ -1617,7 +1652,7 @@ class WalkCompiler:
         aidx = self.next_aidx
         self.next_aidx += 1
         target_id = str(template["target"])
-        time_value = float(template.get("time", 0.0))
+        time_value = optional_field(template, "time", float) or 0.0
         self.actions.append(
             SurvivalAction(
                 sort_key=action_key(time_value, priority, target_id, template),
@@ -1627,10 +1662,10 @@ class WalkCompiler:
                 subject=subject_i,
                 attacker=attacker_i,
                 aidx=aidx,
-                amount=max(0.0, float(template.get("amount", 0.0) or 0.0)),
-                duration=max(0.0, float(template.get("duration", 0.0) or 0.0)),
+                amount=max(0.0, optional_field(template, "amount", float) or 0.0),
+                duration=max(0.0, optional_field(template, "duration", float) or 0.0),
                 persistent=bool(template.get("persistent")),
-                multiplier=float(template.get("multiplier", 1.0) or 1.0),
+                multiplier=optional_field(template, "multiplier", float) or 1.0,
                 damage_reduction=bool(template.get("damage_reduction")),
                 next_event_only=bool(template.get("next_event_only")),
                 # The declared escape from the delivery gate: a modifier
@@ -1640,29 +1675,33 @@ class WalkCompiler:
                 # it here made the two walks disagree by exactly the
                 # unpriced packets, which no equality gate could attribute.
                 all_sources=bool(template.get("all_sources")),
-                source_participant=str(template.get("source_participant", "")),
-                armor_reduction_percent=float(
-                    template.get("armor_reduction_percent", 0.0) or 0.0
+                source_participant=(
+                    optional_field(template, "source_participant", str) or ""
                 ),
-                mr_reduction_percent=float(
-                    template.get("mr_reduction_percent", 0.0) or 0.0
+                armor_reduction_percent=(
+                    optional_field(template, "armor_reduction_percent", float) or 0.0
                 ),
-                resistance_type=str(template.get("resistance_type", "")),
+                mr_reduction_percent=(
+                    optional_field(template, "mr_reduction_percent", float) or 0.0
+                ),
+                resistance_type=optional_field(template, "resistance_type", str) or "",
                 # The packet names its holder as a participant id because
                 # that is what a support author knows; the kernel's owner
                 # skip wants the roster slot, and an owner outside this
                 # roster resolves to ``-1`` — "this packet declares no
                 # holder" — exactly as ``action_from_event`` resolves it.
-                holder=index_of.get(str(template.get("owner", "")), -1),
+                holder=index_of.get(optional_field(template, "owner", str) or "", -1),
                 damage_classes=declared_class_set(
                     template.get("damage_classes"), DamageClass
                 ),
                 attack_classes=declared_class_set(
                     template.get("attack_classes"), AttackClass
                 ),
-                source_key=str(template.get("source_key", "")),
+                source_key=optional_field(template, "source_key", str) or "",
                 source=source,
-                event_slot=EVENT_SLOTS.slot(str(template.get("_event_id", ""))),
+                event_slot=EVENT_SLOTS.slot(
+                    optional_field(template, "_event_id", str) or ""
+                ),
                 sequence=template.get("sequence"),
                 duration_set="duration" in template,
             )
@@ -1810,18 +1849,17 @@ def knights_vow_target_factor(
         return TargetMitigation(1.0, None)
     if damage_class is DamageClass.PHYSICAL:
         effective = apply_armor_penetration(
-            float(target.stats.get("armor", 0.0) or 0.0),
-            float(source.stats.get("flat_armor_penetration", 0.0) or 0.0),
-            float(source.stats.get("armor_penetration_percent", 0.0) or 0.0) / 100.0,
-            float(source.stats.get("armor_penetration_bonus_percent", 0.0) or 0.0)
-            / 100.0,
-            bonus_armor=float(target.stats.get("bonus_armor", 0.0) or 0.0),
+            _stat(target.stats, "armor"),
+            _stat(source.stats, "flat_armor_penetration"),
+            _stat(source.stats, "armor_penetration_percent") / 100.0,
+            _stat(source.stats, "armor_penetration_bonus_percent") / 100.0,
+            bonus_armor=_stat(target.stats, "bonus_armor"),
         )
     else:
         effective = apply_magic_penetration(
-            float(target.stats.get("magic_resistance", 0.0) or 0.0),
-            float(source.stats.get("magic_penetration_flat", 0.0) or 0.0),
-            float(source.stats.get("magic_penetration_percent", 0.0) or 0.0) / 100.0,
+            _stat(target.stats, "magic_resistance"),
+            _stat(source.stats, "magic_penetration_flat"),
+            _stat(source.stats, "magic_penetration_percent") / 100.0,
         )
     factor = apply_resistance(1.0, effective)
     if not math.isfinite(factor) or factor < 0.0:

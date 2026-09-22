@@ -136,6 +136,7 @@ root|patch_identity.py
 root|program/__init__.py
 root|program/amp.py
 root|program/capability.py
+root|program/compile.py
 root|program/dependency.py
 root|program/identity.py
 root|program/precision.py
@@ -210,7 +211,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|95
+er5-tail-ceiling|94
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
