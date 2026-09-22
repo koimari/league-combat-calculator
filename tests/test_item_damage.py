@@ -773,9 +773,9 @@ class TestShadowflameCinderbloom:
             },
         }
         # Target at 1000 HP, threshold 400 — 100 damage won't cross it
-        bonus, _, _, _ = _simulate_ordered_damage(
+        bonus = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
-        )
+        ).bonus_total
         assert bonus == 0.0
 
     def test_bonus_when_target_below_threshold(self) -> None:
@@ -817,9 +817,9 @@ class TestShadowflameCinderbloom:
                 "parts": (DamagePart("magic", 200),),
             },
         }
-        bonus, _, _, _ = _simulate_ordered_damage(
+        bonus = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
-        )
+        ).bonus_total
         # W (200) dealt below threshold, gets 20% bonus = 40
         assert abs(bonus - 40.0) < 0.01
 
@@ -846,16 +846,16 @@ class TestShadowflameCinderbloom:
             for slot in ("Q", "W", "E")
         }
 
-        no_shield, _, _, _ = _simulate_ordered_damage(
+        no_shield = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
-        )
-        shielded, _, _, _ = _simulate_ordered_damage(
+        ).bonus_total
+        shielded = _simulate_ordered_damage(
             _shadowflame_effect(),
             breakdown,
             ability_damages,
             1000.0,
             target_magic_shield=300.0,
-        )
+        ).bonus_total
 
         assert no_shield == pytest.approx(80.0)
         assert shielded == 0.0
@@ -883,7 +883,7 @@ class TestShadowflameCinderbloom:
             "W": {"damage_type": "magic", "parts": (DamagePart("magic", 200),)},
         }
 
-        bonus, _, _, _ = _simulate_ordered_damage(
+        bonus = _simulate_ordered_damage(
             _shadowflame_effect(),
             breakdown,
             ability_damages,
@@ -894,7 +894,7 @@ class TestShadowflameCinderbloom:
                 {"time": 1.0, "slot": "W", "ordinal": 1},
                 {"time": 2.0, "slot": "Q", "ordinal": 2},
             ],
-        )
+        ).bonus_total
 
         # Q1 leaves 500 HP, W leaves 300 HP, so only Q2 lands below 40%.
         assert bonus == pytest.approx(100.0)
@@ -916,10 +916,10 @@ class TestShadowflameCinderbloom:
             for slot, damage in (("Q", 600.0), ("W", 200.0), ("E", 200.0))
         }
 
-        no_lifeline, _, _, _ = _simulate_ordered_damage(
+        no_lifeline = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, abilities, 1000.0
-        )
-        lifeline, _, _, _ = _simulate_ordered_damage(
+        ).bonus_total
+        lifeline = _simulate_ordered_damage(
             _shadowflame_effect(),
             breakdown,
             abilities,
@@ -927,7 +927,7 @@ class TestShadowflameCinderbloom:
             target_threshold_shield_amount=400.0,
             target_threshold_shield_health_ratio=0.30,
             target_threshold_shield_duration=3.0,
-        )
+        ).bonus_total
 
         assert no_lifeline == pytest.approx(40.0)
         assert lifeline == 0.0
@@ -957,9 +957,9 @@ class TestShadowflameCinderbloom:
                 "parts": (DamagePart("magic", 700),),
             },
         }
-        bonus, _, _, _ = _simulate_ordered_damage(
+        bonus = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
-        )
+        ).bonus_total
         # Auto attacks are physical — no crit bonus
         assert bonus == 0.0
 
@@ -1011,9 +1011,9 @@ class TestShadowflameCinderbloom:
                 "parts": (DamagePart("magic", 150),),
             },
         }
-        bonus, _, _, _ = _simulate_ordered_damage(
+        bonus = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
-        )
+        ).bonus_total
         assert abs(bonus - 30.0) < 0.01
 
     def test_damage_higher_with_shadowflame(
@@ -1152,9 +1152,9 @@ class TestShadowflameCinderbloom:
             },
         }
         # Default cast_order includes "Q2" — step 1 already consumes it.
-        bonus, _, _, _ = _simulate_ordered_damage(
+        bonus = _simulate_ordered_damage(
             _shadowflame_effect(), breakdown, ability_damages, 1000.0
-        )
+        ).bonus_total
         assert abs(bonus - 60.0) < 0.01
 
     def test_ambessa_q2_and_luden_have_one_ledger_position(

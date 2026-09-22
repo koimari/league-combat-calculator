@@ -1,6 +1,5 @@
 """Re-pricing a landed packet after the fact, and the mechanics that read the re-priced ledger."""
 
-from collections.abc import Mapping
 from typing import Any
 
 from ...item_behavior import AmpChainSlot
@@ -8,13 +7,17 @@ from ...program.capability import dropped_preview_mechanics
 from ...survival.pricing import restate_declaration
 from ..config import FightConfig
 from ..ledger.event_rows import _damage_type_fields
-from ..ledger.pool_walk import _LIANDRY_BURN_KEY, _simulate_ordered_damage
+from ..ledger.pool_walk import (
+    _LIANDRY_BURN_KEY,
+    PoolAdjustments,
+    _simulate_ordered_damage,
+)
 from ..results import RotationResult
 from ..state import FightState
 from .amp_chain import _amp_slot
 
 
-def _apply_liandry_reprice(state: FightState, adjustments: Mapping[str, Any]) -> None:
+def _apply_liandry_reprice(state: FightState, adjustments: PoolAdjustments) -> None:
     """Fold the max-health reprice back onto the burn's own breakdown row.
 
     The burn's row is where this number belongs: it is more of Liandry's own
@@ -27,14 +30,14 @@ def _apply_liandry_reprice(state: FightState, adjustments: Mapping[str, Any]) ->
     the burn at its pre-lifeline magnitude and the reprice would vanish from
     every total holding it.
     """
-    liandry_delta = float(adjustments["liandry_delta"])
+    liandry_delta = float(adjustments.liandry_delta)
     if abs(liandry_delta) <= 1e-9:
         return
     liandry_row = state.breakdown.get(_LIANDRY_BURN_KEY)
     if liandry_row is None:  # pragma: no cover - registry invariant
         raise RuntimeError("Liandry adjustment has no breakdown row")
     repriced = _carry_declarations_onto_repriced_ticks(
-        liandry_row.get("damage_events"), adjustments["liandry_events"]
+        liandry_row.get("damage_events"), adjustments.liandry_events
     )
     liandry_row["total_damage"] = float(liandry_row["total_damage"]) + liandry_delta
     liandry_row["damage_events"] = repriced
@@ -111,12 +114,7 @@ def _add_shadowflame_cinderbloom(
     has_threshold_health = config.target_threshold_health_bonus > 0
     if cinderbloom is None and not has_threshold_health:
         return
-    (
-        shadowflame_bonus,
-        bonus_by_type,
-        bonus_events,
-        adjustments,
-    ) = _simulate_ordered_damage(
+    walk = _simulate_ordered_damage(
         cinderbloom,
         state.breakdown,
         state.ability_damages,
@@ -140,11 +138,11 @@ def _add_shadowflame_cinderbloom(
         target_threshold_health_duration=config.target_threshold_health_duration,
         roster_target_index=state.roster_target_index,
     )
-    _apply_liandry_reprice(state, adjustments)
-    if shadowflame_bonus > 0:
+    _apply_liandry_reprice(state, walk.adjustments)
+    if walk.bonus_total > 0:
         state.breakdown[f"shadowflame_{cinderbloom.owner}"] = {
             "name": f"{cinderbloom.owner} (Cinderbloom)",
-            "total_damage": shadowflame_bonus,
+            "total_damage": walk.bonus_total,
             # Cinderbloom is computed from the ordered source ledger above,
             # and each bonus packet keeps the timestamp of the hit it rode.
             # They go on the row's own ``damage_events`` because that is the
@@ -153,7 +151,7 @@ def _add_shadowflame_cinderbloom(
             # ability time instead, which replays the same total anyway and
             # lands the whole bonus after a target the earlier packets
             # killed.  Death can only stop the packets that really are late.
-            "damage_events": bonus_events,
+            "damage_events": walk.bonus_events,
             # Which mechanic this row is the pair engine's reading of, taken
             # from the rule the slot resolved rather than spelled again here.
             # The walk owns Cinderbloom, because the predicate reads the
@@ -164,6 +162,6 @@ def _add_shadowflame_cinderbloom(
             # is the single-attacker question, where the preview is the
             # answer.
             "pair_preview_of": cinderbloom.rules[0].mechanic_id,
-            **_damage_type_fields(bonus_by_type),
+            **_damage_type_fields(walk.bonus_by_type),
         }
-        state.total_damage += shadowflame_bonus
+        state.total_damage += walk.bonus_total

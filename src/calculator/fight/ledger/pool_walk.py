@@ -1,7 +1,7 @@
 """The target's live pools, walked event by event."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, NamedTuple
 
 from ... import shield_ledger, shield_pools
 from ...interpreters import delta_amp, threshold_defense
@@ -118,6 +118,28 @@ def _liandry_max_health_reprice(
     return adjusted, adjusted - damage
 
 
+class PoolAdjustments(NamedTuple):
+    """What the walk produced that is not Cinderbloom's bonus.
+
+    The Liandry reprice belongs to the burn's own row, and the threshold
+    crossing is the Lifeline the walk watched arm.
+    """
+
+    liandry_delta: float
+    liandry_events: list[dict[str, Any]]
+    threshold_health_triggered: bool
+    threshold_health_trigger_time: float
+
+
+class PoolWalk(NamedTuple):
+    """One pass of the ordered ledger against the target's live pools."""
+
+    bonus_total: float
+    bonus_by_type: dict[str, float]
+    bonus_events: list[dict[str, Any]]
+    adjustments: PoolAdjustments
+
+
 def _simulate_ordered_damage(
     cinderbloom: "delta_amp.AmpSlot | None",
     breakdown: dict[str, Any],
@@ -138,7 +160,7 @@ def _simulate_ordered_damage(
     target_threshold_health_ratio: float = 0.0,
     target_threshold_health_duration: float = 0.0,
     roster_target_index: int | None = None,
-) -> tuple[float, dict[str, float], list[dict[str, Any]], dict[str, Any]]:
+) -> PoolWalk:
     """Simulate the ordered damage ledger against the target's pools.
 
     **This is not one mechanic's function.**  Two unrelated things need the
@@ -155,10 +177,8 @@ def _simulate_ordered_damage(
         target_health: Target's maximum health at the start of the fight.
         cast_order: Ability cast order (e.g., ["E", "Q", "W", "R"]).
 
-    Returns:
-        (total Cinderbloom bonus, bonus per damage type — the crit bonus
-        keeps the underlying damage's type, the bonus events, the
-        non-Cinderbloom adjustments the same walk produced).
+    A Cinderbloom crit bonus keeps the underlying damage's type, so
+    ``bonus_by_type`` is keyed by the type the hit it rode carried.
     """
     if cast_order is None:
         cast_order = list(DEFAULT_CAST_ORDER)
@@ -250,10 +270,14 @@ def _simulate_ordered_damage(
         if outcome.threshold_health_triggered:
             heal_drip.start(pools, event_time, outcome)
 
-    adjustments = {
-        "liandry_delta": liandry_delta,
-        "liandry_events": liandry_events,
-        "threshold_health_triggered": heal_drip.triggered,
-        "threshold_health_trigger_time": heal_drip.trigger_time,
-    }
-    return total_bonus, bonus_by_type, bonus_events, adjustments
+    return PoolWalk(
+        total_bonus,
+        bonus_by_type,
+        bonus_events,
+        PoolAdjustments(
+            liandry_delta,
+            liandry_events,
+            heal_drip.triggered,
+            heal_drip.trigger_time,
+        ),
+    )
