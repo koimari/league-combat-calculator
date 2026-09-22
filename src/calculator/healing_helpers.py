@@ -22,6 +22,7 @@ from enum import Enum
 from functools import partial
 from typing import Any
 
+from .cast_event_row import cast_time as cast_event_time
 from .event_row_field import required_field
 
 # The event source a heal rule reads: a slot letter, a set of source keys,
@@ -111,6 +112,16 @@ def ledger_source_key(event: Mapping[str, Any]) -> str:
     return str(_required_ledger_field(event, "source_key"))
 
 
+def ledger_time(event: Mapping[str, Any]) -> float:
+    """WHEN the damage landed, where ``0.0`` is the fight's own origin."""
+    return float(_required_ledger_field(event, "time"))
+
+
+def ledger_damage(event: Mapping[str, Any]) -> float:
+    """The mitigated damage it dealt; ``0.0`` is a real reading, absent is not."""
+    return float(_required_ledger_field(event, "damage"))
+
+
 def attributed_events(
     events: Iterable[dict[str, Any]],
     predicate: Callable[[str, dict[str, Any]], bool],
@@ -130,7 +141,7 @@ def trigger_fields(event: dict[str, Any]) -> dict[str, Any]:
     """Carry a stable internal receipt for the damage that caused a heal."""
     fields: dict[str, Any] = {
         "_trigger_source": ledger_source_key(event),
-        "_trigger_time": float(event.get("time", 0.0)),
+        "_trigger_time": ledger_time(event),
     }
     if event.get("sequence") is not None:
         fields["_trigger_sequence"] = int(event["sequence"])
@@ -162,10 +173,10 @@ def heal_from_damage(
     amount = max(0.0, float(amount))
     if amount <= 0.0:
         return
-    if link_to_damage and float(event.get("damage", 0.0)) <= 0.0:
+    if link_to_damage and ledger_damage(event) <= 0.0:
         return
     heal: dict[str, Any] = {
-        "time": float(event.get("time", 0.0)),
+        "time": ledger_time(event),
         "amount": amount,
         "source": source,
         "kind": "champion_ability",
@@ -285,7 +296,7 @@ def cast_slot_times(
 ) -> list[float]:
     """Ordered cast times for one slot from the engine's cast timeline."""
     return sorted(
-        float(cast.get("time", 0.0))
+        cast_event_time(cast)
         for cast in (cast_timeline or [])
         if cast.get("slot") == slot
     )
@@ -404,21 +415,21 @@ def payments(
     events = _events_matching(source, damage_events)
     if anchor is HealAnchor.DAMAGING_HIT:
         return [
-            Payment(float(event.get("time", 0.0)), event)
+            Payment(ledger_time(event), event)
             for event in events
-            if float(event.get("damage", 0.0) or 0.0) > 0.0
+            if ledger_damage(event) > 0.0
         ]
     if not isinstance(source, str):
         raise ValueError(f"{anchor} needs one slot to match casts, got {source!r}")
     cast_times = cast_slot_times(cast_timeline, source)
     activations: dict[float, dict[str, Any]] = {}
     for event in events:
-        event_time = float(event.get("time", 0.0))
+        event_time = ledger_time(event)
         cast_time = _attributing_cast(cast_times, event_time)
         if cast_time is None:
             cast_time = event_time
         held = activations.get(cast_time)
-        if held is None or event_time < float(held.get("time", 0.0)):
+        if held is None or event_time < ledger_time(held):
             activations[cast_time] = event
     return [
         Payment(cast_time, activations[cast_time]) for cast_time in sorted(activations)

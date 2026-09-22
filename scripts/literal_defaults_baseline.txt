@@ -585,13 +585,6 @@ ENGINE_ROW|champions/vi.py|_denting_stream|dict.get|"E" 1
 ENGINE_ROW|champions/vi.py|_denting_stream|dict.get|"Q" 1
 ENGINE_ROW|champions/vladimir.py|derive_self_healing|or-default|"raw_damage" 1
 ENGINE_ROW|champions/xin_zhao.py|derive_self_healing|or-default|"stacks_required" 1
-ENGINE_ROW|healing_helpers.py|cast_slot_times|dict.get|"time" 1
-ENGINE_ROW|healing_helpers.py|heal_from_damage|dict.get|"damage" 1
-ENGINE_ROW|healing_helpers.py|heal_from_damage|dict.get|"time" 1
-ENGINE_ROW|healing_helpers.py|payments|dict.get|"damage" 1
-ENGINE_ROW|healing_helpers.py|payments|dict.get|"time" 3
-ENGINE_ROW|healing_helpers.py|payments|or-default|"damage" 1
-ENGINE_ROW|healing_helpers.py|trigger_fields|dict.get|"time" 1
 ENGINE_ROW|item_coverage.py|require_certified_target_timeline|dict.get|"coarse_sources" 1
 ENGINE_ROW|item_coverage.py|require_certified_target_timeline|dict.get|"complete" 1
 ENGINE_ROW|stats.py|calculate_total_stats|dict.get|"armor_penetration_bonus_percent" 1
