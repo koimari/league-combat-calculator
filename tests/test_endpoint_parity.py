@@ -419,7 +419,7 @@ def test_optimize_consults_and_populates_cache(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# Pinned parity symptom (issue #138 §4b, pre-existing optimizer behavior)
+# Pinned parity symptom: pre-existing optimizer behavior
 # ---------------------------------------------------------------------------
 
 

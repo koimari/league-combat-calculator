@@ -57,7 +57,7 @@ of 6% omnivamp."; also cross-checked by data/atoms/items.json 3008
 * Receipt-vs-score parity: the Slay state reaches the score and receipt
   paths identically (score-only run_fight, full run_fight, and the
   compiled vs receipt timeline walks agree; the compiled walk must not
-  silently drop the stack state — issue #169 dict-row retention); the
+  silently drop the stack state, which is dict-row retention); the
   healing application is pinned as STAT-ONLY today — self_healing_events
   come from the "Omnivamp" stat source and NO Slay-sourced packet or
   invented healing exists anywhere.  If the survival engine cannot price

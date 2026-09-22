@@ -1,10 +1,10 @@
-"""E9-BIS-A: event-order certification for the last 5 BIS champions.
+"""Event-order certification for the last five BIS champions.
 
 Smolder, Talon, Twitch, Vel'Koz and Viego all emitted champion rows
 without authored event order (or with cast_boundary-only precision), so
 every one of their 96 BIS candidates evaluated as 'partial' and the
 optimizer certified none ("No candidate has complete sourced event
-order").  This is the same failure Varus had before 938bf9a.
+order"), which is the same failure Varus carried before its own fix.
 
 The module fixes follow the Varus pattern:
 

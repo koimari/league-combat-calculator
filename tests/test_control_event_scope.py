@@ -1,8 +1,8 @@
 """A control event names who it lands on, and the roster honours it.
 
-Issue #209: ``ControlEvent`` carried kind, duration and timing but no
-recipient, so a single-target cast broadcast its control to every enemy on
-the board — Lulu's Whimsy polymorphed a whole roster off one cast.  The
+Without a recipient a ``ControlEvent`` carries kind, duration and timing
+only, and a single-target cast broadcasts its control to every enemy on
+the board — Lulu's Whimsy polymorphs a whole roster off one cast.  The
 scope is the answer, declared once beside the event, and an unscoped
 control still reaches every enemy the cast hit.
 """
@@ -129,7 +129,7 @@ def test_an_area_cast_still_roots_every_enemy() -> None:
 def test_a_targeted_cast_holds_one_roster_enemy(
     champion: str, slot: str, kind: str, options: dict, sentence: str
 ) -> None:
-    """Issue #232: each of these eight casts names one enemy in the cache.
+    """Each of these eight casts names one enemy in the cache.
 
     The sentence is asserted with the allocation, so a patch that widens the
     cast fails here instead of leaving a stale ``ONE_TARGET`` behind.

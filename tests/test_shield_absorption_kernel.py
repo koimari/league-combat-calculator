@@ -1,9 +1,9 @@
-"""Issue #159 — one transition kernel drives every shield absorption path.
+"""One transition kernel drives every shield absorption path.
 
 Absorption order and shield/health mutation have five sites: two ordered
 walks in ``damage.py``, the authoritative receipt walk, and both damage
-branches of the compiled score walk.  Issue #137's survival kernel folds the
-last three into one damage transition; #159 makes that transition and both
+branches of the compiled score walk.  The survival kernel folds the last
+three into one damage transition, and that transition and both
 ``damage.py`` walks execute ``shield_ledger.absorb``.
 
 The per-transition contract lives in ``tests/test_shield_ledger.py``; these
@@ -46,8 +46,8 @@ class TestOneOwner:
     def test_every_absorption_consumer_calls_the_kernel(self):
         """The one-pair engine's two walks, and the survival kernel's one.
 
-        Issue #137 left a single damage transition on the participant side;
-        this pins that no path grew a second copy of the absorption order.
+        The participant side carries a single damage transition, and this
+        pins that no path grew a second copy of the absorption order.
         """
         walks = (
             SRC / "fight" / "after" / "shield_outcome.py",

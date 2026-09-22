@@ -1,4 +1,4 @@
-"""Issue #162: public domain rules have one backend-owned contract."""
+"""Public domain rules have one backend-owned contract."""
 
 from pathlib import Path
 

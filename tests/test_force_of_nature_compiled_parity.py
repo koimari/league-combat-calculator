@@ -70,7 +70,7 @@ Contract under test (current runtime facts, verified before pinning):
   score kernel authors a movement event or applies a move-speed stat at
   max stacks.  That declared-but-unapplied state is the named boundary.
 * COMPILED VS RECEIPT PARITY: both adapters drive one kernel
-  (test_survival_kernel.py, issue #137).  Today FoN sits in
+  (test_survival_kernel.py).  Today FoN sits in
   COMPILED_WALK_UNREPRESENTABLE_ITEMS ("Steadfast reprice needs baseline
   resistances"), so the compiled fast path fails closed: a MAIN holder
   falls back per evaluation (context.uncompilable stays False, no panels

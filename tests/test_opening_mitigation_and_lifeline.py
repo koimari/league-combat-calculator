@@ -1,4 +1,4 @@
-"""Issue #46 acceptance: opening mitigation, spell shields, and Lifeline.
+"""Acceptance: opening mitigation, spell shields, and Lifeline.
 
 Every in-scope item must (a) resolve in a /api/calculate fight with a
 sourced shield/reduction receipt and (b) certify in /api/bis for a fitting
@@ -363,7 +363,7 @@ def test_bloodthirster_certifies_in_bis():
 )
 def test_lifeline_threshold_shield_triggers_on_late_crossing(item, expected_absorbed):
     """Lifeline must arm on the threshold crossing at any fight time, not
-    only within the first ``duration`` seconds (issue #46 gap)."""
+    only within the first ``duration`` seconds."""
     body = _calculate(
         {
             "champion": "Ziggs",

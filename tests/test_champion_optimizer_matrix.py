@@ -1,4 +1,4 @@
-"""Tests for the bounded issue #38 champion optimizer smoke matrix."""
+"""Tests for the bounded champion optimizer smoke matrix."""
 
 from scripts.champion_optimizer_matrix import build_gate_report, run_matrix
 

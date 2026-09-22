@@ -1,4 +1,4 @@
-"""Issue #143 — one authoritative ledger owner per champion heal.
+"""One authoritative ledger owner per champion heal.
 
 Taric Q was double-granted: the E1 self-heal rule priced the sourced
 5-charge stock into ``healing[attacker]`` while the generic support

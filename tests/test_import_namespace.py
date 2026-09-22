@@ -1,4 +1,4 @@
-"""Issue #164 — one calculator package namespace + canonical math owners.
+"""One calculator package namespace + canonical math owners.
 
 A Flask entry point that inserts ``src/`` on ``sys.path`` and imports
 ``calculator.*`` while tests and scripts import ``src.calculator.*`` loads
@@ -21,8 +21,8 @@ ROOT = Path(__file__).resolve().parent.parent
 
 #: A guard against a wedged child, not a budget: importing the app costs 0.85 s
 #: on an idle box and 5-15 s while ``pytest -n auto`` has all sixteen cores
-#: busy, so a cap sized for the idle number fails under the suite that runs it
-#: (issue #263).
+#: busy, so a cap sized for the idle number fails under the suite that runs
+#: it.
 HANG_GUARD_SECONDS = 120
 
 

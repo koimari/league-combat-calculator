@@ -1,4 +1,4 @@
-"""Issue #142 — fail closed on unknown support ``target_scope`` values.
+"""Fail closed on unknown support ``target_scope`` values.
 
 A terminal catch-all in the coupled resolver (``_support_target_ids``) that
 silently redirects every unrecognized / missing / structurally invalid scope

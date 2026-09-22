@@ -1,4 +1,4 @@
-"""Issue #82 — role-quest boot upgrades + support-item progression acceptance.
+"""Role-quest boot upgrades and support-item progression acceptance.
 
 The acceptance criteria pin four contracts:
 

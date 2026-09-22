@@ -1,4 +1,4 @@
-"""Issue #137 — one state transition engine for receipts and optimizer walks.
+"""One state transition engine for receipts and optimizer walks.
 
 The compiled optimizer walk fails closed.  ``_WalkCompiler`` (and
 the compile-stage capability checks) raise a named

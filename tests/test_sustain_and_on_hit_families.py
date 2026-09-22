@@ -70,7 +70,7 @@ def _items(*names):
 
 
 # ---------------------------------------------------------------------------
-# Issue #45 — grouped sustain stats and item healing
+# Grouped sustain stats and item healing
 # ---------------------------------------------------------------------------
 
 
@@ -232,7 +232,7 @@ def test_calculate_participant_timeline_sustain_receipts_include_lifesteal():
 
 
 # ---------------------------------------------------------------------------
-# Issue #43 — Guinsoo's Rageblade Seething Strike (0-32% attack speed)
+# Guinsoo's Rageblade Seething Strike (0-32% attack speed)
 # ---------------------------------------------------------------------------
 
 
@@ -272,7 +272,7 @@ def test_guinsoo_seething_strike_stacks_typed_and_fight_accelerates():
 
 
 # ---------------------------------------------------------------------------
-# Issue #43 — Lich Bane empowered-attack bonus attack speed
+# Lich Bane empowered-attack bonus attack speed
 # ---------------------------------------------------------------------------
 
 
@@ -293,7 +293,7 @@ def test_lich_bane_empowered_attack_bonus_as_typed_and_priced():
 
 
 # ---------------------------------------------------------------------------
-# Issue #43 — Essence Reaver Spellblade mana restoration
+# Essence Reaver Spellblade mana restoration
 # ---------------------------------------------------------------------------
 
 
@@ -325,7 +325,7 @@ def test_essence_reaver_spellblade_mana_restore_typed_and_wired():
 
 
 # ---------------------------------------------------------------------------
-# Issue #43 — Dusk and Dawn (Spellblade + second on-hit application)
+# Dusk and Dawn (Spellblade + second on-hit application)
 # ---------------------------------------------------------------------------
 
 
@@ -352,7 +352,7 @@ def test_dusk_and_dawn_spellblade_typed_and_double_on_hit_wired():
 
 
 # ---------------------------------------------------------------------------
-# Issue #43 — Hydra cleave secondary-target damage (documented boundary)
+# Hydra cleave secondary-target damage (documented boundary)
 # ---------------------------------------------------------------------------
 
 
@@ -389,7 +389,7 @@ def test_hydra_cleave_secondary_cone_typed_and_boundary_documented():
 
 
 # ---------------------------------------------------------------------------
-# Issue #43 — Energized cadence (Statikk / RFC / Stormrazor / Voltaic)
+# Energized cadence (Statikk / RFC / Stormrazor / Voltaic)
 # ---------------------------------------------------------------------------
 
 

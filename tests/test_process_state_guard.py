@@ -1,6 +1,6 @@
 """The guard that fails a test for leaving shared process state changed.
 
-Issue #263: under ``pytest -n auto`` every test on one xdist worker shares
+Under ``pytest -n auto`` every test on one xdist worker shares
 one ``src.app`` module object, so a config key or a module attribute left
 changed decides it for every test that lands after it.  The failures were
 whole-file cascades in files the diff never touched, green serially and

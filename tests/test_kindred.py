@@ -54,8 +54,8 @@ class TestReviewedCrowdControl:
 class TestCoverageMap:
     """Q prices a row; P prices nothing; R prices a heal, not damage.
 
-    ``b03bbad9`` rewrote the set as ``{P, E}`` while adding the Mark stack
-    row, turning Dance of Arrows into a reported gap and losing the
+    An earlier edit rewrote the set as ``{P, E}`` while adding the Mark
+    stack row, turning Dance of Arrows into a reported gap and losing the
     ``no_damage`` reading the map had before it.  Mark of the Kindred is
     range and scaling state.  Lamb's Respite is a minimum-health floor plus
     a heal the ally scanner pays (375 to each teammate in the zone and to

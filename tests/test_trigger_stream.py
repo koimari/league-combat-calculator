@@ -2162,7 +2162,7 @@ def test_bloodsong_normalises_an_empty_trigger_event_id_to_none():
     Fimbulwinter and Bloodsong coerce an empty id to ``None``, Carve and
     Vile Decay pass the bus's ``str`` through as ``""``.  The retired code
     passed ``event.get("_event_id")`` through everywhere, so a
-    present-but-empty id stayed ``""`` on all four.  44e10ea's body covers
+    present-but-empty id stayed ``""`` on all four.  The fix covers
     Fimbulwinter's ``or None`` and Carve/Vile Decay's ``""`` and not this
     one, so it is pinned here.
 
@@ -2328,7 +2328,7 @@ def test_a_support_scan_row_carrying_a_garbage_number_is_dropped_not_raised():
     greater than zero and was admitted.  The bus coerces both to 0.0 —
     non-finite included, since ``Trigger`` refuses a non-finite number —
     and ``_stack_triggers`` then drops the row for carrying no damage.
-    44e10ea named this softening for ``time`` only.
+    The softening it rests on was named for ``time`` only.
 
     So the bus lands both cases opposite to the scan: garbage does not
     raise, and infinity does not stack.
@@ -2358,14 +2358,14 @@ def test_a_support_scan_row_carrying_a_garbage_number_is_dropped_not_raised():
 
 
 def test_the_receipt_token_is_the_rows_own_token_on_every_rung():
-    """b2882ec reordered the ladder and moved no ``cc_kind`` token.
+    """The ladder reorder moved no ``cc_kind`` token.
 
     ``verify-P2b``'s second pass read the reorder as also propagating the
     token onto rungs the retired ladder blanked — ``{"cc_kind": "none",
     "hard_cc": True}`` yielding ``cc_kind="none"`` where it once yielded
     ``""``.  It does not: the retired ladder returned the normalised token
     whenever it was non-empty and ``""`` exactly when it was empty, which
-    is the same function as returning it unconditionally.  What b2882ec
+    is the same function as returning it unconditionally.  What the reorder
     moved is the *class* on that row, from ``NONE`` to ``IMMOBILIZE``, and
     that move is what its body describes.
 

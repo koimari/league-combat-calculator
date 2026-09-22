@@ -1,4 +1,4 @@
-"""Issue #135 — 200% critical strikes at the public /api/calculate boundary.
+"""200% critical strikes at the public /api/calculate boundary.
 
 Regression contract: the retired frontend engine priced autos at
 ``1 + (crit / 100) * 0.75`` (175%); the backend is the authority and

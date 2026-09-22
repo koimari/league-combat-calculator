@@ -31,8 +31,8 @@ def test_every_cached_champion_has_an_importable_engine_registration():
 
 def test_custom_manifest_is_the_single_authoritative_roster():
     """_CHAMPION_MODULES is the one explicit roster manifest: it must
-    exactly equal the cached champion names (issue #136 — a new champion
-    needs no count edits anywhere, only a manifest entry + reviewed module)."""
+    exactly equal the cached champion names, so a new champion needs no
+    count edits anywhere, only a manifest entry and a reviewed module."""
     champions = _champions()
     cache_names = {champion["name"] for champion in champions.values()}
     assert set(_CHAMPION_MODULES) == cache_names

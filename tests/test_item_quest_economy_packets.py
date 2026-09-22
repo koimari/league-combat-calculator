@@ -427,7 +427,7 @@ def test_tear_state_receipt_exposes_timing_triggers_cap_and_minion_boundary():
 
 @pytest.mark.parametrize("holder", manaflow_items())
 def test_every_manaflow_holder_states_its_own_charge_ledger(holder):
-    """Issue #230: the four upgrades carried a flat progress row only."""
+    """Each upgrade states its own charge ledger, not a flat progress row."""
     sourced = manaflow_declaration(holder)
     receipt = item_state_receipts(
         [{"name": holder}],

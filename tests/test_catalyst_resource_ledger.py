@@ -708,7 +708,7 @@ def test_catalyst_roster_poisons_the_compiled_context():
     """A roster actor carrying Catalyst makes the compiled path
     search-invariant-unusable: the context is marked uncompilable, the
     score result still equals the receipt walk, and later evaluations skip
-    the compiled path entirely (issue #137 semantics)."""
+    the compiled path entirely."""
     champion = get_champion("Ahri")
     params = FightParams.from_request(
         {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True

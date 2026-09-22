@@ -5,7 +5,7 @@ cast lights inside it still lands after it (a fused Time Bomb, Requiem's
 payload, a DoT's remaining ticks, a burn's tail), the reading a user measured
 in game for a 3 s Cassiopeia and Blackfire Torch fight. Off, every landing is
 clipped at the fight's end, so a 1 s fight shows nothing of a bomb that goes
-off at 3 s (muri's report, issue #323). One-rotation fights never clip: that
+off at 3 s (muri's report). One-rotation fights never clip: that
 mode is "cast everything once and let it land".
 """
 

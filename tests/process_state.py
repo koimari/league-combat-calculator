@@ -3,8 +3,8 @@
 ``src.app`` is imported once per xdist worker and every test on that worker
 shares its module namespace and its Flask config, so a test that rebinds
 ``calculate_payload`` or writes ``app.config[...]`` without a restore decides
-those for every test that lands after it.  That is why issue #263's failures
-were whole-file cascades in files the diff never touched, green serially and
+those for every test that lands after it.  That is why such a leak shows up
+as whole-file cascades in files the diff never touched, green serially and
 green on rerun: the leak and its victim only ever meet under ``-n auto``.
 
 ``WATCHED_MODULES`` is the table; every attribute under a watched module is

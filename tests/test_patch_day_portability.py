@@ -1,4 +1,4 @@
-"""Issue #134: patch day is portable and fails closed on stale reviewed packets.
+"""Patch day is portable and fails closed on stale reviewed packets.
 
 Covers the four patch-day scripts' portability contract (no developer-home
 defaults), the fail-closed reviewed-packet chain (missing wiki DB, zero

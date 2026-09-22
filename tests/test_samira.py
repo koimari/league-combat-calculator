@@ -35,7 +35,7 @@ class TestReviewedCrowdControl:
 class TestCoverageMap:
     """Every slot prices a row now that P rides the shared hit-rider axis.
 
-    ``b03bbad9`` added the Style stack row to P and rewrote the whole
+    An earlier edit added the Style stack row to P and rewrote the whole
     ``MODULE_COVERAGE`` set as ``{P, R}`` instead of adding P to the
     ``{Q, W, E, R}`` that was there — three priced slots reported as gaps.
     P stayed ``out_of_scope`` after that only because Daredevil Impulse's

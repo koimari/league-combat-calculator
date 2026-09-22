@@ -38,7 +38,7 @@ def _evidence_atoms(atoms, kind, ename):
 
 
 def test_issue_fixture_active_not_absorbed_by_passive():
-    """The exact issue #140 fixture: shield passive + dash active.
+    """The two-effect fixture: shield passive + dash active.
 
     Both effects must emit atoms, each attributed to ITS OWN effect, and no
     atom's evidence may name the wrong effect.

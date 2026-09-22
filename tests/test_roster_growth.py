@@ -1,4 +1,4 @@
-"""Roster-growth regression for issue #136.
+"""Roster growth: a new champion needs a manifest entry and nothing else.
 
 Adding one champion must require NO literal-count edits anywhere: the
 builders derive their counts from the cache, the registry derives from

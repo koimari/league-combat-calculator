@@ -1,4 +1,4 @@
-"""One crowd-control kind vocabulary, one home (F-9, issue #212).
+"""One crowd-control kind vocabulary, one home.
 
 ``ability_spec.CC_KIND_VOCABULARY`` is the only set that says what a
 champion module may author as a ``cc_kind``.  Every other crowd-control

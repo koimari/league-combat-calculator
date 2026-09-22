@@ -415,9 +415,9 @@ def test_aphelios_severum_score_path_matches_receipt():
 
 
 def test_roster_warmog_heart_rides_compiled_walk():
-    """A roster actor's active Warmog's Heart compiles once per search
-    (issue #169): the base panel authors the same gated, live max-health
-    ticks the receipt walk authors, and the score receipt deep-equals it.
+    """A roster actor's active Warmog's Heart compiles once per search: the
+    base panel authors the same gated, live max-health ticks the receipt
+    walk authors, and the score receipt deep-equals it.
     Constant pressure keeps every tick behind the damage-free gate; a
     sparse-caster window lets later ticks through it."""
     warmog_mundo = _roster(
@@ -555,9 +555,9 @@ def test_vamp_candidate_rides_compiled_walk():
 
 
 def test_grievous_builds_ride_compiled_walk():
-    """Grievous Wounds builds compile end-to-end (issue #169, replacing the
-    routing hint): the candidate's own wound pack prices enemy healing, and a
-    roster wound prices the candidate's vamp healing."""
+    """Grievous Wounds builds compile end-to-end: the candidate's own wound
+    pack prices enemy healing, and a roster wound prices the candidate's vamp
+    healing."""
     params = FightParams.from_request(
         {
             "fight_mode": "time_based",

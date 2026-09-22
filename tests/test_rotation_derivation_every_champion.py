@@ -188,8 +188,8 @@ def _slot_options(champion_name):
     """``slot -> option keys`` from the PUBLIC rotation accessor.
 
     The same authoritative declaration the resolver consumes, so
-    production and tests cannot drift (issue #145: the old shared
-    ``_CONSUME_OPTIONS`` allowlist is gone).
+    production and tests cannot drift, and there is no shared
+    ``_CONSUME_OPTIONS`` allowlist beside them.
     """
     from src.calculator.champions import (
         get_champion_option_rotation,

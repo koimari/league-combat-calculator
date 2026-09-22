@@ -43,7 +43,7 @@ def test_participant_controls_share_the_same_target_policy_receipt():
 
 
 def test_target_policy_contract_is_the_closed_resolution_vocabulary():
-    """Issue #142: the published target-policy map is exactly the closed
+    """The published target-policy map is exactly the closed
     resolver vocabulary plus ``none_selected`` — the contract and the
     resolver cannot drift."""
     policies = PARTICIPANT_LEDGER_CONTRACT["target_policy"]

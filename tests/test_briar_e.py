@@ -925,7 +925,7 @@ class TestExactBoundaryTimes:
 class TestScoreAndReceiptAgreement:
     """The compiled optimizer walk applies the same damage-modifier
     semantics as the receipt walk; unsupported forms fail closed with a
-    named receipt (issue #137 contract)."""
+    named receipt."""
 
     @staticmethod
     def _briar_timeline(champion_options, **kwargs):

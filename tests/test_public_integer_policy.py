@@ -1,4 +1,4 @@
-"""Architecture and behavior regressions for issue #158."""
+"""The public integer policy, and the owners that run without a Flask context."""
 
 from pathlib import Path
 

@@ -1,4 +1,4 @@
-"""Issue #166 — the full-entry release gate consumes item_source contracts.
+"""The full-entry release gate consumes item_source contracts.
 
 A gate that re-parses ``modes``/``removed`` keys and effect branches itself
 lets a cache-shape or acquisition-rule change make the audit a different

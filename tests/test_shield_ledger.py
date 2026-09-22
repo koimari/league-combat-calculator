@@ -1,4 +1,4 @@
-"""Issue #159 — contract tests for the one shield/health transition kernel.
+"""Contract tests for the one shield/health transition kernel.
 
 ``shield_ledger.absorb`` is the single owner of absorption order and state
 mutation.  These tests exercise it directly, independently of the walks that

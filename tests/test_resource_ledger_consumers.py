@@ -132,7 +132,7 @@ def test_tear_denied_cast_never_consumes_a_charge():
 
 @pytest.mark.parametrize("holder", manaflow_items())
 def test_every_manaflow_holder_runs_its_own_charge_ledger(holder):
-    """Issue #230: the ledger's holder comes from the build, not a literal.
+    """The ledger's holder comes from the build, not a literal.
 
     Each of the five prices the fight with its OWN cadence, grant pair,
     ceiling, wiki receipt and mana atom, and the granted bonus maximum lands
@@ -172,7 +172,7 @@ def test_every_manaflow_holder_runs_its_own_charge_ledger(holder):
 
 @pytest.mark.parametrize("holder", _ON_HIT_HOLDERS)
 def test_an_on_hit_holder_charges_in_an_auto_attacks_only_fight(holder):
-    """Issue #230: no cast fires here, so only the on-hit stream can spend.
+    """No cast fires here, so only the on-hit stream can spend.
 
     Disconnect that stream and every number below is zero, which is what the
     three holders published before it ran.

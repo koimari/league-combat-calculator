@@ -1,4 +1,4 @@
-"""Focused rotation-semantics tests for issue #145's five named options.
+"""Focused rotation-semantics tests for the five named options.
 
 The resolver derives setup/consume edges from the module OPTIONS rotation
 declarations (``get_champion_option_rotation``).  These tests lock the
@@ -214,7 +214,7 @@ class TestKalistaSoulMarkProc:
     def test_option_gated_w_is_deterministic_across_cache_warmth(
         self, champion_by_name, items_by_name, cold_memo
     ) -> None:
-        """Cold cache must not drop the option-gated W slot (issue #145 §6)."""
+        """Cold cache must not drop the option-gated W slot."""
         data = champion_by_name["Kalista"]
         parsed_on = _parse(
             data, 11, (), items_by_name, champion_options={"soul_mark_proc": True}
@@ -273,7 +273,7 @@ class TestNoSignalGuard:
         self, champion_by_name, items_by_name, monkeypatch, cold_memo
     ) -> None:
         """A receipt cannot claim "no detectable setup/consume signal" while
-        an enabled option is unclassified (issue #145 acceptance)."""
+        an enabled option is unclassified."""
         data = champion_by_name["Fiddlesticks"]
         parsed = _parse(data, 11, (), items_by_name)
 

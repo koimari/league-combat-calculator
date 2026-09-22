@@ -1,4 +1,4 @@
-"""Issue #329: per-attack riders ride the swings, and a non-Q window is placed.
+"""Per-attack riders ride the swings, and a non-Q window is placed.
 
 The engine places a kit's attack-speed window at the first cast of the slot
 that grants it, anchors a ``proc_window`` on-hit at that same cast, and

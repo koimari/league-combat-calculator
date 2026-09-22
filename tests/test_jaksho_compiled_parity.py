@@ -63,7 +63,7 @@ Contract under test (current runtime facts, verified before pinning):
   a zero-bonus holder reaches 5 stacks yet gains no dynamic bonus and no
   reprice.
 * COMPILED VS RECEIPT PARITY: both adapters drive one kernel
-  (test_survival_kernel.py, issue #137).  Today Jak'Sho sits in
+  (test_survival_kernel.py).  Today Jak'Sho sits in
   COMPILED_WALK_UNREPRESENTABLE_ITEMS ("Voidborn reprice needs baseline
   resistances"), so the compiled fast path fails closed: a MAIN holder
   falls back per evaluation (context.uncompilable stays False, no panels

@@ -1,4 +1,4 @@
-"""Compiled-panel vs receipt-walk parity for roster support, issue #226.
+"""Compiled-panel vs receipt-walk parity for roster support.
 
 The compiled score path stages ally support once per attacker against that
 attacker's first defender, and until this suite existed nothing pinned that a

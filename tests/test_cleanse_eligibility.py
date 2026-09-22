@@ -847,7 +847,7 @@ def test_r4_cleanse_declarations_three_sourced_items():
 
 
 def test_quicksilver_movement_atom_and_declaration_share_one_accessor():
-    """Issue #230, rule 5: the 50%/2s pair has one home in item_effects.
+    """Rule 5: the 50%/2s pair has one home in item_effects.
 
     Both the declaration and the atom receipt's ``values`` are that one
     read, so neither can outlive the other; the record above is the
@@ -2036,9 +2036,9 @@ def test_r18_app_parity_today():
 def test_r19_compiled_walk_stages_every_cleanse_shape():
     """Unit: the compiled score kernel stages both cleanse shapes — the
     cleanse-kind self-cast and the heal that carries the marker — because
-    the truncation itself is a shared-kernel transition both adapters drive
-    (issue #226).  Movement is still refused with its named receipt, and the
-    three cleanse items stay representable as builds."""
+    the truncation itself is a shared-kernel transition both adapters drive.
+    Movement is still refused with its named receipt, and the three cleanse
+    items stay representable as builds."""
     assert unrepresentable_template_receipt({"kind": "cleanse", "amount": 1.0}) is None
     assert (
         unrepresentable_template_receipt(

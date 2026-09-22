@@ -1,4 +1,4 @@
-"""Issue #216: ``decompose_wiki --wiki-db`` supplies the index the packet gate reads.
+"""``decompose_wiki --wiki-db`` supplies the index the packet gate reads.
 
 The gate's whole read is ``build_reviewed_modules._wiki_revisions``, so that
 reader is the assertion: a database the builder writes from a stubbed wiki API

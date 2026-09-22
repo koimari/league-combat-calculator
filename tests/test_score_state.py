@@ -98,7 +98,7 @@ class TestItRecordsAppliedAmountsAndNothingElse:
 
 
 class TestTheCapabilityFlagsThatMakeTheHotLoopCheap:
-    """Issue #171: the kernel reads these to skip work this ledger discards."""
+    """The kernel reads these to skip work this ledger discards."""
 
     def test_it_records_neither_annotations_nor_event_fields(self) -> None:
         assert ScoreLedger.records_annotations is False

@@ -83,8 +83,8 @@ class TestReviewedCrowdControl:
 class TestCoverageMap:
     """R prices a row and W prices nothing; the map had both backwards.
 
-    ``b03bbad9`` rewrote the set as ``{P, Q, E}`` while adding P, dropping
-    Last Breath from it.  P and W are ``no_damage`` rather than
+    An earlier edit rewrote the set as ``{P, Q, E}`` while adding P and
+    dropping Last Breath.  P and W are ``no_damage`` rather than
     ``out_of_scope``: Way of the Wanderer grants the Flow shield and the
     crit conversion the fight engine already applies, and Wind Wall only
     destroys projectiles — neither slot damages anybody.
