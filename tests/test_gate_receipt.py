@@ -240,22 +240,18 @@ def test_champion_optimizer_matrix_emits_boolean_envelope():
 def test_ci_validates_every_receipt_it_emits():
     """A new matrix cannot ship an unchecked artifact.
 
-    Every ``artifacts/backend/*.json`` the workflow writes is an argument to
-    the ``validate_receipt.py`` line, so a gate that emits a receipt and
-    forgets to validate it fails here rather than in CI's output.
+    Every receipt the test job's script writes into its artifact directory is
+    an argument to the ``validate_receipt.py`` line, so a gate that emits a
+    receipt and forgets to validate it fails here rather than in CI's output.
     """
-    workflow = (ROOT / ".github" / "workflows" / "tests.yml").read_text(
-        encoding="utf-8"
-    )
-    written = set(re.findall(r">\s*(artifacts/backend/\S+\.json)", workflow))
+    script = (ROOT / "ci" / "test.sh").read_text(encoding="utf-8")
+    written = set(re.findall(r">\s*\\?\"\$BACKEND/(\S+?\.json)", script))
     # status.json carries the two exit codes, not a gate receipt envelope.
-    written.discard("artifacts/backend/status.json")
+    written.discard("status.json")
     validated = set(
         re.findall(
-            r"(artifacts/backend/\S+\.json)",
-            next(
-                line for line in workflow.splitlines() if "validate_receipt.py" in line
-            ),
+            r"\$BACKEND/(\S+?\.json)",
+            next(line for line in script.splitlines() if "validate_receipt.py" in line),
         )
     )
     assert written

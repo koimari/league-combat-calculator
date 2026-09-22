@@ -82,6 +82,7 @@ from tests.coverage_resolver import (
 ROOT = Path(__file__).resolve().parents[1]
 RESOLVER_PATH = ROOT / "tests" / "coverage_resolver.py"
 WORKFLOW_PATH = ROOT / ".github" / "workflows" / "tests.yml"
+CI_TEST_PATH = ROOT / "ci" / "test.sh"
 
 FULL_SESSION_NODE = (
     "tests/test_coverage_claims.py::test_the_full_session_tier_sees_its_own_node"
@@ -689,45 +690,33 @@ def test_the_resolver_contributes_no_collected_node() -> None:
     ]
 
 
-def _shell_commands(workflow: str) -> list[list[str]]:
-    """Every ``run:`` command in a workflow, tokenized, block scalars included."""
-    commands: list[list[str]] = []
-    lines = workflow.splitlines()
-    index = 0
-    while index < len(lines):
-        line = lines[index]
+def _shell_commands(script: str) -> list[list[str]]:
+    """Every command the script runs, tokenized: a ``run_step`` label and the
+    variable the interpreter's own pytest is resolved into both drop out."""
+    commands = []
+    for line in script.splitlines():
         stripped = line.strip()
-        index += 1
-        if not stripped.startswith("run:"):
-            continue
-        body = stripped[len("run:") :].strip()
-        if body not in ("|", ">", "|-", ">-"):
-            commands.append(body.split())
-            continue
-        indent = len(line) - len(line.lstrip())
-        while index < len(lines):
-            following = lines[index]
-            if following.strip() and len(following) - len(following.lstrip()) <= indent:
-                break
-            commands.append(following.strip().split())
-            index += 1
+        if stripped.startswith("run_step "):
+            stripped = stripped.split('"', 2)[2]
+        commands.append(stripped.replace('"$PYTEST"', "pytest").split())
     return commands
 
 
 def test_ci_runs_pytest_with_no_keyword_marker_or_path_filter() -> None:
     """Otherwise the full-session tier is decorative: never collected anywhere.
 
-    The workflow is read as shell commands rather than as YAML — the repo
-    carries no YAML parser — and every command whose first word is ``pytest``
-    has to carry no ``-k``, no ``-m`` and no positional path.
+    Every gate command lives in the ``ci/`` script its workflow job runs
+    (docs/ci-local.md), so the test job's script is what is read here, and
+    every command that invokes pytest has to carry no ``-k``, no ``-m`` and
+    no positional path.
     """
-    commands = _shell_commands(WORKFLOW_PATH.read_text(encoding="utf-8"))
+    commands = _shell_commands(CI_TEST_PATH.read_text(encoding="utf-8"))
     invocations = [
         command
         for command in commands
         if command[:1] == ["pytest"] or command[:3] == ["python", "-m", "pytest"]
     ]
-    assert invocations, "the workflow runs no pytest step"
+    assert invocations, "the test job runs no pytest step"
     # Options that take a value: their value is not a positional path.
     # ``-n auto`` (pytest-xdist) is the workflow's parallel-worker count.
     value_options = {"-n", "--numprocesses", "-p", "--dist", "--cov"}
