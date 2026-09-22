@@ -629,8 +629,7 @@ def compilability_for(owner: str, scope: ReceiptScope) -> Compilability:
         if registry_entries(owner):
             return ReceiptOnly(
                 f"{owner}: the registry declares behaviour that no BehaviorRule "
-                "models yet, so the compiled kernel has nothing to represent it "
-                "with (Phase 3 migration frontier)",
+                "models, so the compiled kernel has nothing to represent it with",
                 scope=scope,
             )
         return Compilable()
