@@ -179,7 +179,7 @@ class PairView:
     """One pair fight as the roster composition reads it.
 
     The receipt projection of the same compile the score panels take: every
-    field on an enriched event is a value :meth:`WalkCompiler.add_engine_result`
+    field on an enriched event is a value :meth:`WalkCompiler._compile_pair`
     already decided for the action beside it, so the two representations of
     one fight cannot drift.
 

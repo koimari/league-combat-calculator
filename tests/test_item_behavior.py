@@ -407,7 +407,7 @@ def test_every_utility_member_is_spelled_the_way_it_serializes() -> None:
 def test_the_packet_kind_enum_covers_every_kind_the_utility_census_reads() -> None:
     """ER1: the census's eight reads resolve to members, not to bare strings.
 
-    ``participant_timeline._utility_outcome_receipt`` classified seven
+    ``timeline.utility._utility_outcome_receipt`` classified seven
     dimensions and the denial split by comparing ``event["kind"]`` against
     string literals, so a kind could be authored in one spelling and read in
     another with nothing to notice.  Both sides now go through

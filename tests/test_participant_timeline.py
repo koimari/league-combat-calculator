@@ -27,7 +27,6 @@ from src.calculator.participant_timeline import (
     _simulate_survival,
     build_participant_timeline,
 )
-from src.calculator.timeline.records import TimelineScene
 from src.calculator.pipeline import run_fight
 from src.calculator.program.build import roster_program
 from src.calculator.program.build import roster_program as _roster_program
@@ -49,6 +48,7 @@ from src.calculator.survival import (
     TransitionRank,
     build_states,
 )
+from src.calculator.timeline.records import TimelineScene
 
 
 def _simulated_rows(combatants, *args, **kwargs):

@@ -8,7 +8,7 @@ which of that origin's events it is.  :func:`event_id_text` is the single
 producer of the public string.  The four origins render as:
 
 * :class:`PairOrigin` -- ``f"{attacker_id}:{defender_id}:{i}"``, authored by
-  ``program.compile.WalkCompiler.add_engine_result`` and rebuilt by
+  ``program.compile.WalkCompiler._compile_pair`` and rebuilt by
   ``survival.compile.WalkCompiler``.
 * :class:`SupportOrigin` -- ``f"{holder_id}:{label}:{i}"``, the timeline's
   ``:warmog:``, ``:heal:``, ``:grey:`` and ``:defy:`` packets.

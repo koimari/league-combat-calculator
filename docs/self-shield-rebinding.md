@@ -42,7 +42,7 @@ blocked proc is a shield the fight did not earn.
 
 ## When nothing can carry it
 
-`participant_timeline._self_shield_carrier_denials` names a rider that was
+`timeline.receipt._self_shield_carrier_denials` names a rider that was
 refused `trigger_event_skipped` while its holder authored in-window ability
 packets and landed none. The row is published in `combat.item_denial_receipts`
 and names the authored carrier, the last candidate the rider could have taken,

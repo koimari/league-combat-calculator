@@ -321,7 +321,7 @@ def _pair_cache_key(
 def _stamp_ability_instances(result: MutableMapping[str, Any]) -> None:
     """Give one engine result's damage events their delivery facts in place.
 
-    The *view* half of what :meth:`WalkCompiler.add_engine_result` derives
+    The *view* half of what :meth:`WalkCompiler._compile_pair` derives
     for the walk: the item support scan reads the enriched per-event copy,
     and a score-only result never passes through the pair enrichment that
     would otherwise supply it.  Same two derivers, one home.
