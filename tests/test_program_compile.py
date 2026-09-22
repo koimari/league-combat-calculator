@@ -150,13 +150,10 @@ def compile_result(
     """*result* through the one compiler, as typed actions."""
     compiler = program_compile.WalkCompiler(0)
     compiler.add_engine_result(
-        result,
-        "enemy:Veigar",
-        "main",
+        program_compile.PairFight(result, "enemy:Veigar", "main", **kwargs),
         program_compile.WalkSlots(
             1, 0, {}, 8.0, {}, [], suppress_actor_wide_heals=suppress_actor_wide_heals
         ),
-        **kwargs,
     )
     return compiler.actions
 

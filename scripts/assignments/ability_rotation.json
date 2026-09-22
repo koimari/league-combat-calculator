@@ -1,0 +1,20 @@
+{
+ "source": "src/calculator/fight/rotation/ability_rotation.py",
+ "modules": [
+  {
+   "path": "src/calculator/fight/rotation/cast_slot.py",
+   "docstring": "One slot of the rotation: the swings it forces, the controls it authors, the item on-hits it carries and the debuff it leaves.",
+   "defs": [
+    "_forced_swing_parts",
+    "_author_control_events",
+    "_apply_ability_item_on_hits",
+    "_apply_slot_target_debuff"
+   ]
+  }
+ ],
+ "decisions": [
+  "The four steps the rotation loop calls once per slot go together, because each reads the slot's declaration and nothing of the rotation's own bookkeeping: what stays in `ability_rotation.py` is the schedule, the resource admission and the running totals the loop folds.",
+  "`_with_stack_levels` and `_stacking_ability_hit_times` stay in the residue: the first is read by the loop's pricing line and the second by the first, and both read the breakdown the rotation is in the middle of writing.",
+  "One module and not four: each step has exactly one reader, so four files would price four imports for one loop, and sightline #27's fan-out arm counts the residue's imports either way."
+ ]
+}

@@ -108,6 +108,7 @@ FIGHT_STEPS_WITHOUT_A_FRONT_DOOR = (
     "fight.rotation.ability_rotation",
     "fight.rotation.burst_autos",
     "fight.rotation.cast_plan",
+    "fight.rotation.cast_slot",
     "fight.rotation.energy_walk",
     "fight.rotation.mana_walk",
     "fight.rotation.precomputed_procs",

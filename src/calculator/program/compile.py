@@ -114,6 +114,33 @@ _DAMAGE_ACTION_KINDS = frozenset(
 )
 
 
+class PairFight(NamedTuple):
+    """One pair fight's own facts: whose rows these are, and against whom.
+
+    The three a pair fight cannot see for itself, and its caller can:
+
+    * ``defender_index`` -- the defender's slot in the attacker's ordered
+      roster.  A later target is re-priced to the sourced reduced heal
+      amount when the engine authored one (Vladimir's Hemoplague).
+    * ``champion_wounds`` -- the attacker's wound-declaring source keys
+      (Katarina R, Varus E) mapped to their packets, so a champion wound
+      rides its damage event as the same receipt an item wound does.
+    * ``amps`` -- the attacker's amplifiers.  ``live`` riders ride their own
+      damage packets so the bonus dies with its host, and the default is
+      empty because most holders declare none, never because a caller may
+      leave it out.  ``holder`` is the static, pair-local factor a re-priced
+      preview's declaration needs, required rather than defaulted the moment
+      this fight carries one.
+    """
+
+    result: Mapping[str, Any]
+    attacker_id: str
+    defender_id: str
+    defender_index: int = 0
+    champion_wounds: Mapping[str, Any] | None = None
+    amps: AmpRiders = NO_AMPS
+
+
 class WalkSlots(NamedTuple):
     """Where one pair fight's staged actions are filed, and by what window.
 
@@ -306,13 +333,15 @@ def pair_view(
     """One pair fight's receipt view, through the one packet compiler."""
     view = PairView(result, amps)
     WalkCompiler(0).project_pair_view(
-        result,
-        attacker_id,
-        defender_id,
+        PairFight(
+            result,
+            attacker_id,
+            defender_id,
+            defender_index,
+            champion_wounds=champion_wounds,
+            amps=amps,
+        ),
         view,
-        defender_index=defender_index,
-        champion_wounds=champion_wounds,
-        amps=amps,
     )
     return view
 
@@ -812,72 +841,16 @@ class WalkCompiler:
         # supplies the packets it applies to.
         self.staged_modifier = False
 
-    def add_engine_result(
-        self,
-        result: Mapping[str, Any],
-        attacker_id: str,
-        defender_id: str,
-        slots: WalkSlots,
-        *,
-        defender_index: int = 0,
-        champion_wounds: Mapping[str, Any] | None = None,
-        amps: AmpRiders = NO_AMPS,
-    ) -> None:
+    def add_engine_result(self, fight: PairFight, slots: WalkSlots) -> None:
         """Stage one pair fight's actions and ledgers for the walk."""
-        self._compile_pair(
-            result,
-            attacker_id,
-            defender_id,
-            slots,
-            defender_index=defender_index,
-            champion_wounds=champion_wounds,
-            amps=amps,
-            view=None,
-        )
+        self._compile_pair(fight, slots, view=None)
 
-    def project_pair_view(
-        self,
-        result: Mapping[str, Any],
-        attacker_id: str,
-        defender_id: str,
-        view: PairView,
-        *,
-        defender_index: int = 0,
-        champion_wounds: Mapping[str, Any] | None = None,
-        amps: AmpRiders = NO_AMPS,
-    ) -> None:
-        """Enrich *view*'s events from one pair fight, staging nothing.
-
-        Three things the score walk owes are not the receipt's: the
-        fail-closed refusal of a transition *the score kernel* cannot stage
-        (the receipt walk stages every one of them, which is what the
-        fallback is), the cross-fight actor-wide heal dedup (the composition
-        owns its own, over the copies published here), and the actions
-        themselves — nobody reads them, and building them would make the
-        receipt path pay for the score path's representation.
-        """
-        self._compile_pair(
-            result,
-            attacker_id,
-            defender_id,
-            projection_only(),
-            defender_index=defender_index,
-            champion_wounds=champion_wounds,
-            amps=amps,
-            view=view,
-        )
+    def project_pair_view(self, fight: PairFight, view: PairView) -> None:
+        """Enrich *view*'s events from one pair fight, staging nothing."""
+        self._compile_pair(fight, projection_only(), view=view)
 
     def _compile_pair(
-        self,
-        result: Mapping[str, Any],
-        attacker_id: str,
-        defender_id: str,
-        slots: WalkSlots,
-        *,
-        defender_index: int,
-        champion_wounds: Mapping[str, Any] | None,
-        amps: AmpRiders,
-        view: PairView | None,
+        self, fight: PairFight, slots: WalkSlots, *, view: PairView | None
     ) -> None:
         """Compile one pair fight from the engine's own rows.
 
@@ -888,6 +861,14 @@ class WalkCompiler:
         differs: the projection enriches it, staging has none.  The sort-key
         layout is ``action_key``'s; both must change together.
 
+        Three things the score walk owes are not the projection's: the
+        fail-closed refusal of a transition *the score kernel* cannot stage
+        (the receipt walk stages every one of them, which is what the
+        fallback is), the cross-fight actor-wide heal dedup (the composition
+        owns its own, over the copies published here), and the actions
+        themselves — nobody reads them, and building them would make the
+        receipt path pay for the score path's representation.
+
         A pair row the registry declares ``THEORETICAL`` is a *preview* of a
         number the coupled walk owns, so it and its events are dropped
         (:func:`~.capability.pair_preview_sources`) — composing it would put
@@ -895,22 +876,16 @@ class WalkCompiler:
         walk *re-prices* keeps its packet: the walk is about to price it from
         its declaration, and dropping it would delete the family's damage.
 
-        The three fields a pair fight cannot see for itself, and the caller
-        can:
-
-        * ``defender_index`` — the defender's slot in the attacker's ordered
-          roster.  A later target is re-priced to the sourced reduced heal
-          amount when the engine authored one (Vladimir's Hemoplague).
-        * ``champion_wounds`` — the attacker's wound-declaring source keys
-          (Katarina R, Varus E) mapped to their packets, so a champion wound
-          rides its damage event as the same receipt an item wound does.
-        * ``amps`` — the attacker's amplifiers. ``live`` riders ride their own
-          damage packets so the bonus dies with its host, and the default is
-          empty because most holders declare none, never because a caller may
-          leave it out. ``holder`` is the static, pair-local factor a
-          re-priced preview's declaration needs, required rather than
-          defaulted the moment this fight carries one.
+        Both records are read into locals here rather than through their
+        fields, because the loop below builds tens of thousands of actions
+        per request.
         """
+        result = fight.result
+        attacker_id = fight.attacker_id
+        defender_id = fight.defender_id
+        defender_index = fight.defender_index
+        champion_wounds = fight.champion_wounds
+        amps = fight.amps
         attacker_i = slots.attacker_i
         defender_i = slots.defender_i
         grievous_by_dtype = slots.grievous_by_dtype

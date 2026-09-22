@@ -30,7 +30,7 @@ from src.calculator.program.capability import (
     pair_preview_mechanics,
     walk_repriced_mechanics,
 )
-from src.calculator.program.compile import WalkCompiler, WalkSlots
+from src.calculator.program.compile import PairFight, WalkCompiler, WalkSlots
 from src.calculator.program.views.view_tag import ViewTag
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival.event_slots import EVENT_SLOTS
@@ -251,9 +251,7 @@ def _compile_engine_result():
     """The score path's composition of that fight, as typed actions."""
     compiler = WalkCompiler(0)
     compiler.add_engine_result(
-        _engine_result_with_a_preview_row(),
-        "main",
-        "enemy:Aatrox",
+        PairFight(_engine_result_with_a_preview_row(), "main", "enemy:Aatrox"),
         WalkSlots(0, 1, {}, 8.0, {}, []),
     )
     return compiler.actions

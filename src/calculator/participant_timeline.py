@@ -97,6 +97,7 @@ from .program.amp import (
 from .program.build import ParamPatch, roster_program
 from .program.capability import arming_stacking, dropped_pair_previews
 from .program.compile import (
+    PairFight,
     PairView,
     WalkCompiler,
     WalkSlots,
@@ -3167,9 +3168,14 @@ def _context_setup(
             pair_result_cache[cache_key] = view
         attacker_i = context.index_of[attacker.participant_id]
         base.add_engine_result(
-            view.engine,
-            attacker.participant_id,
-            defender.participant_id,
+            PairFight(
+                view.engine,
+                attacker.participant_id,
+                defender.participant_id,
+                defender_index,
+                champion_wounds=wounds,
+                amps=view.amps,
+            ),
             WalkSlots(
                 attacker_i,
                 context.index_of[defender.participant_id],
@@ -3184,9 +3190,6 @@ def _context_setup(
                 # (Dr. Mundo's Maximum Dosage).
                 attacker.team == "enemy",
             ),
-            defender_index=defender_index,
-            champion_wounds=wounds,
-            amps=view.amps,
         )
         if attacker.team == "ally" and attacker.participant_id not in support_attached:
             base.add_support_templates(
@@ -3331,9 +3334,13 @@ def _build_signature_panel(
         # shared base sets, or a key recorded by one signature would silently
         # drop another signature's only copy.
         sig.add_engine_result(
-            view.engine,
-            attacker.participant_id,
-            "main",
+            PairFight(
+                view.engine,
+                attacker.participant_id,
+                "main",
+                champion_wounds=wounds,
+                amps=view.amps,
+            ),
             WalkSlots(
                 attacker_i,
                 0,
@@ -3342,8 +3349,6 @@ def _build_signature_panel(
                 dict(context.base_heal_dedup.get(attacker_i) or {}),
                 context.panel_id_strings[(attacker.participant_id, "main")],
             ),
-            champion_wounds=wounds,
-            amps=view.amps,
         )
         sig.add_support_templates(
             _attached_support_templates(
@@ -3525,9 +3530,17 @@ def _score_with_search_context(
         # consumer of this result that is not the compiler.
         _stamp_ability_instances(result)
         fresh.add_engine_result(
-            result,
-            "main",
-            defender.participant_id,
+            PairFight(
+                result,
+                "main",
+                defender.participant_id,
+                defender_index,
+                champion_wounds=main_champion_wounds,
+                amps=AmpRiders(
+                    _live_amps_of(main, defender, params),
+                    _holder_amps_of(main, defender, params),
+                ),
+            ),
             WalkSlots(
                 0,
                 context.index_of[defender.participant_id],
@@ -3535,12 +3548,6 @@ def _score_with_search_context(
                 duration,
                 heal_dedup,
                 context.pair_id_strings[defender.participant_id],
-            ),
-            defender_index=defender_index,
-            champion_wounds=main_champion_wounds,
-            amps=AmpRiders(
-                _live_amps_of(main, defender, params),
-                _holder_amps_of(main, defender, params),
             ),
         )
     if first_result is not None and first_defender is not None:

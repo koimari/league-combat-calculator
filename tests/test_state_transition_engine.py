@@ -23,7 +23,7 @@ from src.calculator.participant_timeline import (
     _WalkCompiler,
     build_participant_timeline,
 )
-from src.calculator.program.compile import WalkSlots
+from src.calculator.program.compile import PairFight, WalkSlots
 from src.calculator.stats import calculate_total_stats
 
 _APHELIOS_ITEMS = [
@@ -115,11 +115,8 @@ def test_compiler_fails_closed_on_overheal_to_shield():
     }
     with pytest.raises(UncompilableActionError) as exc:
         compiler.add_engine_result(
-            result,
-            "main",
-            "enemy:X",
+            PairFight(result, "main", "enemy:X", 0),
             WalkSlots(0, 1, {}, 10.0, {}, []),
-            defender_index=0,
         )
     assert exc.value.receipt == "overheal_to_shield"
     assert exc.value.source == "Severum"
@@ -143,11 +140,8 @@ def test_compiler_carries_vamp_healing_category():
         ],
     }
     compiler.add_engine_result(
-        result,
-        "main",
-        "enemy:X",
+        PairFight(result, "main", "enemy:X", 0),
         WalkSlots(0, 1, {}, 10.0, {}, []),
-        defender_index=0,
     )
     heal = next(action for action in compiler.actions if action.kind.name == "HEAL")
     assert heal.healing_category == "vamp"
@@ -212,11 +206,8 @@ def test_compiler_fails_closed_on_execute_threshold_damage():
     }
     with pytest.raises(UncompilableActionError) as exc:
         compiler.add_engine_result(
-            result,
-            "main",
-            "enemy:X",
+            PairFight(result, "main", "enemy:X", 0),
             WalkSlots(0, 1, {}, 10.0, {}, []),
-            defender_index=0,
         )
     assert exc.value.receipt == "execute_threshold=The Collector"
 
