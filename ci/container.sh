@@ -2,7 +2,8 @@
 # Local equivalent of tests.yml job: container
 #   docker build, the smoke the workflow ran against the image (health,
 #   non-root user, one calculate, the metrics module present, the
-#   HEALTHCHECK reaching healthy), then trivy when it is installed.
+#   HEALTHCHECK reaching healthy), then trivy when it is installed, the one
+#   check whose absence is never a failure (the workflow runs the action).
 set -o pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.." || exit 1
 # shellcheck source=ci/common.sh
@@ -82,8 +83,12 @@ ci_section "container: smoke production image"
 run_step "smoke $IMAGE on 127.0.0.1:$PORT" smoke
 
 ci_section "container: scan production image"
-if require_tool trivy "brew install trivy"; then
+if command -v trivy >/dev/null 2>&1; then
   run_step "trivy image (HIGH,CRITICAL, unfixed ignored)" trivy image --exit-code 1 --ignore-unfixed --severity HIGH,CRITICAL --format table "$IMAGE"
+else
+  # The workflow scans with the trivy action, this job's next step, so the
+  # binary is absent there by design: the one skip strict mode must allow.
+  ci_skip_by_design "trivy not installed: install with: brew install trivy"
 fi
 
 ci_summary

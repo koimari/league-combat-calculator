@@ -60,6 +60,17 @@ ci_skip() {
     ci_fail "$* [LCC_CI_STRICT: a skip is a failure here]"
     return
   fi
+  _ci_record_skip "$*"
+}
+
+# A check the hosted job covers another way, so its absence is never a gate
+# that did not run: it is reported and never fails, even under
+# LCC_CI_STRICT, which every job may then set.
+ci_skip_by_design() {
+  _ci_record_skip "$* [by design]"
+}
+
+_ci_record_skip() {
   CI_SKIP_COUNT=$((CI_SKIP_COUNT + 1))
   CI_SKIPPED_NAMES+=("$*")
   echo "$(_ci_color 33 SKIP) - $*"

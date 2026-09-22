@@ -131,10 +131,12 @@ jobs:
 
       # docker build, then the smoke against the running image: health,
       # non-root, one calculate, the metrics module, HEALTHCHECK healthy.
-      # Not strict: the script's trivy step is this job's next one, an
-      # action rather than a binary on PATH, so it skips here by design.
+      # Strict like every other job: the script's trivy step is the one skip
+      # it allows, because this job's next step is the scan as an action.
       - name: Build and smoke the production image
         run: bash ci/container.sh
+        env:
+          LCC_CI_STRICT: "1"
 
       - name: Scan production image
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0

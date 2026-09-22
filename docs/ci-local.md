@@ -24,8 +24,10 @@ Individual jobs: `ci-shared-ui`, `ci-test`, `ci-static`, `ci-coverage-census`,
 Every target exits non-zero on failure and prints a PASS/FAIL/SKIP summary.
 A check that needs a tool you have not installed skips with the install
 command rather than silently passing. `LCC_CI_STRICT=1` turns a skip into a
-failure, which is what the workflow sets: a hosted runner installs
-everything, so a skip there is a gate that did not run. Python steps run the
+failure, which is what the workflow sets on every job: a hosted runner
+installs everything, so a skip there is a gate that did not run. One check
+is exempt, `trivy image`, because the workflow scans with the trivy action
+instead; it prints `[by design]` and never fails. Python steps run the
 checkout's own `.venv` (override with `LCC_CI_PYTHON`), a linked worktree
 falling back to the main checkout's, never a bare `python3`.
 
