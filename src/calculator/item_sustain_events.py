@@ -22,11 +22,11 @@ _catalyst_field = partial(
     kind="catalyst Eternity heal row",
     stamper="mana_item_schedules.CatalystHealRow.public",
 )
-#: One field of the auto-attack uptime receipt; all four arms stamp it.
+#: One field of the auto-attack schedule row, built as one dict literal.
 _schedule_field = partial(
     required_field,
-    kind="auto-attack uptime receipt",
-    stamper="auto_attack_policy.resolve_auto_attack_policy",
+    kind="auto-attack schedule row",
+    stamper="fight_receipts._attach_engine_receipts",
 )
 
 
