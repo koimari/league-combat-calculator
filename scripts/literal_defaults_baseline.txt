@@ -88,6 +88,7 @@ root|ally_packet_recipient.py
 root|application_errors.py
 root|attack_windows.py
 root|binary_roots.py
+root|breakdown_row.py
 root|build_search.py
 root|capabilities.py
 root|capability_fields.py
@@ -101,6 +102,7 @@ root|champion_growth.py
 root|champions
 root|cleanse_declarations.py
 root|combat_events.py
+root|composed_event_row.py
 root|control_spec.py
 root|coverage_evidence.py
 root|damage.py
@@ -113,6 +115,7 @@ root|economics_data.py
 root|event_row_field.py
 root|fight
 root|fight_request_bounds.py
+root|fight_result_row.py
 root|heal_event_row.py
 root|healing_helpers.py
 root|interpreters
