@@ -30,7 +30,7 @@ from src.calculator.program.capability import (
     pair_preview_mechanics,
     walk_repriced_mechanics,
 )
-from src.calculator.program.compile import WalkCompiler
+from src.calculator.program.compile import WalkCompiler, WalkSlots
 from src.calculator.program.views.view_tag import ViewTag
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival.event_slots import EVENT_SLOTS
@@ -253,13 +253,8 @@ def _compile_engine_result():
     compiler.add_engine_result(
         _engine_result_with_a_preview_row(),
         "main",
-        0,
         "enemy:Aatrox",
-        defender_i=1,
-        grievous_by_dtype={},
-        duration=8.0,
-        heal_dedup={},
-        id_strings=[],
+        WalkSlots(0, 1, {}, 8.0, {}, []),
     )
     return compiler.actions
 

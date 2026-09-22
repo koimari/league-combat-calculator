@@ -99,6 +99,7 @@ from .program.capability import arming_stacking, dropped_pair_previews
 from .program.compile import (
     PairView,
     WalkCompiler,
+    WalkSlots,
     ability_instance_for_event,
     action_from_event,
     grey_health_heal_action,
@@ -3168,22 +3169,24 @@ def _context_setup(
         base.add_engine_result(
             view.engine,
             attacker.participant_id,
-            attacker_i,
             defender.participant_id,
-            defender_i=context.index_of[defender.participant_id],
-            grievous_by_dtype=context.grievous_packs[attacker_i],
-            duration=params.fight_duration_seconds,
-            heal_dedup=context.base_heal_dedup[attacker_i],
-            id_strings=context.panel_id_strings[pair_id],
+            WalkSlots(
+                attacker_i,
+                context.index_of[defender.participant_id],
+                context.grievous_packs[attacker_i],
+                params.fight_duration_seconds,
+                context.base_heal_dedup[attacker_i],
+                context.panel_id_strings[pair_id],
+                # An enemy attacker's ordered pair list is [main, *allies],
+                # so the dedup always keeps its main-pair copy, which lives
+                # in the signature panel, not here.  Skip the ally-pair
+                # copies; the engine may price them differently per defender
+                # (Dr. Mundo's Maximum Dosage).
+                attacker.team == "enemy",
+            ),
             defender_index=defender_index,
             champion_wounds=wounds,
             amps=view.amps,
-            # An enemy attacker's ordered pair list is [main, *allies], so
-            # the dedup always keeps its main-pair copy, which lives in the
-            # signature panel, not here.  Skip the ally-pair copies; the
-            # engine may price them differently per defender (Dr. Mundo's
-            # Maximum Dosage).
-            suppress_actor_wide_heals=attacker.team == "enemy",
         )
         if attacker.team == "ally" and attacker.participant_id not in support_attached:
             base.add_support_templates(
@@ -3330,13 +3333,15 @@ def _build_signature_panel(
         sig.add_engine_result(
             view.engine,
             attacker.participant_id,
-            attacker_i,
             "main",
-            defender_i=0,
-            grievous_by_dtype=context.grievous_packs[attacker_i],
-            duration=duration,
-            heal_dedup=dict(context.base_heal_dedup.get(attacker_i) or {}),
-            id_strings=context.panel_id_strings[(attacker.participant_id, "main")],
+            WalkSlots(
+                attacker_i,
+                0,
+                context.grievous_packs[attacker_i],
+                duration,
+                dict(context.base_heal_dedup.get(attacker_i) or {}),
+                context.panel_id_strings[(attacker.participant_id, "main")],
+            ),
             champion_wounds=wounds,
             amps=view.amps,
         )
@@ -3522,13 +3527,15 @@ def _score_with_search_context(
         fresh.add_engine_result(
             result,
             "main",
-            0,
             defender.participant_id,
-            defender_i=context.index_of[defender.participant_id],
-            grievous_by_dtype=main_packs,
-            duration=duration,
-            heal_dedup=heal_dedup,
-            id_strings=context.pair_id_strings[defender.participant_id],
+            WalkSlots(
+                0,
+                context.index_of[defender.participant_id],
+                main_packs,
+                duration,
+                heal_dedup,
+                context.pair_id_strings[defender.participant_id],
+            ),
             defender_index=defender_index,
             champion_wounds=main_champion_wounds,
             amps=AmpRiders(

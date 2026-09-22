@@ -997,13 +997,14 @@ CC_KIND_READERS = {
     # whole of A1: each stamps the raw token onto ``SurvivalAction.cc_kind``
     # and neither branches on it.  Every "is this an immobilize?" question
     # they ask goes to ``is_immobilizing_event`` on the line above the copy,
-    # so the classifier still has one home.  ``add_engine_result`` joined
-    # when the merge restored the delivery facts on compiled damage rows:
-    # Force of Nature's Steadfast and the spell-shield cast grouping read
-    # ``action.cc_kind`` off the action, and a compiled packet that carried
-    # none priced differently from the receipt packet with nothing saying so.
+    # so the classifier still has one home.  ``_compile_pair``, the body
+    # both compiler entry points share, joined when the merge restored the
+    # delivery facts on compiled damage rows: Force of Nature's Steadfast
+    # and the spell-shield cast grouping read ``action.cc_kind`` off the
+    # action, and a compiled packet that carried none priced differently
+    # from the receipt packet with nothing saying so.
     "src/calculator/program/compile.py": frozenset(
-        {"action_from_event", "add_engine_result"}
+        {"action_from_event", "_compile_pair"}
     ),
     # The receipt view publishes the token as a public field; a projection
     # that classified it would be a second classifier inside a layer that

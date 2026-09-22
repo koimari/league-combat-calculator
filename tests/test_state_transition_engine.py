@@ -23,6 +23,7 @@ from src.calculator.participant_timeline import (
     _WalkCompiler,
     build_participant_timeline,
 )
+from src.calculator.program.compile import WalkSlots
 from src.calculator.stats import calculate_total_stats
 
 _APHELIOS_ITEMS = [
@@ -116,13 +117,8 @@ def test_compiler_fails_closed_on_overheal_to_shield():
         compiler.add_engine_result(
             result,
             "main",
-            0,
             "enemy:X",
-            defender_i=1,
-            grievous_by_dtype={},
-            duration=10.0,
-            heal_dedup={},
-            id_strings=[],
+            WalkSlots(0, 1, {}, 10.0, {}, []),
             defender_index=0,
         )
     assert exc.value.receipt == "overheal_to_shield"
@@ -149,13 +145,8 @@ def test_compiler_carries_vamp_healing_category():
     compiler.add_engine_result(
         result,
         "main",
-        0,
         "enemy:X",
-        defender_i=1,
-        grievous_by_dtype={},
-        duration=10.0,
-        heal_dedup={},
-        id_strings=[],
+        WalkSlots(0, 1, {}, 10.0, {}, []),
         defender_index=0,
     )
     heal = next(action for action in compiler.actions if action.kind.name == "HEAL")
@@ -223,13 +214,8 @@ def test_compiler_fails_closed_on_execute_threshold_damage():
         compiler.add_engine_result(
             result,
             "main",
-            0,
             "enemy:X",
-            defender_i=1,
-            grievous_by_dtype={},
-            duration=10.0,
-            heal_dedup={},
-            id_strings=[],
+            WalkSlots(0, 1, {}, 10.0, {}, []),
             defender_index=0,
         )
     assert exc.value.receipt == "execute_threshold=The Collector"

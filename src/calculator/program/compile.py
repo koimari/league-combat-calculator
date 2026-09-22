@@ -44,7 +44,6 @@ that builds the walk compiles what the walk may not reach and hands it over.
 # not) this file exists to make impossible.
 from __future__ import annotations
 
-from ..cast_event_row import cast_slot as _row_cast_slot, cast_time as _row_cast_time
 import math
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
@@ -52,6 +51,8 @@ from operator import itemgetter
 from typing import Any, NamedTuple
 
 from ..ability_spec import AttackClass, DamageClass
+from ..cast_event_row import cast_slot as _row_cast_slot
+from ..cast_event_row import cast_time as _row_cast_time
 from ..defensive_effects import armed_revive
 from ..delivery_facts import CombatantFacts
 from ..healing_reduction import amplifies_recovery
@@ -111,6 +112,40 @@ _DAMAGE_ACTION_KINDS = frozenset(
         ActionKind.REDIRECT,
     }
 )
+
+
+class WalkSlots(NamedTuple):
+    """Where one pair fight's staged actions are filed, and by what window.
+
+    Every field is bookkeeping the walk owns and the fight cannot see for
+    itself: the two roster slots the actions are filed under, the fight
+    window that bounds them, the attacker's grievous packs, the cross-fight
+    heal dedup this fight replays into, and the search-lifetime cache of
+    this pair's positional event-id strings.  The last two are written
+    through, so each fight takes its own record: a shared one carries one
+    fight's event ids into the next, and the coupled walk then sees two
+    applied contributions for one mechanic.
+
+    ``suppress_actor_wide_heals`` marks a fight whose actor-wide heal copies
+    are never the kept copy: an enemy attacker's ordered pair list is
+    ``[main, *allies]``, so the walk always keeps the main-pair copy and the
+    ally-pair copies are skipped, because the engine may price them
+    differently per defender (Dr. Mundo's Maximum Dosage).  Trigger-linked
+    actor-wide heals still fail closed before the skip.
+    """
+
+    attacker_i: int
+    defender_i: int
+    grievous_by_dtype: Mapping[str, Any]
+    duration: float
+    heal_dedup: dict[tuple[str, float], float]
+    id_strings: list[str]
+    suppress_actor_wide_heals: bool = False
+
+
+def projection_only() -> WalkSlots:
+    """What the receipt projection files: nothing, in its own record."""
+    return WalkSlots(-1, -1, {}, 0.0, {}, [])
 
 
 class PairView:
@@ -268,29 +303,16 @@ def pair_view(
     champion_wounds: Mapping[str, Any] | None = None,
     amps: AmpRiders = NO_AMPS,
 ) -> PairView:
-    """One pair fight's receipt view, through the one packet compiler.
-
-    The walk's own bookkeeping arguments are neutral here and named in one
-    place for that reason: the receipt projection stages no actions, so it
-    has no roster slots to file them under, no fight window to bound them by
-    and no cross-fight heal dedup to replay.  The composition owns that
-    dedup itself, over the copies this view publishes.
-    """
+    """One pair fight's receipt view, through the one packet compiler."""
     view = PairView(result, amps)
-    WalkCompiler(0).add_engine_result(
+    WalkCompiler(0).project_pair_view(
         result,
         attacker_id,
-        -1,
         defender_id,
-        defender_i=-1,
-        grievous_by_dtype={},
-        duration=0.0,
-        heal_dedup={},
-        id_strings=[],
+        view,
         defender_index=defender_index,
         champion_wounds=champion_wounds,
         amps=amps,
-        view=view,
     )
     return view
 
@@ -794,27 +816,77 @@ class WalkCompiler:
         self,
         result: Mapping[str, Any],
         attacker_id: str,
-        attacker_i: int,
         defender_id: str,
+        slots: WalkSlots,
         *,
-        defender_i: int,
-        grievous_by_dtype: Mapping[str, Any],
-        duration: float,
-        heal_dedup: dict[tuple[str, float], float],
-        id_strings: list[str],
         defender_index: int = 0,
         champion_wounds: Mapping[str, Any] | None = None,
         amps: AmpRiders = NO_AMPS,
-        suppress_actor_wide_heals: bool = False,
-        view: PairView | None = None,
+    ) -> None:
+        """Stage one pair fight's actions and ledgers for the walk."""
+        self._compile_pair(
+            result,
+            attacker_id,
+            defender_id,
+            slots,
+            defender_index=defender_index,
+            champion_wounds=champion_wounds,
+            amps=amps,
+            view=None,
+        )
+
+    def project_pair_view(
+        self,
+        result: Mapping[str, Any],
+        attacker_id: str,
+        defender_id: str,
+        view: PairView,
+        *,
+        defender_index: int = 0,
+        champion_wounds: Mapping[str, Any] | None = None,
+        amps: AmpRiders = NO_AMPS,
+    ) -> None:
+        """Enrich *view*'s events from one pair fight, staging nothing.
+
+        Three things the score walk owes are not the receipt's: the
+        fail-closed refusal of a transition *the score kernel* cannot stage
+        (the receipt walk stages every one of them, which is what the
+        fallback is), the cross-fight actor-wide heal dedup (the composition
+        owns its own, over the copies published here), and the actions
+        themselves — nobody reads them, and building them would make the
+        receipt path pay for the score path's representation.
+        """
+        self._compile_pair(
+            result,
+            attacker_id,
+            defender_id,
+            projection_only(),
+            defender_index=defender_index,
+            champion_wounds=champion_wounds,
+            amps=amps,
+            view=view,
+        )
+
+    def _compile_pair(
+        self,
+        result: Mapping[str, Any],
+        attacker_id: str,
+        defender_id: str,
+        slots: WalkSlots,
+        *,
+        defender_index: int,
+        champion_wounds: Mapping[str, Any] | None,
+        amps: AmpRiders,
+        view: PairView | None,
     ) -> None:
         """Compile one pair fight from the engine's own rows.
 
-        The one packet compiler: every roster pair, every signature panel and
-        every candidate's fresh fights reach the walk through here, so a fact
-        about a packet is decided once.  The sort-key layout is
-        ``action_key``'s; both must change together.  ``id_strings`` is the
-        search-lifetime cache of this pair's positional event-id strings.
+        The one packet compiler: every roster pair, every signature panel,
+        every candidate's fresh fights and the receipt projection reach the
+        walk through here, so a fact about a packet is decided once.  The two
+        entry points above are the two jobs, and *view* is the one thing that
+        differs: the projection enriches it, staging has none.  The sort-key
+        layout is ``action_key``'s; both must change together.
 
         A pair row the registry declares ``THEORETICAL`` is a *preview* of a
         number the coupled walk owns, so it and its events are dropped
@@ -823,7 +895,7 @@ class WalkCompiler:
         walk *re-prices* keeps its packet: the walk is about to price it from
         its declaration, and dropping it would delete the family's damage.
 
-        The four fields a pair fight cannot see for itself, and the caller
+        The three fields a pair fight cannot see for itself, and the caller
         can:
 
         * ``defender_index`` — the defender's slot in the attacker's ordered
@@ -838,25 +910,14 @@ class WalkCompiler:
           leave it out. ``holder`` is the static, pair-local factor a
           re-priced preview's declaration needs, required rather than
           defaulted the moment this fight carries one.
-
-        ``suppress_actor_wide_heals`` marks a fight whose actor-wide heal
-        copies are never the kept copy: an enemy attacker's ordered pair list
-        is ``[main, *allies]``, so the walk always keeps the main-pair copy
-        and the ally-pair copies are skipped here, because the engine may
-        price them differently per defender (Dr. Mundo's Maximum Dosage).
-        Trigger-linked actor-wide heals still fail closed before the skip.
-
-        ``view`` selects the **receipt projection** (:class:`PairView`): the
-        per-event dict enrichment the roster composition reads, built from the
-        same locals the action beside it is built from.
-        Three things the score walk owes are not the receipt's: the
-        fail-closed refusal of a transition *the score kernel* cannot stage
-        (the receipt walk stages every one of them, which is what the
-        fallback is), the cross-fight actor-wide heal dedup (the composition
-        owns its own, over the copies published here), and the actions
-        themselves — nobody reads them, and building them would make the
-        receipt path pay for the score path's representation.
         """
+        attacker_i = slots.attacker_i
+        defender_i = slots.defender_i
+        grievous_by_dtype = slots.grievous_by_dtype
+        duration = slots.duration
+        heal_dedup = slots.heal_dedup
+        id_strings = slots.id_strings
+        suppress_actor_wide_heals = slots.suppress_actor_wide_heals
         result_breakdown = result.get("breakdown") or {}
         previewed = pair_preview_sources(result_breakdown)
         # A preview the walk *re-prices* keeps its packet on both paths: the
