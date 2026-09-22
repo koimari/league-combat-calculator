@@ -258,6 +258,18 @@ def test_ci_validates_every_receipt_it_emits():
     assert written == validated
 
 
+def test_the_validator_names_the_directory_ci_writes_into():
+    """``validate_receipt.py``'s docstring tells a reader where CI's receipts
+    land; the two scripts that build that path are the ones it must agree
+    with, so moving the artifact root fails here."""
+    common = (ROOT / "ci" / "common.sh").read_text(encoding="utf-8")
+    script = (ROOT / "ci" / "test.sh").read_text(encoding="utf-8")
+    artifacts = re.search(r"CI_ARTIFACTS:=\$CI_ROOT/([^}\"]+)", common)[1]
+    backend = re.search(r'BACKEND="\$CI_ARTIFACTS/(\S+?)"', script)[1]
+    validator = (ROOT / "scripts" / "validate_receipt.py").read_text(encoding="utf-8")
+    assert f"{artifacts}/{backend}/" in validator
+
+
 def test_item_umbrella_audit_emits_boolean_envelope():
     """The umbrella gate's envelope must validate like its siblings."""
     import json as _json
