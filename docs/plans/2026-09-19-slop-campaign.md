@@ -41,7 +41,7 @@ are the audit's own.
 | B | 3 | `contract-tests`: 2.1, 2.2, 2.7 codemods. `dead-tests`: 2.3, 2.4, 2.5, 2.6 with A1 Akshan fixed first, 2.8, 2.9, A8, A12, A13. `relocate`: 2.10, 2.11, 2.12, X3 `ER5_TAIL` derivation. | parallel, one integrator |
 | C | 4 | `dead-src`: D1 to D27, A3, A5, A6, A9, A10, A11, pylint `--fail-on` widened. `wrappers`: D29 to D33, W2 to W12, branched from the verified `dead-src` because both edit the interpreters and the catalog. | chained, one integrator |
 | D | 5 | one unit per codemod in the audit's order: C1, A2 then C4 `CachedSentence`, C5, C4 rest, C7, C8, C6, C9 to C11, C2, C3 | sequential, goldens between |
-| E | 6 | P1 module by module, P3, P4 and P5, P6 and X1, P8 P10 P12 P13 X2, then P2 behind a `benchmarks.md` row | sequential |
+| E | 6 | Four runs. Part 1: P6 and X1 with the lint first, P4 and P5, P8 P10 P12 P13, X2, a checkpoint, then the two P3 splits. Rescue: the part 1 units parked on a second verification, rebased onto main with their findings closed. Part 2: P1 module by module (the `.get(key, literal)` sites, the ratchet falling to zero), then P7, P9, P11, X3, X7. Part 3: P2, the `SurvivalAction` split, behind a `benchmarks.md` row. | chained, one integrator per run |
 
 Wave A units conflict only on `architecture.md` (`docs` retires HANDOVER, `claude-md` receives its
 section 11) and on the docstrings that cite HANDOVER. The integrator resolves those by intent.
