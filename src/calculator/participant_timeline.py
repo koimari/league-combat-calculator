@@ -5,6 +5,12 @@ This layer only composes its post-mitigation event ledgers, applies starting
 shields and sourced self-heals in timestamp order, and reports who was alive
 when damage landed.  It intentionally does not invent targeting, cooldown,
 or crowd-control behavior that the packets do not provide.
+
+What stays here is the composition itself: the request record, the pass
+driver, the pair-fight loop with the support templates it attaches, the
+event schedulers, the survival walk and the compiled score lane.
+``timeline/`` holds the records those steps write through, the grey-health
+pool, the utility receipt and the published combat receipt.
 """
 
 # pylint: disable=duplicate-code
@@ -33,11 +39,7 @@ from .cast_event_row import (
     cast_time as _row_cast_time,
 )
 from .champion_loadout import ResolvedLoadout
-from .champions.inputs import declared_option_defaults
 from .champions.lulu_events import derive_lulu_support_events
-from .champions.shared_option_keys import TAHM_KENCH_GREY_SHIELD
-from .champions.skill_orders import get_ability_rank
-from .champions.slot_extract import extract_cooldown, extract_named
 from .combat_events import certified_recipients
 from .defensive_effects import armed_revive
 from .fight_params import FightParams
@@ -66,9 +68,7 @@ from .item_behavior import (
     RegenerationRule,
     ThresholdRegenRule,
     is_denial_receipt,
-    is_packet_kind,
 )
-from .item_coverage import ATTACKER_LANES, item_model_coverage
 from .item_effects import (
     ThornsEffect,
     actualizer_active_seconds,
@@ -94,7 +94,7 @@ from .program.amp import (
     LiveAmpRider,
     live_amp_riders,
 )
-from .program.build import ParamPatch, Program, roster_program
+from .program.build import ParamPatch, roster_program
 from .program.capability import arming_stacking, dropped_pair_previews
 from .program.compile import (
     PairView,
@@ -129,11 +129,10 @@ from .program.rung import (
     gate_rung,
 )
 from .program.views import breakdown as _breakdown_view
-from .program.views import receipt as _receipt_view
 from .program.views import score as _score_view
 from .program.views import survival as _survival_view
 from .program.views.leaf import DISCARD, LeafWriter
-from .program.walk import AttackerOutcome, ObjectiveFold, WalkResult, walk
+from .program.walk import AttackerOutcome, WalkResult, walk
 from .resistance import apply_resistance
 from .roster_composition import (
     ActorRequest,
@@ -160,7 +159,6 @@ from .state_lifecycle import TriggerGate
 from .support_effects import derive_ally_effects
 from .support_event_view import resolve_knights_vow_tether
 from .survival import (
-    BARRIER_GRANT_KINDS,
     EVENT_SLOTS,
     SUPPORT_RANK_KEY,
     ActionKind,
@@ -183,6 +181,17 @@ from .survival import (
 from .survival import (
     resolve_grievous as _grievous_pack,
 )
+from .timeline.grey_health import _apply_grey_health, _grey_health_receipts
+from .timeline.receipt import _compose_receipt
+from .timeline.records import (
+    GreySubject,
+    Ledgers,
+    PairCacheKey,
+    Roster,
+    TimelineScene,
+    Walked,
+)
+from .timeline.utility import _utility_outcome_receipt
 from .timeline_coverage import combine_timeline_coverages
 from .trigger_stream import (
     TriggerKind,
@@ -295,10 +304,6 @@ def _compiled_lane_is_open(request: Composition, patch: ParamPatch | None) -> bo
         and request.enemies
         and request.params.enemies_attack
     )
-
-
-#: Every input that priced one cached pair packet, restores included.
-PairCacheKey = tuple[str, str, tuple[float | str, ...], tuple[tuple[float, float], ...]]
 
 
 def _pair_cache_key(
@@ -808,19 +813,6 @@ def _guardian_selection_template() -> dict[str, Any]:
         "source": "Guardian · Guard target",
         "target_selection_key": "guardian:target",
     }
-
-
-class TimelineScene(NamedTuple):
-    """The roster and the three event books a scheduler authors into.
-
-    The books are held by reference, so a scheduler appends to the same lists
-    the composition goes on to read.
-    """
-
-    all_actors: list[Combatant]
-    incoming: MutableMapping[str, list[dict[str, Any]]]
-    outgoing: MutableMapping[str, list[dict[str, Any]]]
-    support_effects: MutableMapping[str, list[dict[str, Any]]]
 
 
 def _keystone_holder[KeystoneEffect](
@@ -2090,355 +2082,6 @@ def _roster_actors(loadouts: Sequence[ResolvedLoadout], team: str) -> list[Comba
     return actors
 
 
-def _utility_outcome_receipt(
-    actor: Combatant,
-    support_events: Iterable[Mapping[str, Any]],
-    outgoing_events: Iterable[Mapping[str, Any]],
-) -> dict[str, Any]:
-    """Summarise authored non-TDD outcomes without inventing a conversion.
-
-    Movement and cleanse are real event dimensions, but their units are not
-    interchangeable with healing, shielding, or damage.  Keep them as
-    separate receipts so the Utility objective can expose what was applied
-    while refusing to turn a percent/second or a cleanse count into a made-up
-    scalar score.  Item dimensions are sourced from the same full-entry
-    coverage table used by the API picker.
-    """
-    authored = list(support_events)
-    support = [
-        event
-        for event in authored
-        if event.get("kind") != "damage"
-        if float(event.get("applied_amount", event.get("amount", 0.0)) or 0.0) > 0.0
-    ]
-    movement = [
-        event for event in support if is_packet_kind(event, PacketKind.MOVEMENT)
-    ]
-    # A Purify cast rides a heal packet carrying the ``cleanse`` marker
-    # (kind "heal", cleanse=True), so the marker counts alongside the
-    # dedicated kind=="cleanse" packets.  ``cleanse_group`` then folds one
-    # cast's per-recipient packets back into the one action they came from
-    # — Milio's R cleanses himself and every selected teammate from a
-    # single cast, and this receipt counts actions, not recipients.
-    cleanse_packets = [
-        event
-        for event in support
-        if is_packet_kind(event, PacketKind.CLEANSE) or bool(event.get("cleanse"))
-    ]
-    cleanse = list(
-        {
-            str(
-                event.get("cleanse_group")
-                or event.get("_event_id")
-                or event.get("event_id")
-                or id(event)
-            ): event
-            for event in cleanse_packets
-        }.values()
-    )
-    slow = [event for event in support if is_packet_kind(event, PacketKind.SLOW)]
-    # A movement packet that also names a slow-resist share is two
-    # utility facts in one packet: the burst and the resistance that
-    # rides it (Stormraider's Surge grants both from one trigger).
-    slow_resistance = [
-        event
-        for event in support
-        if is_packet_kind(event, PacketKind.MOVEMENT)
-        and event.get("slow_resist_percent") is not None
-    ]
-    economy = [event for event in support if is_packet_kind(event, PacketKind.ECONOMY)]
-    vision = [event for event in support if is_packet_kind(event, PacketKind.VISION)]
-    # Umbral Glaive's Blackout is a vision packet that applies no amount to
-    # anybody -- it denies the enemy's wards rather than granting the holder
-    # anything -- so it is read off the AUTHORED stream rather than the
-    # applied one.  Filtering it by applied amount was why an armed holder's
-    # only vision outcome was the one it does not produce.
-    blackout = [
-        event
-        for event in authored
-        if is_packet_kind(event, PacketKind.VISION) and bool(event.get("ward_only"))
-    ]
-    # A damage modifier is an outcome whether or not it applied an amount:
-    # the window it opened is the fact.  ``ratio_seconds`` prices only the
-    # ones carrying a positive share, while the event count stays honest
-    # about the windows.
-    damage_modifiers = [
-        event for event in authored if is_packet_kind(event, PacketKind.DAMAGE_MODIFIER)
-    ]
-    damage_reduction = [
-        event
-        for event in damage_modifiers
-        if float(event.get("amount", 0.0) or 0.0) > 0.0
-    ]
-    # Manaflow-style resource packets are receipt-only progression events in
-    # native mana units (including the zero-amount Helping Hand boundary,
-    # which is read from the authored stream so the named boundary stays
-    # visible even though it never applies to a champion target).
-    resource = [
-        event for event in authored if is_packet_kind(event, PacketKind.RESOURCE)
-    ]
-    movement_speed_percent_seconds = sum(
-        abs(
-            float(
-                event.get("bonus_move_speed_percent", event.get("amount", 0.0)) or 0.0
-            )
-        )
-        * max(0.0, float(event.get("duration", 0.0) or 0.0))
-        for event in movement
-    )
-    slow_percent_seconds = sum(
-        abs(float(event.get("slow_percent", event.get("amount", 0.0)) or 0.0))
-        * max(0.0, float(event.get("duration", 0.0) or 0.0))
-        for event in slow
-    )
-    targeting = [
-        event.get("targeting")
-        for event in outgoing_events
-        if isinstance(event.get("targeting"), Mapping)
-    ]
-    secondary = [
-        row
-        for row in targeting
-        if str(row.get("kind", ""))
-        in {
-            "active_secondary",
-            "chain_lightning",
-            "chain_lightning_copied_on_hit",
-            "cleave_secondary",
-            "hydra_cleave",
-            "runaan_bolt",
-            "runaan_bolt_copied_on_hit",
-        }
-    ]
-    coverage = [
-        item_model_coverage(str(item.get("name", "")), ATTACKER_LANES)
-        for item in actor.items
-    ]
-    dimensions = sorted(
-        {
-            dimension.value
-            for entry in coverage
-            for dimension in entry.outcome_dimensions
-        }
-    )
-    applied_dimensions = set()
-    if movement:
-        applied_dimensions.add("movement")
-    if cleanse:
-        applied_dimensions.add("cleanse")
-    if slow:
-        applied_dimensions.add("slow")
-    if slow_resistance:
-        applied_dimensions.add("slow_resistance")
-    if damage_modifiers:
-        applied_dimensions.add("damage_reduction")
-    if secondary:
-        applied_dimensions.add("multi_target")
-    if economy:
-        applied_dimensions.add("economy")
-    if vision:
-        applied_dimensions.add("vision")
-    if resource:
-        applied_dimensions.add("resource")
-    if blackout:
-        applied_dimensions.add("vision")
-    return {
-        "contract": "utility_outcomes_v1",
-        "dimensions": dimensions,
-        "applied_dimensions": sorted(applied_dimensions),
-        "movement": {
-            "event_count": len(movement),
-            "speed_percent_seconds": round(movement_speed_percent_seconds, 6),
-        },
-        "cleanse": {"event_count": len(cleanse)},
-        "slow": {
-            "event_count": len(slow),
-            "percent_seconds": round(slow_percent_seconds, 6),
-        },
-        "slow_resistance": {
-            "event_count": len(slow_resistance),
-            "percent_seconds": round(
-                sum(
-                    abs(float(event.get("slow_resist_percent", 0.0) or 0.0))
-                    * max(0.0, float(event.get("duration", 0.0) or 0.0))
-                    for event in slow_resistance
-                ),
-                6,
-            ),
-        },
-        "damage_reduction": {
-            "event_count": len(damage_modifiers),
-            "ratio_seconds": round(
-                sum(
-                    max(0.0, float(event.get("amount", 0.0) or 0.0))
-                    * max(0.0, float(event.get("duration", 0.0) or 0.0))
-                    for event in damage_reduction
-                ),
-                6,
-            ),
-            "multiplier_windows": [
-                {
-                    "source": str(event.get("source", "")),
-                    "multiplier": round(float(event.get("multiplier", 1.0) or 1.0), 6),
-                    "duration": round(
-                        max(0.0, float(event.get("duration", 0.0) or 0.0)), 6
-                    ),
-                    "expires_at": round(
-                        float(event.get("time", 0.0))
-                        + max(0.0, float(event.get("duration", 0.0) or 0.0)),
-                        6,
-                    ),
-                }
-                for event in damage_modifiers
-                if float(event.get("multiplier", 1.0) or 1.0) < 1.0
-            ],
-        },
-        "economy": {
-            "event_count": len(economy),
-            "gold": round(
-                sum(
-                    float(event.get("gold_amount", event.get("amount", 0.0)) or 0.0)
-                    for event in economy
-                ),
-                6,
-            ),
-        },
-        "vision": {
-            "event_count": len(vision),
-            "ward_uses": round(
-                sum(
-                    float(event.get("ward_uses", event.get("amount", 0.0)) or 0.0)
-                    for event in vision
-                ),
-                6,
-            ),
-            "blackout": {
-                "event_count": len(blackout),
-                "trigger_windows": round(
-                    sum(
-                        float(event.get("blackout_trigger_windows", 0.0) or 0.0)
-                        for event in blackout
-                    ),
-                    6,
-                ),
-            },
-        },
-        "resource": {
-            "event_count": len(resource),
-            "bonus_mana": round(
-                sum(float(event.get("amount", 0.0) or 0.0) for event in resource),
-                6,
-            ),
-        },
-        "multi_target": {
-            "packet_count": len(secondary),
-            "allocated_packet_count": sum(
-                1 for row in secondary if row.get("allocated_target_index") is not None
-            ),
-        },
-        "scored_support_amount": round(
-            sum(
-                float(event.get("applied_amount", 0.0) or 0.0)
-                for event in support
-                if event.get("kind") not in {"economy", "vision"}
-            ),
-            6,
-        ),
-        "item_coverage": [
-            {
-                "name": entry.name,
-                "status": entry.status,
-                "dimensions": [
-                    dimension.value for dimension in entry.outcome_dimensions
-                ],
-                "reason": entry.reason,
-            }
-            for entry in coverage
-            if entry.outcome_dimensions
-        ],
-        "metric_note": (
-            "Movement, cleanse, economy, and vision remain separate units; no "
-            "cross-unit utility score is inferred. Healing, shielding, and "
-            "applied support amounts remain event-derived values."
-        ),
-    }
-
-
-def _annotate_overheal(healing_events: Iterable[MutableMapping[str, Any]]) -> None:
-    """Give every published recovery row the overheal figure it publishes.
-
-    The walk's annotator writes ``overheal`` for a recovery it applied: the
-    excess that neither temporary health, Ichorshield nor an overheal shield
-    absorbed.  A recovery the walk *skipped* never reaches that line, and
-    its published overheal is a different quantity, everything the heal
-    would have restored and did not.  Both are the composition's answer, and
-    this is the one producer of the second, so no projection computes it.
-    """
-    for event in healing_events:
-        if event.get("overheal") is not None:
-            continue
-        amount = float(event.get("amount", 0.0))
-        event["overheal"] = max(
-            0.0,
-            float(event.get("reduced_amount", amount))
-            - float(event.get("applied_amount", amount)),
-        )
-
-
-def _target_allocation_receipt(
-    public_events: Iterable[Mapping[str, Any]],
-    target_count: int,
-    breakdown_rows: Iterable[Mapping[str, Any]] = (),
-) -> dict[str, Any]:
-    """Prove roster allocation for every authored secondary-target packet."""
-    rows = [
-        event.get("targeting")
-        for event in public_events
-        if isinstance(event.get("targeting"), Mapping)
-    ]
-    rows.extend(
-        row.get("targeting")
-        for row in breakdown_rows
-        if isinstance(row.get("targeting"), Mapping)
-    )
-    for row in breakdown_rows:
-        sources = row.get("sources")
-        if not isinstance(sources, list):
-            continue
-        rows.extend(
-            source.get("targeting")
-            for source in sources
-            if isinstance(source, Mapping)
-            and isinstance(source.get("targeting"), Mapping)
-        )
-    secondary = [
-        row
-        for row in rows
-        if str(row.get("kind", ""))
-        in {
-            "active_secondary",
-            "chain_lightning",
-            "chain_lightning_copied_on_hit",
-            "cleave_secondary",
-            "hydra_cleave",
-            "runaan_bolt",
-            "runaan_bolt_copied_on_hit",
-        }
-    ]
-    missing = [row for row in secondary if row.get("allocated_target_index") is None]
-    return {
-        "contract": "ordered_roster_target_allocation_v1",
-        "target_count": max(0, int(target_count)),
-        "secondary_packet_count": len(secondary),
-        "allocated_secondary_packet_count": len(secondary) - len(missing),
-        "complete": not missing,
-        "policy": "roster_index_from_engine_targeting" if secondary else "none",
-        "unallocated_reasons": (
-            ["secondary packet is missing allocated_target_index"] if missing else []
-        ),
-    }
-
-
 def _schedule_thorns_events(
     scene: TimelineScene,
 ) -> None:
@@ -2567,549 +2210,6 @@ def _schedule_authored_reactive_events(
                     event["_wound_until"] = event["time"] + event["grievous_duration"]
                 incoming.setdefault(target, []).append(event)
                 outgoing.setdefault(event["attacker"], []).append(event)
-
-
-# ─────────────────────────────────────────────────────────────────────────
-# Grey-health primitive (E8a)
-# ─────────────────────────────────────────────────────────────────────────
-# Grey-health champions store a sourced portion of post-mitigation damage
-# TAKEN as a grey pool on their health bar and pay it back as a heal when
-# their active consumes the pool.  The 1v1 heal derivation
-# (``healing.derive_self_healing``) only sees the main's OUTGOING events,
-# so the receipts are authored here against the incoming ledger: the
-# main-as-defender's pair events accumulate the sourced percentage, and
-# each consume heals the sourced portion.  Every ratio is pinned from
-# data/champions.json prose or leveling rows (citations inline below); no
-# value is invented.  The authored heals carry fixed sourced amounts (the
-# pair engine's post-mitigation values) so the ordered walk and the
-# compiled optimizer walk apply byte-identical numbers; walk-time state
-# gates (spell shields, stasis, redirects) are documented boundaries that
-# would require a stateful per-event pool, which the 1v1 receipt does not
-# model.
-#
-# Pyke P (Gift of the Drowned Ones) — data/champions.json P prose only:
-#   "Pyke stores 9% (+ 0.2% per 1 Lethality) of the post-mitigation damage
-#   he takes from enemy champions as grey health ..., increased to 40%
-#   (+ 0.4% per 1 Lethality) while there are two or more visible enemy
-#   champions nearby. He can store up to 80 (+ 800% bonus AD) grey health,
-#   with an upper cap of 55% of his maximum health."  "While Pyke is not
-#   visible to enemies, he rapidly consumes his grey health to heal for the
-#   same amount."  Out-of-vision is a boundary the 1v1 ledger does not
-#   model, so the consume is documented, not authored as an in-window heal.
-_PYKE_P_STORE_RATIO = 0.09
-_PYKE_P_STORE_PER_LETHALITY = 0.002
-_PYKE_P_STORE_MULTI_RATIO = 0.40
-_PYKE_P_STORE_MULTI_PER_LETHALITY = 0.004
-_PYKE_P_STORE_FLAT_CAP = 80.0
-_PYKE_P_STORE_BONUS_AD_CAP_RATIO = 8.0  # "80 (+ 800% bonus AD)"
-_PYKE_P_STORE_MAX_HEALTH_CAP_RATIO = 0.55
-# Rengar W (Battle Roar) — data/champions.json W prose only (the W
-# leveling rows carry the ability's magic damage, not a heal amount):
-#   "Rengar stores 50% of the post-mitigation damage he has taken in the
-#   last 1.5 seconds as grey health ... consuming his grey health to heal
-#   for the same amount."  The active heals 100% of the stored pool, i.e.
-#   50% of the post-mitigation damage taken in the 1.5 s before the cast.
-#   A same-timestamp incoming packet resolves before the cast's heal (the
-#   ledger's damage-before-heal phase order), so the window is inclusive.
-_RENGAR_W_STORE_RATIO = 0.50
-_RENGAR_W_STORE_WINDOW_SECONDS = 1.5
-_RENGAR_W_CONSUME_HEAL_RATIO = 1.0
-# Tahm Kench E (Thick Skin) — leveling rows:
-#   "Damage Stored into Grey Health" 15/23/31/39/47 by E rank (1 enemy),
-#   "Increased Damage Stored into Grey Health" 42/44/46/48/50 with 2+
-#   visible enemies, pool cap "300% of his maximum health".  The heal is
-#   the out-of-combat consume ("after 4 seconds without taking damage ...
-#   restore 60% : 100% (based on level) of the amount") whose level row
-#   "Max Health Damage" carries 60 : 100 (based on level).  The E ACTIVE
-#   ("Tahm Kench converts his current grey health into a shield that lasts
-#   for 2.5 seconds") pays the pool as a SHIELD instead, on E's own cached
-#   3 s haste-scaled cooldown.  It is a player decision, so the module
-#   declares it as the ``e_convert_grey_shield`` option and the press
-#   schedule is the earliest-available convention Mordekaiser's recast
-#   already uses; with the option off nothing presses and the pool pays
-#   the out-of-combat heal exactly as before.  The consume is modeled as
-#   one lump heal at the 4 s boundary; the wiki's 10%-max-health-per-
-#   0.264 s tick delivery is a rate detail with the same total.
-_TAHM_E_STORE_RANK = (0.15, 0.23, 0.31, 0.39, 0.47)
-_TAHM_E_STORE_MULTI_RANK = (0.42, 0.44, 0.46, 0.48, 0.50)
-_TAHM_E_STORE_CAP_RATIO = 3.0
-_TAHM_E_OUT_OF_COMBAT_SECONDS = 4.0
-_TAHM_E_SHIELD_DURATION_SECONDS = 2.5
-# Mordekaiser W (Indestructible) — data/champions.json W prose:
-#   "stores 45% of the post-mitigation damage he deals and 7.5% of the
-#   pre-mitigation damage he takes ... up to 30% of his maximum health."
-#   Recast ("Indestructible can be recast after 0.5 seconds while the
-#   shield is active ... consuming the remaining shield, healing for a
-#   portion of the amount") pays the "Shield to Healing" leveling row
-#   35/37.5/40/42.5/45 by W rank of the shield amount (the pool at the
-#   first W cast; the model presses the recast at its earliest available
-#   time — the exact moment is a player decision, documented boundary).
-#   The Potential Shield decay and the active shield's exponential decay
-#   are state, not modeled.
-_MORDE_W_STORE_DEALT_RATIO = 0.45
-_MORDE_W_STORE_TAKEN_PRE_RATIO = 0.075
-_MORDE_W_STORE_CAP_RATIO = 0.30
-_MORDE_W_SHIELD_TO_HEALING_RANK = (0.35, 0.375, 0.40, 0.425, 0.45)
-_MORDE_W_RECAST_AVAILABLE_SECONDS = 0.5
-# Locke W (Soul Ignition) — data/champions.json W prose:
-#   "He also stores an amount of grey health on his health bar equal to
-#   100% of the post-mitigation damage he takes from enemy champions, up
-#   to a cap ... Recast: Locke ends Soul Ignition and consumes his grey
-#   health to heal for the same amount."  The cap is the leveling row
-#   "Damage taken grey health cap" (40/60/80/100/120 by W rank + 100%
-#   AP); the storage window is the 6-second active ("ignites his soul
-#   for 6 seconds").  The recast is available after 0.5 s and "does so
-#   automatically afterwards" — the auto-recast at the 6 s boundary is
-#   the deterministic consume.  The additional pool from Soul Ignition's
-#   health cost and the missing-health bonus ("increased by up to
-#   40 : 200 (based on level) (+ 20% AP) based on his missing health")
-#   are dynamic self-state and remain documented boundaries, exactly as
-#   the E1-b6 review scoped them.
-_LOCKE_W_STORE_RATIO = 1.0
-_LOCKE_W_STORE_WINDOW_SECONDS = 6.0
-_LOCKE_W_AUTO_RECAST_SECONDS = 6.0
-_LOCKE_W_CONSUME_HEAL_RATIO = 1.0
-
-
-def _grey_leveling_values(ability: Mapping[str, Any], attribute: str) -> list[float]:
-    """Read one leveling attribute's first modifier value array."""
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute") != attribute:
-                continue
-            modifiers = leveling.get("modifiers", [])
-            if not modifiers:
-                continue
-            values = modifiers[0].get("values", [])
-            if values:
-                return [float(value) for value in values]
-    return []
-
-
-def _grey_level_ratio(ability: Mapping[str, Any], attribute: str, level: int) -> float:
-    """One level-indexed sourced percentage (an 18+ entry row)."""
-    values = _grey_leveling_values(ability, attribute)
-    if not values:
-        return 0.0
-    index = min(max(int(level), 1) - 1, len(values) - 1)
-    return float(values[index]) / 100.0
-
-
-# pylint: disable=too-many-arguments,too-many-positional-arguments
-# pylint: disable=too-many-locals,too-many-branches,too-many-statements
-def _grey_health_receipts(
-    champion_name: str,
-    champion_data: Mapping[str, Any],
-    level: int,
-    stats: Mapping[str, float],
-    *,
-    incoming: list[tuple[float, float, float]],
-    outgoing: Iterable[tuple[float, float, float]],
-    cast_timeline: Iterable[Mapping[str, Any]],
-    duration: float,
-    enemy_count: int,
-    ability_ranks: Mapping[str, int] | None = None,
-    champion_options: Mapping[str, Any] | None = None,
-) -> tuple[
-    list[tuple[float, str, float]],
-    list[tuple[float, str, float, float]],
-    dict[str, float | str],
-]:
-    """Author the grey-health consumes for one grey-health main champion.
-
-    ``incoming``/``outgoing`` are ``(time, post_mitigation,
-    pre_mitigation)`` damage records for damage the main TAKES (its
-    defenders' pair packets) and DEALS within the fight window.  Returns
-    ``(consume_heals, consume_shields, summary)`` — a heal is ``(time,
-    source, amount)``, a shield adds its duration — and the summary
-    carries the ``grey_health_stored`` pool, the ``grey_health_consumed``
-    total, and a ``source`` label for the receipt.  The pool accumulates
-    the sourced ratio of post-mitigation incoming damage (Mordekaiser also
-    stores from pre-mitigation damage taken and from post-mitigation
-    damage dealt), capped per champion.  Only Tahm Kench's E active pays a
-    pool as a shield, and only when its option is on.
-    """
-    name = str(champion_name)
-    heals: list[tuple[float, str, float]] = []
-    shields: list[tuple[float, str, float, float]] = []
-
-    def _slot_rank(slot: str) -> int:
-        if ability_ranks and slot in ability_ranks:
-            return max(0, int(ability_ranks[slot] or 0))
-        return max(0, int(get_ability_rank(slot, level, name)))
-
-    if name == "Pyke":
-        lethality = float(stats.get("lethality", 0.0) or 0.0)
-        if enemy_count >= 2:
-            ratio = _PYKE_P_STORE_MULTI_RATIO + (
-                _PYKE_P_STORE_MULTI_PER_LETHALITY * lethality
-            )
-        else:
-            ratio = _PYKE_P_STORE_RATIO + (_PYKE_P_STORE_PER_LETHALITY * lethality)
-        max_health = max(0.0, float(stats.get("health", 0.0) or 0.0))
-        bonus_ad = max(0.0, float(stats.get("bonus_attack_damage", 0.0) or 0.0))
-        cap = min(
-            _PYKE_P_STORE_FLAT_CAP + _PYKE_P_STORE_BONUS_AD_CAP_RATIO * bonus_ad,
-            _PYKE_P_STORE_MAX_HEALTH_CAP_RATIO * max_health,
-        )
-        pool = min(cap, ratio * sum(post for _t, post, _pre in incoming))
-        # Out-of-vision consume: vision is a boundary the 1v1 ledger does
-        # not model, so the 100% heal is documented, not authored.
-        return (
-            heals,
-            shields,
-            {
-                "grey_health_stored": pool,
-                "grey_health_consumed": 0.0,
-                "source": (
-                    "Gift of the Drowned Ones (9% + 0.2% per Lethality of "
-                    "post-mitigation damage taken; out-of-vision consume is a "
-                    "vision boundary, not modeled in-window)"
-                ),
-            },
-        )
-    if name == "Rengar":
-        w_casts = sorted(
-            float(_row_cast_time(cast))
-            for cast in cast_timeline
-            if str(_row_cast_slot(cast)) == "W"
-        )
-        consumed = 0.0
-        for cast_time in w_casts:
-            window = sum(
-                post
-                for event_time, post, _pre in incoming
-                if cast_time - _RENGAR_W_STORE_WINDOW_SECONDS <= event_time <= cast_time
-            )
-            amount = _RENGAR_W_STORE_RATIO * _RENGAR_W_CONSUME_HEAL_RATIO * window
-            if amount > 0.0 and cast_time <= duration:
-                heals.append((cast_time, "Battle Roar (grey health)", amount))
-                consumed += amount
-        stored = _RENGAR_W_STORE_RATIO * sum(post for _t, post, _pre in incoming)
-        return (
-            heals,
-            shields,
-            {
-                "grey_health_stored": stored,
-                "grey_health_consumed": consumed,
-                "source": (
-                    "Battle Roar (50% of post-mitigation damage taken in the "
-                    "last 1.5 seconds stored as grey health; the active heals "
-                    "the stored pool)"
-                ),
-            },
-        )
-    if name == "Tahm Kench":
-        e_rank = max(1, _slot_rank("E"))
-        rank_row = _TAHM_E_STORE_MULTI_RANK if enemy_count >= 2 else _TAHM_E_STORE_RANK
-        ratio = rank_row[min(e_rank, len(rank_row)) - 1]
-        max_health = max(0.0, float(stats.get("health", 0.0) or 0.0))
-        ability = _grey_ability(champion_data, "E")
-        pool = min(
-            _TAHM_E_STORE_CAP_RATIO * max_health,
-            ratio * sum(post for _t, post, _pre in incoming),
-        )
-        consumed = 0.0
-        # The E ACTIVE, when the module's option turns it on: each press
-        # converts the grey banked since the previous one into a 2.5 s
-        # shield, on E's own haste-scaled cooldown.
-        residual, last_press = pool, None
-        cooldown = _grey_cooldown(ability, e_rank, stats)
-        if _declared_option(name, champion_options, TAHM_KENCH_GREY_SHIELD):
-            banked, press_time = 0.0, None
-            for event_time, post, _pre in sorted(incoming):
-                if press_time is not None and event_time >= press_time:
-                    banked = _press_thick_skin(shields, press_time, banked, duration)
-                    last_press, press_time = press_time, press_time + cooldown
-                banked = min(
-                    _TAHM_E_STORE_CAP_RATIO * max_health, banked + ratio * post
-                )
-                if press_time is None:
-                    press_time = event_time
-            if press_time is not None:
-                banked = _press_thick_skin(shields, press_time, banked, duration)
-                last_press = press_time
-            residual = banked
-            consumed = pool - residual
-        if residual > 0.0 and incoming:
-            last_damage_time = max(event_time for event_time, _post, _pre in incoming)
-            consume_time = last_damage_time + _TAHM_E_OUT_OF_COMBAT_SECONDS
-            # "While Thick Skin is not on cooldown, and after 4 seconds
-            # without taking damage": a press inside the window blocks the
-            # heal until its own cooldown has run out.
-            ready = last_press is None or last_press + cooldown <= consume_time
-            if consume_time <= duration and ready:
-                restore = _grey_level_ratio(ability, "Max Health Damage", level)
-                amount = restore * residual
-                if amount > 0.0:
-                    heals.append((consume_time, "Thick Skin (grey health)", amount))
-                    consumed += amount
-        return (
-            heals,
-            shields,
-            {
-                "grey_health_stored": pool,
-                "grey_health_consumed": consumed,
-                "source": (
-                    "Thick Skin (E-rank % of post-mitigation damage taken "
-                    "stored as grey health; the out-of-combat consume restores "
-                    "60% : 100% based on level of the pool after 4 seconds "
-                    "without damage, and the active converts the pool into a "
-                    "2.5s shield when its option is on)"
-                ),
-            },
-        )
-    if name == "Mordekaiser":
-        w_rank = max(1, _slot_rank("W"))
-        heal_ratio = _MORDE_W_SHIELD_TO_HEALING_RANK[
-            min(w_rank, len(_MORDE_W_SHIELD_TO_HEALING_RANK)) - 1
-        ]
-        max_health = max(0.0, float(stats.get("health", 0.0) or 0.0))
-        cap = _MORDE_W_STORE_CAP_RATIO * max_health
-        dealt_total = _MORDE_W_STORE_DEALT_RATIO * sum(
-            post for _t, post, _pre in outgoing
-        )
-        taken_total = _MORDE_W_STORE_TAKEN_PRE_RATIO * sum(
-            pre for _t, _post, pre in incoming
-        )
-        pool = min(cap, dealt_total + taken_total)
-        w_casts = sorted(
-            float(_row_cast_time(cast))
-            for cast in cast_timeline
-            if str(_row_cast_slot(cast)) == "W"
-        )
-        consumed = 0.0
-        if w_casts:
-            w1_time = w_casts[0]
-            dealt_up_to = _MORDE_W_STORE_DEALT_RATIO * sum(
-                post for event_time, post, _pre in outgoing if event_time <= w1_time
-            )
-            taken_up_to = _MORDE_W_STORE_TAKEN_PRE_RATIO * sum(
-                pre for event_time, _post, pre in incoming if event_time <= w1_time
-            )
-            shield_amount = min(cap, dealt_up_to + taken_up_to)
-            recast_time = w1_time + _MORDE_W_RECAST_AVAILABLE_SECONDS
-            amount = heal_ratio * shield_amount
-            if amount > 0.0 and recast_time <= duration:
-                heals.append((recast_time, "Indestructible (grey health)", amount))
-                consumed = amount
-        return (
-            heals,
-            shields,
-            {
-                "grey_health_stored": pool,
-                "grey_health_consumed": consumed,
-                "source": (
-                    "Indestructible (45% of post-mitigation damage dealt + "
-                    "7.5% of pre-mitigation damage taken stored as Potential "
-                    "Shield, capped at 30% of maximum health; the W recast "
-                    "heals the Shield-to-Healing % of the stored shield — the "
-                    "recast is modeled at its earliest available time, shield "
-                    "decay is state)"
-                ),
-            },
-        )
-    if name == "Locke":
-        # Soul Ignition (W): each W cast opens a 6-second storage window
-        # during which 100% of the post-mitigation champion damage taken
-        # accumulates as grey health, capped by the rank row; the
-        # automatic recast at the 6 s boundary consumes the pool to heal
-        # for the same amount (cached W prose, leveling row "Damage taken
-        # grey health cap").  The health-cost and missing-health bonus
-        # terms remain documented boundaries (dynamic self-state, per the
-        # E1-b6 scope note).
-        w_rank = max(1, _slot_rank("W"))
-        cap = extract_named(
-            _grey_ability(champion_data, "W"),
-            "Damage taken grey health cap",
-            w_rank,
-            stats,
-            {},
-        )
-        w_casts = sorted(
-            float(_row_cast_time(cast))
-            for cast in cast_timeline
-            if str(_row_cast_slot(cast)) == "W"
-        )
-        consumed = 0.0
-        for cast_time in w_casts:
-            window_start = cast_time
-            window_end = cast_time + _LOCKE_W_STORE_WINDOW_SECONDS
-            stored = min(
-                cap,
-                _LOCKE_W_STORE_RATIO
-                * sum(
-                    post
-                    for event_time, post, _pre in incoming
-                    if window_start <= event_time <= window_end
-                ),
-            )
-            consume_time = cast_time + _LOCKE_W_AUTO_RECAST_SECONDS
-            amount = _LOCKE_W_CONSUME_HEAL_RATIO * stored
-            if amount > 0.0 and consume_time <= duration:
-                heals.append((consume_time, "Soul Ignition (grey health)", amount))
-                consumed += amount
-        return (
-            heals,
-            shields,
-            {
-                "grey_health_stored": min(
-                    cap,
-                    _LOCKE_W_STORE_RATIO * sum(post for _t, post, _pre in incoming),
-                ),
-                "grey_health_consumed": consumed,
-                "source": (
-                    "Soul Ignition (100% of post-mitigation damage taken from "
-                    "enemy champions during the 6s active stored as grey "
-                    "health, capped by the 'Damage taken grey health cap' row; "
-                    "the automatic recast at 6s heals the stored pool; the "
-                    "health-cost add and missing-health bonus remain dynamic "
-                    "self-state boundaries)"
-                ),
-            },
-        )
-    if name == "Kled":
-        # Skaarl's 400 : 1400 (based on level) health pool is the mounted
-        # duo's damage sink; dismount at zero and the remount restore are a
-        # revive-boundary pattern (like Aatrox's ghost atom) and are NOT
-        # implemented.  No heal is authored; the module documents it.
-        return (
-            heals,
-            shields,
-            {
-                "grey_health_stored": 0.0,
-                "grey_health_consumed": 0.0,
-                "source": (
-                    "Skaarl the Cowardly Lizard (the mounted duo's damage pool "
-                    "is a revive-boundary pattern; dismount/remount are not "
-                    "modeled)"
-                ),
-            },
-        )
-    return (
-        heals,
-        shields,
-        {
-            "grey_health_stored": 0.0,
-            "grey_health_consumed": 0.0,
-            "source": "",
-        },
-    )
-
-
-def _declared_option(
-    champion: str, options: Mapping[str, Any] | None, key: str
-) -> bool:
-    """One champion option, falling back to the module's own declared row."""
-    if options is not None and key in options:
-        return bool(options[key])
-    return bool(declared_option_defaults(champion)[key])
-
-
-def _grey_cooldown(
-    ability: Mapping[str, Any], rank: int, stats: Mapping[str, float]
-) -> float:
-    """One cached ability cooldown at a rank, after ability haste.
-
-    Thick Skin's press cadence hangs off this number, so a missing cooldown
-    row raises rather than pricing a zero-cooldown press loop.
-    """
-    base = extract_cooldown(dict(ability), rank)
-    if base <= 0.0:
-        raise ValueError(
-            "grey-health press cadence needs a cached cooldown row; "
-            f"ability {ability.get('name')!r} declares none"
-        )
-    haste = max(0.0, float(stats.get("ability_haste", 0.0) or 0.0))
-    return base * 100.0 / (100.0 + haste)
-
-
-def _press_thick_skin(
-    shields: list[tuple[float, str, float, float]],
-    press_time: float,
-    banked: float,
-    duration: float,
-) -> float:
-    """One Thick Skin press: the bank becomes a shield, or stays banked.
-
-    Returns the grey health still on the bar afterwards, so a press the
-    fight window never reaches consumes nothing.
-    """
-    if banked <= 0.0 or press_time > duration:
-        return banked
-    shields.append(
-        (
-            press_time,
-            "Thick Skin (grey health)",
-            banked,
-            _TAHM_E_SHIELD_DURATION_SECONDS,
-        )
-    )
-    return 0.0
-
-
-def _grey_ability(champion_data: Mapping[str, Any], slot: str) -> dict[str, Any]:
-    """Return one ability's first JSON entry for a slot (lists allowed)."""
-    abilities = champion_data.get("abilities")
-    if not isinstance(abilities, Mapping):
-        return {}
-    entry = abilities.get(slot)
-    if isinstance(entry, list):
-        entry = entry[0] if entry else None
-    return dict(entry) if isinstance(entry, Mapping) else {}
-
-
-def _grey_health_event_receipt(
-    name: str,
-    level: int,
-    stats: Mapping[str, float],
-    enemy_count: int,
-    event: Mapping[str, Any],
-    *,
-    incoming: bool,
-    ability_ranks: Mapping[str, int] | None = None,
-) -> float | None:
-    """One event's sourced grey-health contribution for the public receipt.
-
-    ``incoming=True`` prices a packet the main TAKES, ``incoming=False`` a
-    packet the main DEALS (Mordekaiser's dealt term).  Returns None when
-    the champion authors no receipt for that direction.
-    """
-    if name == "Pyke":
-        if not incoming:
-            return None
-        lethality = float(stats.get("lethality", 0.0) or 0.0)
-        if enemy_count >= 2:
-            ratio = _PYKE_P_STORE_MULTI_RATIO + (
-                _PYKE_P_STORE_MULTI_PER_LETHALITY * lethality
-            )
-        else:
-            ratio = _PYKE_P_STORE_RATIO + (_PYKE_P_STORE_PER_LETHALITY * lethality)
-        return ratio * max(0.0, float(event.get("damage", 0.0) or 0.0))
-    if name == "Rengar":
-        if not incoming:
-            return None
-        return _RENGAR_W_STORE_RATIO * max(0.0, float(event.get("damage", 0.0) or 0.0))
-    if name == "Tahm Kench":
-        if not incoming:
-            return None
-        ability_rank = int(ability_ranks.get("E", 0) or 0) if ability_ranks else 0
-        if ability_rank == 0:
-            ability_rank = max(1, int(get_ability_rank("E", level, name)))
-        rank_row = _TAHM_E_STORE_MULTI_RANK if enemy_count >= 2 else _TAHM_E_STORE_RANK
-        ratio = rank_row[min(ability_rank, len(rank_row)) - 1]
-        return ratio * max(0.0, float(event.get("damage", 0.0) or 0.0))
-    if name == "Mordekaiser":
-        damage = max(0.0, float(event.get("damage", 0.0) or 0.0))
-        if incoming:
-            raw = max(0.0, float(event.get("raw_damage", damage) or 0.0))
-            return _MORDE_W_STORE_TAKEN_PRE_RATIO * raw
-        return _MORDE_W_STORE_DEALT_RATIO * damage
-    if name == "Locke":
-        if not incoming:
-            return None
-        return _LOCKE_W_STORE_RATIO * max(0.0, float(event.get("damage", 0.0) or 0.0))
-    return None
 
 
 def _routing_build(
@@ -4828,130 +3928,6 @@ def _attacker_outcome(
     )
 
 
-def _published_support_phase(event: Mapping[str, Any]) -> TransitionRank:
-    """Where one support packet sits in the *published* support list.
-
-    Not :func:`support_transition_rank`: this classifies on kind alone, so a
-    ``LATE_BARRIER`` publishes beside the barriers the walk arms it after.
-    """
-    return (
-        TransitionRank.BARRIER_GRANT
-        if event.get("kind") in BARRIER_GRANT_KINDS
-        else TransitionRank.RECOVERY
-    )
-
-
-# The named receipt for a self-shield rider that never found a carrier
-# (docs/self-shield-rebinding.md).  A rider is bound
-# to ONE carrier packet by ordinal, in ``fight.ledger.event_rows._damage_event_row``, before
-# the ordered survival walk decides which packets land; a rider whose payload
-# declares ``rebind_on_ability_hit`` moves to the first ability packet that
-# does land (``survival.transitions._rebind_self_shields``).  A refusal that
-# survives that means every candidate was blocked, and this receipt says so
-# beside the zero rather than leaving the reader to read the zero as a
-# mechanic that paid nothing.
-SELF_SHIELD_CARRIER_DENIAL = "self_shield_carrier_skipped"
-
-
-def _self_shield_carrier_denials(
-    support_events: Iterable[Mapping[str, Any]],
-    damage_events: Iterable[Mapping[str, Any]],
-) -> list[dict[str, Any]]:
-    """Name every self-shield rider whose carriers were all blocked.
-
-    Read-only, post-walk, and deliberately narrow: a rider is named only
-    when all three hold.
-
-    1. The rider was refused for a *carrier's* sake, not its own -- the walk
-       stamped ``trigger_event_skipped`` (transitions.py's trigger gate),
-       which is the one skip reason that means "the packet I was bound to
-       did not land".  A rider refused on its own terms (a dead holder, an
-       expired window) is a game fact and is left alone.
-    2. That carrier packet really is skipped in the published ledger.  The
-       cross-check is what keeps the receipt a statement about this fight
-       rather than a re-reading of the stamp.
-    3. The holder authored at least one in-window ability packet at or
-       after the carrier's timestamp and landed none.  A rider that re-binds
-       would have taken the first one that landed, so a surviving refusal
-       means the holder was blocked through every candidate; the row names
-       the last one, which is where the rider gave up.  A holder who
-       authored none was never going to be shielded, and a holder who
-       landed one is carrying a rider that declared this carrier its only
-       one -- neither invents a denial.
-
-    Returns rows in the established ``item_denial`` shape (the section's
-    comment in ``program/views/receipt.py`` is the contract: a denial is a
-    receipt with no applied amount, published as its own section rather than
-    as a zero packet a reader would have to interpret).
-    """
-    ordered_damage = [
-        event
-        for event in damage_events
-        if isinstance(event, Mapping) and event.get("attacker")
-    ]
-    # ``_event_id`` is the internal name; the public receipt renames it to
-    # ``event_id`` on serialization, and the rider's ``_trigger_event_id``
-    # was stamped from the internal one, so the join is on the internal key.
-    skipped_by_id = {
-        str(event.get("_event_id", "")): event
-        for event in ordered_damage
-        if event.get("skipped_reason") and event.get("_event_id")
-    }
-    # Every holder's in-window ability packets in time order, landed or not:
-    # one pass here instead of a rescan per rider.  A packet the walk refused
-    # ``outside_window`` (transitions.py's first gate) is past the fight's
-    # horizon and never reaches a carrier, so it is not a candidate here
-    # either.
-    ability_packets: dict[str, list[Mapping[str, Any]]] = {}
-    for event in ordered_damage:
-        if event.get("is_ability") and event.get("skipped_reason") != "outside_window":
-            ability_packets.setdefault(str(event["attacker"]), []).append(event)
-    for packets in ability_packets.values():
-        packets.sort(key=lambda event: float(event.get("time", 0.0) or 0.0))
-
-    denials: list[dict[str, Any]] = []
-    for rider in support_events:
-        if not isinstance(rider, Mapping) or not rider.get("_self_shield_rider"):
-            continue
-        if rider.get("skipped_reason") != "trigger_event_skipped":
-            continue
-        carrier_id = str(rider.get("_trigger_event_id", ""))
-        carrier = skipped_by_id.get(carrier_id)
-        if carrier is None:
-            continue
-        holder = str(rider.get("attacker", ""))
-        carrier_time = float(carrier.get("time", 0.0) or 0.0)
-        candidates = [
-            event
-            for event in ability_packets.get(holder, ())
-            if float(event.get("time", 0.0) or 0.0) >= carrier_time
-        ]
-        if not candidates or any(
-            not event.get("skipped_reason") for event in candidates
-        ):
-            continue
-        last_candidate = candidates[-1]
-        denials.append(
-            {
-                "time": round(carrier_time, 3),
-                "kind": PacketKind.ITEM_DENIAL.value,
-                "source": str(rider.get("source", "")),
-                "reason": SELF_SHIELD_CARRIER_DENIAL,
-                "attacker": holder,
-                "target": str(rider.get("target", holder)),
-                "event_id": str(rider.get("_event_id", "")),
-                "carrier_event_id": carrier_id,
-                "carrier_skipped_reason": str(carrier.get("skipped_reason", "")),
-                "last_candidate_event_id": str(last_candidate.get("_event_id", "")),
-                "last_candidate_skipped_reason": str(
-                    last_candidate.get("skipped_reason", "")
-                ),
-                "withheld_amount": round(float(rider.get("amount", 0.0) or 0.0), 3),
-            }
-        )
-    return denials
-
-
 @dataclass(frozen=True)
 class Composition:
     """Everything one roster composition is priced from.
@@ -4980,72 +3956,6 @@ class Composition:
     def work_counters(self) -> WorkCounterSink | None:
         """The search's counter sink, or none outside a search."""
         return self.search_context.work_counters if self.search_context else None
-
-
-class Roster(NamedTuple):
-    """The composed actors, in the order every ledger fold replays them."""
-
-    main: Combatant
-    ally_actors: list[Combatant]
-    enemy_actors: list[Combatant]
-    enemy_attackers: list[Combatant]
-    all_actors: list[Combatant]
-
-
-class Ledgers(NamedTuple):
-    """The books one pass writes, held by reference by every step.
-
-    ``main_cast_timeline`` is the main champion's own cast schedule, taken
-    from its first outgoing pair fight, and drives grey-health consume
-    timing (Rengar W, Mordekaiser W).
-    """
-
-    outgoing: defaultdict[str, list[dict[str, Any]]]
-    incoming: defaultdict[str, list[dict[str, Any]]]
-    healing: defaultdict[str, list[dict[str, Any]]]
-    support_effects: defaultdict[str, list[dict[str, Any]]]
-    item_denial_receipts: list[dict[str, Any]]
-    breakdown: defaultdict[str, dict[str, Any]]
-    coverage_reports: list[dict[str, Any]]
-    main_cast_timeline: list[dict[str, Any]]
-
-    @classmethod
-    def empty(cls) -> Ledgers:
-        """One pass's books, before any pair fight is folded in."""
-        return cls(
-            defaultdict(list),
-            defaultdict(list),
-            defaultdict(list),
-            defaultdict(list),
-            [],
-            defaultdict(
-                lambda: {
-                    "participant_id": "",
-                    "team": "",
-                    "champion": "",
-                    "total_damage": 0.0,
-                    "sources": {},
-                }
-            ),
-            [],
-            [],
-        )
-
-    def scene(self, all_actors: list[Combatant]) -> TimelineScene:
-        """The three books a scheduler authors into, with their roster."""
-        return TimelineScene(
-            all_actors, self.incoming, self.outgoing, self.support_effects
-        )
-
-
-class Walked(NamedTuple):
-    """What the survival walk hands the published receipt."""
-
-    program: Program
-    result: WalkResult
-    survival: dict[str, Any]
-    public_breakdown: list[dict[str, Any]]
-    support_by_attacker: Mapping[str, float]
 
 
 def build_participant_timeline(
@@ -5179,7 +4089,7 @@ def _compose_pass(
         if pending is not None:
             return pending
     _schedule_composed_events(request, roster, ledgers)
-    grey_summary = _apply_grey_health(request, roster, ledgers)
+    grey_summary = _apply_grey_health(_grey_subject(request, roster), ledgers)
     walked = _walk_composition(request, roster, ledgers, grey_summary)
     if not request.include_receipt:
         # Optimizer scoring reads only the survival rows, the per-actor
@@ -5194,7 +4104,19 @@ def _compose_pass(
             walked.result,
             LeafWriter() if request.published else DISCARD,
         )
-    return _compose_receipt(request, roster, ledgers, walked)
+    return _compose_receipt(request.focus_participant_id, roster, ledgers, walked)
+
+
+def _grey_subject(request: Composition, roster: Roster) -> GreySubject:
+    """The grey-health subject this pass's main champion is."""
+    return GreySubject(
+        str(request.champion_data.get("name", "")),
+        request.champion_data,
+        request.level,
+        request.main_stats,
+        request.params,
+        len(roster.enemy_actors),
+    )
 
 
 def _compiled_lane_pass(request: Composition, patch: ParamPatch | None) -> Any | None:
@@ -5721,108 +4643,6 @@ def _schedule_composed_events(
             ]
 
 
-def _grey_damage_record(event: Mapping[str, Any]) -> tuple[float, float, float]:
-    """One ``(time, post_mitigation, pre_mitigation)`` grey-health record."""
-    return (
-        float(event.get("time", 0.0)),
-        float(event.get("damage", 0.0) or 0.0),
-        float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0),
-    )
-
-
-def _apply_grey_health(
-    request: Composition, roster: Roster, ledgers: Ledgers
-) -> dict[str, float | str]:
-    """Bank and repay the main champion's grey health, and stamp its receipts.
-
-    When the main is the defender and is a grey-health champion, the
-    incoming ledger accumulates the sourced % of post-mitigation damage
-    taken and the champion's active pays the stored pool back as a heal.
-    Authored after every incoming source (pair fights, thorns, reactive)
-    exists so the receipts see the same event set the walk applies; the
-    consume heals carry fixed sourced amounts and ride the ordinary heal
-    application (Grievous, overheal caps).
-    """
-    main_name = str(request.champion_data.get("name", ""))
-    if main_name not in GREY_HEALTH_RULE_CHAMPIONS or not roster.enemy_actors:
-        return {}
-    params = request.params
-    duration = params.fight_duration_seconds
-    main_incoming = [
-        event
-        for event in ledgers.incoming["main"]
-        if float(event.get("time", 0.0)) <= duration
-    ]
-    main_outgoing = [
-        event
-        for event in ledgers.outgoing["main"]
-        if float(event.get("time", 0.0)) <= duration
-    ]
-    grey_heals, grey_shields, grey_summary = _grey_health_receipts(
-        main_name,
-        request.champion_data,
-        request.level,
-        request.main_stats,
-        incoming=[_grey_damage_record(event) for event in main_incoming],
-        outgoing=[_grey_damage_record(event) for event in main_outgoing],
-        cast_timeline=ledgers.main_cast_timeline,
-        duration=duration,
-        enemy_count=len(roster.enemy_actors),
-        ability_ranks=params.ability_ranks,
-        champion_options=params.champion_options,
-    )
-    for index, (heal_time, source, amount) in enumerate(grey_heals):
-        heal_event: dict[str, Any] = {
-            "time": float(heal_time),
-            "amount": float(amount),
-            "source": source,
-            "kind": "champion_ability",
-            "attacker": "main",
-            "_event_id": f"main:grey:{source}:{index}",
-            "_grey_health": True,
-        }
-        heal_event["_sk"] = action_key(
-            float(heal_time),
-            TransitionRank.RECOVERY,
-            "main",
-            heal_event,
-        )
-        ledgers.healing["main"].append(heal_event)
-    for index, (grant_time, source, amount, window) in enumerate(grey_shields):
-        ledgers.support_effects["main"].append(
-            {
-                "time": float(grant_time),
-                "kind": "shield",
-                "amount": float(amount),
-                "duration": float(window),
-                "source": source,
-                "source_key": source,
-                "attacker": "main",
-                "target": "main",
-                "target_scope": "self",
-                "target_policy": "self",
-                "_event_id": f"main:grey:{source}:shield:{index}",
-                # Grey health is banked by damage already taken, so the
-                # barrier this press raises arms after it.
-                SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,
-            }
-        )
-    for taken, events in ((True, main_incoming), (False, main_outgoing)):
-        for event in events:
-            receipt = _grey_health_event_receipt(
-                main_name,
-                request.level,
-                request.main_stats,
-                len(roster.enemy_actors),
-                event,
-                incoming=taken,
-                ability_ranks=params.ability_ranks,
-            )
-            if receipt is not None and receipt > 0.0:
-                event["grey_health_stored"] = round(receipt, 6)
-    return grey_summary
-
-
 def _walk_composition(
     request: Composition,
     roster: Roster,
@@ -5938,146 +4758,4 @@ def _walk_composition(
         survival,
         _breakdown_view.breakdown(program, walk_result),
         support_by_attacker,
-    )
-
-
-def _compose_receipt(
-    request: Composition, roster: Roster, ledgers: Ledgers, walked: Walked
-) -> dict[str, Any]:
-    """Sort, audit and publish the composed timeline as one combat receipt."""
-    focus_id = request.focus_participant_id
-    focus_row = next(
-        (row for row in walked.public_breakdown if row["participant_id"] == focus_id),
-        None,
-    )
-    focus_support = sum(
-        float(event.get("applied_amount", 0.0))
-        for events in ledgers.support_effects.values()
-        for event in events
-        if event.get("attacker") == focus_id
-    )
-    focus_healing = sum(
-        float(event.get("applied_amount", 0.0))
-        for event in ledgers.healing.get(focus_id, [])
-    )
-    public_events = sorted(
-        (event for events in ledgers.outgoing.values() for event in events),
-        key=lambda event: event.get("_sk")
-        or action_key(
-            float(event.get("time", 0.0)),
-            (
-                TransitionRank.REACTIVE
-                if event.get("_reactive")
-                else TransitionRank.DAMAGE
-            ),
-            str(event.get("target", "")),
-            event,
-        ),
-    )
-    public_healing_events = sorted(
-        (event for events in ledgers.healing.values() for event in events),
-        key=lambda event: event.get("_sk")
-        or action_key(
-            float(event.get("time", 0.0)),
-            TransitionRank.RECOVERY,
-            str(event.get("attacker", "")),
-            event,
-        ),
-    )
-    _annotate_overheal(public_healing_events)
-    public_support_events = sorted(
-        (event for events in ledgers.support_effects.values() for event in events),
-        key=lambda event: (
-            float(event.get("time", 0.0)),
-            _published_support_phase(event),
-            str(event.get("target", "")),
-            str(event.get("attacker", "")),
-            str(event.get("_event_id", "")),
-        ),
-    )
-    # D-VI-1, audited here because this is the first point at which BOTH
-    # resolved ledgers exist: the walk has stamped every skip, and nothing
-    # downstream can still change which packets landed.  Read-only -- it
-    # adds receipts and moves no number.
-    ledgers.item_denial_receipts.extend(
-        _self_shield_carrier_denials(public_support_events, public_events)
-    )
-    support_by_actor = {
-        actor.participant_id: [
-            event
-            for event in public_support_events
-            if event.get("attacker") == actor.participant_id
-        ]
-        for actor in roster.all_actors
-    }
-    outgoing_by_actor = {
-        actor.participant_id: [
-            event
-            for event in public_events
-            if event.get("attacker") == actor.participant_id
-        ]
-        for actor in roster.all_actors
-    }
-    utility_by_actor = {
-        actor.participant_id: _utility_outcome_receipt(
-            actor,
-            support_by_actor[actor.participant_id],
-            outgoing_by_actor[actor.participant_id],
-        )
-        for actor in roster.all_actors
-    }
-    # Every aggregate the objective block publishes, summed once here.  The
-    # TDD view republishes them at their declared precisions and adds
-    # nothing: a view that sums is a second producer of the total it claims
-    # to project, which is the incident's own shape at the aggregate.
-    objective = ObjectiveFold(
-        main_team_damage_before_death=sum(
-            row["total_damage"]
-            for row in walked.public_breakdown
-            if row["team"] in {"main", "ally"}
-        ),
-        enemy_team_damage_before_death=sum(
-            row["total_damage"]
-            for row in walked.public_breakdown
-            if row["team"] == "enemy"
-        ),
-        surviving_main_team=sum(
-            1
-            for actor in roster.all_actors
-            if actor.team in {"main", "ally"}
-            and walked.survival[actor.participant_id]["survived_window"]
-        ),
-        focus_damage_before_death=(
-            float(focus_row.get("total_damage", 0.0)) if focus_row else 0.0
-        ),
-        focus_support_value=focus_support,
-        focus_healing=focus_healing,
-        main_team_effective_health=sum(
-            float(walked.survival[actor.participant_id]["effective_health"])
-            for actor in roster.all_actors
-            if actor.team in {"main", "ally"}
-        ),
-        enemy_team_effective_health=sum(
-            float(walked.survival[actor.participant_id]["effective_health"])
-            for actor in roster.all_actors
-            if actor.team == "enemy"
-        ),
-        total_support_value=sum(walked.support_by_attacker.values()),
-        total_healing_reduced=sum(
-            float(state["healing_reduced"]) for state in walked.survival.values()
-        ),
-    )
-    return _receipt_view.receipt(
-        walked.program,
-        walked.result.projected(
-            damage_events=public_events,
-            healing_events=public_healing_events,
-            support_events=public_support_events,
-            utility_by_actor=utility_by_actor,
-            target_allocation=_target_allocation_receipt(
-                public_events, len(roster.enemy_actors), walked.public_breakdown
-            ),
-            item_denial_receipts=ledgers.item_denial_receipts,
-            objective=objective,
-        ),
     )

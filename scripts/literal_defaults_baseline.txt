@@ -172,6 +172,8 @@ root|survival/event_slots.py
 root|survival/phases.py
 root|survival/pricing.py
 root|survival/typed_action.py
+root|timeline/__init__.py
+root|timeline/records.py
 root|value_ref.py
 root|value_source_receipt.py
 root|vendor_path.py
@@ -199,7 +201,11 @@ payload-receiver|state.ability_damages
 payload-receiver|storage.
 payload-receiver|target_debuff.
 
-er5-tail-ceiling|93
+# Splitting one uncovered module into six is the one move that raises this
+# count without licensing a site: `participant_timeline.py` became itself plus
+# `timeline/`, whose two clean members joined the roots above and whose four
+# others carry the sites they always carried.
+er5-tail-ceiling|97
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1

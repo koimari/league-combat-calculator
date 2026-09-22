@@ -46,7 +46,11 @@ from src.calculator.survival.typed_action import ActionKind, SurvivalAction
 ROOT = Path(__file__).parents[1]
 SURVIVAL = ROOT / "src" / "calculator" / "survival"
 PROGRAM = ROOT / "src" / "calculator" / "program"
-TIMELINE = ROOT / "src" / "calculator" / "participant_timeline.py"
+# The composition and the steps it reads through, which author packets too.
+TIMELINE = (
+    ROOT / "src" / "calculator" / "participant_timeline.py",
+    *sorted((ROOT / "src" / "calculator" / "timeline").glob("*.py")),
+)
 # The ally-packet blocks that name a rank, one file each since the dispatch
 # split: the quest receipts, Fimbulwinter's shield and the shred modifiers.
 ITEM_SUPPORT = tuple(
@@ -65,7 +69,7 @@ def _population() -> tuple[Path, ...]:
     kernel after that move would leave the guard pointed at a file the
     construction had left.
     """
-    return (*sorted(SURVIVAL.glob("*.py")), *sorted(PROGRAM.rglob("*.py")), TIMELINE)
+    return (*sorted(SURVIVAL.glob("*.py")), *sorted(PROGRAM.rglob("*.py")), *TIMELINE)
 
 
 def test_the_ordering_fold_is_total_and_closed() -> None:
@@ -642,9 +646,12 @@ def test_every_packet_author_declares_a_named_rank() -> None:
     one is the argument going missing.
     """
     declared = [
-        row for path in (*ITEM_SUPPORT, TIMELINE) for row in _declared_ranks(path)
+        row for path in (*ITEM_SUPPORT, *TIMELINE) for row in _declared_ranks(path)
     ]
     assert sorted(declared) == [
+        # Thick Skin's grey-health press, a barrier the damage it banked pays
+        # for, so it arms after that damage.
+        ("grey_health.py", "LATE_BARRIER"),
         # Abyssal Mask's Unmake aura, Tear's Manaflow grant, Fimbulwinter's
         # denial receipt and its late self shield, Redemption's true damage.
         ("item_support_actives.py", "DAMAGE"),
@@ -654,16 +661,14 @@ def test_every_packet_author_declares_a_named_rank() -> None:
         ("item_support_shred.py", "AURA_ARM"),
         # Guardian's reactive shield and Glacial Augment's ally reduction;
         # Glacial's icy zone and Stormraider's surge; Aftershock's
-        # resistances; Grasp's permanent health; Eclipse's self shield and
-        # Thick Skin's grey-health press (both barriers a packet already
-        # landed pays for, so both arm after the damage).
+        # resistances; Grasp's permanent health; Eclipse's self shield, the
+        # one barrier here that arms after the damage paying for it.
         ("participant_timeline.py", "AURA_ARM"),
         ("participant_timeline.py", "AURA_ARM"),
         ("participant_timeline.py", "BARRIER_GRANT"),
         ("participant_timeline.py", "BARRIER_GRANT"),
         ("participant_timeline.py", "DAMAGE"),
         ("participant_timeline.py", "DEBUFF_ARM"),
-        ("participant_timeline.py", "LATE_BARRIER"),
         ("participant_timeline.py", "LATE_BARRIER"),
     ]
 

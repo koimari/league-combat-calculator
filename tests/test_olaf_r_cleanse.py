@@ -1490,7 +1490,7 @@ class TestBonusStateReceipts:
         # The kernel consumes the movement packet without error; the
         # PUBLIC panel is the combat-level utility_outcomes receipt.
         assert result["main"]["survived_window"] is True
-        from src.calculator.participant_timeline import _utility_outcome_receipt
+        from src.calculator.timeline.utility import _utility_outcome_receipt
 
         panel = _utility_outcome_receipt(
             _dummy_combatant("main", "main"),

@@ -19,7 +19,6 @@ from src.calculator.participant_timeline import (
     ActorRequest,
     Combatant,
     CoupledSearchContext,
-    TimelineScene,
     _actor_params,
     _owned_state_event_id,
     _regeneration_windows,
@@ -28,6 +27,7 @@ from src.calculator.participant_timeline import (
     _simulate_survival,
     build_participant_timeline,
 )
+from src.calculator.timeline.records import TimelineScene
 from src.calculator.pipeline import run_fight
 from src.calculator.program.build import roster_program
 from src.calculator.program.build import roster_program as _roster_program
@@ -6088,14 +6088,14 @@ class TestThePublishedReceiptFieldsHaveOneProducer:
     """
 
     def test_a_skipped_recovery_is_given_the_overheal_it_publishes(self) -> None:
-        from src.calculator.participant_timeline import _annotate_overheal
+        from src.calculator.timeline.receipt import _annotate_overheal
 
         skipped = {"amount": 31.5, "applied_amount": 0.0, "skipped_reason": "x"}
         _annotate_overheal([skipped])
         assert skipped["overheal"] == 31.5
 
     def test_a_reduced_recovery_overheals_only_what_it_did_not_apply(self) -> None:
-        from src.calculator.participant_timeline import _annotate_overheal
+        from src.calculator.timeline.receipt import _annotate_overheal
 
         event = {"amount": 40.0, "reduced_amount": 24.0, "applied_amount": 10.0}
         _annotate_overheal([event])
@@ -6103,14 +6103,14 @@ class TestThePublishedReceiptFieldsHaveOneProducer:
 
     def test_the_walks_own_annotation_is_never_overwritten(self) -> None:
         """The applied path's overheal is a different, narrower quantity."""
-        from src.calculator.participant_timeline import _annotate_overheal
+        from src.calculator.timeline.receipt import _annotate_overheal
 
         event = {"amount": 40.0, "applied_amount": 10.0, "overheal": 0.0}
         _annotate_overheal([event])
         assert event["overheal"] == 0.0
 
     def test_a_recovery_that_applied_everything_overheals_nothing(self) -> None:
-        from src.calculator.participant_timeline import _annotate_overheal
+        from src.calculator.timeline.receipt import _annotate_overheal
 
         event = {"amount": 12.0, "applied_amount": 30.0}
         _annotate_overheal([event])

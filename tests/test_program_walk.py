@@ -399,6 +399,7 @@ class TestEveryViewOfOneRequestProjectsOneWalk:
         from src.calculator import participant_timeline as timeline_module
         from src.calculator.champion_loadout import ChampionLoadout
         from src.calculator.fight_params import FightParams
+        from src.calculator.timeline import receipt as receipt_step
 
         walked: list = []
         seen: dict[str, list] = {"breakdown": [], "receipt": [], "survival": []}
@@ -414,7 +415,7 @@ class TestEveryViewOfOneRequestProjectsOneWalk:
 
         for name, module, attribute in (
             ("breakdown", timeline_module._breakdown_view, "breakdown"),
-            ("receipt", timeline_module._receipt_view, "receipt"),
+            ("receipt", receipt_step._receipt_view, "receipt"),
             ("survival", timeline_module._survival_view, "survival_leaves"),
         ):
             original = getattr(module, attribute)

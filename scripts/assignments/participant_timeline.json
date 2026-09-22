@@ -1,0 +1,85 @@
+{
+ "source": "src/calculator/participant_timeline.py",
+ "packages": {
+  "src/calculator/timeline": "The records `participant_timeline` composes over, and the steps that read only those."
+ },
+ "modules": [
+  {
+   "path": "src/calculator/timeline/records.py",
+   "docstring": "The books one composition pass writes through, and the subjects its steps read.",
+   "defs": [
+    "PairCacheKey",
+    "TimelineScene",
+    "Roster",
+    "Ledgers",
+    "GreySubject",
+    "Walked"
+   ]
+  },
+  {
+   "path": "src/calculator/timeline/grey_rates.py",
+   "docstring": "What each grey-health champion banks, and the cached rows those rates are read against.",
+   "defs": [
+    "_PYKE_P_STORE_RATIO",
+    "_PYKE_P_STORE_PER_LETHALITY",
+    "_PYKE_P_STORE_MULTI_RATIO",
+    "_PYKE_P_STORE_MULTI_PER_LETHALITY",
+    "_PYKE_P_STORE_FLAT_CAP",
+    "_PYKE_P_STORE_BONUS_AD_CAP_RATIO",
+    "_PYKE_P_STORE_MAX_HEALTH_CAP_RATIO",
+    "_RENGAR_W_STORE_RATIO",
+    "_RENGAR_W_STORE_WINDOW_SECONDS",
+    "_RENGAR_W_CONSUME_HEAL_RATIO",
+    "_TAHM_E_STORE_RANK",
+    "_TAHM_E_STORE_MULTI_RANK",
+    "_TAHM_E_STORE_CAP_RATIO",
+    "_TAHM_E_OUT_OF_COMBAT_SECONDS",
+    "_TAHM_E_SHIELD_DURATION_SECONDS",
+    "_MORDE_W_STORE_DEALT_RATIO",
+    "_MORDE_W_STORE_TAKEN_PRE_RATIO",
+    "_MORDE_W_STORE_CAP_RATIO",
+    "_MORDE_W_SHIELD_TO_HEALING_RANK",
+    "_MORDE_W_RECAST_AVAILABLE_SECONDS",
+    "_LOCKE_W_STORE_RATIO",
+    "_LOCKE_W_STORE_WINDOW_SECONDS",
+    "_LOCKE_W_AUTO_RECAST_SECONDS",
+    "_LOCKE_W_CONSUME_HEAL_RATIO",
+    "_grey_leveling_values",
+    "_grey_level_ratio",
+    "_declared_option",
+    "_grey_cooldown",
+    "_press_thick_skin",
+    "_grey_ability",
+    "_grey_health_event_receipt"
+   ]
+  },
+  {
+   "path": "src/calculator/timeline/grey_health.py",
+   "docstring": "The grey pool: banked from the packets that landed, repaid by the active.",
+   "defs": ["_grey_health_receipts", "_grey_damage_record", "_apply_grey_health"]
+  },
+  {
+   "path": "src/calculator/timeline/utility.py",
+   "docstring": "One actor's utility outcome receipt, folded from its support and damage rows.",
+   "defs": ["_utility_outcome_receipt"]
+  },
+  {
+   "path": "src/calculator/timeline/receipt.py",
+   "docstring": "The published combat receipt: the sorted ledgers, the audit and the objective fold.",
+   "defs": [
+    "_annotate_overheal",
+    "_target_allocation_receipt",
+    "_published_support_phase",
+    "SELF_SHIELD_CARRIER_DENIAL",
+    "_self_shield_carrier_denials",
+    "_compose_receipt"
+   ]
+  }
+ ],
+ "decisions": [
+  "The split follows the carve, not the file: `_compose_pass` is eleven named steps over three records, and a step can only leave the residue with every unit it reads. Only `_apply_grey_health` and `_compose_receipt` have a closed set; the pair-fight steps read `_support_effect_templates`, 517 lines with six helpers of its own, so they stay with it.",
+  "`Composition` stays in the residue and the two moved steps take narrower subjects, because `Composition` names `PairView` and `CoupledSearchContext` (which names `WalkCompiler`), and a second module importing `program/compile.py` tips its #27 price arm: 2,174 lines, 15 hot symbols, fan-in 167 to 169. Measured, not assumed: a records module carrying `Composition` put the finding on a file this branch never edited. `GreySubject` is the five request facts grey health reads plus the enemy count, and `_compose_receipt` takes the focus id it was already unpacking on its first line.",
+  "grey_rates.py apart from grey_health.py for size: the two together are 706 lines after black, over #27's price arm with `_grey_damage_record` hot at four readers. The rates and the cached rows they are read against are one idea, the pool banked and repaid is the other.",
+  "utility.py is its own module rather than a sixth unit of receipt.py: `_utility_outcome_receipt` is 272 lines with three readers (the walk step, the receipt step and the compiled score lane), so folding it in would put a 640-line module under the same arm and make two readers pay for the third."
+ ]
+}

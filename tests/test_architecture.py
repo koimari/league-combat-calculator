@@ -68,6 +68,8 @@ SPLIT_LEAVES = {
     "support_champion_packets": "support_effects",
     "support_context": "item_support_effects",
     "survival.defense_contracts": "survival.receipt_state",
+    "timeline.grey_health": "participant_timeline",
+    "timeline.grey_rates": "participant_timeline",
 }
 
 

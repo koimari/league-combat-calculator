@@ -439,9 +439,9 @@ def test_no_utility_census_read_is_a_bare_string_literal() -> None:
     import re
     from pathlib import Path
 
-    from src.calculator import participant_timeline
+    from src.calculator.timeline import utility
 
-    body = Path(participant_timeline.__file__).read_text(encoding="utf-8")
+    body = Path(utility.__file__).read_text(encoding="utf-8")
     census = body.split("def _utility_outcome_receipt(")[1].split("\ndef ")[0]
     bare = re.findall(
         r'\.get\("kind"\)\s*==\s*"(?:movement|cleanse|slow|economy|vision'
