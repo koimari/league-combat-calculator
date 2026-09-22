@@ -18,7 +18,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-import tail_site_triage as triage  # noqa: E402
+import tail_site_triage as triage
 
 
 def _committed() -> dict:
@@ -132,7 +132,7 @@ def test_every_adjudication_states_the_measurement_that_decided_it():
 
 
 def test_an_adjudicated_site_still_exists_in_the_tree():
-    """A stale entry would shrink the count for work that no longer exists."""
+    """A stale entry would shrink the count for work the tree does not hold."""
     from pathlib import Path
 
     import literal_defaults

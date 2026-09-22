@@ -28,10 +28,18 @@ run_step "docker build --tag $IMAGE ." docker build --tag "$IMAGE" .
 smoke() {
   docker rm --force "$NAME" >/dev/null 2>&1 || true
   docker run --detach --name "$NAME" --publish "127.0.0.1:$PORT:8000" "$IMAGE" >/dev/null || return 1
-  # On any failing exit dump the container's own logs before cleanup: a
-  # gunicorn worker-boot death once reached the health gate with only
-  # `docker inspect` output, and the worker's traceback was lost.
-  trap 'status=$?; if [ "$status" -ne 0 ]; then docker logs '"$NAME"'; fi; docker rm --force '"$NAME"' >/dev/null 2>&1; trap - RETURN; return "$status"' RETURN
+  # A failing check dumps the container's own logs before cleanup, so a
+  # gunicorn worker-boot death shows its traceback, not only `docker inspect`.
+  # The status is captured here, not in a RETURN trap: `$?` inside a RETURN
+  # trap reads 0, which made every failed smoke report success.
+  local status=0
+  smoke_checks || status=$?
+  if [ "$status" -ne 0 ]; then docker logs "$NAME"; fi
+  docker rm --force "$NAME" >/dev/null 2>&1
+  return "$status"
+}
+
+smoke_checks() {
   local attempt
   for attempt in $(seq 1 45); do
     if curl --fail --silent "http://127.0.0.1:$PORT/healthz" >/dev/null; then
