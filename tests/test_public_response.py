@@ -1,18 +1,11 @@
 """Front-door tests for public response serialization."""
 
 from src.calculator.public_response import serialize_fight_result
+from tests.fight_result_stub import fight_result
 
 
 def _result(events):
-    return {
-        "champion_stats": {},
-        "ability_damage": 0.0,
-        "auto_attack_damage": 0.0,
-        "damage_by_type": {},
-        "breakdown": {},
-        "damage_events": events,
-        "self_healing_events": [],
-    }
+    return fight_result(damage_events=events)
 
 
 def test_serializer_keeps_valid_event_times() -> None:

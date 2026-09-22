@@ -15,6 +15,7 @@ from src.calculator.public_response import (
     serialize_fight_result,
 )
 from tests.app_config import app_config
+from tests.fight_result_stub import fight_result
 
 app = app_module.app
 
@@ -138,43 +139,16 @@ def test_single_target_keys_are_subset_of_roster_keys():
 def test_serializer_schema_parity():
     """The schema table and both serializers agree on the public key set, so
     a key added to one serializer cannot silently vanish from the other."""
-    result = {
-        "champion_stats": {},
-        "total_damage": 100.0,
-        "health_damage": 100.0,
-        "shield_absorbed": 0.0,
-        "magic_shield_absorbed": 0.0,
-        "physical_shield_absorbed": 0.0,
-        "general_shield_absorbed": 0.0,
-        "threshold_shield_absorbed": 0.0,
-        "threshold_health_triggered": False,
-        "threshold_health_bonus_gained": 0.0,
-        "target_healing_received": 0.0,
-        "target_ending_health": 0.0,
-        "target_effective_max_health": 2000.0,
-        "ability_damage": 100.0,
-        "auto_attack_damage": 0.0,
-        "damage_by_type": {"magic": 100.0},
-        "breakdown": {},
-        "effective_mr": 30.0,
-        "effective_armor": 40.0,
-        "notes": [],
-        "cast_timeline": [],
-        "rotation": {},
-        "resource_spent": 0.0,
-        "resource_remaining": 100.0,
-        "timeline_coverage": {
-            "complete": True,
-            "certification": "event_order_certified",
-            "exact_sources": [],
-            "coarse_sources": [],
-        },
-        "auto_attack_policy": {},
-        "auto_attack_schedule": {},
-        "damage_events": [],
-        "self_healing": 0.0,
-        "self_healing_events": [],
-    }
+    result = fight_result(
+        total_damage=100.0,
+        health_damage=100.0,
+        target_effective_max_health=2000.0,
+        ability_damage=100.0,
+        damage_by_type={"magic": 100.0},
+        effective_mr=30.0,
+        effective_armor=40.0,
+        resource_remaining=100.0,
+    )
     single = serialize_fight_result(result)
     assert set(single) == set(_PUBLIC_FIELD_POLICIES)
     aggregated = aggregate_public_results([single, serialize_fight_result(result)])

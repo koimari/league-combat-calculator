@@ -5,18 +5,15 @@ import math
 import pytest
 
 from src.calculator.public_response import serialize_fight_result
+from tests.fight_result_stub import fight_result
 
 
 def _result(*, damage_events=(), self_healing_events=(), breakdown=None):
-    return {
-        "champion_stats": {},
-        "ability_damage": 0.0,
-        "auto_attack_damage": 0.0,
-        "damage_by_type": {},
-        "breakdown": breakdown or {},
-        "damage_events": list(damage_events),
-        "self_healing_events": list(self_healing_events),
-    }
+    return fight_result(
+        breakdown=breakdown or {},
+        damage_events=list(damage_events),
+        self_healing_events=list(self_healing_events),
+    )
 
 
 def test_serializer_preserves_non_damage_amount_receipts():

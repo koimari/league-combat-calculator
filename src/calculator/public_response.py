@@ -10,14 +10,28 @@ silently disappear from the other (see tests/test_endpoint_parity.py).
 
 import math
 from collections.abc import Callable, Mapping
+from functools import partial
 from typing import Any
 from urllib.parse import urlsplit
 
 from .capabilities import FIGHT_EFFECTIVE_STATS
 from .champion_loadout import ChampionLoadout
 from .champions import engine_registration_kind
+from .event_row_field import optional_field, required_field
+from .fight_result_row import result_breakdown
 from .timeline_coverage import (
     aggregate_timeline_coverage,
+)
+
+#: Every field this serializer publishes is on every result the pipeline
+#: hands it: 4,121 of 4,121 fights over both golden sweeps carry all of
+#: them, and the score-only mode that drops the shield outcome reaches the
+#: optimizer rather than a response.  So absence is a producer break, and
+#: this is the API's last hop, where a literal default is a published number
+#: nothing computed.  The aggregate's own measures read the public row the
+#: same way, because this module stamps each of them on every row it builds.
+_result_field = partial(
+    required_field, kind="fight result", stamper="pipeline.run_fight outside score mode"
 )
 
 ICON_HOSTS = frozenset(
@@ -94,9 +108,9 @@ def _target_effective_health(result: Mapping[str, object]) -> float:
     effective-health definition, so overkill compares across both shapes.
     """
     return (
-        float(result.get("target_effective_max_health", 0.0))
-        + float(result.get("shield_absorbed", 0.0))
-        + float(result.get("target_healing_received", 0.0))
+        float(_result_field(result, "target_effective_max_health"))
+        + float(_result_field(result, "shield_absorbed"))
+        + float(_result_field(result, "target_healing_received"))
     )
 
 
@@ -104,7 +118,8 @@ def _legacy_overkill(result: Mapping[str, object]) -> float:
     """Raw total damage beyond the target's effective health, which the
     per-target engine can exceed because it keeps swinging after defeat."""
     return max(
-        0.0, float(result.get("total_damage", 0.0)) - _target_effective_health(result)
+        0.0,
+        float(_result_field(result, "total_damage")) - _target_effective_health(result),
     )
 
 
@@ -112,18 +127,19 @@ def _public_damage_event(event: Mapping[str, object]) -> dict[str, object]:
     """Keep typed interaction fields on the public damage ledger."""
     # These four ARE on every internal damage row the engine builds
     # (docs/receipts/internal-row-census.json, 3,960 rows over 173
-    # champions), and they still keep their defaults. This serializer's
+    # champions), and they are still read as optional. This serializer's
     # contract is to TOLERATE a malformed row and withhold it, which
     # tests/test_public_response.py pins by handing it partial events on
     # purpose. Indexing here turns graceful withholding into a crash at the
     # API boundary, so the census licenses the read and the contract forbids
-    # it (clause 5).
+    # it (clause 5): what the tolerance buys is named here rather than left
+    # as a literal beside each key.
     row: dict[str, object] = {
         "time": _public_event_time(event),
-        "source": str(event.get("source_key", "")),
-        "damage_type": str(event.get("damage_type", "")),
-        "damage": round(float(event.get("damage", 0.0)), 1),
-        "phase": str(event.get("phase", "")),
+        "source": optional_field(event, "source_key", str) or "",
+        "damage_type": optional_field(event, "damage_type", str) or "",
+        "damage": round(optional_field(event, "damage", float) or 0.0, 1),
+        "phase": optional_field(event, "phase", str) or "",
     }
     for key in (
         "amplified",
@@ -150,26 +166,28 @@ def _public_damage_event(event: Mapping[str, object]) -> dict[str, object]:
 
 def serialize_fight_result(result: Mapping[str, object]) -> dict[str, Any]:
     """Translate one engine result into the stable public response shape."""
-    breakdown = result.get("breakdown", {})
     api_breakdown = {}
-    for key, entry in breakdown.items():
-        has_damage = entry.get("total_damage", 0.0) > 0
-        total_amount = entry.get("total_amount", 0.0)
+    for key, entry in result_breakdown(result).items():
+        # 126 of the 24,860 engine breakdown rows measured over both golden
+        # sweeps carry no `total_damage`, and 94 carry a `total_amount`: a
+        # row states one measure, the other, or only its `detail`.
+        damage_total = optional_field(entry, "total_damage", float) or 0.0
+        total_amount = entry.get("total_amount")
         has_amount = isinstance(total_amount, (int, float)) and total_amount > 0
-        if not (has_damage or has_amount or "detail" in entry):
+        if not (damage_total > 0 or has_amount or "detail" in entry):
             continue
         row = {
             "name": entry.get("name", key),
-            "total_damage": round(entry.get("total_damage", 0.0), 1),
+            "total_damage": round(damage_total, 1),
             "total_amount": round(total_amount, 1) if has_amount else None,
-            "casts": entry.get("casts", None),
-            "count": entry.get("count", None),
-            "unit": entry.get("unit", None),
+            "casts": entry.get("casts"),
+            "count": entry.get("count"),
+            "unit": entry.get("unit"),
             "damage_per_hit": (
                 round(entry["damage_per_hit"], 1) if "damage_per_hit" in entry else None
             ),
-            "num_crits": entry.get("num_crits", None),
-            "num_non_crits": entry.get("num_non_crits", None),
+            "num_crits": entry.get("num_crits"),
+            "num_non_crits": entry.get("num_non_crits"),
             "crit_damage_per_hit": (
                 round(entry["crit_damage_per_hit"], 1)
                 if entry.get("crit_damage_per_hit") is not None
@@ -187,7 +205,7 @@ def serialize_fight_result(result: Mapping[str, object]) -> dict[str, Any]:
                 if entry.get("amount_per_proc") is not None
                 else None
             )
-            row["proc_times"] = list(entry.get("proc_times", []))
+            row["proc_times"] = optional_field(entry, "proc_times", list) or []
             row["output_type"] = "mana" if entry.get("unit") == "mana" else "health"
         for display_key in ("detail", "damage_display"):
             if display_key in entry:
@@ -225,27 +243,33 @@ def serialize_fight_result(result: Mapping[str, object]) -> dict[str, Any]:
     return {
         "champion_stats": result["champion_stats"],
         "champion_stats_state": FIGHT_EFFECTIVE_STATS,
-        "total_damage": round(result.get("total_damage", 0.0), 1),
-        "health_damage": round(result.get("health_damage", 0.0), 1),
-        "shield_absorbed": round(result.get("shield_absorbed", 0.0), 1),
-        "magic_shield_absorbed": round(result.get("magic_shield_absorbed", 0.0), 1),
-        "physical_shield_absorbed": round(
-            result.get("physical_shield_absorbed", 0.0), 1
+        "total_damage": round(_result_field(result, "total_damage"), 1),
+        "health_damage": round(_result_field(result, "health_damage"), 1),
+        "shield_absorbed": round(_result_field(result, "shield_absorbed"), 1),
+        "magic_shield_absorbed": round(
+            _result_field(result, "magic_shield_absorbed"), 1
         ),
-        "general_shield_absorbed": round(result.get("general_shield_absorbed", 0.0), 1),
+        "physical_shield_absorbed": round(
+            _result_field(result, "physical_shield_absorbed"), 1
+        ),
+        "general_shield_absorbed": round(
+            _result_field(result, "general_shield_absorbed"), 1
+        ),
         "threshold_shield_absorbed": round(
-            result.get("threshold_shield_absorbed", 0.0), 1
+            _result_field(result, "threshold_shield_absorbed"), 1
         ),
         "threshold_health_triggered": bool(
-            result.get("threshold_health_triggered", False)
+            _result_field(result, "threshold_health_triggered")
         ),
         "threshold_health_bonus_gained": round(
-            result.get("threshold_health_bonus_gained", 0.0), 1
+            _result_field(result, "threshold_health_bonus_gained"), 1
         ),
-        "target_healing_received": round(result.get("target_healing_received", 0.0), 1),
-        "target_ending_health": round(result.get("target_ending_health", 0.0), 1),
+        "target_healing_received": round(
+            _result_field(result, "target_healing_received"), 1
+        ),
+        "target_ending_health": round(_result_field(result, "target_ending_health"), 1),
         "target_effective_max_health": round(
-            result.get("target_effective_max_health", 0.0), 1
+            _result_field(result, "target_effective_max_health"), 1
         ),
         "target_effective_health": round(_target_effective_health(result), 1),
         "overkill": round(_legacy_overkill(result), 1),
@@ -256,31 +280,37 @@ def serialize_fight_result(result: Mapping[str, object]) -> dict[str, Any]:
             for dtype, amount in result["damage_by_type"].items()
         },
         "breakdown": api_breakdown,
-        "effective_mr": round(result.get("effective_mr", 0.0), 1),
-        "effective_armor": round(result.get("effective_armor", 0.0), 1),
-        "notes": list(result.get("notes", [])),
-        "cast_timeline": list(result.get("cast_timeline", [])),
-        "rotation": dict(result.get("rotation") or {}),
-        "resource_spent": round(result.get("resource_spent", 0.0), 1),
-        "resource_remaining": round(result.get("resource_remaining", 0.0), 1),
-        "resource_ledger": dict(result.get("resource_ledger") or {}),
-        "timeline_coverage": dict(result.get("timeline_coverage", {})),
-        "auto_attack_policy": dict(result.get("auto_attack_policy", {})),
-        "auto_attack_schedule": dict(result.get("auto_attack_schedule", {})),
+        "effective_mr": round(_result_field(result, "effective_mr"), 1),
+        "effective_armor": round(_result_field(result, "effective_armor"), 1),
+        "notes": list(_result_field(result, "notes")),
+        "cast_timeline": list(_result_field(result, "cast_timeline")),
+        "rotation": dict(_result_field(result, "rotation")),
+        "resource_spent": round(_result_field(result, "resource_spent"), 1),
+        "resource_remaining": round(_result_field(result, "resource_remaining"), 1),
+        # The one stamped field whose VALUE is optional:
+        # ``fight.results`` types it ``dict | None`` and a kit with no
+        # resource account leaves it None, which publishes as no ledger.
+        "resource_ledger": dict(_result_field(result, "resource_ledger") or {}),
+        "timeline_coverage": dict(_result_field(result, "timeline_coverage")),
+        "auto_attack_policy": dict(_result_field(result, "auto_attack_policy")),
+        "auto_attack_schedule": dict(_result_field(result, "auto_attack_schedule")),
         "damage_events": [
             _public_damage_event(event)
-            for event in result.get("damage_events", [])
+            for event in _result_field(result, "damage_events")
             if isinstance(event, Mapping) and _public_event_time(event) is not None
         ],
-        "self_healing": round(float(result.get("self_healing", 0.0)), 1),
+        "self_healing": round(float(_result_field(result, "self_healing")), 1),
+        # The same withholding contract as the damage ledger above, over the
+        # heal stream: a row whose time this serializer cannot read is kept
+        # out, and what the ones it keeps do not carry is read as optional.
         "self_healing_events": [
             {
                 "time": _public_event_time(event),
-                "source": str(event.get("source", "")),
-                "kind": str(event.get("kind", "")),
-                "amount": round(float(event.get("amount", 0.0)), 1),
+                "source": optional_field(event, "source", str) or "",
+                "kind": optional_field(event, "kind", str) or "",
+                "amount": round(optional_field(event, "amount", float) or 0.0, 1),
             }
-            for event in result.get("self_healing_events", [])
+            for event in _result_field(result, "self_healing_events")
             if isinstance(event, Mapping) and _public_event_time(event) is not None
         ],
     }
@@ -373,10 +403,12 @@ def _summed_breakdown(key: str, results: list[dict[str, Any]]) -> object:
                 },
             )
             aggregate["total_damage"] += entry["total_damage"]
-            aggregate["total_amount"] += float(entry.get("total_amount") or 0.0)
+            aggregate["total_amount"] += float(entry["total_amount"] or 0.0)
             if entry.get("amount_per_proc") is not None:
                 aggregate["amount_per_proc"] = entry["amount_per_proc"]
-            aggregate["proc_times"].extend(entry.get("proc_times") or [])
+            aggregate["proc_times"].extend(
+                optional_field(entry, "proc_times", list) or []
+            )
 
     for entry in breakdown.values():
         entry["total_damage"] = round(entry["total_damage"], 1)

@@ -15,6 +15,7 @@ from src.calculator.public_response import serialize_fight_result
 from src.calculator.scenario import parse_scenario_request
 from src.rate_limit import TokenBucketStore
 from tests.app_config import app_config
+from tests.fight_result_stub import fight_result
 
 
 def _empty_optimizer_result(**_kwargs):
@@ -155,17 +156,11 @@ def test_calculate_and_optimize_share_fight_request_semantics(monkeypatch):
 
     def fake_run_fight(data, level, items, params):
         captured["calculate"] = params
-        return {
-            "champion_stats": {},
-            "breakdown": {},
-            "total_damage": 0.0,
-            "auto_attack_damage": 0.0,
-            "ability_damage": 0.0,
-            "damage_by_type": {"physical": 0.0, "magic": 0.0, "true": 0.0},
-            "effective_mr": params.target_magic_resistance,
-            "effective_armor": params.target_armor,
-            "notes": [],
-        }
+        return fight_result(
+            damage_by_type={"physical": 0.0, "magic": 0.0, "true": 0.0},
+            effective_mr=params.target_magic_resistance,
+            effective_armor=params.target_armor,
+        )
 
     def fake_optimize_build(*, fight_params, **_kwargs):
         captured["optimize"] = fight_params
@@ -2277,14 +2272,12 @@ class TestBreakdownProcRowShape:
     def test_temporary_lethality_receipt_reaches_frontend_breakdown(self):
         """Stateful penetration metadata is not dropped by API serialization."""
         result = serialize_fight_result(
-            {
-                "champion_stats": {},
-                "total_damage": 120.0,
-                "health_damage": 120.0,
-                "ability_damage": 0.0,
-                "auto_attack_damage": 120.0,
-                "damage_by_type": {"physical": 120.0},
-                "breakdown": {
+            fight_result(
+                total_damage=120.0,
+                health_damage=120.0,
+                auto_attack_damage=120.0,
+                damage_by_type={"physical": 120.0},
+                breakdown={
                     "on_hit_once_Voltaic Cyclosword": {
                         "name": "Voltaic Cyclosword (Firmament)",
                         "total_damage": 120.0,
@@ -2300,7 +2293,7 @@ class TestBreakdownProcRowShape:
                         },
                     }
                 },
-            }
+            )
         )
 
         assert result["breakdown"]["on_hit_once_Voltaic Cyclosword"][
@@ -2316,14 +2309,12 @@ class TestBreakdownProcRowShape:
     def test_chain_targeting_receipt_reaches_frontend_breakdown(self):
         """Roster allocation metadata survives the public serializer."""
         result = serialize_fight_result(
-            {
-                "champion_stats": {},
-                "total_damage": 60.0,
-                "health_damage": 60.0,
-                "ability_damage": 0.0,
-                "auto_attack_damage": 60.0,
-                "damage_by_type": {"magic": 60.0},
-                "breakdown": {
+            fight_result(
+                total_damage=60.0,
+                health_damage=60.0,
+                auto_attack_damage=60.0,
+                damage_by_type={"magic": 60.0},
+                breakdown={
                     "on_hit_once_Statikk Shiv": {
                         "name": "Statikk Shiv (Electrospark)",
                         "total_damage": 60.0,
@@ -2339,7 +2330,7 @@ class TestBreakdownProcRowShape:
                         },
                     }
                 },
-            }
+            )
         )
 
         assert result["breakdown"]["on_hit_once_Statikk Shiv"]["targeting"] == {
@@ -2413,17 +2404,11 @@ def test_attacker_above_level_18_requires_completed_top_quest(monkeypatch):
     monkeypatch.setattr(loadout_module, "get_champion", lambda _name: {"name": "Ahri"})
 
     def fake_run_fight(data, level, items, params):
-        return {
-            "champion_stats": {},
-            "breakdown": {},
-            "total_damage": 0.0,
-            "auto_attack_damage": 0.0,
-            "ability_damage": 0.0,
-            "damage_by_type": {"physical": 0.0, "magic": 0.0, "true": 0.0},
-            "effective_mr": params.target_magic_resistance,
-            "effective_armor": params.target_armor,
-            "notes": [],
-        }
+        return fight_result(
+            damage_by_type={"physical": 0.0, "magic": 0.0, "true": 0.0},
+            effective_mr=params.target_magic_resistance,
+            effective_armor=params.target_armor,
+        )
 
     monkeypatch.setattr(calculate_module, "run_fight", fake_run_fight)
     monkeypatch.setattr(
