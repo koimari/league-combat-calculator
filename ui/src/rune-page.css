@@ -292,34 +292,6 @@
   opacity: 0.3;
   cursor: default;
 }
-.calculator-rune-hover-label {
-  display: none;
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 10px);
-  transform: translateX(-50%);
-  min-width: 90px;
-  max-width: 170px;
-  width: max-content;
-  z-index: 5;
-  background: #0c131bea;
-  border: 1px solid #8d7440;
-  color: #eee5d0;
-  padding: 7px 10px;
-  font-size: 11px;
-  text-align: center;
-  pointer-events: none;
-}
-.calculator-rune-hover-label small {
-  display: block;
-  font-size: 10px;
-  color: #b5aba0;
-  margin-top: 4px;
-}
-.calculator-rune-choice:hover .calculator-rune-hover-label,
-.calculator-rune-choice:focus-visible .calculator-rune-hover-label {
-  display: block;
-}
 .calculator-rune-keystone-row {
   height: 147px;
   margin-bottom: 2px;
