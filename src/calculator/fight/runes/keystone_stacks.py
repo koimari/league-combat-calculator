@@ -2,7 +2,7 @@
 
 import math
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, NamedTuple
 
 from ... import rune_effects
 from ...item_behavior import AmpChainSlot
@@ -19,9 +19,19 @@ from ..state import FightState
 from .streams import _page_effects, _record_rune_proc_row
 
 
-def _certified_only_pool(
-    state: FightState, rotation: RotationResult
-) -> tuple[list[dict[str, Any]], set[str], list[str]]:
+class CertifiedPool(NamedTuple):
+    """The ``Pool.CERTIFIED_ONLY`` event pool, and what it left out.
+
+    ``certified`` holds the source keys whose event times the ledger
+    certified; ``coarse_sources`` is the disclosure for the rest.
+    """
+
+    events: list[dict[str, Any]]
+    certified: set[str]
+    coarse_sources: list[str]
+
+
+def _certified_only_pool(state: FightState, rotation: RotationResult) -> CertifiedPool:
     """Build the ``Pool.CERTIFIED_ONLY`` event pool, with what it excluded.
 
     A rule declaring ``Pool.CERTIFIED_ONLY`` prices only sources that carry
@@ -46,7 +56,9 @@ def _certified_only_pool(
         state.cast_order,
         num_auto_attacks=state.num_auto_attacks,
     )
-    return events, set(coverage["exact_sources"]), coverage["coarse_sources"]
+    return CertifiedPool(
+        events, set(coverage["exact_sources"]), coverage["coarse_sources"]
+    )
 
 
 def _add_rune_window_amp_damage(state: FightState, rotation: RotationResult) -> None:
@@ -78,12 +90,12 @@ def _price_rune_window_amp(
     # The pool, the window and the ratio are the rule's; the ledger is the
     # engine's. `Pool.CERTIFIED_ONLY` is why coarse-timed rows are excluded
     # and disclosed below.
-    events, certified, coarse_sources = _certified_only_pool(state, rotation)
+    pool = _certified_only_pool(state, rotation)
     _, window_end = window.window()
     contributing = [
         event
-        for event in events
-        if event["source_key"] in certified and event["time"] < window_end
+        for event in pool.events
+        if event["source_key"] in pool.certified and event["time"] < window_end
     ]
     window_damage = sum(event["damage"] for event in contributing)
 
@@ -122,10 +134,10 @@ def _price_rune_window_amp(
         f"{effect.gold_conversion(state.is_melee) * 100:.0f}% of "
         f"{bonus:.0f} bonus true damage)."
     )
-    if coarse_sources:
+    if pool.coarse_sources:
         state.notes.append(
             f"{effect.rune_name} window excludes sources without "
-            f"certified event times ({', '.join(sorted(coarse_sources))}); "
+            f"certified event times ({', '.join(sorted(pool.coarse_sources))}); "
             "its bonus is a floor, not an estimate."
         )
 
@@ -430,15 +442,15 @@ def _price_rune_proc_amp(
     # (adaptive, never true damage) are amplified while the first — which
     # lands the same instant the buff turns on — is excluded by the
     # strictly-after cut, matching the wiki's triggering-attack rule.
-    events, certified, coarse_sources = _certified_only_pool(state, rotation)
+    pool = _certified_only_pool(state, rotation)
     amp_ratio = lasting.fractions[0]
     # The buff turns on with the first proc.  Which events that leaves inside
     # it is the rule's: `AfterTrigger(strict=True)` excludes the swing that
     # armed it, and the declared typing excludes true damage.
     amplified = [
         event
-        for event in events
-        if event["source_key"] in certified
+        for event in pool.events
+        if event["source_key"] in pool.certified
         and lasting.applies_after(event["time"], proc_times[0])
         and lasting.prices_damage_type(event["damage_type"])
     ]
@@ -466,9 +478,9 @@ def _price_rune_proc_amp(
             ],
         }
         state.total_damage += amp_total
-    if coarse_sources:
+    if pool.coarse_sources:
         state.notes.append(
             f"{effect.rune_name} amp excludes sources without "
-            f"certified event times ({', '.join(sorted(coarse_sources))}); "
+            f"certified event times ({', '.join(sorted(pool.coarse_sources))}); "
             "its bonus is a floor, not an estimate."
         )

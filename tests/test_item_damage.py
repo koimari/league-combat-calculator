@@ -176,7 +176,7 @@ def _simulate_bork_damage(
             holder_is_melee=is_melee,
         ),
     )
-    total, hits, _per_hit_damages = _simulate_current_health_on_hit(
+    decayed = _simulate_current_health_on_hit(
         strikes[0],
         DamageInputs({}, 1, is_melee, target_health, target_health),
         AutoSwings(
@@ -195,7 +195,7 @@ def _simulate_bork_damage(
         phantom_hit_autos=phantom_hit_autos,
         double_hit_all=double_hit_all,
     )
-    return total, hits
+    return decayed.total_damage, decayed.hits
 
 
 def _calculate_phantom_hits(num_auto_attacks, item_names):

@@ -51,6 +51,19 @@ class OnHitProc(NamedTuple):
     mitigated: float
 
 
+class DecayedOnHit(NamedTuple):
+    """What one current-health on-hit dealt over a decaying target.
+
+    ``procs`` holds one :class:`OnHitProc` per counted hit, in application
+    order, so ``total_damage / hits`` is the row's average and the entries
+    are what a per-swing damage event is stamped from.
+    """
+
+    total_damage: float
+    hits: int
+    procs: list[OnHitProc]
+
+
 @dataclass(slots=True)
 class DecayingTarget:
     """The target's health as an ordered walk of the fight reads it.
@@ -277,7 +290,7 @@ def _simulate_current_health_on_hit(
     double_hit_all: bool = False,
     effectiveness: float = 1.0,
     first_auto_damage_by_auto: Sequence[float] = (),
-) -> tuple[float, int, list["OnHitProc"]]:
+) -> DecayedOnHit:
     """Simulate a current-health on-hit against decreasing target HP.
 
     BoRK's passive deals physical damage based on the target's *current*
@@ -297,11 +310,9 @@ def _simulate_current_health_on_hit(
         effectiveness: On-hit effectiveness multiplier on each proc's raw
             damage (Azir soldiers apply on-hit at 50%).
 
-    Returns:
-        Tuple of (total mitigated BoRK damage, total BoRK hit count, each
-        hit as an :class:`OnHitProc` in application order — one entry per
-        counted hit, so callers can stamp per-swing damage events and the
-        declaration each one carries).
+    ``procs`` is in application order, one entry per counted hit, so a
+    caller can stamp per-swing damage events and the declaration each
+    one carries.
     """
     if phantom_hit_autos is None:
         phantom_hit_autos = set()
@@ -349,4 +360,4 @@ def _simulate_current_health_on_hit(
             on_hit_this_auto += max(0.0, float(first_auto_damage_by_auto[i]))
         target.settle_auto(swings.auto_damage_per_hit + on_hit_this_auto)
 
-    return total_damage, total_hits, hit_damages
+    return DecayedOnHit(total_damage, total_hits, hit_damages)

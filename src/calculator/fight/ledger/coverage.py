@@ -2,7 +2,7 @@
 
 import math
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any
+from typing import Any, NamedTuple
 
 from ... import item_effects
 from ...ability_atoms import ability_field, ability_payload
@@ -151,13 +151,27 @@ def _control_armed_holder_shields(
     )
 
 
+class ControlArming(NamedTuple):
+    """Whether a control-armed holder shield is certified, and by what.
+
+    ``armed_by`` names the authored control event the roster walk grants
+    the shield on; ``source`` and ``note`` are the coarse receipt an
+    uncertified ledger publishes instead.
+    """
+
+    complete: bool
+    source: str
+    note: str
+    armed_by: str
+
+
 def _control_armed_event_coverage(
     items: list[dict[str, Any]],
     damage_events: list[dict[str, Any]],
     control_events: list[dict[str, Any]] | None = None,
     *,
     is_melee: bool = False,
-) -> tuple[bool, str, str, str]:
+) -> ControlArming:
     """Certify a control-armed holder shield against the proc's own trigger.
 
     Everlasting — the one such producer declared today — is not a generic
@@ -217,7 +231,7 @@ def _control_armed_event_coverage(
         ]
         if not unreviewed:
             continue
-        return (
+        return ControlArming(
             False,
             slot.rule.mechanic_id.replace(".", "_"),
             f"{slot.owner}'s {slot.producer.value.replace('_', ' ').title()} "
@@ -226,7 +240,7 @@ def _control_armed_event_coverage(
             "reached the ledger with no reviewed crowd-control state.",
             armed_by,
         )
-    return True, "", "", armed_by
+    return ControlArming(True, "", "", armed_by)
 
 
 def _resolve_timeline_coverage(
@@ -252,26 +266,24 @@ def _resolve_timeline_coverage(
         num_auto_attacks=state.num_auto_attacks,
         lean=score_only,
     )
-    control_complete, control_source, control_note, control_armed_by = (
-        _control_armed_event_coverage(
-            items,
-            damage_events,
-            control_events,
-            is_melee=bool(state.is_melee),
-        )
+    arming = _control_armed_event_coverage(
+        items,
+        damage_events,
+        control_events,
+        is_melee=bool(state.is_melee),
     )
-    if control_armed_by:
+    if arming.armed_by:
         # Which authored control armed the holder's shield, named. The
         # roster walk grants it; this is the pair ledger's receipt that the
         # event it grants on is in here, at that instant.
-        coverage["control_armed_by"] = control_armed_by
-    if not control_complete:
+        coverage["control_armed_by"] = arming.armed_by
+    if not arming.complete:
         coverage["complete"] = False
         coverage["certification"] = "partial_event_order"
         coverage["coarse_sources"] = sorted(
-            set(coverage["coarse_sources"]) | {control_source}
+            set(coverage["coarse_sources"]) | {arming.source}
         )
-        coverage["note"] = control_note
+        coverage["note"] = arming.note
     if (
         threshold_health_heal > 0
         and shield_outcome["threshold_health_triggered"]

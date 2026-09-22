@@ -1,7 +1,7 @@
 """Ashe's Focus stacks and the denial receipt."""
 
 from collections.abc import Iterable, Mapping
-from typing import Any
+from typing import Any, NamedTuple
 
 from ...ability_atoms import ability_field, ability_payload
 from ...champions.ashe import ASHE_FOCUS_STACK_RULE
@@ -14,6 +14,14 @@ from ..state import FightState
 from .account import StackEvent, _resource_ledger, _stack_receipt_row
 
 
+class FocusWalk(NamedTuple):
+    """What one Focus stack walk receipted, gained and spent."""
+
+    receipts: list[dict[str, Any]]
+    gains: int
+    consumes: int
+
+
 def _feed_ashe_focus_stack(
     stack: Any,
     swings: list[Any],
@@ -21,7 +29,7 @@ def _feed_ashe_focus_stack(
     duration: float,
     *,
     q_window_end: float = 0.0,
-) -> tuple[list[dict[str, Any]], int, int]:
+) -> FocusWalk:
     """Feed the Focus stack machine from the engine's per-swing stream.
 
     The Q-activation consume sorts BEFORE the same-timestamp swings (the
@@ -138,7 +146,7 @@ def _feed_ashe_focus_stack(
                 )
     sequence += 1
     stack.materialize_expiries(duration, sequence=sequence)
-    return receipts, gains, consumes
+    return FocusWalk(receipts, gains, consumes)
 
 
 def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
@@ -183,7 +191,7 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
     q_casts = [
         event for event in rotation.cast_events if str(event.get("slot", "")) == "Q"
     ]
-    receipts, gains, consumes = _feed_ashe_focus_stack(
+    walk = _feed_ashe_focus_stack(
         stack,
         swings,
         q_casts,
@@ -194,7 +202,7 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
 
     if swings:
         _add_focus_denial(
-            receipts,
+            walk.receipts,
             "auto_attack_without_identity",
             "missing_identity",
         )
@@ -210,7 +218,7 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
             "generate Focus (Runaan's bolts excluded)",
         ),
     ):
-        _add_focus_denial(receipts, source, reason)
+        _add_focus_denial(walk.receipts, source, reason)
 
     _resource_ledger(rotation)["focus"] = {
         "contract": "resource_ledger_v1",
@@ -222,7 +230,7 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
         "closing_current": closing,
         "base_maximum": 4,
         "bonus_maximum": 0,
-        "receipts": receipts,
+        "receipts": walk.receipts,
         "declaration": ASHE_FOCUS_STACK_RULE.public_receipt(),
         "state_transitions": stack.public_receipt()["transitions"],
     }
@@ -231,7 +239,7 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
         "owner": "champion",
         "informational": True,
         "event_phase": "effect",
-        "count": gains,
+        "count": walk.gains,
         "starting_stacks": seeded,
         "state": f"{seeded}/4 Focus stacks (seeded); {closing}/4 at fight end",
         "max_stacks": 4,
@@ -243,15 +251,15 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
                 "swing_index": None,
                 "kind": receipt["operation"],
             }
-            for receipt in receipts
+            for receipt in walk.receipts
             if receipt["operation"] in ("gain", "consume")
         ],
         "state_transitions": stack.public_receipt()["transitions"],
     }
-    if gains or consumes:
+    if walk.gains or walk.consumes:
         state.notes.append(
-            f"Ashe Focus: {closing}/4 stacks at fight end ({gains} accepted "
-            f"auto-attack gain(s); {consumes} Ranger's Focus activation(s))."
+            f"Ashe Focus: {closing}/4 stacks at fight end ({walk.gains} accepted "
+            f"auto-attack gain(s); {walk.consumes} Ranger's Focus activation(s))."
         )
     else:
         state.notes.append(

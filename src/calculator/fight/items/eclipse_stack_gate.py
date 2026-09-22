@@ -3,7 +3,7 @@
 import math
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, NamedTuple
 
 from ... import item_effects
 from ...trigger_stream import applies_control
@@ -27,18 +27,23 @@ class _EclipseStackTrigger:
     application_id: str
 
 
+class StackedProcTiming(NamedTuple):
+    """One stack-gated champion proc's schedule, gate and denials.
+
+    A denial is never a withholding: a walk that produced this at all
+    priced the row, whatever candidates the gate turned away.
+    """
+
+    events: list[dict[str, Any]]
+    gate: item_effects.WindowStackGate
+    denials: list[dict[str, Any]]
+
+
 def _stacked_champion_proc_times(
     state: FightState,
     rotation: RotationResult,
     effect: item_effects.CooldownProcEffect,
-) -> (
-    tuple[
-        list[dict[str, Any]],
-        item_effects.WindowStackGate,
-        list[dict[str, Any]],
-    ]
-    | None
-):
+) -> StackedProcTiming | None:
     """Schedule a stack-gated champion proc from authored hit boundaries.
 
     Eclipse's passive counts separate damaging ability casts and basic
@@ -399,4 +404,4 @@ def _stacked_champion_proc_times(
                 target=trigger.target_id,
             )
         )
-    return proc_events, gate, denials
+    return StackedProcTiming(proc_events, gate, denials)

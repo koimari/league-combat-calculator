@@ -255,11 +255,9 @@ class TestFailClosedIdentityAndMetadata:
             forced_basic_attacks=0,
         )
 
-        events, _gate, denials = _stacked_champion_proc_times(
-            state, rotation, _eclipse_effect()
-        )
-        assert events == []
-        assert denials[0]["reason"] == "application_identity_unavailable"
+        timing = _stacked_champion_proc_times(state, rotation, _eclipse_effect())
+        assert timing.events == []
+        assert timing.denials[0]["reason"] == "application_identity_unavailable"
 
     def test_non_finite_hit_metadata_has_named_receipt(self) -> None:
         result = _fight({"Q": _direct("Q", time_offset=float("nan"))})
@@ -287,11 +285,9 @@ class TestFailClosedIdentityAndMetadata:
             forced_basic_attacks=0,
         )
 
-        events, _gate, denials = _stacked_champion_proc_times(
-            state, rotation, _eclipse_effect()
-        )
-        assert events == []
-        assert denials[0]["reason"] == "target_identity_unavailable"
+        timing = _stacked_champion_proc_times(state, rotation, _eclipse_effect())
+        assert timing.events == []
+        assert timing.denials[0]["reason"] == "target_identity_unavailable"
 
     def test_malformed_dot_metadata_has_named_denial(self) -> None:
         """A non-numeric ``dot_tick_interval`` (``float('half-second')``

@@ -235,7 +235,9 @@ def _add_late_phase_proc_damage(state: FightState, rotation: RotationResult) -> 
             stack_source_denials: list[dict[str, Any]] = []
             stack_withheld = "malformed_proc_receipt"
         else:
-            stack_events, stack_gate, stack_source_denials = stack_timing
+            stack_events = stack_timing.events
+            stack_gate = stack_timing.gate
+            stack_source_denials = stack_timing.denials
             # A denial is never a withholding — see below — so a walk that
             # ran at all leaves the row unwithheld whatever it denied.
             stack_withheld = None

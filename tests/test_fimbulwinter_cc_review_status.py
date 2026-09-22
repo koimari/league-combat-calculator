@@ -227,16 +227,16 @@ class TestFailClosedReviewState:
         ],
     )
     def test_unknown_or_degraded_ability_event_stays_coarse(self, event):
-        complete, source, note, armed = _control_armed_event_coverage(
+        arming = _control_armed_event_coverage(
             [get_item_by_name(FIMBULWINTER)],
             [event],
         )
-        assert complete is False
-        assert source == "fimbulwinter_everlasting"
-        assert "Fimbulwinter" in note
-        assert "Everlasting" in note
+        assert arming.complete is False
+        assert arming.source == "fimbulwinter_everlasting"
+        assert "Fimbulwinter" in arming.note
+        assert "Everlasting" in arming.note
         # Nothing in the ledger arms it, so there is no event to certify.
-        assert armed == ""
+        assert arming.armed_by == ""
 
     def test_unknown_cc_kind_is_refused_and_never_shields(self):
         """An unspellable kind is refused outright, not read as no control.

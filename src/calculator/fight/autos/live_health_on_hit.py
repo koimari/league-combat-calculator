@@ -86,11 +86,7 @@ def _pay_current_health_on_hit(
     breakdown = state.breakdown
     magic_amp = state.magic_amp
     num_auto_attacks = state.num_auto_attacks
-    (
-        current_health_total,
-        current_health_hits,
-        current_health_hit_damages,
-    ) = _simulate_current_health_on_hit(
+    decayed = _simulate_current_health_on_hit(
         effect=effect,
         base_inputs=_damage_inputs(state),
         swings=AutoSwings(
@@ -107,7 +103,7 @@ def _pay_current_health_on_hit(
         first_auto_damage_by_auto=first_auto_damage_by_auto,
     )
     result.current_health_on_hit_avg = (
-        current_health_total / current_health_hits if current_health_hits > 0 else 0.0
+        decayed.total_damage / decayed.hits if decayed.hits > 0 else 0.0
     )
     result.current_health_damage_type = effect.source.damage_type
 
@@ -115,9 +111,9 @@ def _pay_current_health_on_hit(
     mechanic = source.previewed_mechanic()
     breakdown[source.breakdown_key] = {
         "name": source.display_name,
-        "count": current_health_hits,
+        "count": decayed.hits,
         "damage_per_hit": result.current_health_on_hit_avg,
-        "total_damage": current_health_total,
+        "total_damage": decayed.total_damage,
         "damage_type": source.damage_type,
         # A preview like the static strikes above author, and the one of
         # the eight whose applications do not share a magnitude: the
@@ -127,25 +123,24 @@ def _pay_current_health_on_hit(
         "pair_preview_of": mechanic,
         "declared": _on_hit_declaration(
             mechanic,
-            sum(proc.raw for proc in current_health_hit_damages),
+            sum(proc.raw for proc in decayed.procs),
         ),
     }
     # The simulation walks the same application order the swing
     # schedule authored, so its per-hit values stamp one event each.
-    if application_times and len(current_health_hit_damages) == len(application_times):
+    if application_times and len(decayed.procs) == len(application_times):
         breakdown[source.breakdown_key].update(
             _swing_event_row(
                 application_times,
-                [proc.mitigated for proc in current_health_hit_damages],
+                [proc.mitigated for proc in decayed.procs],
                 source.damage_type,
                 declarations=[
-                    _on_hit_declaration(mechanic, proc.raw)
-                    for proc in current_health_hit_damages
+                    _on_hit_declaration(mechanic, proc.raw) for proc in decayed.procs
                 ],
                 resists=resists,
             )
         )
-    return current_health_total
+    return decayed.total_damage
 
 
 def _pay_scheduled_live_health_procs(
