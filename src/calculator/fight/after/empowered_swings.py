@@ -202,7 +202,9 @@ def _reattribute_empowered_swings(
         auto_row["total_damage"] -= moved
         # ``detail`` always wins over the UI's derived "N casts" text, so
         # spell out that the row now includes the attack it consumed.
-        casts = source_casts(row)
+        # A burst-scheduled consumer can reach here with no cast count at
+        # all, and the derived text counts what it can prove: no casts.
+        casts = source_casts(row) or 0
         base = row.get("detail") or f"{casts} cast{'' if casts == 1 else 's'}"
         row["detail"] = f"{base}, incl. basic attack"
 

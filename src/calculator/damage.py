@@ -542,8 +542,9 @@ def split_by_damage_type(
         damage = source_total_damage(entry)
         if damage is None:
             continue
-        if source_damage_type(entry) in totals:
-            totals[source_damage_type(entry)] += damage
+        damage_type = source_damage_type(entry)
+        if damage_type in totals:
+            totals[damage_type] += damage
         else:
             redistributed_damage += damage
 

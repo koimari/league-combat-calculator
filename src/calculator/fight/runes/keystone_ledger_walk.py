@@ -322,7 +322,6 @@ def _add_keystone_deathfire(state: FightState, rotation: RotationResult) -> None
                 **trigger,
                 "duration_seconds": duration,
                 "new_chain": new_chain,
-                "event_precision": trigger["event_precision"],
             }
         )
     if active_start is not None:
