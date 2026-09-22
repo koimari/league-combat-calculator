@@ -30,6 +30,13 @@ name. Each close row is the median of three consecutive runs.
 `import src.calculator.calculate` in a fresh interpreter: 345 ms at `7bb9701e`, 334 ms at
 close (median of 3), unchanged; no unit touched import-time work.
 
+`import src.calculator.quantity` is 391 ms here, median of 3 whole-interpreter runs, 392
+modules in `sys.modules`. Cutting the `src/calculator`
+facade is worth about 130 ms and cannot reach 100 ms on its own: the one line that file
+keeps, `publish_rune_compilers()`, pulls the 173-module champion roster through
+`rune_effects` to `champions.inputs.champion_stat`, which two `rune_paths` modules import
+too. The rest needs `champions/inputs.py` out of the champions package.
+
 Where the three deltas come from, both changes measured one per commit against three
 identical golden compares:
 
