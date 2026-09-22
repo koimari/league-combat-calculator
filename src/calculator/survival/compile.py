@@ -31,13 +31,22 @@ from __future__ import annotations
 
 import math
 from collections.abc import Iterable, Mapping
+from functools import partial
 from typing import Any
 
 from ..delivery_facts import CombatantFacts
+from ..event_row_field import build_stat_field, optional_field, required_field
 from ..item_effects import ThornsEffect
 from ..resistance import apply_magic_penetration
 from .pricing import mitigate_declared
 from .typed_action import ActionKind, SurvivalAction
+
+#: One field of the wound packet a champion module's declaration produces.
+_wound_field = partial(
+    required_field,
+    kind="champion wound packet",
+    stamper="healing_reduction.champion_grievous_wound_sources",
+)
 
 
 class UncompilableActionError(ValueError):
@@ -86,7 +95,8 @@ def unrepresentable_damage_receipt(event: Mapping[str, Any]) -> str | None:
     """Return a named receipt when a damage packet carries a transition the
     compiled score kernel cannot stage, else None."""
     if event.get("execute_threshold_ratio") is not None:
-        return f"execute_threshold={event.get('execute_source', '')}"
+        source = optional_field(event, "execute_source", str)
+        return f"execute_threshold={source or ''}"
     if event.get("redirect_fraction"):
         return "redirect_fraction"
     if event.get("_deferred"):
@@ -149,15 +159,16 @@ def unrepresentable_modifier_receipt(template: Mapping[str, Any]) -> str | None:
     # can stage identically to the walk, and mis-compiling one is silent, so
     # each reads back as its own named receipt.
     if template.get("damage_reduction"):
-        amount = _finite_or_none(template.get("amount", 0.0), floor=0.0)
+        amount = _finite_or_none(template.get("amount"), floor=0.0)
         if amount is None:
             return "support_damage_modifier_amount=nonfinite"
     else:
-        multiplier = _finite_or_none(template.get("multiplier", 1.0) or 1.0, floor=0.0)
+        declared = template.get("multiplier")
+        multiplier = _finite_or_none(declared or 1.0, floor=0.0)
         if multiplier is None:
             return "support_damage_modifier_multiplier=nonfinite"
     for field in ("armor_reduction_percent", "mr_reduction_percent"):
-        if _finite_or_none(template.get(field, 0.0)) is None:
+        if _finite_or_none(template.get(field)) is None:
             return f"support_damage_modifier_{field}=nonfinite"
     return None
 
@@ -181,7 +192,7 @@ def _finite_or_none(value: Any, *, floor: float | None = None) -> float | None:
 
 def _template_duration(template: Mapping[str, Any]) -> float:
     """One template's armed window, clamped at zero and never raising."""
-    number = _finite_or_none(template.get("duration", 0.0))
+    number = _finite_or_none(template.get("duration"))
     return max(0.0, number) if number is not None else 0.0
 
 
@@ -199,7 +210,7 @@ def unrepresentable_template_receipt(template: Mapping[str, Any]) -> str | None:
     the compiled score kernel, else None."""
     if template.get("_guardian_reactive"):
         return "guardian_reactive_shield"
-    kind = str(template.get("kind", ""))
+    kind = optional_field(template, "kind", str) or ""
     if kind == "crowd_control_resist":
         # The Dr. Mundo passive IMMUNITY arm is representable
         # -- it only sets the armed state, and the RESIST gate lives in the
@@ -207,7 +218,7 @@ def unrepresentable_template_receipt(template: Mapping[str, Any]) -> str | None:
         # it identically (the score ledger ignores the receipts).
         return None
     if kind in _STAGED_STATE_KINDS:
-        if kind == "spell_shield" and template.get("on_block_heal_amount", 0.0):
+        if kind == "spell_shield" and template.get("on_block_heal_amount"):
             return "support_spell_shield_on_block_heal"
         if _template_duration(template) <= 0.0:
             return "support_duration=0"
@@ -256,9 +267,9 @@ def heal_trigger_key(event: Mapping[str, Any]) -> tuple[str, float, int]:
     through :func:`trigger_time_key` rather than spelling its own digit count.
     """
     return (
-        str(event.get("_trigger_source", "")),
-        trigger_time_key(event.get("_trigger_time", 0.0)),
-        int(event.get("_trigger_sequence", 0) or 0),
+        optional_field(event, "_trigger_source", str) or "",
+        trigger_time_key(optional_field(event, "_trigger_time", float) or 0.0),
+        int(optional_field(event, "_trigger_sequence", int) or 0),
     )
 
 
@@ -280,8 +291,8 @@ def champion_wound_tuple(
     if packet is None or float(damage or 0.0) <= 0.0:
         return None
     return (
-        float(packet.get("duration", 0.0)),
-        str(packet.get("source", "Grievous Wounds")),
+        float(_wound_field(packet, "duration")),
+        str(_wound_field(packet, "source")),
     )
 
 
@@ -310,12 +321,12 @@ def thorns_return_damage(
         )
     # Bramble's fixed packet keeps a zero ratio; Thornmail authors one.
     bonus_armor_ratio = max(0.0, float(profile.bonus_armor_ratio))
-    bonus_armor = max(0.0, float(holder.stats.get("bonus_armor", 0.0) or 0.0))
+    bonus_armor = max(0.0, float(build_stat_field(holder.stats, "bonus_armor")))
     raw_damage = float(profile.damage) + bonus_armor_ratio * bonus_armor
     resistance = apply_magic_penetration(
-        float(striker.stats.get("magic_resistance", 0.0)),
-        float(holder.stats.get("magic_penetration_flat", 0.0)),
-        float(holder.stats.get("magic_penetration_percent", 0.0)) / 100.0,
+        float(build_stat_field(striker.stats, "magic_resistance")),
+        float(build_stat_field(holder.stats, "magic_penetration_flat")),
+        float(build_stat_field(holder.stats, "magic_penetration_percent")) / 100.0,
     )
     return mitigate_declared(raw_damage, profile.damage_type, resistance)
 

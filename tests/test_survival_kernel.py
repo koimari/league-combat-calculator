@@ -1202,7 +1202,8 @@ def test_the_strike_back_prices_through_the_shared_arithmetic():
     the two agree on a real Thornmail profile is what makes `pricing` the one
     home rather than a successor sitting beside a precedent.
     """
-    holder = _PricingHolder({"bonus_armor": 80.0})
+    unpenetrating = {"magic_penetration_flat": 0.0, "magic_penetration_percent": 0.0}
+    holder = _PricingHolder({"bonus_armor": 80.0} | unpenetrating)
     striker = _PricingHolder({"magic_resistance": 67.0})
     profile = thorns_effects([_item("Thornmail")])[0]
 

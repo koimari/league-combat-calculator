@@ -176,6 +176,7 @@ root|stats.py
 root|support_context.py
 root|survival/__init__.py
 root|survival/accumulate.py
+root|survival/compile.py
 root|survival/defense_contracts.py
 root|survival/event_slots.py
 root|survival/phases.py
@@ -214,7 +215,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|91
+er5-tail-ceiling|90
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
