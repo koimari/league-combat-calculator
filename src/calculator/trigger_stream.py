@@ -926,12 +926,17 @@ _CHARGED_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 )
 
 
+_STATIC_ON_HIT_HOME = "fight.autos.on_hit_layering._layer_on_hit_effects"
+_LIVE_HEALTH_HOME = "fight.autos.live_health_on_hit._pay_current_health_on_hit"
+
+
 # The eight on-hit strikes the coupled walk prices.  One row
 # per declared rule in ``item_behavior_catalog``'s ``on_hit_strike`` family,
-# and one authoring site for all of them: ``fight.autos.on_hit_layering._layer_on_hit_effects``
-# lays every declared strike onto the applications of the fight's swings,
-# whether the strike's magnitude is fixed per application or re-read against
-# the target's falling health.
+# over the two sites that author them: ``_layer_on_hit_effects`` lays a strike
+# of a magnitude fixed per application onto the fight's swings, and
+# ``_pay_current_health_on_hit`` walks the one strike re-read against the
+# target's falling health down the auto stream, pricing each application at
+# the health the ones before it left.
 #
 # Three rows the committed triage lists for this family are deliberately
 # absent, because no declaration of this family authors them: Titanic
@@ -942,18 +947,16 @@ _CHARGED_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 # measures a family's rows by removing the ITEM, which is conservative by
 # construction and lists every mechanic that item holds.
 _ON_HIT_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
-    RetiredFamilyMechanic(
-        f"{slug}.on_hit", item, "fight.autos.on_hit_layering._layer_on_hit_effects"
-    )
-    for slug, item in (
-        ("blade_of_the_ruined_king", "Blade of the Ruined King"),
-        ("guinsoos_rageblade", "Guinsoo's Rageblade"),
-        ("muramana", "Muramana"),
-        ("nashors_tooth", "Nashor's Tooth"),
-        ("recurve_bow", "Recurve Bow"),
-        ("terminus", "Terminus"),
-        ("titanic_hydra", "Titanic Hydra"),
-        ("wits_end", "Wit's End"),
+    RetiredFamilyMechanic(f"{slug}.on_hit", item, home)
+    for slug, item, home in (
+        ("blade_of_the_ruined_king", "Blade of the Ruined King", _LIVE_HEALTH_HOME),
+        ("guinsoos_rageblade", "Guinsoo's Rageblade", _STATIC_ON_HIT_HOME),
+        ("muramana", "Muramana", _STATIC_ON_HIT_HOME),
+        ("nashors_tooth", "Nashor's Tooth", _STATIC_ON_HIT_HOME),
+        ("recurve_bow", "Recurve Bow", _STATIC_ON_HIT_HOME),
+        ("terminus", "Terminus", _STATIC_ON_HIT_HOME),
+        ("titanic_hydra", "Titanic Hydra", _STATIC_ON_HIT_HOME),
+        ("wits_end", "Wit's End", _STATIC_ON_HIT_HOME),
     )
 )
 

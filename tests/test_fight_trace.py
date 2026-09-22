@@ -396,7 +396,7 @@ class TestTheDeclaredPricingHome:
             and isinstance(capability.owner, trigger_stream.ItemOwner)
         ]
         assert len(item_pair) == 58
-        assert len({capability.impl for capability in item_pair}) == 21
+        assert len({capability.impl for capability in item_pair}) == 22
 
 
 class TestTheTraceBoundary:
