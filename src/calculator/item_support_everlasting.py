@@ -46,7 +46,7 @@ def _everlasting_packets(ctx: SupportCtx) -> list[dict[str, Any]]:
     # ``_event_id``, ``cc_kind`` and cast instance, and the bus does not
     # carry the unclassified rows a denial exists to report.
     # Candidacy is the MECHANIC's question, so its own kernel rule answers
-    # it: SURVIVAL-API D-08 rules that "applies crowd control" (the bus's
+    # it: "applies crowd control" (the bus's
     # ``applies_control``, the wider sibling used by Cheap Shot and
     # friends) and "blocks actions" (this trigger) are two different
     # questions, and they disagree on ``polymorph`` and ``silence``.
@@ -261,7 +261,7 @@ def _everlasting_packets(ctx: SupportCtx) -> list[dict[str, Any]]:
                 # ``None`` when the producer did not enrich: the survival
                 # compiler's fail-closed ``support_trigger_link`` branch
                 # keys on ``is not None``, so an unenriched shield must
-                # carry an absent link and not an empty one (D-03).
+                # carry an absent link and not an empty one.
                 _trigger_event_id=event.get("_event_id"),
                 trigger_kind=trigger_kind,
                 current_mana=current_mana,

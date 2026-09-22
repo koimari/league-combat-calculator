@@ -217,7 +217,7 @@ def _intervention_packets(ctx: SupportCtx) -> list[dict[str, Any]]:
     # shields, death cutoffs, and attribution remain shared with all other
     # damage events.
     #
-    # D-50: one active, one ``source=`` literal, two packets landing on two
+    # One active, one ``source=`` literal, two packets landing on two
     # different roster classes.  ``secondary_target`` is what says the
     # second half exists — a reader of the declaration alone could
     # otherwise not tell that Intervention damages anybody.

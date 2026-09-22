@@ -23,7 +23,7 @@ from typing import Any
 from .ally_packet_shape import _item_names, _packet, _producer, _same_side
 from .interpreters.ally_packet import resolve_slots
 
-# Phase 3's declarations.  A producer is reached through the rule its registry
+# The declarations.  A producer is reached through the rule its registry
 # entry declares — "does this holder declare Everlasting?" — rather than by
 # spelling the item that has it, so a key no declaration carries is a stop
 # instead of a silent registry read.

@@ -351,13 +351,12 @@ def _command_packets(moment: _ControlMoment) -> list[dict[str, Any]]:
     all_actors = moment.ctx.all_actors
     time = moment.time
     packets: list[dict[str, Any]] = []
-    # H2's recorded ruling, *deferred, default shipped*: no ability
-    # declares a reviewed crowd-control scope yet, so every mark takes
-    # the shipped default -- ``SingleTarget`` on the pair defender --
-    # and publishes the disclosure that names the ability it was
-    # assumed for.  Which enemy is marked stops being a roster
-    # position and becomes a routed answer; what that answer *is*
-    # does not move, which is the whole content of "default shipped".
+    # No ability declares a reviewed crowd-control scope, so every
+    # mark takes the default -- ``SingleTarget`` on the pair defender
+    # -- and publishes the disclosure that names the ability it was
+    # assumed for.  Which enemy is marked is a routed answer rather
+    # than a roster position, and the default is what that route
+    # resolves to until an ability states its own scope.
     scope, disclosures = reviewed_scope(
         Unreviewed(ability=_cc_ability_label(cc, all_actors))
     )

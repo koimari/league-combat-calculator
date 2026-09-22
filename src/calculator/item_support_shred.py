@@ -111,7 +111,7 @@ def _expose_weakness_packets(ctx: SupportCtx) -> list[dict[str, Any]]:
                 # declared explicitly rather than left to an empty set.
                 damage_classes=frozenset(DamageClass),
                 attack_classes=frozenset(AttackClass),
-                # Phase 4 S7 settled which engine owns this: the walk.
+                # The walk owns this.
                 # The amplified pool is every roster attacker's damage
                 # inside a live window, which is a roster input, so there
                 # is no pair-local half for the walk to skip and this

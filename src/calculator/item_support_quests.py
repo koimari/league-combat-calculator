@@ -25,7 +25,7 @@ def _support_quest_packets(
 
     World Atlas and Runic Compass carry the same quest, and the two outcomes
     — the gold and the ward — are two declared producers on the one record,
-    because Phase 2 declares a capability and a packet source for each.  The
+    because each has its own capability and packet source.  The
     item is whichever transformed stage the build equipped, read off the
     declarations rather than spelled: ``validate_resolved_loadout`` already
     refuses a build carrying two support quest items, and ``_producer``'s

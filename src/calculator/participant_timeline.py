@@ -4583,7 +4583,7 @@ def _resource_restore_request(
     exact (time, pre-mitigation-damage x declared ratio) restores attached
     to each holder that declares the shape.  Asking is a return value: the
     driver rebuilds the composition with the patch, so the two passes are
-    siblings rather than a call inside a call (D-70).
+    siblings rather than a call inside a call.
     """
     resource_restores: dict[str, tuple[tuple[float, float], ...]] = {}
     for actor in roster.all_actors:
