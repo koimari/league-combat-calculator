@@ -101,7 +101,7 @@ def _damaging_cast_times(state: FightState, rotation: RotationResult) -> list[fl
     damaging_slots = {
         slot
         for slot, entry in state.ability_damages.items()
-        if float(entry.get("total_raw", 0.0)) > 0
+        if float(ability_field(entry, "total_raw")) > 0
     }
     return sorted(
         float(event["time"])

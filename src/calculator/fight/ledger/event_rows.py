@@ -9,6 +9,7 @@ from ...ability_atoms import ability_field
 from ...survival.pricing import AuthoredDeclaration
 from ...trigger_stream import TriggerKind
 from ..state import FightState
+from .breakdown import source_casts, source_damage_type, source_total_damage
 
 
 def _row_time(row: Mapping[str, Any]) -> float:
@@ -50,11 +51,11 @@ def _row_damage_parts(entry: Mapping[str, Any]) -> list[tuple[str, float]]:
             for dtype, amount in by_type.items()
             if dtype in {"physical", "magic", "true"} and amount > 0
         ]
-    dtype = entry.get("damage_type")
-    damage = float(entry.get("total_damage", 0.0))
+    dtype = source_damage_type(entry)
+    damage = source_total_damage(entry)
     return (
         [(dtype, damage)]
-        if dtype in {"physical", "magic", "true"} and damage > 0
+        if dtype in {"physical", "magic", "true"} and damage is not None and damage > 0
         else []
     )
 
@@ -273,7 +274,7 @@ def _item_proc_precision(state: FightState, slot: str) -> str:
         row = row.get(slot)
     cast_order = state.cast_order
     if cast_order is not None and slot in cast_order and isinstance(row, Mapping):
-        casts = int(row.get("casts", 0) or 0)
-        if casts > 0 and dot <= 0.0:
+        casts = source_casts(row)
+        if casts is not None and casts > 0 and dot <= 0.0:
             return "exact"
     return "cast_boundary"

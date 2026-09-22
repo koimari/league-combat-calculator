@@ -44,6 +44,7 @@ __all__ = [
     "REQUIRED_FIELDS",
     "event_damage",
     "event_damage_type",
+    "event_precision",
     "event_raw_damage",
     "event_source",
     "event_time",
@@ -82,3 +83,8 @@ def event_source(event: Mapping[str, Any]) -> str:
 def event_raw_damage(event: Mapping[str, Any]) -> float | None:
     """The pre-mitigation damage; ``None`` where this row's walk priced none."""
     return optional_field(event, "raw_damage", float)
+
+
+def event_precision(event: Mapping[str, Any]) -> str | None:
+    """How exactly this packet's time is placed; ``None`` where none was stated."""
+    return optional_field(event, "event_precision", str)

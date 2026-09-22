@@ -57,7 +57,11 @@ from .fight.items.secondary_delivery import (
     _add_cone_delivery,
 )
 from .fight.items.ultimate_procs import _add_ultimate_proc_damage
-from .fight.ledger.breakdown import _is_auto_stream_key
+from .fight.ledger.breakdown import (
+    _is_auto_stream_key,
+    source_damage_type,
+    source_total_damage,
+)
 from .fight.ledger.coverage import _resolve_timeline_coverage
 from .fight.ledger.event_ledger import _ordered_damage_events
 from .fight.ledger.execute_stamps import _stamp_execute_thresholds
@@ -476,8 +480,10 @@ def split_auto_vs_ability(
     redistributed_damage = 0.0  # damage_amp_<source> rows
 
     for key, entry in breakdown.items():
-        dmg = entry.get("total_damage", 0.0)
         if entry.get("informational"):
+            continue
+        dmg = source_total_damage(entry)
+        if dmg is None:
             continue
         if "auto_attack_fraction" in entry:
             fraction = float(entry["auto_attack_fraction"])
@@ -532,10 +538,14 @@ def split_by_damage_type(
             # (physical/magic/true); a stray key should raise.
             for dtype, amount in by_type.items():
                 totals[dtype] += amount
-        elif entry.get("damage_type") in totals:
-            totals[entry["damage_type"]] += entry.get("total_damage", 0.0)
+            continue
+        damage = source_total_damage(entry)
+        if damage is None:
+            continue
+        if source_damage_type(entry) in totals:
+            totals[source_damage_type(entry)] += damage
         else:
-            redistributed_damage += entry.get("total_damage", 0.0)
+            redistributed_damage += damage
 
     typed_total = sum(totals.values())
     if typed_total > 0:

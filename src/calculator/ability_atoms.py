@@ -277,6 +277,9 @@ ABILITY_PAYLOAD_SCHEMA: Mapping[str, Mapping[str, Any]] = MappingProxyType(
                 "resource_restore": 0.0,
                 "resource_restore_per_proc": 0.0,
                 "resource_type": "NONE",
+                # The producer-side pre-mitigation diagnostic; a payload
+                # whose builder authors none states no raw damage.
+                "total_raw": 0.0,
                 # The sourced rule for a kit's self-silencing resource
                 # (Rumble's Heat); the fight's cast plan walks it.
                 "cast_resource_lockout": None,

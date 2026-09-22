@@ -6,11 +6,13 @@ from typing import Any, NamedTuple
 
 from ... import item_effects
 from ...ability_atoms import ability_field, ability_payload
+from ...damage_event_row import event_precision
 from ...interpreters import ally_packet, threshold_defense
 from ...item_behavior import PacketKind, PacketTrigger, Recipients
 from ...survival.actions import event_timestamp
 from ...trigger_stream import Stream, authored_triggers
 from ..state import FightState
+from .breakdown import source_casts, source_damage_events, source_total_damage
 
 
 def _event_timeline_coverage(
@@ -35,9 +37,12 @@ def _event_timeline_coverage(
         if entry.get("withheld_reason"):
             coarse.append(key)
             continue
-        if entry.get("informational") or float(entry.get("total_damage", 0.0)) <= 0:
+        if entry.get("informational"):
             continue
-        damage_events = entry.get("damage_events")
+        row_total = source_total_damage(entry)
+        if row_total is None or row_total <= 0:
+            continue
+        damage_events = source_damage_events(entry)
         # One pass computes the authored total (in list order) and the
         # cast-boundary downgrade together.
         event_total = None
@@ -49,7 +54,7 @@ def _event_timeline_coverage(
                 if (
                     not has_boundary
                     and isinstance(event, dict)
-                    and str(event.get("event_precision", "")) == "cast_boundary"
+                    and event_precision(event) == "cast_boundary"
                 ):
                     has_boundary = True
         if has_boundary:
@@ -57,13 +62,14 @@ def _event_timeline_coverage(
             continue
         if event_total is not None and math.isclose(
             event_total,
-            float(entry["total_damage"]),
+            row_total,
             rel_tol=1e-9,
             abs_tol=1e-6,
         ):
             exact.append(key)
             continue
-        if key in cast_keys and int(entry.get("casts", 0)) > 0:
+        entry_casts = source_casts(entry)
+        if key in cast_keys and entry_casts is not None and entry_casts > 0:
             info = ability_payload(ability_damages, key)
             if float(ability_field(info, "dot_duration")) > 0:
                 coarse.append(key)
@@ -77,7 +83,9 @@ def _event_timeline_coverage(
         for key, info in ability_damages.items()
         if info.get("requires_auto_timeline_coupling")
         and num_auto_attacks > 0
-        and int(breakdown.get(key, {}).get("casts", 0)) > 0
+        and key in breakdown
+        and (coupled_casts := source_casts(breakdown[key])) is not None
+        and coupled_casts > 0
     }
     if lean:
         # Score-mode consumers only ever combine coverages by set union

@@ -5,7 +5,15 @@ from operator import itemgetter
 from typing import Any
 
 from ...ability_atoms import ability_field, ability_payload
+from ...cast_event_row import cast_slot
+from ...cast_event_row import cast_time as cast_event_time
 from ..cast_control_marker import _declared_cc_marker, _entry_control_scope
+from .breakdown import (
+    source_casts,
+    source_hit_count,
+    source_total_damage,
+    source_total_raw,
+)
 from .event_rows import (
     _AUTO_EVENT_FIELDS,
     _EVENT_PHASE_ORDER,
@@ -161,8 +169,8 @@ def _ordered_damage_events(
         entry = breakdown.get(key)
         if not entry or entry.get("informational"):
             continue
-        casts = max(0, int(entry.get("casts", 0)))
-        if casts <= 0:
+        casts = source_casts(entry)
+        if casts is None or casts <= 0:
             continue
         # Champion modules may have emitted a typed event ledger for this
         # ability.  Preserve it (including live target-health metadata)
@@ -172,13 +180,13 @@ def _ordered_damage_events(
         if timeline_by_slot is None:
             timeline_by_slot = {}
             for cast_event in cast_events or []:
-                timeline_by_slot.setdefault(str(cast_event.get("slot", "")), []).append(
+                timeline_by_slot.setdefault(cast_slot(cast_event), []).append(
                     cast_event
                 )
         slot_timeline = timeline_by_slot.get(key, [])
         info = ability_payload(ability_damages, key)
         instances = max(1, int(ability_field(info, "cast_instances")))
-        raw_total = float(entry.get("total_raw", 0.0) or 0.0)
+        raw_total = source_total_raw(entry)
         # The control facts belong to the ONE part that authored control, so
         # they are kept apart from the row's shared facts and stamped only on
         # that part's damage type — a two-typed cast must not publish one
@@ -235,12 +243,14 @@ def _ordered_damage_events(
             "area_damage": bool(entry.get("area_damage")),
             "cast_while_disabled": bool(entry.get("cast_while_disabled")),
             "raw_damage": (
-                raw_total / (casts * instances) if raw_total > 0.0 else None
+                raw_total / (casts * instances)
+                if raw_total is not None and raw_total > 0.0
+                else None
             ),
         }
         for cast_index in range(casts):
             cast_time = (
-                float(slot_timeline[cast_index].get("time", 0.0))
+                cast_event_time(slot_timeline[cast_index])
                 if cast_index < len(slot_timeline)
                 else 0.0
             )
@@ -268,7 +278,8 @@ def _ordered_damage_events(
         and not auto.get("informational")
         and not add_declared_events("auto_attacks", auto, default_phase="auto")
     ):
-        hits = max(1, int(auto.get("count", 1)))
+        counted = source_hit_count(auto)
+        hits = 1 if counted is None else max(1, counted)
         for dtype, amount in _row_damage_parts(auto):
             for hit_index in range(hits):
                 add(
@@ -316,8 +327,8 @@ def _ordered_damage_events(
                     },
                 )
         else:
-            damage = float(entry.get("total_damage", 0.0))
-            if damage > 0:
+            damage = source_total_damage(entry)
+            if damage is not None and damage > 0:
                 untyped.append((key, damage))
 
     # ``typed_totals`` accumulated per add above, in event order.
