@@ -2,22 +2,18 @@
 
 ``state.breakdown`` is keyed by source and every step of a fight writes its
 own rows into it as dict literals, so what a row carries depends on what
-produced it rather than on one schema. That is measured, not assumed: one
-timed fight per registered champion (the probe
-``scripts/internal_row_census.py`` states) produces 960 rows, and only
-``name`` is on all of them.
+produced it rather than on one schema. That is measured, not asserted:
+``scripts/internal_row_census.py`` walks one timed fight per registered
+champion and ``docs/receipts/internal-row-census.json`` holds how many of
+its ``breakdown`` rows carry each key. Only ``name`` carries on all of
+them, so every reader below is optional and answers ``None`` where no
+producer stamped the field, and none of them may become a required read.
 
-``total_damage`` and ``damage_type`` are on 958 of the 960. The two without
-them are the stack-state rows a champion publishes for display, which carry
-``informational`` and price nothing. ``casts`` and ``total_raw`` are on the
-686 an ability cast authored; ``damage_events`` on 781 and ``event_phase``
-on 777, the rows whose producer authored an event list; ``count`` and
-``damage_per_hit`` on the auto-attack rows alone.
-
-So every reader below is optional and answers ``None`` where no producer
-stamped the field. A caller states for itself what a source with no such
-reading contributes, instead of each one spelling a zero that would also
-hide a producer that broke.
+A caller states for itself what a source with no such reading contributes,
+instead of each one spelling a zero that would also hide a producer that
+broke. ``tests/test_ledger_breakdown_row.py`` holds both halves of that
+against the census: which fields are optional, and the one stamp no reader
+accepts, a ``total_damage`` that is not a number.
 """
 
 from collections.abc import Mapping, Sequence

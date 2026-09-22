@@ -104,7 +104,9 @@ FIGHT_STEPS_WITHOUT_A_FRONT_DOOR = (
     "fight.items.energized_packets",
     "fight.items.proc_triggers",
     "fight.items.ultimate_procs",
-    "fight.ledger.breakdown",
+    # `fight.ledger.breakdown` left this frontier when
+    # `tests/test_ledger_breakdown_row.py` began asserting its readers
+    # directly, against the corpus that licenses them.
     "fight.ledger.execute_stamps",
     "fight.rotation.ability_rotation",
     "fight.rotation.burst_autos",

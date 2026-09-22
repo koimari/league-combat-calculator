@@ -7,7 +7,91 @@
   "role": "mid"
  },
  "streams": {
+  "breakdown": {
+   "keys": {
+    "area_damage": 315,
+    "casts": 686,
+    "combat_extension_seconds": 2,
+    "control_events": 18,
+    "count": 274,
+    "crit_damage_per_hit": 173,
+    "damage_by_type": 19,
+    "damage_events": 781,
+    "damage_per_hit": 270,
+    "damage_type": 958,
+    "detail": 405,
+    "event_phase": 777,
+    "informational": 2,
+    "max_stacks": 2,
+    "mechanic": 49,
+    "name": 960,
+    "non_crit_damage_per_hit": 173,
+    "num_crits": 175,
+    "num_non_crits": 175,
+    "owner": 2,
+    "self_shield_events": 16,
+    "skillshot": 327,
+    "stack_duration_seconds": 2,
+    "stack_events": 2,
+    "starting_stacks": 2,
+    "state": 2,
+    "state_transitions": 2,
+    "total_damage": 958,
+    "total_raw": 686,
+    "unit": 27
+   },
+   "rows": 960,
+   "universal": [
+    "name"
+   ]
+  },
+  "breakdown_damage_events": {
+   "keys": {
+    "basic_attack": 1784,
+    "cast_while_disabled": 6,
+    "cc_duration": 44,
+    "cc_kind": 1775,
+    "cc_reviewed": 1777,
+    "control_source_atoms": 36,
+    "critical_strike": 1357,
+    "damage": 3881,
+    "damage_over_time": 430,
+    "damage_type": 3881,
+    "event_precision": 2049,
+    "raw_damage": 3618,
+    "raw_formula": 1784,
+    "resistance_met": 3586,
+    "source_missing_ratio": 1784,
+    "time": 3881
+   },
+   "rows": 3881,
+   "universal": [
+    "damage",
+    "damage_type",
+    "time"
+   ]
+  },
   "control_events": {
+   "keys": {
+    "application_id": 18,
+    "cast_id": 18,
+    "cc_duration": 18,
+    "cc_kind": 18,
+    "cc_magnitude": 5,
+    "cc_reviewed": 18,
+    "control_source_atoms": 14,
+    "damage": 18,
+    "damage_type": 18,
+    "event_precision": 18,
+    "is_ability": 18,
+    "kind": 18,
+    "sequence": 18,
+    "skillshot": 18,
+    "source": 18,
+    "source_key": 18,
+    "target_id": 18,
+    "time": 18
+   },
    "rows": 18,
    "universal": [
     "application_id",
@@ -29,6 +113,37 @@
    ]
   },
   "damage_events": {
+   "keys": {
+    "_lk": 3961,
+    "area_damage": 1046,
+    "basic_attack": 18,
+    "cast_while_disabled": 6,
+    "cc_duration": 44,
+    "cc_kind": 1829,
+    "cc_reviewed": 1831,
+    "control_source_atoms": 36,
+    "damage": 3961,
+    "damage_over_time": 430,
+    "damage_type": 3961,
+    "event_precision": 2028,
+    "execute_declared_by_cast": 8,
+    "execute_source": 8,
+    "execute_threshold_ratio": 8,
+    "is_ability": 1882,
+    "omnivamp_effectiveness": 1820,
+    "order": 3961,
+    "ordinal": 3961,
+    "phase": 3961,
+    "raw_damage": 3698,
+    "raw_formula": 61,
+    "resistance_met": 3565,
+    "self_shield": 16,
+    "sequence": 3961,
+    "skillshot": 1067,
+    "source_key": 3961,
+    "source_missing_ratio": 61,
+    "time": 3961
+   },
    "rows": 3961,
    "universal": [
     "_lk",
@@ -43,6 +158,25 @@
    ]
   },
   "self_healing_events": {
+   "keys": {
+    "_darius_q_group": 2,
+    "_event_id": 15,
+    "_later_target_amount": 1,
+    "_trigger_sequence": 269,
+    "_trigger_source": 269,
+    "_trigger_time": 269,
+    "actor_wide": 171,
+    "amount": 443,
+    "amount_formula": 83,
+    "cast_while_disabled": 1,
+    "charges": 1,
+    "kind": 443,
+    "requires_damage_free_seconds": 20,
+    "sequence": 40,
+    "source": 443,
+    "target_scope": 15,
+    "time": 443
+   },
    "rows": 443,
    "universal": [
     "amount",

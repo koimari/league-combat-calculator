@@ -72,13 +72,22 @@ def test_a_moved_universal_set_is_reported_rather_than_absorbed():
     assert measured != _committed()
 
 
+def test_a_key_stamped_on_fewer_rows_is_reported_too():
+    """Why the receipt counts every key and not only the universal ones: a
+    producer that stops stamping an optional field on some of its rows moves
+    no universal set, and the readers of that field branch on it."""
+    measured = census.measure()
+    measured["streams"]["breakdown"]["keys"]["total_damage"] -= 1
+    assert measured != _committed()
+
+
 def test_the_corpus_does_not_claim_more_reach_than_it_has():
     """One scenario shape per champion, and the receipt says so.
 
-    ``raw_damage`` is on 3,697 of 3,960 rows here: near-universal, and
-    therefore exactly the kind of key a reader skimming a summary would
-    convert. It is absent from the universal set, which is the corpus
-    refusing to round up.
+    ``raw_damage`` is on all but a few hundred of the ``damage_events``
+    rows: near-universal, and therefore exactly the kind of key a reader
+    skimming a summary would convert. It is absent from the universal set,
+    which is the corpus refusing to round up.
     """
     universal = set(_committed()["streams"]["damage_events"]["universal"])
     assert "raw_damage" not in universal
