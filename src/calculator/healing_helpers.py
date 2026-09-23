@@ -11,8 +11,8 @@ of the ledger the module happened to author.
 """
 
 # The slotlib readers are re-exported here so a champion module reaches one
-# healing surface, and a resolver's parameter list is the shared rule interface.
-# pylint: disable=too-many-arguments,unused-import
+# healing surface.
+# pylint: disable=unused-import
 
 from __future__ import annotations
 
@@ -223,7 +223,7 @@ def ranked_rows(
     )
 
 
-def cast_heals(  # pylint: disable=too-many-arguments
+def cast_heals(
     slot: str,
     source: str,
     damage_events: list[dict[str, Any]],

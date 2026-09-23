@@ -158,7 +158,7 @@ def _uniform_swing_schedule(state: "FightState", num_auto_attacks: int) -> list[
     return _swings_at_rate(num_auto_attacks, autos_per_second)
 
 
-# pylint: disable-next=too-many-arguments,too-many-locals
+# pylint: disable-next=too-many-locals
 def _add_empower_window_on_hit(
     state: "FightState",
     rotation: "RotationResult",

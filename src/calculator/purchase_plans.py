@@ -33,7 +33,7 @@ class PurchaseSearch:
 
     # A search context is a deliberate value bag; splitting it would spread
     # one run's state across parallel argument lists.
-    # pylint: disable=too-many-instance-attributes,too-many-arguments,too-many-locals
+    # pylint: disable=too-many-instance-attributes,too-many-locals
 
     def __init__(
         self,
@@ -359,7 +359,6 @@ def _improve_purchase_chain(
     max_rounds: int = 3,
 ) -> tuple[list[dict[str, Any]], float]:
     """Hill-climb a purchase chain: swap single buys, then respend leftovers."""
-    # pylint: disable=too-many-arguments  # one climb needs its whole context
     for _ in range(max_rounds):
         improved = False
         for index in range(len(chain)):

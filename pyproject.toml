@@ -71,8 +71,12 @@ ignore = [
   "TID252",
   # Lazy imports break cycles and keep cold start cheap; tests import inside the case.
   "PLC0415",
-  # sightline #23 prices complexity and #55 arity; one owner per fact.
-  "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
+  # sightline #23 prices complexity; one owner per fact.
+  "C901", "PLR0911", "PLR0912", "PLR0915",
+  # Arity's one owner is sightline #55, which `sightline gate . --full` blocks on above
+  # .sightline-baseline; it counts positional width, as a keyword-only parameter is
+  # named at every call. Pylint's two arity checks are off below for the same reason.
+  "PLR0913", "PLR0917",
   # Contract-shaped signatures (champion modules, readers, stubs); sightline #32 flags
   # a never-read parameter where it is not a contract.
   "ARG001", "ARG002", "ARG004", "ARG005",
@@ -133,3 +137,7 @@ ignore = [
 "scripts/decompose_binaries.py" = ["BLE001"]
 "scripts/atomize.py" = ["BLE001"]
 "src/metrics.py" = ["BLE001"]
+
+# Arity belongs to sightline #55 (the reason beside PLR0913 above).
+[tool.pylint."messages control"]
+disable = ["too-many-arguments", "too-many-positional-arguments"]

@@ -97,7 +97,7 @@ _NO_EVENT_FIELDS: Mapping[str, Any] = MappingProxyType({})
 _AUTO_EVENT_FIELDS: Mapping[str, Any] = MappingProxyType({"basic_attack": True})
 
 
-def _damage_event_row(  # pylint: disable=too-many-arguments
+def _damage_event_row(
     light: bool,
     lean: bool,
     source_key: str,

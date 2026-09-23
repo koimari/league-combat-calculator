@@ -125,7 +125,7 @@ def delayed_damage(*, delay: float, **simple_damage_kwargs: Any) -> SlotParser:
     return delayed(simple_damage(**simple_damage_kwargs), delay=delay)
 
 
-def named_damage(  # pylint: disable=too-many-arguments
+def named_damage(
     attr: str | Callable[[SlotCtx], str],
     dmg_type: str,
     *,
@@ -322,7 +322,7 @@ def ability_cast_times(
     return [(time, slots[index]) for time, index in casts]
 
 
-def no_damage(  # pylint: disable=too-many-arguments
+def no_damage(
     ctx: SlotCtx,
     *,
     name: str,
@@ -435,7 +435,7 @@ def steroid_entry(
     return entry
 
 
-def between_rows(  # pylint: disable=too-many-arguments
+def between_rows(
     ctx: SlotCtx,
     ability: dict[str, Any],
     rank_value: int,

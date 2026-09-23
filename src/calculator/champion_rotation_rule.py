@@ -132,7 +132,7 @@ def _fit_rule_to_fight(
 
 
 # comment-ok: width - a pylint pragma cannot wrap
-def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements,too-many-arguments
+def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     champion_name: str,
     ability_damages: Mapping[str, Any],
     champion_data: Mapping[str, Any],
