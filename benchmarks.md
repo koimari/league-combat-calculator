@@ -64,57 +64,68 @@ leaf, by D-72's single-writer rule) and `program/compile.action_from_event` (10%
 `dict.get` calls per event). Both are the shape the design asks for, so moving either is
 a design change rather than a tuning pass.
 
-## Survival action: `SurvivalAction` construction and the walk
+## Survival action: record construction and the walk
 
 ```bash
 python scripts/bench_survival_action.py                           # tables
 python scripts/bench_survival_action.py --compare benchmarks.md   # exits 1 on a >25% median regression
 ```
 
-Captured at `38e47659` on the machine above, CPython 3.14.2, each cell the median of three
-consecutive runs. Every input is a real action from the named golden scenario's walk. A
-group's representative is its first action at the group's median count of fields set away
-from the class default. Construction is `timeit`, the median of 15 repeats of 20,000 calls.
-The four source walks hold 873 actions of 96 fields: a median of 16 set, 56 never set.
+Captured at `3fb9b938` on the machine above, CPython 3.14.2. Each cell is the median of three
+runs alternating with base `6ad828b5`, whose rows carry `@6ad828b5`. Every input is a real
+action from the named golden scenario's walk. A group's representative is its first action at
+the group's median count of fields set away from the neutral value. Construction is `timeit`,
+the median of 15 repeats of 20,000 calls. The four source walks hold 873 actions. The base
+built each as one 96-field tuple. Here each is the record of its kind in
+`survival/action_families`, a median of 48 fields stored and 16 set.
 
 | group | scenario | set fields | all-kw µs | set-kw µs | narrow µs |
 |---|---|---|---|---|---|
-| damage | crit_onhit_carry_roster | 16 | 3.513 | 1.559 | 0.397 |
-| heal | cleaver_bloodsong_roster | 12 | 3.474 | 1.478 | 0.337 |
-| shield | lethality_window_assassin_roster | 14 | 3.512 | 1.526 | 0.362 |
-| buff | cleaver_bloodsong_roster | 19 | 3.533 | 1.674 | 0.45 |
-| state | control_event_roster | 19 | 3.583 | 1.608 | 0.443 |
+| damage @6ad828b5 | crit_onhit_carry_roster | 16 | 3.523 | 1.55 | 0.397 |
+| heal @6ad828b5 | cleaver_bloodsong_roster | 12 | 3.519 | 1.481 | 0.344 |
+| shield @6ad828b5 | lethality_window_assassin_roster | 14 | 3.531 | 1.53 | 0.359 |
+| buff @6ad828b5 | cleaver_bloodsong_roster | 19 | 3.537 | 1.691 | 0.446 |
+| state @6ad828b5 | control_event_roster | 19 | 3.589 | 1.595 | 0.441 |
+| damage | crit_onhit_carry_roster | 16 | 1.36 | 0.826 | 0.39 |
+| heal | cleaver_bloodsong_roster | 12 | 1.533 | 0.837 | 0.339 |
+| shield | lethality_window_assassin_roster | 13 | 1.251 | 0.747 | 0.351 |
+| buff | cleaver_bloodsong_roster | 18 | 0.985 | 0.727 | 0.428 |
+| state | control_event_roster | 19 | 1.118 | 0.787 | 0.438 |
 
-`all-kw` passes every field by keyword, the shape of `program/compile.action_from_event`,
-which names 95 of the 96 and builds every action a request walks. `set-kw` passes only the
-set fields, and `narrow` builds a NamedTuple of only those fields from the same values. The
-width costs about 3.1 µs an action, 8.8x the narrow type. `narrow` is the target a
-per-group split is measured against: on `crit_onhit_carry_roster` the gap is 354 actions,
-about 1.1 ms of a 34.1 ms request. No golden scenario walks a utility action, so that group
-has no row, and none walks more than three shields.
+`all-kw` builds the action's own record by every field it stores, the width
+`program/compile.action_from_event` pays. `set-kw` passes only the set fields, and `narrow`
+builds a NamedTuple of only those fields. The records cut `all-kw` by 2.3x to 3.6x. The shield
+and buff representatives set one field fewer because their records do not store
+`duration_set`, which only the utility transition reads. Timed over the 354 events of
+`crit_onhit_carry_roster`, `action_from_event` fell from about 9.9 µs an event to 4.4.
 
 | constructor | fields | µs |
 |---|---|---|
-| row_copy | 29 | 1.189 |
-| keywords | 29 | 1.776 |
-| narrow | 29 | 0.68 |
+| row_copy @6ad828b5 | 29 | 1.18 |
+| keywords @6ad828b5 | 29 | 1.737 |
+| narrow @6ad828b5 | 29 | 0.679 |
+| keywords | 29 | 1.095 |
+| narrow | 29 | 0.689 |
 
-`row_copy` is `survival/actions.compiled_damage_action` fed the damage representative's 29
-fields. `keywords` is `SurvivalAction(**those fields)`, which the bench asserts it equals.
-The fast path saves a third, not the half its comment claims, and a 29-field NamedTuple by
-keyword beats it. No coupled golden scenario reaches it: only the score path's
-`WalkCompiler` staging does.
+`keywords` is the score compiler's damage construction: the 29 keywords
+`WalkCompiler._compile_pair` passes, read off its call. The base built the 96-field tuple that
+way, so its compiler used `row_copy`, a default row assigned through 29 field indices. The
+48-field `DamageAction` by keyword beats that copy, so the copy is gone.
 
 | scenario | actions | walk median µs | p10-p90 µs | request ms |
 |---|---|---|---|---|
-| crit_onhit_carry_roster | 354 | 2199 | 103 | 34.08 |
-| cleaver_bloodsong_roster | 182 | 1795 | 87 | 19.1 |
-| lethality_window_assassin_roster | 139 | 1216 | 52 | 14.68 |
+| crit_onhit_carry_roster @6ad828b5 | 354 | 2254 | 146 | 34.57 |
+| cleaver_bloodsong_roster @6ad828b5 | 182 | 1833 | 138 | 19.43 |
+| lethality_window_assassin_roster @6ad828b5 | 139 | 1240 | 60 | 15.15 |
+| crit_onhit_carry_roster | 354 | 2203 | 156 | 32.12 |
+| cleaver_bloodsong_roster | 182 | 1821 | 88 | 17.98 |
+| lethality_window_assassin_roster | 139 | 1224 | 118 | 13.93 |
 
 The walk rows time `run_survival_walk` inside a warm `calculate_payload(deterministic=True)`
-over 50 requests, and `request ms` is the whole request's median. The three scenarios carry
-the most damage and ichor heals, damage modifiers beside heals, and the most shields. A
-split must leave these rows where they are.
+over 50 requests, and `request ms` is the whole request's median. The walk reads a field a
+record does not store off the `SurvivalAction` class attribute, no slower than a tuple slot,
+so each walk median stays inside its spread. The requests fall 7 to 8%, the construction they
+no longer pay.
 
 ## Optimizer search: `/api/optimize`
 
