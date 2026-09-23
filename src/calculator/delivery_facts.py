@@ -22,9 +22,9 @@ class PacketIdentity(Protocol):  # pylint: disable=too-few-public-methods
 class PacketFacts(PacketIdentity, Protocol):  # pylint: disable=too-few-public-methods
     """One survival action as the eligibility kernels read it.
 
-    ``survival.actions.SurvivalAction`` is the one production packet; the
-    survival package imports this module, so the kernels name its delivery
-    markers and identity fields structurally.
+    ``survival.typed_action.SurvivalAction``'s records are the production
+    packets; the survival package imports this module, so the kernels name
+    their delivery markers and identity fields structurally.
     """
 
     source: str

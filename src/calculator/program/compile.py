@@ -822,11 +822,8 @@ def revive_candidate_actions(
 
 
 def _support_action(**fields: Any) -> SurvivalAction:
-    """The record of the packet's ``kind``, over the fields that record stores.
-
-    A support template states one field set whatever its kind, and a field
-    its record does not store is one no transition of that kind reads.
-    """
+    """The record of the packet's ``kind`` over the fields it stores; no
+    transition of that kind reads a field the record drops."""
     record = FAMILY_OF[fields["kind"]]
     return record(
         **{name: value for name, value in fields.items() if name in record._fields}

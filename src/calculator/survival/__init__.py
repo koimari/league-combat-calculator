@@ -4,8 +4,10 @@ Package layout (top-level flow: compile -> transition -> accumulate):
 
 * :mod:`typed_action` — the :class:`SurvivalAction`/:class:`ActionKind`
   interface, its live amplification and its trigger linkage;
+* :mod:`action_families` — the record each kind is built as, storing the
+  fields its transitions read;
 * :mod:`actions` — the total order a walk consumes actions in (the shared
-  ordering helpers) and the compiled damage row's field indices;
+  ordering helpers);
 * :mod:`classify` — what an event *is*: its damage and attack class, the
   modifier classes it declares, and its transition rank;
 * :mod:`phases` — when a transition resolves, and what the public timeline

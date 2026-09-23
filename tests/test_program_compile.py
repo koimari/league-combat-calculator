@@ -4,9 +4,9 @@ file-length-ok: the module under test is the one-constructor boundary, and
 one suite per boundary is what keeps its field list provable in one place.
 
 ``program/compile`` is the front door for action construction.  Its claim is
-a location claim first — every ``SurvivalAction(...)`` expression in ``src/``
-is in this module, bar the one declared survivor, which
-``tests/test_program_structure.py`` asserts over the tree — and a
+a location claim first — every expression building an action record in
+``src/`` is in this module, which ``tests/test_program_structure.py`` asserts
+over the tree — and a
 fail-closed claim second: an engine row the kernel cannot stage raises with a
 named receipt rather than compiling a hole.
 

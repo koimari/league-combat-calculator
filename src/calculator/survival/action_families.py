@@ -245,26 +245,16 @@ class StateAction(
     )
 
 
-class WideAction(
-    _record("WideRecord", ActionKind.DAMAGE, frozenset(ACTION_FIELDS)), SurvivalAction
-):
-    """Every field, for the kinds no family record builds yet."""
-
-    __slots__ = ()
-    kinds = frozenset(ActionKind)
-
-
 FAMILIES: tuple[type[SurvivalAction], ...] = (
     DamageAction,
     HealAction,
-    ModifierAction,
-    StateAction,
     BarrierAction,
-    ControlAction,
     StatBuffAction,
+    ModifierAction,
     UtilityAction,
+    ControlAction,
+    StateAction,
 )
 FAMILY_OF: dict[ActionKind, type[SurvivalAction]] = {
-    **dict.fromkeys(ActionKind, WideAction),
-    **{kind: family for family in FAMILIES for kind in family.kinds},
+    kind: family for family in FAMILIES for kind in family.kinds
 }

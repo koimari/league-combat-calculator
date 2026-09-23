@@ -401,9 +401,9 @@ def test_no_float_literal_reaches_a_phase_slot() -> None:
     The population is every phase slot in the kernel package and the
     timeline — action construction, sort-key tuples in all four spellings,
     the phase argument of every definition that takes one, and the
-    comparisons that read a phase back — not just the
-    ``SurvivalAction(phase=)`` keyword, which is one spelling of many and
-    the one a migration notices first.
+    comparisons that read a phase back — not just a record's ``phase=``
+    keyword, which is one spelling of many and the one a migration notices
+    first.
     """
     paths = _population()
     rules = _population_rules(paths)

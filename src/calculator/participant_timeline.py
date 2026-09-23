@@ -2840,8 +2840,8 @@ def _simulate_survival(
     # Allocating after the sort keeps
     # the slot in walk order, so a reader can put a refusal back where the
     # walk made it.  Stamped in place rather than into a second list: an
-    # action is 93 slots wide, and a comprehension holds the original and
-    # the replacement together, doubling the array at the walk's peak.
+    # action is up to 53 slots wide, and a comprehension holds the original
+    # and the replacement together, doubling the array at the walk's peak.
     for slot, action in enumerate(actions):
         actions[slot] = action._replace(aidx=slot)
 
