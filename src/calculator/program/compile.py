@@ -67,6 +67,7 @@ from ..survival.action_families import (
     DamageAction,
     HealAction,
     ModifierAction,
+    StateAction,
     WideAction,
 )
 from ..survival.actions import (
@@ -790,7 +791,7 @@ def revive_candidate_actions(
                 "target": actor.participant_id,
             }
             candidates.append(
-                WideAction(
+                StateAction(
                     sort_key=action_key(
                         candidate_time,
                         TransitionRank.DAMAGE,
