@@ -138,6 +138,9 @@ ignore = [
 "scripts/decompose_binaries.py" = ["BLE001"]
 "scripts/atomize.py" = ["BLE001"]
 "src/metrics.py" = ["BLE001"]
+# PYI024: the action families' fields are computed at import, and only
+# collections.namedtuple takes a computed field list with defaults.
+"src/calculator/survival/action_families.py" = ["PYI024"]
 
 # Arity belongs to sightline #55 (the reason beside PLR0913 above).
 [tool.pylint."messages control"]

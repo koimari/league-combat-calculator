@@ -40,18 +40,43 @@ CORE = (
 # dispatch; ``_DELIVERY`` is what the spell-shield and projectile gates read;
 # ``_PACKET`` is the live packet chain and the resistance a price meets.
 _GATED = frozenset(
-    "rebinds_on_ability_hit defy_trigger_slot cast_blocked_by_attacker_control"
-    " cast_while_disabled".split()
+    (
+        "rebinds_on_ability_hit",
+        "defy_trigger_slot",
+        "cast_blocked_by_attacker_control",
+        "cast_while_disabled",
+    )
 )
 _LATE = frozenset(
-    "deferred deferred_batch_slot reactive cleanse cleanse_item cleanse_group".split()
+    (
+        "deferred",
+        "deferred_batch_slot",
+        "reactive",
+        "cleanse",
+        "cleanse_item",
+        "cleanse_group",
+    )
 )
 _DELIVERY = frozenset(
-    "is_ability basic_attack ability_instance immobilized cc_kind"
-    " skillshot area_damage damage_over_time".split()
+    (
+        "is_ability",
+        "basic_attack",
+        "ability_instance",
+        "immobilized",
+        "cc_kind",
+        "skillshot",
+        "area_damage",
+        "damage_over_time",
+    )
 )
 _PACKET = frozenset(
-    "damage_type declared live_amp baseline_effective_armor baseline_effective_mr".split()
+    (
+        "damage_type",
+        "declared",
+        "live_amp",
+        "baseline_effective_armor",
+        "baseline_effective_mr",
+    )
 )
 
 
@@ -74,9 +99,17 @@ class DamageAction(
         | _DELIVERY
         | _PACKET
         | frozenset(
-            "raw_formula raw_damage grievous wound execute_threshold_ratio"
-            " execute_source redirect_holder_health_ratio redirect_original_damage"
-            " cc_duration".split()
+            (
+                "raw_formula",
+                "raw_damage",
+                "grievous",
+                "wound",
+                "execute_threshold_ratio",
+                "execute_source",
+                "redirect_holder_health_ratio",
+                "redirect_original_damage",
+                "cc_duration",
+            )
         ),
     ),
     SurvivalAction,
@@ -104,12 +137,22 @@ class HealAction(
         | _DELIVERY
         | _PACKET
         | frozenset(
-            "healing_category amplified_recovery amount_formula"
-            " requires_existing_shield requires_maw_lifeline_omnivamp"
-            " shield_gate_subject shield_gate_time requires_holder_health_ratio"
-            " requires_damage_free_seconds overheal_to_temporary_health"
-            " temporary_health_duration overheal_to_shield overheal_shield_cap"
-            " overheal_shield_duration".split()
+            (
+                "healing_category",
+                "amplified_recovery",
+                "amount_formula",
+                "requires_existing_shield",
+                "requires_maw_lifeline_omnivamp",
+                "shield_gate_subject",
+                "shield_gate_time",
+                "requires_holder_health_ratio",
+                "requires_damage_free_seconds",
+                "overheal_to_temporary_health",
+                "temporary_health_duration",
+                "overheal_to_shield",
+                "overheal_shield_cap",
+                "overheal_shield_duration",
+            )
         ),
     ),
     SurvivalAction,
@@ -131,8 +174,13 @@ class BarrierAction(
         | _DELIVERY
         | _PACKET
         | frozenset(
-            "amount_formula duration shield_pool crowd_control_immunity_while_shield"
-            " crowd_control_immunity_source".split()
+            (
+                "amount_formula",
+                "duration",
+                "shield_pool",
+                "crowd_control_immunity_while_shield",
+                "crowd_control_immunity_source",
+            )
         ),
     ),
     SurvivalAction,
@@ -149,9 +197,17 @@ class StatBuffAction(
         ActionKind.STAT_BUFF,
         _GATED
         | frozenset(
-            "duration bonus_attack_speed_percent bonus_move_speed_percent"
-            " bonus_armor bonus_magic_resistance bonus_health ability_power"
-            " ability_haste on_hit_magic_damage".split()
+            (
+                "duration",
+                "bonus_attack_speed_percent",
+                "bonus_move_speed_percent",
+                "bonus_armor",
+                "bonus_magic_resistance",
+                "bonus_health",
+                "ability_power",
+                "ability_haste",
+                "on_hit_magic_damage",
+            )
         ),
     ),
     SurvivalAction,
@@ -168,10 +224,21 @@ class ModifierAction(
         ActionKind.DAMAGE_MODIFIER,
         _GATED
         | frozenset(
-            "duration persistent multiplier damage_reduction next_event_only"
-            " all_sources armor_reduction_percent mr_reduction_percent"
-            " resistance_type holder damage_classes attack_classes"
-            " source_participant".split()
+            (
+                "duration",
+                "persistent",
+                "multiplier",
+                "damage_reduction",
+                "next_event_only",
+                "all_sources",
+                "armor_reduction_percent",
+                "mr_reduction_percent",
+                "resistance_type",
+                "holder",
+                "damage_classes",
+                "attack_classes",
+                "source_participant",
+            )
         ),
     ),
     SurvivalAction,
@@ -188,8 +255,15 @@ class UtilityAction(
         ActionKind.UTILITY,
         _GATED
         | frozenset(
-            "cleanse cleanse_item cleanse_group duration duration_set"
-            " next_event_only utility_kind".split()
+            (
+                "cleanse",
+                "cleanse_item",
+                "cleanse_group",
+                "duration",
+                "duration_set",
+                "next_event_only",
+                "utility_kind",
+            )
         ),
     ),
     SurvivalAction,
@@ -208,8 +282,13 @@ class ControlAction(
         | _LATE
         | _DELIVERY
         | frozenset(
-            "damage_type baseline_effective_armor baseline_effective_mr"
-            " cc_duration duration".split()
+            (
+                "damage_type",
+                "baseline_effective_armor",
+                "baseline_effective_mr",
+                "cc_duration",
+                "duration",
+            )
         ),
     ),
     SurvivalAction,
@@ -225,8 +304,14 @@ class StateAction(
         "StateRecord",
         ActionKind.STASIS,
         frozenset(
-            "duration delay health_ratio on_block_heal_amount on_block_heal_delay"
-            " on_block_heal_source".split()
+            (
+                "duration",
+                "delay",
+                "health_ratio",
+                "on_block_heal_amount",
+                "on_block_heal_delay",
+                "on_block_heal_source",
+            )
         ),
     ),
     SurvivalAction,
