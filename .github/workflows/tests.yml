@@ -123,6 +123,36 @@ jobs:
           LCC_CI_STRICT: "1"
           LCC_CI_CENSUS_SHARD: ${{ matrix.shard }}/4
 
+  property-sweep:
+    # Rules every fight obeys (a longer fight never deals less, more armour
+    # never deals more, a traced fight sums to its total, ...) over every
+    # champion bare and in a seeded random legal build.
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Sweep the fight properties (shard ${{ matrix.shard }}/4)
+        run: bash ci/property_sweep.sh
+        env:
+          LCC_CI_PYTHON: python
+          LCC_CI_STRICT: "1"
+          LCC_CI_SWEEP_SHARD: ${{ matrix.shard }}/4
+
   container:
     runs-on: ubuntu-latest
 
