@@ -259,6 +259,7 @@ FAMILIES: tuple[type[SurvivalAction], ...] = (
     HealAction,
     ModifierAction,
     StateAction,
+    BarrierAction,
 )
 FAMILY_OF: dict[ActionKind, type[SurvivalAction]] = {
     **dict.fromkeys(ActionKind, WideAction),

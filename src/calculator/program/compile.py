@@ -64,6 +64,7 @@ from ..resistance import (
 from ..survival.action_families import (
     CORE,
     FAMILY_OF,
+    BarrierAction,
     DamageAction,
     HealAction,
     ModifierAction,
@@ -2229,7 +2230,7 @@ def grey_health_shield_action(
     walks stage one press identically (Tahm Kench's Thick Skin active).
     """
     event_id = f"main:grey:{source}:shield:{index}"
-    return WideAction(
+    return BarrierAction(
         sort_key=action_key(
             float(grant_time),
             TransitionRank.LATE_BARRIER,
@@ -2247,7 +2248,6 @@ def grey_health_shield_action(
         source=str(source),
         event_slot=EVENT_SLOTS.slot(event_id),
         duration=float(duration),
-        duration_set=True,
     )
 
 
