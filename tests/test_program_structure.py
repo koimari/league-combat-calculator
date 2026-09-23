@@ -4,9 +4,8 @@ Four properties this phase claims about the *tree* rather than about any
 one module, each asserted here because none of them belongs to a module's
 own front door:
 
-* **One constructor** (criterion 2).  Every ``SurvivalAction(...)``
-  expression in ``src/`` is in ``program/compile.py``, bar the one declared
-  survivor.
+* **One constructor** (criterion 2).  Every expression building an action
+  record in ``src/`` is in ``program/compile.py``.
 * **One direction.**  ``program -> survival`` and never back, so the kernel
   keeps a hot loop that cannot dispatch on a logical type.
 * **One allocation budget.**  The coupled evaluation is where allocation
@@ -38,9 +37,8 @@ SURVIVAL = SRC / "survival"
 PROGRAM = SRC / "program"
 FINGERPRINTS = ROOT / "docs" / "receipts" / "campaign-fingerprints.json"
 
-# Where the one constructor lives, and the one expression allowed outside it.
+# Where the one constructor lives.
 CONSTRUCTOR_HOME = "calculator/program/compile.py"
-DECLARED_SURVIVOR = "calculator/survival/actions.py"
 
 #: Every record an action is built as, read off the module declaring them.
 RECORDS = tuple(
@@ -118,7 +116,7 @@ class TestOneConstructor:
         outside = {
             path: count for path, count in sites.items() if path != CONSTRUCTOR_HOME
         }
-        assert outside == {DECLARED_SURVIVOR: 1}
+        assert outside == {}
 
     def test_the_home_actually_constructs(self) -> None:
         """A home with no expressions in it would pass the test above vacuously."""
@@ -176,9 +174,8 @@ class TestTheAllocationBudget:
 
         S4 trades per-fight dict churn for cached frozen records, which is
         why allocation is gated here and nowhere else.  If this
-        cannot hold, the declared fallback is to keep ``compiled_damage_action``
-        as the compiler's inner loop and treat the program as a build-time
-        artifact -- never to widen the margin.
+        cannot hold, the declared fallback is to treat the program as a
+        build-time artifact -- never to widen the margin.
         """
         from scripts.bench_coupled_optimizer import allocation_probe
 

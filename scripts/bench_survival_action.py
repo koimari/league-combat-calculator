@@ -1,9 +1,9 @@
-"""What the 96-field ``SurvivalAction`` costs: the numbers ``benchmarks.md`` holds.
+"""What an action record costs: the numbers ``benchmarks.md`` holds.
 
 Every input is a real action read from a named golden scenario's walk, so a
 row prices values the engine produced rather than a hand-typed tuple.  Three
-tables: construction per ``ActionKind`` group, the fast damage constructor
-against the keyword call it replaces, and the walk itself per scenario.
+tables: construction per ``ActionKind`` group, the score compiler's damage
+construction, and the walk itself per scenario.
 
 Usage:
     python scripts/bench_survival_action.py                          # tables
@@ -13,7 +13,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import inspect
+import ast
 import statistics
 import subprocess
 import sys
@@ -30,15 +30,18 @@ sys.path.insert(0, str(ROOT))
 from scripts.golden_snapshot import COUPLED_SCENARIOS
 from src.calculator.calculate import calculate_payload
 from src.calculator.program import walk as walk_module
-from src.calculator.survival.action_families import WideAction
-from src.calculator.survival.actions import compiled_damage_action
-from src.calculator.survival.typed_action import ActionKind, SurvivalAction
+from src.calculator.survival.action_families import DamageAction
+from src.calculator.survival.typed_action import (
+    ACTION_FIELDS,
+    ActionKind,
+    SurvivalAction,
+)
 
 REPEATS = 15
 NUMBER = 20_000
 WALK_REPEATS = 50
 
-#: The split's target groups; every kind maps to one, so a new kind raises here.
+#: The audit's kind groups; every kind maps to one, so a new kind raises here.
 GROUPS = {
     "damage": ("PLAIN_DAMAGE", "DAMAGE", "EXECUTE", "DEFER", "REDIRECT"),
     "heal": ("HEAL", "OVERHEAL_SHIELD", "ICHOR_CONVERT"),
@@ -76,7 +79,7 @@ WALK_SCENARIOS = (
     "lethality_window_assassin_roster",
 )
 
-CONSTRUCTORS = ("row_copy", "keywords", "narrow")
+CONSTRUCTORS = ("keywords", "narrow")
 
 TABLES = {
     "construction": (
@@ -98,8 +101,8 @@ MEDIAN_COLUMN = {
 }
 
 _GOLDEN = {scenario.name: scenario.request for scenario in COUPLED_SCENARIOS}
-_DEFAULT = WideAction()
 _REAL_WALK = walk_module.run_survival_walk
+_COMPILER = ROOT / "src" / "calculator" / "program" / "compile.py"
 
 
 def walked(scenario: str) -> tuple[list[SurvivalAction], float, float]:
@@ -123,11 +126,12 @@ def walked(scenario: str) -> tuple[list[SurvivalAction], float, float]:
 
 
 def set_fields(action: SurvivalAction) -> dict[str, Any]:
-    """The fields this action holds away from the class default."""
+    """The fields this action holds away from their neutral value."""
+    neutral = {name: getattr(SurvivalAction, name) for name in action._fields}
     return {
         name: value
-        for name, value, default in zip(action._fields, action, _DEFAULT, strict=True)
-        if value is not default and value != default
+        for name, value in zip(action._fields, action, strict=True)
+        if value is not neutral[name] and value != neutral[name]
     }
 
 
@@ -147,16 +151,15 @@ def narrow_type(fields: Mapping[str, Any]) -> type:
 
 def per_call_us(
     call: Callable[..., object],
-    args: Sequence[object],
     kwargs: Mapping[str, object],
     *,
     repeats: int,
     number: int,
 ) -> float:
-    """Median over ``repeats`` of ``number`` calls, in µs per call."""
+    """Median over ``repeats`` of ``number`` keyword calls, in µs per call."""
     readings = timeit.repeat(
-        "call(*args, **kwargs)",
-        globals={"call": call, "args": tuple(args), "kwargs": dict(kwargs)},
+        "call(**kwargs)",
+        globals={"call": call, "kwargs": dict(kwargs)},
         repeat=repeats,
         number=number,
     )
@@ -166,46 +169,52 @@ def per_call_us(
 def construction_row(
     group: str, scenario: str, action: SurvivalAction, *, repeats: int, number: int
 ) -> dict[str, Any]:
-    """One group's action built wide by every keyword, wide by its set ones, and narrow."""
+    """One group's action built by every stored field, by its set ones, and narrow."""
     held = set_fields(action)
     timing = {"repeats": repeats, "number": number}
+    record = type(action)
     return {
         "group": group,
         "scenario": scenario,
         "set fields": len(held),
-        "all-kw µs": per_call_us(WideAction, (), action._asdict(), **timing),
-        "set-kw µs": per_call_us(WideAction, (), held, **timing),
-        "narrow µs": per_call_us(narrow_type(held), (), held, **timing),
+        "all-kw µs": per_call_us(record, action._asdict(), **timing),
+        "set-kw µs": per_call_us(record, held, **timing),
+        "narrow µs": per_call_us(narrow_type(held), held, **timing),
     }
+
+
+def compiled_damage_fields() -> tuple[str, ...]:
+    """The keywords the score compiler builds a ``DamageAction`` with, read off its call."""
+    tree = ast.parse(_COMPILER.read_text(encoding="utf-8"))
+    compile_pair = next(
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.FunctionDef) and node.name == "_compile_pair"
+    )
+    call = next(
+        node
+        for node in ast.walk(compile_pair)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "DamageAction"
+    )
+    return tuple(keyword.arg for keyword in call.keywords if keyword.arg)
 
 
 def constructor_rows(
     action: SurvivalAction, *, repeats: int, number: int
 ) -> list[dict[str, Any]]:
-    """The fast damage constructor against the keyword call it states it equals."""
-    parameters = inspect.signature(compiled_damage_action).parameters.values()
-    positional = [
-        getattr(action, p.name) for p in parameters if p.kind is p.POSITIONAL_OR_KEYWORD
-    ]
-    keywords = {
-        p.name: getattr(action, p.name) for p in parameters if p.kind is p.KEYWORD_ONLY
-    }
-    every = {p.name: getattr(action, p.name) for p in parameters}
-    if compiled_damage_action(*positional, **keywords) != WideAction(**every):
-        raise RuntimeError("compiled_damage_action no longer builds the keyword tuple")
+    """The score compiler's damage construction, and the narrow type of its fields."""
+    every = {name: getattr(action, name) for name in compiled_damage_fields()}
     timing = {"repeats": repeats, "number": number}
-    readings = (
-        (compiled_damage_action, positional, keywords),
-        (WideAction, (), every),
-        (narrow_type(every), (), every),
-    )
+    readings = ((DamageAction, every), (narrow_type(every), every))
     return [
         {
             "constructor": name,
             "fields": len(every),
-            "µs": per_call_us(call, args, kwargs, **timing),
+            "µs": per_call_us(call, kwargs, **timing),
         }
-        for name, (call, args, kwargs) in zip(CONSTRUCTORS, readings, strict=True)
+        for name, (call, kwargs) in zip(CONSTRUCTORS, readings, strict=True)
     ]
 
 
@@ -234,7 +243,8 @@ def bench(
         scenario: walked(scenario)[0]
         for scenario in dict.fromkeys(s for _, s in CONSTRUCTION_INPUTS)
     }
-    held = [set_fields(a) for actions in sources.values() for a in actions]
+    walked_actions = [a for actions in sources.values() for a in actions]
+    held = [set_fields(a) for a in walked_actions]
     damage = representative(sources[CONSTRUCTION_INPUTS[0][1]], "damage")
     return {
         "construction": [
@@ -253,8 +263,9 @@ def bench(
         ],
         "census": {
             "actions": len(held),
+            "median stored": statistics.median(len(a) for a in walked_actions),
             "median set fields": statistics.median(map(len, held)),
-            "never set": len(set(WideAction._fields).difference(*held)),
+            "never set": len(set(ACTION_FIELDS).difference(*held)),
         },
     }
 
@@ -271,7 +282,8 @@ def markdown(report: Mapping[str, Any]) -> str:
     census = report["census"]
     lines = [
         f"CPython {sys.version.split()[0]} at {head or 'unknown'}; "
-        f"{len(WideAction._fields)} fields, {census['actions']} walked actions, "
+        f"{len(ACTION_FIELDS)} fields, {census['actions']} walked actions, "
+        f"median {census['median stored']} stored, "
         f"median {census['median set fields']} set, {census['never set']} never set",
     ]
     for table, columns in TABLES.items():

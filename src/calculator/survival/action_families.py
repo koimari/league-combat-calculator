@@ -254,7 +254,7 @@ class WideAction(
     kinds = frozenset(ActionKind)
 
 
-FAMILIES: tuple[type[SurvivalAction], ...] = ()
+FAMILIES: tuple[type[SurvivalAction], ...] = (DamageAction,)
 FAMILY_OF: dict[ActionKind, type[SurvivalAction]] = {
     **dict.fromkeys(ActionKind, WideAction),
     **{kind: family for family in FAMILIES for kind in family.kinds},

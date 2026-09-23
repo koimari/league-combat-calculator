@@ -33,7 +33,6 @@ from src.calculator.survival import classify, phases
 from src.calculator.survival.action_families import DamageAction
 from src.calculator.survival.actions import (
     action_key,
-    compiled_damage_action,
     event_timestamp,
 )
 from src.calculator.survival.classify import (
@@ -172,18 +171,18 @@ def test_the_sort_key_carries_the_slot_and_not_the_rank() -> None:
 #      ``<something>.phase``;
 #   5. the *default* of a class field named ``phase``.  A default is a slot
 #      every constructor that omits the field fills, which makes it the
-#      widest one in the tree rather than the narrowest:
-#      ``compiled_damage_action`` deliberately assigns no phase, so
-#      ``SurvivalAction``'s class default is where every compiled damage
+#      widest one in the tree rather than the narrowest: the score
+#      compiler builds its damage actions with no phase, so
+#      ``SurvivalAction``'s neutral rank is where every compiled damage
 #      action in the hot path gets its phase from.
 #
 # **Shapes 2 and 3 read their positions from the definitions, never from a
 # list of names.**  The first version of this guard typed out five callee
-# names and asserted the tree was clean; ``compiled_damage_action`` was not
-# among them, so the two hot-path sort keys ``compile.py`` hands it
-# positionally were counted as absent by the very rule that existed to find
-# them.  A guard whose population is enumerated by its own blind spot is
-# green over nothing, which is the failure it exists to catch.
+# names and asserted the tree was clean, so a sort key handed positionally to
+# a callee missing from the list was counted as absent by the very rule
+# that existed to find it.  A guard whose population is enumerated by its
+# own blind spot is green over nothing, which is the failure it exists to
+# catch.
 # ``_slot_rules`` therefore derives the index of a ``phase`` parameter and of
 # a ``sort_key`` parameter from every ``def`` and every NamedTuple field
 # list in the population, so a positional call is a slot whether or not
@@ -393,10 +392,7 @@ def test_the_positional_phase_slots_are_read_from_the_definitions() -> None:
         "classify_event_kind": 1,
         "classify_prefetched": 1,
     }
-    assert dict(rules.sort_key_arg) == {
-        "SurvivalAction": 0,
-        "compiled_damage_action": 0,
-    }
+    assert dict(rules.sort_key_arg) == {"SurvivalAction": 0}
 
 
 def test_no_float_literal_reaches_a_phase_slot() -> None:
@@ -418,41 +414,15 @@ def test_no_float_literal_reaches_a_phase_slot() -> None:
 
 
 def test_the_compiled_hot_path_arms_at_the_damage_rank() -> None:
-    """The widest phase slot: a class default nothing overwrites.
+    """The widest phase slot: a default nothing overwrites.
 
-    ``compiled_damage_action`` assigns no phase — there is no ``_I_PHASE``
-    index — so every damage action the optimizer compiles takes
-    :class:`SurvivalAction`'s class default.  Asserting both halves is what
-    keeps that shortcut honest: if the default ever stops being the damage
-    rank, this fails instead of the compiled score path quietly arming its
-    damage somewhere the receipt walk does not.
+    The score compiler builds its damage actions without a ``phase``, so each
+    takes ``DamageAction``'s default, which is :class:`SurvivalAction`'s
+    neutral rank.  If that stops being the damage rank, this fails instead of
+    the compiled score path arming its damage where the receipt walk does not.
     """
-    action = compiled_damage_action(
-        (0.0, TransitionRank.DAMAGE, 0),
-        0.0,
-        ActionKind.PLAIN_DAMAGE,
-        0,
-        attacker=1,
-        aidx=0,
-        amount=10.0,
-        damage_type="physical",
-        raw_formula=None,
-        raw_damage=10.0,
-        grievous=None,
-        wound=None,
-        source_key="source_key",
-        source="Source",
-        event_slot="event:1",
-        sequence=0,
-        live_amp=None,
-        declared=None,
-        is_ability=False,
-        basic_attack=False,
-        baseline_effective_armor=None,
-        baseline_effective_mr=None,
-    )
-    assert action.phase is TransitionRank.DAMAGE
     assert DamageAction().phase is TransitionRank.DAMAGE
+    assert SurvivalAction.phase is TransitionRank.DAMAGE
 
 
 def test_the_phase_slot_guard_sees_every_spelling(tmp_path: Path) -> None:
@@ -463,13 +433,13 @@ def test_the_phase_slot_guard_sees_every_spelling(tmp_path: Path) -> None:
             (
                 # The definitions shapes 2 and 3 read their positions from.
                 "def action_key(event_time, phase, participant_id, event):\n    pass",
-                "def compiled_damage_action(sort_key, time, kind):\n    pass",
+                "def compiled_action(sort_key, time, kind):\n    pass",
                 "SurvivalAction(phase=1.0)",
                 "action_key(t, 0.5, who, event)",
                 "SurvivalAction(sort_key=(t, 1.0, s))",
                 "sort_key = (t, 0.5, s)",
                 "sorted(rows, key=lambda row: (row.t, -1.0, row.id))",
-                "compiled_damage_action((t, 0.0, seq), time, kind)",
+                "compiled_action((t, 0.0, seq), time, kind)",
                 "if phase == -1:\n    pass",
                 "priority = -1.0 if kind == 'shield' else 1.0",
                 "SurvivalAction(phase=priority)",
@@ -518,7 +488,7 @@ def test_support_kinds_classify_to_their_ladder_rank() -> None:
 def test_the_action_carries_a_rank_and_not_a_float() -> None:
     """The phase field's type is the vocabulary, not a number.
 
-    ``SurvivalAction`` is a NamedTuple under ``from __future__ import
+    ``SurvivalAction`` is annotated under ``from __future__ import
     annotations``, so the annotation is the deferred source text — which is
     exactly what a reader greps for when asking what a phase *is*.
     """

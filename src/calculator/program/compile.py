@@ -1,23 +1,10 @@
-"""The one ``SurvivalAction`` constructor in ``src/``.
+"""The one place ``src/`` builds a survival action.
 
-Nine construction expressions built the kernel's action tuple before this
-stage: two in ``survival/actions``, six in ``survival/compile`` and one in
-``participant_timeline``.  Nine constructors are nine chances for two of them
-to disagree about a field, and they did -- the receipt adapter and the score
-compiler each rebuilt the same sort key by hand, in two spellings, and a
-phase written as a float at one of them was invisible at the other.  A
-mechanic priced by one engine and not the other is what that disagreement
-costs.
-
-So construction lives here, once.  ``scripts/behavior_frontier.py`` counts
-``SurvivalAction(...)`` expressions **outside this file**, and its target is
-one: ``survival/actions``'s ``_ACTION_DEFAULT_ROW``, the fast constructor's
-default row, which is a declared performance fallback.
-
-Outside, and only outside — so the arithmetic is worth stating plainly, since
-"nine become one" reads as a subtraction and is not one.  What the counter
-buys is a single place to change a field, not fewer places that build the
-tuple.
+Every action is one of the records in ``survival/action_families``, and
+every expression building one is in this module:
+``tests/test_program_structure.py`` counts those outside it, and the count
+is zero.  One home for construction is one place to change a field, so the
+receipt adapter and the score compiler cannot stamp one differently.
 
 Three builders:
 
@@ -74,10 +61,9 @@ from ..resistance import (
     apply_magic_penetration,
     apply_resistance,
 )
-from ..survival.action_families import CORE, FAMILY_OF, WideAction
+from ..survival.action_families import CORE, FAMILY_OF, DamageAction, WideAction
 from ..survival.actions import (
     action_key,
-    compiled_damage_action,
     event_sequence,
     participant_order,
 )
@@ -110,19 +96,6 @@ from ..survival.typed_action import ActionKind, SurvivalAction
 from ..trigger_stream import HolderStacking, is_immobilizing_event
 from .amp import NO_AMPS, AmpRiders, live_amp_for
 from .capability import arming_stacking, dropped_pair_previews, pair_preview_sources
-
-# Kinds a compiled damage action may carry; a revive candidate is authored
-# beside each of them.  Moved here with ``revive_candidate_actions``, which is
-# its only reader.
-_DAMAGE_ACTION_KINDS = frozenset(
-    {
-        ActionKind.PLAIN_DAMAGE,
-        ActionKind.DAMAGE,
-        ActionKind.EXECUTE,
-        ActionKind.DEFER,
-        ActionKind.REDIRECT,
-    }
-)
 
 
 class PairFight(NamedTuple):
@@ -520,12 +493,7 @@ def _wound(event: Mapping[str, Any], _index_of: Mapping[str, int]) -> Any:
 
 
 def _immobilized(event: Mapping[str, Any], _index_of: Mapping[str, int]) -> bool:
-    """The bus's immobilize answer, with the bare ``crowd_control`` marker.
-
-    The marker stays a disjunct: the bus classifies it
-    ``UNCLASSIFIED_CONTROL``, and narrowing Steadfast to reject it would move
-    a number.
-    """
+    """The bus's immobilize answer, or the bare marker it leaves unclassified."""
     return is_immobilizing_event(event) or bool(event.get("crowd_control"))
 
 
@@ -793,7 +761,7 @@ def revive_candidate_actions(
             continue
         revive_amount, revive_delay, revive_source, revive_key = revive
         for action in actions:
-            if action.subject != actor_index or action.kind not in _DAMAGE_ACTION_KINDS:
+            if action.subject != actor_index or action.kind not in DamageAction.kinds:
                 continue
             if action.amount <= 0.0:
                 continue
@@ -1206,18 +1174,23 @@ class WalkCompiler:
                 source,
             )
             if staging:
+                # ``live_amp``, ``declared``, the two delivery flags and the
+                # two resistance baselines are stated even at their neutral
+                # values: each neutral is also an answer, and a packet built
+                # without one would score a term missing.  ``phase`` is the
+                # record's damage-rank default.
                 actions_append(
-                    compiled_damage_action(
-                        sort_key,
-                        time_value,
-                        (
+                    DamageAction(
+                        sort_key=sort_key,
+                        time=time_value,
+                        kind=(
                             ActionKind.PLAIN_DAMAGE
                             if live_formula is None
                             and grievous is None
                             and wound is None
                             else ActionKind.DAMAGE
                         ),
-                        defender_i,
+                        subject=defender_i,
                         attacker=attacker_i,
                         aidx=aidx,
                         amount=damage,
@@ -1806,7 +1779,7 @@ class WalkCompiler:
                     f"{profile.item_name} (Thorns)",
                 )
                 actions.append(
-                    WideAction(
+                    DamageAction(
                         sort_key=sort_key,
                         time=strike_time,
                         phase=TransitionRank.REACTIVE,
@@ -1994,7 +1967,7 @@ def stage_knights_vow_redirect_actions(
     for action in compiler.actions:
         if (
             action.subject != target_i
-            or action.kind not in _DAMAGE_ACTION_KINDS
+            or action.kind not in DamageAction.kinds
             or action.amount <= 0.0
             or action.deferred
             or action.redirected
@@ -2068,7 +2041,7 @@ def stage_knights_vow_redirect_actions(
         )
         holder_resistance = holder_share.effective_resistance
         child_text = f"{EVENT_SLOTS.text(action.event_slot)}:redirect"
-        child = WideAction(
+        child = DamageAction(
             sort_key=action_key(
                 float(action.time),
                 TransitionRank.REACTIVE,
@@ -2155,7 +2128,7 @@ def stage_knights_vow_heals(
     for action in compiler.actions:
         if (
             action.attacker != target_i
-            or action.kind not in _DAMAGE_ACTION_KINDS
+            or action.kind not in DamageAction.kinds
             or action.amount <= 0.0
             or str(action.damage_type) not in {"physical", "magic", "true"}
         ):

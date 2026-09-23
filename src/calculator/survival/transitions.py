@@ -90,6 +90,7 @@ from ..spell_shield_eligibility import (
 )
 from ..state_timeline import SourceReceipt
 from . import pricing
+from .action_families import DamageAction
 from .actions import action_key
 from .classify import attack_class_of, damage_class_of, declared_modifier_classes
 from .event_slots import EVENT_SLOTS, NO_SLOT
@@ -2517,7 +2518,7 @@ def _apply_live_packet_chain(
     event = action.event
     raw_amount = action.amount if event is None else event.get("damage", action.amount)
     amount = max(0.0, float(raw_amount or 0.0))
-    if action.kind in _DAMAGE_KINDS and (
+    if action.kind in DamageAction.kinds and (
         ctx.stack_flags[action.subject]
         or state.get("aftershock_until", 0.0) > action.time
     ):
@@ -2591,7 +2592,7 @@ def _apply_live_packet_chain(
                 state["incoming_damage_cooldown_until"],
                 action.time + state["incoming_damage_cooldown"],
             )
-    if action.live_amp is not None and action.kind in _DAMAGE_KINDS:
+    if action.live_amp is not None and action.kind in DamageAction.kinds:
         amount = _apply_live_amp(ctx, action, state, amount)
     return amount
 
@@ -3721,17 +3722,6 @@ def _apply_damage(
         # resurrection stasis here is what makes the scheduled candidate
         # eligible, so a Rebirth still on cooldown is a plain death.
         arm_revive_stasis(state, float(event_time))
-
-
-_DAMAGE_KINDS = frozenset(
-    {
-        ActionKind.PLAIN_DAMAGE,
-        ActionKind.DAMAGE,
-        ActionKind.EXECUTE,
-        ActionKind.DEFER,
-        ActionKind.REDIRECT,
-    }
-)
 
 
 def _rebind_self_shields(
