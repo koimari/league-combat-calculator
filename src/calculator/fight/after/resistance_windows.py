@@ -21,6 +21,7 @@ from ...survival.pricing import AuthoredDeclaration, restate_declaration
 from ..ledger.breakdown import source_event_phase, source_total_damage
 from ..ledger.event_rows import _finite_numeric_receipt
 from ..resists import Resists
+from ..results import ShredDeclaration
 from ..setup.target_debuffs import _apply_target_shred
 from ..state import FightState
 
@@ -76,44 +77,55 @@ def _hit_times(row: Any) -> list[float]:
     return sorted(time for time in times if time is not None)
 
 
-def _shred_windows(state: FightState) -> list[_Shred]:
-    """Each declared shred's windows, opened by the hits of its own row.
+def _windows_of(
+    declaration: ShredDeclaration, hits: list[float]
+) -> tuple[_ShredWindow, ...]:
+    """One shred's windows, opened by the hits of its own row.
 
     A cast's window opens at its first hit, a threshold shred's at the hit that
     reaches the threshold (Garen E), and a stacking shred lands one stack per
     hit up to its cap (Corki Q); a row with no timed hits opens at its casts.
     """
-    shreds: dict[str, _Shred] = {}
-    for declaration in state.shred_declarations:
-        debuff = declaration.debuff
-        duration = float(ability_field(debuff, "duration", form="target_debuff"))
-        span = duration if duration > 0.0 else math.inf
-        threshold = int(ability_field(debuff, "threshold_hits", form="target_debuff"))
-        stacks = int(ability_field(debuff, "stacks", form="target_debuff"))
-        hits = _hit_times(state.breakdown.get(declaration.source_key))
-        openings = sorted(declaration.opening_times)
-        windows: list[_ShredWindow] = []
-        for index, opening in enumerate(openings):
-            following = openings[index + 1] if index + 1 < len(openings) else math.inf
-            cast_hits = [
-                hit
-                for hit in hits
-                if opening - _TIME_EPSILON <= hit < following - _TIME_EPSILON
-            ] or [opening]
-            if threshold > 0:
-                if len(cast_hits) >= threshold:
-                    applied = cast_hits[threshold - 1]
-                    windows.append(_ShredWindow(applied, applied + span, 1.0))
-            elif stacks > 0:
-                windows.extend(
-                    _ShredWindow(hit, hit + span, count / stacks)
-                    for count, hit in enumerate(cast_hits[:stacks], 1)
-                )
-            else:
-                windows.append(_ShredWindow(cast_hits[0], cast_hits[0] + span, 1.0))
-        shreds[declaration.source_key] = _Shred(
-            declaration.source_key, debuff, tuple(windows)
+    debuff = declaration.debuff
+    duration = float(ability_field(debuff, "duration", form="target_debuff"))
+    span = duration if duration > 0.0 else math.inf
+    threshold = int(ability_field(debuff, "threshold_hits", form="target_debuff"))
+    stacks = int(ability_field(debuff, "stacks", form="target_debuff"))
+    openings = sorted(declaration.opening_times)
+    windows: list[_ShredWindow] = []
+    for opening, following in zip(openings, [*openings[1:], math.inf]):
+        cast_hits = [
+            hit
+            for hit in hits
+            if opening - _TIME_EPSILON <= hit < following - _TIME_EPSILON
+        ] or [opening]
+        if threshold > 0:
+            windows.extend(
+                _ShredWindow(hit, hit + span, 1.0)
+                for hit in cast_hits[threshold - 1 : threshold]
+            )
+        elif stacks > 0:
+            windows.extend(
+                _ShredWindow(hit, hit + span, count / stacks)
+                for count, hit in enumerate(cast_hits[:stacks], 1)
+            )
+        else:
+            windows.append(_ShredWindow(cast_hits[0], cast_hits[0] + span, 1.0))
+    return tuple(windows)
+
+
+def _shred_windows(state: FightState) -> list[_Shred]:
+    """Every declared shred with the windows its row's hits opened."""
+    shreds = {
+        declaration.source_key: _Shred(
+            declaration.source_key,
+            declaration.debuff,
+            _windows_of(
+                declaration, _hit_times(state.breakdown.get(declaration.source_key))
+            ),
         )
+        for declaration in state.shred_declarations
+    }
     return [shred for shred in shreds.values() if shred.windows]
 
 
@@ -182,7 +194,7 @@ def _lethality_at(
             )
         )
         later_event = (
-            time > window["trigger_time"] and time <= window["end_time"] + _TIME_EPSILON
+            window["trigger_time"] < time <= window["end_time"] + _TIME_EPSILON
         )
         if same_time_trigger or later_event:
             extra += float(window["amount"])
@@ -268,82 +280,99 @@ def _met_resistance(event: Mapping[str, Any]) -> float | None:
     return None if met is None else float(met)
 
 
+class _Pricing:
+    """The fight's windows, and what one timed packet meets under them."""
+
+    def __init__(
+        self,
+        resists: Resists,
+        shreds: list[_Shred],
+        lethality: list[dict[str, Any]],
+    ) -> None:
+        self.shreds = shreds
+        self.lethality = lethality
+        self.live = _LiveResistance(resists)
+        self.shredding = {
+            damage_class: tuple(
+                index
+                for index, shred in enumerate(shreds)
+                if _reduces(shred.debuff, resistance)
+            )
+            for damage_class, resistance in (("physical", "armor"), ("magic", "mr"))
+        }
+        self.kept = 0
+
+    def reprice(self, source_key: str, row: Mapping[str, Any], event: dict) -> float:
+        """Re-price one packet at its live resistance; what its damage moved by."""
+        damage_class = event.get("damage_type")
+        shredding = self.shredding.get(damage_class)
+        time = _finite_numeric_receipt(event.get("time"))
+        damage = _finite_numeric_receipt(event.get("damage"))
+        if shredding is None or time is None or damage is None or damage <= 0.0:
+            return 0.0
+        extra, granting = (
+            _lethality_at(self.lethality, source_key, row, time)
+            if damage_class == "physical"
+            else (0.0, [])
+        )
+        if not shredding and extra <= 0.0:
+            return 0.0
+        met = _met_resistance(event)
+        if met is None or not self.live.met_served_pipeline(damage_class, met):
+            self.kept += 1
+            return 0.0
+        active = tuple(
+            (index, self.shreds[index].debuff, fraction)
+            for index in shredding
+            if (fraction := self.shreds[index].fraction_at(source_key, time)) > 0.0
+        )
+        meets = self.live.at(damage_class, active, extra)
+        repriced = rescale_mitigated(damage, met, meets)
+        if abs(meets - met) <= _MATCH_TOLERANCE or not math.isfinite(repriced):
+            return 0.0
+        event["damage"] = repriced
+        event["resistance_met"] = meets
+        restate_declaration(event, resistance=meets)
+        for window in granting:
+            window["applied_count"] += 1
+        return repriced - damage
+
+
+def _reprice_row(pricing: _Pricing, source_key: str, row: dict[str, Any]) -> float:
+    """Re-price one row's timed packets; what its total moved by."""
+    row_delta = 0.0
+    by_type = row.get("damage_by_type")
+    for event in row["damage_events"]:
+        if not isinstance(event, dict):
+            continue
+        delta = pricing.reprice(source_key, row, event)
+        if not delta:
+            continue
+        row_delta += delta
+        if isinstance(by_type, dict) and event["damage_type"] in by_type:
+            by_type[event["damage_type"]] = float(by_type[event["damage_type"]]) + delta
+    if row_delta:
+        priced = source_total_damage(row)
+        row["total_damage"] = row_delta if priced is None else priced + row_delta
+        if "damage_per_hit" in row and row.get("count"):
+            row["damage_per_hit"] = float(row["total_damage"]) / float(row["count"])
+    return row_delta
+
+
 def _apply_resistance_windows(state: FightState) -> None:
     """Re-price every timed physical and magic packet at its live resistance."""
     shreds = _shred_windows(state)
     lethality = _lethality_windows(state)
     if not shreds and not lethality:
         return
-    live = _LiveResistance(state.resists)
-    kept = 0
-
+    pricing = _Pricing(state.resists, shreds, lethality)
     for source_key, row in state.breakdown.items():
-        if not isinstance(row, dict):
-            continue
-        events = row.get("damage_events")
-        if not isinstance(events, list):
-            continue
-        row_delta = 0.0
-        for event in events:
-            if not isinstance(event, dict):
-                continue
-            damage_class = event.get("damage_type")
-            if damage_class not in ("physical", "magic"):
-                continue
-            time = _finite_numeric_receipt(event.get("time"))
-            damage = _finite_numeric_receipt(event.get("damage"))
-            if time is None or damage is None or damage <= 0.0:
-                continue
-            resistance = "armor" if damage_class == "physical" else "mr"
-            active = tuple(
-                (index, shred.debuff, fraction)
-                for index, shred in enumerate(shreds)
-                if _reduces(shred.debuff, resistance)
-                and (fraction := shred.fraction_at(str(source_key), time)) > 0.0
-            )
-            extra, granting = (
-                _lethality_at(lethality, str(source_key), row, time)
-                if damage_class == "physical"
-                else (0.0, [])
-            )
-            if (
-                not active
-                and extra <= 0.0
-                and not any(_reduces(shred.debuff, resistance) for shred in shreds)
-            ):
-                continue
-            met = _met_resistance(event)
-            if met is None or not live.met_served_pipeline(damage_class, met):
-                kept += 1
-                continue
-            meets = live.at(damage_class, active, extra)
-            if abs(meets - met) <= _MATCH_TOLERANCE:
-                continue
-            repriced = rescale_mitigated(damage, met, meets)
-            if not math.isfinite(repriced):
-                continue
-            event["damage"] = repriced
-            event["resistance_met"] = meets
-            restate_declaration(event, resistance=meets)
-            row_delta += repriced - damage
-            by_type = row.get("damage_by_type")
-            if isinstance(by_type, dict) and damage_class in by_type:
-                by_type[damage_class] = float(by_type[damage_class]) + (
-                    repriced - damage
-                )
-            for window in granting:
-                window["applied_count"] += 1
-        if row_delta:
-            priced = source_total_damage(row)
-            row["total_damage"] = row_delta if priced is None else priced + row_delta
-            if "damage_per_hit" in row and row.get("count"):
-                row["damage_per_hit"] = float(row["total_damage"]) / float(row["count"])
-            state.total_damage += row_delta
-
-    if kept:
+        if isinstance(row, dict) and isinstance(row.get("damage_events"), list):
+            state.total_damage += _reprice_row(pricing, str(source_key), row)
+    if pricing.kept:
         state.notes.append(
-            f"{kept} timed packet(s) kept the resistance the fight served them: "
-            "each met a resistance of its own (a per-hit MR state or a "
+            f"{pricing.kept} timed packet(s) kept the resistance the fight served "
+            "them: each met a resistance of its own (a per-hit MR state or a "
             "mid-fight penetration change) the resistance windows do not replay."
         )
     _publish_lethality_receipts(state, lethality)
