@@ -6,6 +6,7 @@ from scripts.prose_lint import (
     ASSUMPTION_CAP,
     FAILING,
     MODULE_DOCSTRING_CAP,
+    REPO_PATH,
     REPORTING,
     scan,
 )
@@ -273,6 +274,11 @@ def test_a_pointer_beside_a_path_that_resolves_is_not_reported(tmp_path):
     hits = found["pointer"]
     assert [hit.split(":")[1] for hit in hits] == ["4", "5", "6"], hits
     assert found["history"] == []
+
+
+def test_a_path_ending_a_sentence_leaves_the_full_stop_out():
+    """Windows resolves ``stages.json.`` as ``stages.json``; POSIX does not."""
+    assert REPO_PATH.findall("recorded in docs/stages.json.") == ["docs/stages.json"]
 
 
 def test_prose_beside_a_docstring_answers_to_the_pointer_rule(tmp_path):

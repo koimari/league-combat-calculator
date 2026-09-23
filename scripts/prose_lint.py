@@ -101,8 +101,9 @@ BANNER = re.compile(r"^# -{5,}$")
 #: The keywords a call documents itself through, which is how a command's own
 #: help text is prose the reader meets rather than a string the code passes.
 DOC_KEYWORDS = ("description", "help", "epilog")
-# A repository path, which is what makes a pointer resolve.
-REPO_PATH = re.compile(r"[\w.-]+(?:/[\w.-]+)+")
+# A repository path, which is what makes a pointer resolve.  A full stop that
+# ends the sentence is not part of it.
+REPO_PATH = re.compile(r"[\w.-]+(?:/[\w.-]+)+(?<!\.)")
 #: Which rules a file in each scope answers to.  A test's prose answers to
 #: the pointer rule and to nothing else: its length and its tense are its own.
 SOURCE_RULES = (("history", HISTORY), ("pointer", POINTER))
