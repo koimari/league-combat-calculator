@@ -1068,7 +1068,6 @@ def test_a_module_self_shield_is_actor_wide_and_granted_once_per_roster():
             "fight_mode": "time_based",
             "fight_duration": 10,
             "include_auto_attacks": False,
-            "deterministic": True,
             "enemies": [
                 {"champion": name, "level": 18, "items": []}
                 for name in ("Aphelios", "Ambessa", "Ashe", "Annie", "Akali")
@@ -6249,9 +6248,14 @@ class TestSelfStateEventIdsNameTheirOwner:
             "level": 13,
             "fight_mode": "one_rotation",
             "role": "mid",
-            "ally_effects_enabled": True,
             "allies": [
-                {"champion": "Alistar", "level": 13, "role": "support", "items": []}
+                {
+                    "champion": "Alistar",
+                    "level": 13,
+                    "role": "support",
+                    "items": [],
+                    "ally_effects_enabled": True,
+                }
             ],
             "enemies": [
                 {"champion": "Alistar", "level": 13, "role": "support", "items": []},

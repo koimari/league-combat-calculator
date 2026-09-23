@@ -42,13 +42,12 @@ def _fight(**overrides) -> dict:
         "enemies": [_ENEMY],
         "fight_duration": 10,
         "fight_mode": "time_based",
-        "deterministic": True,
         "include_auto_attacks": True,
         "auto_attack_uptime": 1.0,
         "enemies_attack": True,
     }
     request.update(overrides)
-    return calculate_payload(request)
+    return calculate_payload(request, deterministic=True)
 
 
 class TestTheFightDoesCarryTheHolderSide:

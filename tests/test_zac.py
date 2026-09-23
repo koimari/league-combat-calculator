@@ -109,7 +109,6 @@ def test_the_goo_chunk_heal_is_resolved_in_the_one_pair_receipt() -> None:
             "fight_duration": 10,
             "include_auto_attacks": True,
             "auto_attack_uptime": 1.0,
-            "deterministic": True,
         },
     )
     assert response.status_code == 200

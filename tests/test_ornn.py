@@ -164,8 +164,8 @@ class TestTemperBrittleConsume:
                 "level": 18,
                 "items": [],
                 "fight_mode": "one_rotation",
-                "deterministic": True,
-            }
+            },
+            deterministic=True,
         )
         row = payload["breakdown"]["passive_temper_brittle"]
         # The default dummy is 1000 maximum health behind 100 magic

@@ -60,10 +60,10 @@ def _fight(*, items: list[str], mode: str = "time_based", autos: bool = True) ->
             "enemies": [_ENEMY],
             "fight_duration": 10,
             "fight_mode": mode,
-            "deterministic": True,
             "include_auto_attacks": autos,
             "auto_attack_uptime": 1.0,
-        }
+        },
+        deterministic=True,
     )
 
 

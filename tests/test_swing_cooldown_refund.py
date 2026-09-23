@@ -44,7 +44,6 @@ def _fight(*, ranks: dict, duration: float = 20.0) -> dict:
             "target_health": 2500.0,
             "target_armor": 100.0,
             "target_mr": 50.0,
-            "deterministic": True,
         },
     )
     assert response.status_code == 200, response.get_json()
