@@ -5697,6 +5697,9 @@ class StatBonuses:
     bonus_omnivamp: float  # Endless Hunger Feast's explicit takedown window
     bonus_heal_shield_power: float  # Harmony's bonus-mana conversion
     item_bonus_health_multiplier: float  # Warmog's Vitality (1.0 = none)
+    # Swiftmarch's Noxian Fervor, unsplit: ``stats.py`` splits it with the rune
+    # force through ``rune_effects.adaptive_force_split``.
+    adaptive_force: float
     # Permanent item-owned subsets used by Kai'Sa's Living Weapon. These
     # exclude temporary combat effects (Blackfire, Rapids, AS windows).
     permanent_bonus_ap: float
@@ -5717,7 +5720,6 @@ def resolve_stat_effects(
     item_options: Mapping[str, Mapping[str, int]] | None = None,
     bonus_attack_damage: float = 0.0,
     total_move_speed: float = 0.0,
-    adaptive_type: str = "",
 ) -> StatBonuses:
     """Compile the stat-granting passives of *items* into one bundle.
 
@@ -5783,23 +5785,11 @@ def resolve_stat_effects(
         if "Whispering Circlet" in _item_names(items)
         else 0.0
     )
-    adaptive_force = swiftmarch_adaptive_force(items, total_move_speed=total_move_speed)
-    normalized_adaptive_type = str(adaptive_type or "").upper()
-    adaptive_ap = (
-        adaptive_force
-        if normalized_adaptive_type in {"AP", "ABILITY_POWER", "MAGIC_DAMAGE"}
-        else 0.0
-    )
-    adaptive_ad = (
-        adaptive_force
-        if normalized_adaptive_type in {"AD", "ATTACK_DAMAGE", "PHYSICAL_DAMAGE"}
-        else 0.0
-    )
     return StatBonuses(
-        bonus_ap=permanent_bonus_ap + flowing_water_bonus_ap(items) + adaptive_ap,
+        bonus_ap=permanent_bonus_ap + flowing_water_bonus_ap(items),
         bonus_health=mana_bonus_health,
         ap_multiplier=ap_multiplier(items),
-        bonus_ad=permanent_bonus_ad + hubris_ad + adaptive_ad,
+        bonus_ad=permanent_bonus_ad + hubris_ad,
         attack_speed_percent=passive_attack_speed_bonus(items, is_melee),
         bonus_resists=terminus_resists,
         bonus_pen_percent=terminus_pen,
@@ -5809,6 +5799,9 @@ def resolve_stat_effects(
         bonus_omnivamp=feast_omnivamp + slay_omnivamp,
         bonus_heal_shield_power=harmony_power,
         item_bonus_health_multiplier=health_multiplier,
+        adaptive_force=swiftmarch_adaptive_force(
+            items, total_move_speed=total_move_speed
+        ),
         permanent_bonus_ap=permanent_bonus_ap,
         permanent_ap_multiplier=permanent_ap_multiplier(items),
         permanent_bonus_ad=permanent_bonus_ad,

@@ -688,7 +688,8 @@ class RuneStatContext:
     """What a stat grant is allowed to read when it resolves its amount.
 
     The build's own bonus attack damage and ability power are here because
-    adaptive force asks which of them is larger; ``options`` carries the
+    adaptive force asks which of them is larger, and the champion's cached
+    ``adaptive_type`` because a tie asks it; ``options`` carries the
     explicit inputs the request has no other home for (a stack count, a game
     minute), each with a default the rune discloses.
 
@@ -702,6 +703,7 @@ class RuneStatContext:
     is_melee: bool
     bonus_attack_damage: float
     ability_power: float
+    adaptive_type: str
     options: Mapping[str, Mapping[str, float]]
     item_stat_types: int = 0
 
@@ -2186,16 +2188,34 @@ def adaptive_force_attack_damage_ratio() -> float:
     return RuneValues("adaptive force", ADAPTIVE_FORCE).number("attack_damage_ratio")
 
 
-# The runes state "Grants bonuses based on which stat you already have the most
-# bonuses for. *Defaults to the first listed*", and ``Template:Adaptive`` lists
-# attack damage first, so an adaptive-force tie takes attack damage.  Adaptive
-# *damage* defaults the other way (:func:`pure_adaptive_type`), which is why
-# the two rules are separate functions.
+#: Which stat an adaptive-force tie grants, by the champion's cached adaptiveType.
+_TIE_GRANTS_ABILITY_POWER: Mapping[str, bool] = MappingProxyType(
+    {"PHYSICAL_DAMAGE": False, "MAGIC_DAMAGE": True}
+)
+
+
+# Every adaptive grant, rune or item, splits here.  ``Template:Adaptive``
+# renders each one as bonus AD or AP and links ``Adaptive_force`` as the rule:
+# the larger of bonus AD and AP wins, and a tie goes to the champion's adaptive
+# type.  That page's worked tie (Veigar's shards with no items are AP) overrules
+# the runes' own "Defaults to the first listed".  Adaptive *damage* ties the
+# other way (:func:`pure_adaptive_type`), which is why the rules are separate.
 def adaptive_force_split(
-    force: float, bonus_attack_damage: float, ability_power: float
+    force: float, bonus_attack_damage: float, ability_power: float, adaptive_type: str
 ) -> tuple[float, float]:
     """Split one adaptive-force grant into (bonus attack damage, ability power)."""
-    if ability_power > bonus_attack_damage:
+    if not force:
+        return 0.0, 0.0
+    if ability_power != bonus_attack_damage:
+        grants_ability_power = ability_power > bonus_attack_damage
+    elif adaptive_type in _TIE_GRANTS_ABILITY_POWER:
+        grants_ability_power = _TIE_GRANTS_ABILITY_POWER[adaptive_type]
+    else:
+        raise ValueError(
+            f"adaptiveType {adaptive_type!r} names neither physical nor magic "
+            "damage, so an adaptive-force tie has no stat to grant"
+        )
+    if grants_ability_power:
         return 0.0, force
     return force * adaptive_force_attack_damage_ratio(), 0.0
 
@@ -2294,7 +2314,10 @@ def resolve_stat_grants(
     def grant(stat: RuneStat, amount: float) -> None:
         if stat is RuneStat.ADAPTIVE_FORCE:
             bonus_ad, ability_power = adaptive_force_split(
-                amount, context.bonus_attack_damage, context.ability_power
+                amount,
+                context.bonus_attack_damage,
+                context.ability_power,
+                context.adaptive_type,
             )
             add("bonus_attack_damage", bonus_ad)
             add("ability_power", ability_power)
@@ -2332,6 +2355,7 @@ class CompiledRunePage:
         is_melee: bool,
         bonus_attack_damage: float,
         ability_power: float,
+        adaptive_type: str,
         item_stat_types: int = 0,
     ) -> RuneStatGrants:
         """Total this page against one build state."""
@@ -2342,6 +2366,7 @@ class CompiledRunePage:
                 is_melee=is_melee,
                 bonus_attack_damage=bonus_attack_damage,
                 ability_power=ability_power,
+                adaptive_type=adaptive_type,
                 options=self.options,
                 item_stat_types=item_stat_types,
             ),

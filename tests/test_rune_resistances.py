@@ -271,7 +271,7 @@ class TestApproachVelocityReachesDamageThroughSwiftmarch:
 
     def _swiftmarch(self, **runes):
         request = {
-            "champion": "Garen",
+            "champion": "Ahri",
             "level": 18,
             "role": "mid",
             "boots": "Swiftmarch",
@@ -326,9 +326,9 @@ class TestApproachVelocityReachesDamageThroughSwiftmarch:
             stat_shards=[],
             rune_options={"Approach Velocity": {"near_impaired_enemy": 1}},
         )
-        assert off["champion_stats"]["move_speed"] == pytest.approx(405.0, abs=0.1)
-        assert on["champion_stats"]["move_speed"] == pytest.approx(431.3, abs=0.1)
-        assert on["total_damage"] - off["total_damage"] == pytest.approx(22.9, abs=0.1)
+        assert off["champion_stats"]["move_speed"] == pytest.approx(395.0, abs=0.1)
+        assert on["champion_stats"]["move_speed"] == pytest.approx(422.7, abs=0.1)
+        assert on["total_damage"] - off["total_damage"] == pytest.approx(7.2, abs=0.1)
 
     def test_it_says_how_the_stat_reaches_damage_rather_than_implying_a_row(self):
         disclosures = " ".join(resolve_rune("Approach Velocity").disclosures)

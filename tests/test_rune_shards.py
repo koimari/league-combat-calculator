@@ -38,6 +38,7 @@ def _grant(row: int, name: str, level: int = 9, **context) -> float:
             is_melee=context.get("is_melee", False),
             bonus_attack_damage=context.get("bonus_attack_damage", 0.0),
             ability_power=context.get("ability_power", 0.0),
+            adaptive_type="PHYSICAL_DAMAGE",
             options={},
         )
     )
@@ -202,6 +203,27 @@ class TestTheShardsMoveTheFightTheyAreOn:
         assert bare["champion_stats"]["bonus_attack_damage"] == 10
         assert page["champion_stats"]["bonus_attack_damage"] == 15
         assert page["champion_stats"]["ability_power"] == 0
+
+    @pytest.mark.parametrize(
+        ("champion", "bonus_attack_damage", "ability_power"),
+        [("Veigar", 0, 18), ("Caitlyn", 11, 0)],
+    )
+    def test_with_no_items_the_force_follows_the_adaptive_type(
+        self, champion, bonus_attack_damage, ability_power
+    ):
+        """Adaptive_force's worked example: Veigar's two shards are 18 AP."""
+        page = calculate_payload(
+            {
+                "champion": champion,
+                "level": 1,
+                "items": [],
+                "fight_mode": "one_rotation",
+                "stat_shards": ["Adaptive Force", "Adaptive Force", "Health"],
+            }
+        )
+        stats = page["champion_stats"]
+        assert stats["bonus_attack_damage"] == bonus_attack_damage
+        assert stats["ability_power"] == ability_power
 
     def test_the_attack_speed_shard_buys_a_swing(self):
         """+10% bonus AS through Caitlyn's AS ratio is a ninth auto in 10s."""
@@ -426,7 +448,11 @@ class TestThePickerFillsThreeRowsAndTellsTheStatCard:
             card["keystone"], card["minor_runes"], card["stat_shards"]
         )
         grants = rune_effects.compile_rune_page(page).grants(
-            level=9, is_melee=False, bonus_attack_damage=0.0, ability_power=100.0
+            level=9,
+            is_melee=False,
+            bonus_attack_damage=0.0,
+            ability_power=100.0,
+            adaptive_type="MAGIC_DAMAGE",
         )
         # The shard's 9 plus Absolute Focus's own 15.71 at level 9, both
         # adaptive and both resolving to ability power on an AP build.

@@ -167,8 +167,10 @@ class TestAbsoluteFocus:
         with pytest.raises(ValueError, match="must be a number"):
             option.validated("yes")
 
-    def test_adaptive_force_takes_the_larger_bonus_and_ties_take_attack_damage(self):
-        """30 force is 18 bonus AD (0.6 each) or 30 AP, per Template:Adaptive."""
+    def test_adaptive_force_takes_the_larger_bonus_and_ties_take_the_adaptive_type(
+        self,
+    ):
+        """30 force is 18 bonus AD (0.6 each) or 30 AP, per Adaptive_force."""
         assert rune_effects.adaptive_force_attack_damage_ratio() == pytest.approx(0.6)
         effect = rune_effects.resolve_rune("Absolute Focus")
         ap_build = _context(level=18, ability_power=200.0, bonus_attack_damage=10.0)
@@ -179,9 +181,22 @@ class TestAbsoluteFocus:
         grants = rune_effects.resolve_stat_grants([effect], ad_build)
         assert grants.bonus_attack_damage == pytest.approx(18.0)
         assert grants.ability_power == 0.0
-        tie = _context(level=18)
-        assert rune_effects.resolve_stat_grants([effect], tie).bonus_attack_damage == (
-            pytest.approx(18.0)
+        physical_tie = _context(level=18, adaptive_type="PHYSICAL_DAMAGE")
+        grants = rune_effects.resolve_stat_grants([effect], physical_tie)
+        assert grants.bonus_attack_damage == pytest.approx(18.0)
+        magic_tie = _context(level=18, adaptive_type="MAGIC_DAMAGE")
+        grants = rune_effects.resolve_stat_grants([effect], magic_tie)
+        assert (grants.bonus_attack_damage, grants.ability_power) == (0.0, 30.0)
+
+    def test_a_tie_with_no_adaptive_type_is_refused(self):
+        effect = rune_effects.resolve_rune("Absolute Focus")
+        with pytest.raises(ValueError, match="'ADAPTIVE'"):
+            rune_effects.resolve_stat_grants(
+                [effect], _context(level=18, adaptive_type="ADAPTIVE")
+            )
+        larger_ap = _context(level=18, ability_power=1.0, adaptive_type="ADAPTIVE")
+        assert rune_effects.resolve_stat_grants([effect], larger_ap).ability_power == (
+            pytest.approx(30.0)
         )
 
 
@@ -214,12 +229,20 @@ class TestCosmicInsight:
         )
 
 
-def _context(*, level, ability_power=0.0, bonus_attack_damage=0.0, options=None):
+def _context(
+    *,
+    level,
+    ability_power=0.0,
+    bonus_attack_damage=0.0,
+    options=None,
+    adaptive_type="PHYSICAL_DAMAGE",
+):
     return rune_effects.RuneStatContext(
         level=level,
         is_melee=False,
         bonus_attack_damage=bonus_attack_damage,
         ability_power=ability_power,
+        adaptive_type=adaptive_type,
         options=options or {},
     )
 

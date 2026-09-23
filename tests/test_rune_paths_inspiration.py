@@ -43,6 +43,7 @@ def _biscuits(consumed):
         is_melee=True,
         bonus_attack_damage=0.0,
         ability_power=0.0,
+        adaptive_type="PHYSICAL_DAMAGE",
         options={"Biscuit Delivery": {"biscuits_consumed": consumed}},
     )
 
@@ -122,7 +123,7 @@ class TestMagicalFootwearPricesItsBootsGrant:
 
     def _swiftmarch(self, **runes):
         request = {
-            "champion": "Garen",
+            "champion": "Ahri",
             "level": 18,
             "role": "mid",
             "boots": "Swiftmarch",
@@ -153,7 +154,7 @@ class TestMagicalFootwearPricesItsBootsGrant:
             "move_speed"
         ] == pytest.approx(10.0, abs=0.1)
         assert held["total_damage"] - bare["total_damage"] == pytest.approx(
-            11.5, abs=0.1
+            3.6, abs=0.1
         )
 
     def test_without_swiftmarch_the_speed_moves_and_damage_does_not(self):
@@ -382,6 +383,7 @@ class TestCosmicInsightPricesItsItemHaste:
             is_melee=True,
             bonus_attack_damage=0.0,
             ability_power=0.0,
+            adaptive_type="PHYSICAL_DAMAGE",
             options={},
         )
         assert effect.amount(context) == pytest.approx(10.0)
@@ -560,6 +562,7 @@ def _stat_context(item_stat_types):
         is_melee=False,
         bonus_attack_damage=0.0,
         ability_power=0.0,
+        adaptive_type="PHYSICAL_DAMAGE",
         options={},
         item_stat_types=item_stat_types,
     )

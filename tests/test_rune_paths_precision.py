@@ -478,5 +478,6 @@ def _context(*, stacks=None):
         is_melee=False,
         bonus_attack_damage=0.0,
         ability_power=0.0,
+        adaptive_type="PHYSICAL_DAMAGE",
         options=options,
     )

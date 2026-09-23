@@ -7,7 +7,10 @@ from src.calculator.champion_growth import get_champion_base_stats
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_effects import swiftmarch_adaptive_force
 from src.calculator.item_stat_block import get_item_stats, item_mana_reaches_pool
-from src.calculator.rune_effects import validate_rune_page
+from src.calculator.rune_effects import (
+    adaptive_force_attack_damage_ratio,
+    validate_rune_page,
+)
 from src.calculator.stat_formulas import (
     apply_movement_speed_soft_caps,
     calculate_attack_speed,
@@ -71,6 +74,52 @@ class TestOneMovementSpeed:
         )
         assert (bare["move_speed"], bare["ability_power"]) == (395.0, 21)
         assert (celerity["move_speed"], celerity["ability_power"]) == (398.95, 22)
+
+
+class TestSwiftmarchIsAdaptiveForce:
+    """Noxian Fervor's adaptive force splits by the one rule rune force uses.
+
+    Adaptive_force: one force is 0.6 bonus AD or 1 AP, the larger of bonus AD
+    and AP picks the stat, and a tie goes to the champion's adaptive type.
+    """
+
+    def _force(self, stats: dict) -> float:
+        swiftmarch = [get_item_by_name("Swiftmarch")]
+        return swiftmarch_adaptive_force(
+            swiftmarch, total_move_speed=stats["move_speed"]
+        )
+
+    def test_an_attack_damage_build_takes_bonus_ad_at_the_adaptive_ratio(self):
+        sword = get_item_by_name("Long Sword")
+        stats = calculate_total_stats(
+            get_champion("Caitlyn"), 18, [get_item_by_name("Swiftmarch"), sword]
+        )
+        ratio = adaptive_force_attack_damage_ratio()
+        assert stats["bonus_attack_damage"] == round(
+            get_item_stats(sword)["attack_damage"] + ratio * self._force(stats)
+        )
+        assert stats["ability_power"] == 0
+
+    def test_the_build_not_the_champion_picks_the_stat(self):
+        """Caitlyn is a physical champion, and a rod still makes the force AP."""
+        rod = get_item_by_name("Needlessly Large Rod")
+        stats = calculate_total_stats(
+            get_champion("Caitlyn"), 18, [get_item_by_name("Swiftmarch"), rod]
+        )
+        assert stats["ability_power"] == round(
+            get_item_stats(rod)["ability_power"] + self._force(stats)
+        )
+        assert stats["bonus_attack_damage"] == 0
+
+    @pytest.mark.parametrize(
+        ("champion", "stat", "ratio"),
+        [("Caitlyn", "bonus_attack_damage", 0.6), ("Ahri", "ability_power", 1.0)],
+    )
+    def test_a_tie_goes_to_the_champion_adaptive_type(self, champion, stat, ratio):
+        stats = calculate_total_stats(
+            get_champion(champion), 18, [get_item_by_name("Swiftmarch")]
+        )
+        assert stats[stat] == round(ratio * self._force(stats))
 
 
 class TestResourcePoolKind:

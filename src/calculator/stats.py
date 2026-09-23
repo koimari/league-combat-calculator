@@ -19,7 +19,7 @@ from .item_stat_block import (
     item_stat_type_count,
 )
 from .role_quests import MID_QUEST_AP_PERCENT, MID_QUEST_BONUS_AD_PERCENT
-from .rune_effects import RunePage, compile_rune_page
+from .rune_effects import RunePage, adaptive_force_split, compile_rune_page
 from .stat_formulas import (
     ATTACK_SPEED_CAP,
     MAX_LEVEL,
@@ -127,6 +127,7 @@ def calculate_total_stats(
     # some of its answers before the item conversions and the rest after.
     page = compile_rune_page(rune_page)
     item_stat_types = item_stat_type_count(total_item_stats)
+    adaptive_type = champion_data["adaptiveType"]
 
     # The first of the two totals, and the two channels it is read for are
     # the two an item converts into adaptive force: maximum mana, which the
@@ -140,6 +141,7 @@ def calculate_total_stats(
         is_melee=is_melee,
         bonus_attack_damage=total_item_stats["attack_damage"],
         ability_power=total_item_stats["ability_power"],
+        adaptive_type=adaptive_type,
         item_stat_types=item_stat_types,
     )
 
@@ -225,7 +227,6 @@ def calculate_total_stats(
         level=level,
         item_options=item_options,
         total_move_speed=final_move_speed,
-        adaptive_type=str(champion_data.get("adaptiveType", "")),
     )
 
     quest_ap_multiplier = (
@@ -237,27 +238,33 @@ def calculate_total_stats(
         else 1.0
     )
 
-    # Rune stat grants resolve here, after the item passives, because every
-    # adaptive grant asks which of the build's bonus attack damage and
-    # ability power is larger — and neither is complete until the
-    # conversions (Muramana → AD, Awe → AP), the %AP multiplier and the role
-    # quest have been applied. The grants themselves are excluded from that
-    # comparison, as in game, and are kept out of ``total_item_stats``: each
-    # is added below where that stat belongs, because a rune's adaptive
-    # force is not an item stat (Kai'Sa's evolutions exclude it) even though
-    # it lands in the same total.
+    # Adaptive force, rune and Swiftmarch alike, resolves here, after the item
+    # passives, because every adaptive grant asks which of the build's bonus
+    # attack damage and ability power is larger — and neither is complete
+    # until the conversions (Muramana → AD, Awe → AP), the %AP multiplier and
+    # the role quest have been applied. The grants themselves are excluded
+    # from that comparison, as in game, and are kept out of
+    # ``total_item_stats``: each is added below where that stat belongs,
+    # because adaptive force is not an item stat (Kai'Sa's evolutions exclude
+    # it) even though it lands in the same total.
+    adaptive_basis_ad = (
+        total_item_stats["attack_damage"] + bonuses.bonus_ad
+    ) * quest_bonus_ad_multiplier
+    adaptive_basis_ap = (
+        base_stats["ability_power"]
+        + total_item_stats["ability_power"]
+        + bonuses.bonus_ap
+    ) * (bonuses.ap_multiplier + quest_ap_multiplier)
     runes = page.grants(
         level=level,
         is_melee=is_melee,
-        bonus_attack_damage=(total_item_stats["attack_damage"] + bonuses.bonus_ad)
-        * quest_bonus_ad_multiplier,
-        ability_power=(
-            base_stats["ability_power"]
-            + total_item_stats["ability_power"]
-            + bonuses.bonus_ap
-        )
-        * (bonuses.ap_multiplier + quest_ap_multiplier),
+        bonus_attack_damage=adaptive_basis_ad,
+        ability_power=adaptive_basis_ap,
+        adaptive_type=adaptive_type,
         item_stat_types=item_stat_types,
+    )
+    item_adaptive_ad, item_adaptive_ap = adaptive_force_split(
+        bonuses.adaptive_force, adaptive_basis_ad, adaptive_basis_ap, adaptive_type
     )
 
     # Ability power: base + items + converted AP, then the additive %AP
@@ -266,6 +273,7 @@ def calculate_total_stats(
         base_stats["ability_power"]
         + total_item_stats["ability_power"]
         + bonuses.bonus_ap
+        + item_adaptive_ap
         + runes.ability_power
     )
     # Total AP modifiers stack additively with Rabadon's/Blackfire.
@@ -309,6 +317,7 @@ def calculate_total_stats(
     raw_bonus_ad = (
         total_item_stats["attack_damage"]
         + bonuses.bonus_ad
+        + item_adaptive_ad
         + runes.bonus_attack_damage
         + converted_bonus_ad
     )

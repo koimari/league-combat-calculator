@@ -21,6 +21,7 @@ def _context(*, level=11, ability_power=0.0, bonus_attack_damage=0.0, options=No
         is_melee=False,
         bonus_attack_damage=bonus_attack_damage,
         ability_power=ability_power,
+        adaptive_type="PHYSICAL_DAMAGE",
         options=options or {},
     )
 
