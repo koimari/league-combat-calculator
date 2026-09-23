@@ -340,13 +340,14 @@ class TestViBlastShield:
         assert rider.get("skipped_reason") is None
         # The carrier it moved to is the E packet, not the Q it was authored
         # on, and that packet really did land.
-        assert rider["trigger_event_id"] == "main:enemy:Ahri:5"
-        assert any(
-            event["event_id"] == rider["trigger_event_id"]
-            and event["time"] == pytest.approx(3.221)
-            and not event.get("skipped_reason")
+        (carrier,) = [
+            event
             for event in payload["combat"]["events"]
-        )
+            if event["event_id"] == rider["trigger_event_id"]
+        ]
+        assert carrier["source"] == "E"
+        assert carrier["time"] == pytest.approx(3.221)
+        assert not carrier.get("skipped_reason")
         assert survival["shield_absorbed"] == pytest.approx(228.4, abs=0.1)
         assert payload["combat"]["item_denial_receipts"] == []
 

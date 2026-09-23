@@ -488,7 +488,14 @@ def test_kill_fight_authors_no_slay_support_packets():
     enemy = next(
         row for row in combat["participants"] if row["participant_id"] == "enemy:Aatrox"
     )
-    assert enemy["survival"]["death_time"] == pytest.approx(0.0)
+    # The kill lands on the opening exchange: Jinx's first impact, one
+    # windup after t=0.
+    jinx_opening = min(
+        float(event["time"])
+        for event in combat["events"]
+        if event.get("attacker") == "ally:Jinx"
+    )
+    assert enemy["survival"]["death_time"] == pytest.approx(jinx_opening)
     assert combat.get("support_events", []) == []
     assert _calculate(_main_payload())["champion_stats"]["omnivamp_percent"] == (
         BASE_OMNIVAMP
@@ -721,13 +728,15 @@ def test_healing_flows_from_base_stat_only_no_slay_packets():
     """The survival engine prices omnivamp healing from the STAT (the
     boot's base 4.0): self_healing_events carry the typed "Omnivamp"
     source and NO Slay-sourced packet or invented healing exists anywhere
-    (support_events empty, self-healing sources all stat omnivamp)."""
+    (support_events empty, self-healing sources all stat omnivamp).  The
+    enemy dies (0.338) before its own first impact (0.379), so Lux is
+    never hurt and the priced receipts restore nothing."""
     body = _calculate(_main_payload())
     combat = body["combat"]
     assert combat.get("support_events", []) == []
     assert body["champion_stats"]["omnivamp_percent"] == BASE_OMNIVAMP
     main = _main_row(combat)
-    assert main["survival"]["healing_received"] > 0
+    assert main["survival"]["healing_received"] == 0.0
     assert body["self_healing"] > 0
     assert body["self_healing_events"]
     for event in body["self_healing_events"]:

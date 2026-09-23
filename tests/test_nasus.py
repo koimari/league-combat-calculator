@@ -41,18 +41,17 @@ class TestReviewedCrowdControl:
 def test_p_is_modeled_through_the_soul_eater_lifesteal() -> None:
     """P emits a row with no enemy damage; the heal rule prices the slot.
 
-    A level-18 itemless timed fight with autos pays Soul Eater 88.2 — the
-    receipt behind P's ``modeled`` label.  Six physical swings at the
-    level-18 24% share: five ordinary autos on the 1.75-second cadence
-    (14.4 each) and the Siphoning-Strike-empowered one (16.2, off the
-    larger hit).  That last payment is the one a rule reading only the
+    A level-18 itemless timed fight with autos pays Soul Eater 104.4 — the
+    receipt behind P's ``modeled`` label.  Seven physical hits at the
+    level-18 24% share: five Siphoning Strikes on the 1.75-second cadence
+    (14.4 each) and the two ordinary autos left beside them (16.2 each).
+    The Siphoning Strike payments are the ones a rule reading only the
     ``auto_attacks`` row misses — Q rides a basic attack rather than
     replacing one, so the engine attributes that swing to the Q row —
-    which is why ``derive_self_healing`` reads both rows, and why this
-    receipt is larger than the auto-row-only 48.6 it replaces.  W is a
-    cast slot emitting the pinned packet's sourced zero-damage row, so it
-    is ``no_damage`` rather than a gap; only its slow/cripple magnitude
-    stays unpriced.
+    which is why ``derive_self_healing`` reads both rows.  W is a cast
+    slot emitting the pinned packet's sourced zero-damage row, so it is
+    ``no_damage`` rather than a gap; only its slow/cripple magnitude stays
+    unpriced.
     """
     import pytest
 
@@ -77,7 +76,7 @@ def test_p_is_modeled_through_the_soul_eater_lifesteal() -> None:
         for event in payload["self_healing_events"]
         if event["source"] == "Soul Eater"
     )
-    assert paid == pytest.approx(88.2, abs=0.1)
+    assert paid == pytest.approx(104.4, abs=0.1)
 
 
 # Level 18, ranks Q5/W5/E5/R3, no items, six seconds of autos at full uptime
@@ -138,10 +137,17 @@ def _assert_soul_eater_heals(combat, *, level, ratio):
     survival = closure.main_survival(combat)
     if survival["death_time"] is None:
         # The survival walk applies the receipts only while the fighter is
-        # alive; a dead-by-first-swing level-6 Nasus still emits the sourced
-        # receipts but applies none.
+        # alive and missing health: a dead-by-first-swing level-6 Nasus
+        # still emits the sourced receipts but applies none, and a heal
+        # landing before the enemy's first hit (its windup) restores nothing.
+        first_hit = min(
+            float(event["time"])
+            for event in combat["events"]
+            if event.get("target") == "main" and float(event.get("damage", 0.0)) > 0.0
+        )
         assert survival["healing_received"] == pytest.approx(
-            sum(heal["amount"] for heal in heals), abs=0.25
+            sum(heal["amount"] for heal in heals if heal["time"] >= first_hit),
+            abs=0.25,
         )
 
 

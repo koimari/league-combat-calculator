@@ -216,6 +216,8 @@ def test_both_manaflow_streams_spend_one_shared_charge_pool(holder):
 
     The swing at each bank time takes the charge the following cast then
     finds spent, so the accepted count is the pool's and not the sum of two.
+    The opening charge is the t=0 cast's: the first swing lands a windup
+    after it.
     """
     fight = [get_item_by_name(holder)]
     without = run_fight(get_champion("Ahri"), 18, fight, _params(duration=24.0))
@@ -233,7 +235,9 @@ def test_both_manaflow_streams_spend_one_shared_charge_pool(holder):
     assert len(loud_accepted) == len(quiet_accepted)
     assert loud["bonus_total"] == pytest.approx(quiet["bonus_total"])
     assert {hit["trigger"] for hit in quiet_accepted} == {"ability_cast"}
-    assert {hit["trigger"] for hit in loud_accepted} == {"basic_attack"}
+    assert loud_accepted[0]["time"] == 0.0
+    assert loud_accepted[0]["trigger"] == "ability_cast"
+    assert {hit["trigger"] for hit in loud_accepted[1:]} == {"basic_attack"}
 
 
 def test_a_cast_only_holder_refuses_an_authored_basic_attack_trigger():

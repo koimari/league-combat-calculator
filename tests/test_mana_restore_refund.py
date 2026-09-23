@@ -60,14 +60,17 @@ tests):
     windows, and each Hyper Charge swing that lands in-window restores
     too (the swings ARE basic attacks); swings fired past the fight
     window are gated out.  Hammer has no burst, so its count is exactly
-    floor(attack_speed * duration * uptime).
+    ceil(attack_speed * duration * uptime - phase), phase being the windup's
+    share of one attack cycle.
 """
 
 import math
 
 import pytest
 
+from src.calculator import pipeline
 from src.calculator.ability_atoms import required_ranked_attribute_atom
+from src.calculator.attack_cadence import champion_windup
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion, get_item_by_name
@@ -159,11 +162,17 @@ def _expected_ezreal_refunds(result):
     return expected
 
 
-def _modeled_auto_times(result, duration, uptime=1.0):
-    """The walk's modeled auto schedule: i / (attack_speed * uptime)."""
-    rate = result["champion_stats"]["attack_speed"] * uptime
-    count = math.floor(rate * duration)
-    return count, [index / rate for index in range(count)]
+def _jayce_phase(attack_speed):
+    """Jayce's windup as a share of one attack cycle at *attack_speed*."""
+    return champion_windup(get_champion("Jayce")).phase(attack_speed)
+
+
+def _modeled_auto_times(rate, duration):
+    """Jayce's modeled autos at *rate*: ceil(rate x duration - phase) of
+    them, impact i at (i + phase) / rate."""
+    phase = _jayce_phase(rate)
+    count = math.ceil(rate * duration - phase)
+    return count, [(index + phase) / rate for index in range(count)]
 
 
 def _assert_accounting_identity(result):
@@ -224,8 +233,9 @@ def test_m1_jayce_restore_per_auto_amount_timing_and_rank():
     )
     receipts = result["resource_ledger"]["receipts"]
     restores = _jayce_restores(receipts)
-    expected_count, expected_times = _modeled_auto_times(result, 12.0, uptime=1.0)
-    assert expected_count == 11  # the walk's modeled autos (12s @ 0.99358/s)
+    rate = result["champion_stats"]["attack_speed"]
+    expected_count, expected_times = _modeled_auto_times(rate, 12.0)
+    assert expected_count == 12  # the walk's modeled autos (12s @ 0.99358/s)
     assert len(restores) == expected_count
     assert all(r["amount"] == pytest.approx(25.0) for r in restores)
     assert all(r["tier"] == 0.0 for r in restores)  # restore tier
@@ -273,9 +283,9 @@ def test_m1_jayce_restore_two_ranks_match_ranked_atom_values():
 
 def test_m1_jayce_restore_capped_when_mana_near_full():
     # M1: over-restoration is receipted CAPPED with the account pinned at
-    # maximum.  The t=0 auto lands before the t=0 casts (restore tier), so
-    # with a full opening pool the first restore is always CAPPED; regen
-    # refills the pool during the fight, so later restores cap again.
+    # maximum.  The opening auto lands one windup after the t=0 casts, so
+    # the first restore is accepted into the spent pool; regen refills the
+    # pool during the fight, so later restores cap.
     champ = get_champion("Jayce")
     result = run_fight(
         champ,
@@ -292,10 +302,12 @@ def test_m1_jayce_restore_capped_when_mana_near_full():
     restores = _jayce_restores(ledger["receipts"])
     capped = [r for r in restores if r["reason"] == "CAPPED"]
     assert capped, "expected at least one CAPPED restore"
-    # The first restore of the fight (t=0, before any spend) is CAPPED.
-    assert restores[0]["time"] == 0.0
-    assert restores[0]["reason"] == "CAPPED"
-    assert restores[0]["current_before"] == pytest.approx(restores[0]["maximum_before"])
+    # The first restore of the fight (the opening windup, after the t=0
+    # spends) is accepted below maximum.
+    rate = result["champion_stats"]["attack_speed"]
+    assert restores[0]["time"] == pytest.approx(_jayce_phase(rate) / rate)
+    assert restores[0]["reason"] == "accepted"
+    assert restores[0]["current_before"] < restores[0]["maximum_before"]
     # Every CAPPED restore pins current at maximum; accepted restores never
     # exceed it.
     for r in restores:
@@ -306,10 +318,12 @@ def test_m1_jayce_restore_capped_when_mana_near_full():
             assert r["reason"] == "accepted"
 
 
-def test_m1_jayce_restore_tier_before_simultaneous_cast():
+def test_m1_jayce_restore_tier_before_simultaneous_cast(monkeypatch):
     # M1: at one timestamp the restore applies before a simultaneous cast
-    # (TIER_RESTORE before TIER_CAST); t=0 has an auto and the R/Q/W/E
-    # spends, so the invariant is observable in the receipt stream.
+    # (TIER_RESTORE before TIER_CAST).  Jayce's windup puts every auto after
+    # the t=0 casts; with no windup the opening auto lands at t=0 with the
+    # R/Q/W/E spends, so the invariant is observable in the receipt stream.
+    monkeypatch.setattr(pipeline, "champion_windup", lambda _champion: None)
     champ = get_champion("Jayce")
     result = run_fight(
         champ,
@@ -1006,10 +1020,11 @@ def test_s2_jayce_restore_applies_in_both_stances():
     #
     # COUNT SEMANTICS (RLM-1 contract): ordinary basic attacks restore at
     # the uniform ordinary rate outside the burst windows; each Hyper
-    # Charge swing that LANDS IN-WINDOW (cast_time + (k+1)/burst_as <=
-    # fight duration) restores too — the three swings of a cast fired just
-    # before the window end land after it and are gated out.  The hammer
-    # stance has no burst, so its count is exactly floor(rate*duration).
+    # Charge swing that LANDS IN-WINDOW (cast_time + (k + phase)/burst_as
+    # <= fight duration) restores too — the three swings of a cast fired
+    # just before the window end land after it and are gated out.  The
+    # hammer stance has no burst, so its count is exactly
+    # ceil(rate*duration - phase).
     champ = get_champion("Jayce")
     for hammer_stance in (False, True):
         result = run_fight(
@@ -1027,19 +1042,20 @@ def test_s2_jayce_restore_applies_in_both_stances():
         assert restores, f"no restores in hammer_stance={hammer_stance}"
         rate = result["champion_stats"]["attack_speed"]
         if hammer_stance:
-            expected_count = math.floor(rate * 12.0)
-            expected_times = [index / rate for index in range(expected_count)]
+            expected_count, expected_times = _modeled_auto_times(rate, 12.0)
         else:
             w_casts = [c["time"] for c in result["cast_timeline"] if c["slot"] == "W"]
             burst_as = 3.003
+            burst_phase = _jayce_phase(burst_as)
             burst_seconds = 3.0 * len(w_casts) / burst_as
-            ordinary = math.floor(rate * max(0.0, 12.0 - burst_seconds))
-            expected_times = [index / rate for index in range(ordinary)]
+            _, expected_times = _modeled_auto_times(
+                rate, max(0.0, 12.0 - burst_seconds)
+            )
             for cast_time in w_casts:
                 expected_times.extend(
-                    cast_time + (k + 1) / burst_as
+                    cast_time + (k + burst_phase) / burst_as
                     for k in range(3)
-                    if cast_time + (k + 1) / burst_as <= 12.0 + _EPS
+                    if cast_time + (k + burst_phase) / burst_as <= 12.0 + _EPS
                 )
             expected_times.sort()
             expected_count = len(expected_times)

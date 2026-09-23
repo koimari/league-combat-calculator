@@ -46,8 +46,8 @@ CURRENT RUNTIME FACTS (verify-before-pin completed against
   reconciles any pin it disagrees with.
 
 CONTRACT SEMANTICS PINNED HERE (Model A — extra autos, the Vayne-Q
-template): the ordinary auto stream is untouched (floor(AS x duration x
-uptime)) and every accepted E cast adds one reset swing; total swings =
+template): the ordinary auto stream is untouched (ceil(AS x duration x
+uptime - phase)) and every accepted E cast adds one reset swing; total swings =
 ordinary autos + E casts.  In the 10s reference fight the cooldown grid
 only admits 2 E casts either way (rank-5 cd 6.0s: 0.25 + 6.25; the next
 cast lands at 12.25), so unlike Vayne Q the ambient-auto cap does NOT
@@ -192,7 +192,7 @@ _E_CD = 6.0  # rank 5, 0 haste
 _AUTO_HIT = _ENGINE_AD * 100.0 / 200.0  # 127.5252
 _E_SWING = _AUTO_HIT + _E_BONUS_RAW * 100.0 / 200.0  # 212.45377142857143
 # Direct-engine reference fight pins (10s, uptime 1.0).
-_OFF_AUTOS = 8  # floor(1.0 x 10) = 10 swings, 2 ride the E row
+_OFF_AUTOS = 8  # 1.0 AS x 10s = 10 swings, 2 ride the E row
 _ON_AUTOS = 10  # 10 ordinary + 2 reset swings (Model A)
 _E_CAST_TIMES = [0.25, 6.25]  # cooldown grid (Q's 0.25 cast_time shifts E)
 _OFF_TOTAL = 2601.209142857143
@@ -294,8 +294,9 @@ def _pipeline_fight(
 
     ``auto_attack_uptime=1.0`` rides the legacy mode (the explicit value
     is honored), so the pipeline surface is directly comparable to the
-    direct-engine reference fight (AS 1.020625 at level 18 -> floor(10.2)
-    = 10 swings; 2 ride the E row -> auto row 8)."""
+    direct-engine reference fight (AS 1.020625 at level 18 with a 0.160
+    windup phase -> ceil(10.206 - 0.160) = 11 swings; 2 ride the E row ->
+    auto row 9)."""
     params = {
         "target_health": _TARGET_HEALTH,
         "target_armor": 100.0,
@@ -547,14 +548,14 @@ class TestOptionContract:
     def test_default_parity_absent_vs_false_pipeline(self) -> None:
         """Same parity on the pipeline's registered-fight surface, with
         the current default surface pinned: E 2 casts on the 0.0/6.0
-        grid (rank-5 cd 6.0s), 8 ordinary autos riding the augmented
-        stream (10 swings - 2 on the E row)."""
+        grid (rank-5 cd 6.0s), 9 ordinary autos riding the augmented
+        stream (11 swings - 2 on the E row)."""
         absent = _pipeline_fight(None)
         explicit = _pipeline_fight({OPTION_KEY: False})
         assert _json(absent) == _json(explicit)
         assert absent["breakdown"]["E"]["casts"] == 2
         assert _e_times(absent) == _approx_times([0.0, 6.0])
-        assert absent["breakdown"]["auto_attacks"]["count"] == 8
+        assert absent["breakdown"]["auto_attacks"]["count"] == 9
 
     def test_option_meta_declares_e_reset_throughput(self) -> None:
         """Post-contract: the module declares the bool option (default
