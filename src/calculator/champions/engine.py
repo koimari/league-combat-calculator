@@ -266,6 +266,7 @@ def build_parser(
                 results=results,
                 ability_ranks=ability_ranks,
                 option_defaults=declared_options,
+                champion_data=champion_data,
             )
             entry = parser(ctx)
             if entry is not None:

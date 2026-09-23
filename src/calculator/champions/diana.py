@@ -19,7 +19,6 @@ bonus beyond the first through ``champions_pulled``.  Its "Total Damage Vs. 5
 Champions" row is a derived display value and is only a test cross-check.
 """
 
-import math
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -113,8 +112,8 @@ def _moonsilver_cleave(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] 
     if duration is None:
         return None
 
-    uptime = float(ctx.option("auto_attack_uptime"))
-    num_autos = math.floor(ctx.stat("attack_speed") * float(duration) * uptime)
+    swings = ctx.ambient_swings(float(duration))
+    num_autos = len(swings)
     cleaves = num_autos // _CLEAVE_EVERY_N_ATTACKS
     if cleaves <= 0:
         return None
@@ -122,7 +121,6 @@ def _moonsilver_cleave(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] 
     per_cleave = extract_named(
         ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
     )
-    autos_per_second = ctx.stat("attack_speed") * uptime
     return {
         "name": "Moonsilver Blade (cleave)",
         "damage_type": "magic",
@@ -131,15 +129,12 @@ def _moonsilver_cleave(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] 
         "proc_count": cleaves,
         "damage_events": [
             {
-                "time": (
-                    index * _CLEAVE_EVERY_N_ATTACKS + (_CLEAVE_EVERY_N_ATTACKS - 1)
-                )
-                / autos_per_second,
+                "time": time,
                 "damage_type": "magic",
                 "damage": per_cleave,
                 "event_precision": "exact",
             }
-            for index in range(cleaves)
+            for time in swings[_CLEAVE_EVERY_N_ATTACKS - 1 :: _CLEAVE_EVERY_N_ATTACKS]
         ],
         "event_phase": "auto",
         "unit": "cleaves",

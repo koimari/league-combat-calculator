@@ -19,9 +19,9 @@ the window.  ``SivirR``'s binary ``HuntAttackSpeed`` appears nowhere in
 the cached text and is recorded, not modeled.
 """
 
-import math
 from typing import Any
 
+from .. import attack_cadence
 from ..ability_atoms import (
     AbilityAtomQuery,
     ranked_ability_atom_value,
@@ -69,16 +69,18 @@ def _boomerang_blade(
 _W_DURATION_SOURCE = "Sivir.W[0].effects[0].description"
 
 
-# The bounce stream rides the swings the engine schedules, never a cadence
-# of its own; a window with no auto stream still earns one, because the
-# cache's "Ricochet resets Sivir's basic attack timer" makes the first
-# empowered attack immediate.
+# The bounce stream lands by the engine's cadence (``attack_cadence``), never
+# one of its own; a window with no auto stream still earns one, because the
+# cache's "Ricochet resets Sivir's basic attack timer" commands the first
+# empowered attack at the cast.
 def _empowered_swings(ctx: SlotCtx, window: float, *, bonus_rate: float) -> int:
     """Empowered basic attacks Ricochet's sourced window earns at its own rate."""
-    rate = (ctx.stat("attack_speed") + bonus_rate) * float(
-        ctx.option("auto_attack_uptime")
-    )
-    return max(1, math.floor(rate * window))
+    attack_speed = ctx.stat("attack_speed") + bonus_rate
+    rate = attack_speed * float(ctx.option("auto_attack_uptime"))
+    if rate <= 0.0:
+        return 1
+    phase = ctx.impact_phase(attack_speed)
+    return max(1, attack_cadence.impact_count(rate, window, phase))
 
 
 @ranked_slot

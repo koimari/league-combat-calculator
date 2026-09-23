@@ -273,12 +273,18 @@ class TestTheKitsThatDeclareIt:
         return 0 if row is None else int(row["count"])
 
     def test_galio_smashes_more_often_in_a_longer_fight(self) -> None:
+        """Swings land at Galio's windup (0.26s after each command), so R at
+        2.58s now precedes the 2.81s smash and its 3s cut finds the timer
+        already elapsed: the 20s fight smashes at 0.26, 2.81, 7.91, 10.46,
+        15.56 and 18.11."""
         assert self._procs(self._fight("Galio", 5.0)) == 2
-        assert self._procs(self._fight("Galio", 20.0)) == 7
+        assert self._procs(self._fight("Galio", 20.0)) == 6
 
     def test_sylas_spends_the_stacks_his_casts_banked(self) -> None:
+        """The 20s fight's last swing, at 19.60s, spends the stack the 19.2s
+        Q banked."""
         assert self._procs(self._fight("Sylas", 5.0)) == 4
-        assert self._procs(self._fight("Sylas", 20.0)) == 8
+        assert self._procs(self._fight("Sylas", 20.0)) == 9
 
     def test_ziggs_short_fuse_is_no_longer_capped_at_its_packet_count(self) -> None:
         """The engine held a champion-named walk of its own, capped by the
@@ -294,7 +300,8 @@ class TestTheKitsThatDeclareIt:
     @pytest.mark.parametrize(
         ("champion", "short", "long"),
         [
-            ("Ambessa", 4, 8),
+            # Ambessa's 20s fight: the swing at 19.26s spends the 18.7s E.
+            ("Ambessa", 4, 9),
             ("Akshan", 1, 6),
             ("Ekko", 3, 10),
             ("Talon", 1, 2),

@@ -8,6 +8,8 @@ level 18):
 - R: 0 damage (stat buff only, +65 AD)
 """
 
+import math
+
 import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
@@ -137,13 +139,15 @@ class TestTumbleAutoCoupling:
     Reference scenario (mirrors the observed optimizer bug): level 18,
     R rank 3 (Q CD 2.0s -> 1.0s), 50 ability haste (-> 0.667s), 1.29
     attack speed, 10s fight, 100% AA uptime. Uncoupled, the engine cast
-    Q 16 times against only 12 autos — impossible, since Tumble only
+    Q 16 times against only 13 autos — impossible, since Tumble only
     deals damage through the empowered auto.
 
-    Coupled model: casts = min(cooldown casts, autos) = min(16, 12)
-    = 12. The auto count itself stays floor(1.29 * 10) = 12: Tumble is
-    an attack reset, its dash spent in attack-cooldown dead time (the
-    in-game reset acceleration is not modeled — conservative).
+    Coupled model: casts = min(cooldown casts, autos) = min(16, 13)
+    = 13. The auto count itself stays ceil(1.29 * 10) = 13 (a direct
+    engine call carries no champion windup, so impact k lands at k / AS
+    from the attack command): Tumble is an attack reset, its dash spent
+    in attack-cooldown dead time (the in-game reset acceleration is not
+    modeled — conservative).
     """
 
     @staticmethod
@@ -182,7 +186,7 @@ class TestTumbleAutoCoupling:
         result = self._run_fight(stats, abilities)
         q_casts = result["breakdown"]["Q"]["casts"]
         autos = result["breakdown"]["auto_attacks"]["count"]
-        assert q_casts <= q_casts + autos == int(1.29 * 10.0)
+        assert q_casts <= q_casts + autos == math.ceil(1.29 * 10.0)
 
     def test_autos_unchanged_by_tumbling(self, reference_setup) -> None:
         """Tumble is an attack reset: it never costs Vayne an attack.
@@ -195,17 +199,17 @@ class TestTumbleAutoCoupling:
         result = self._run_fight(stats, abilities)
         autos = result["breakdown"]["auto_attacks"]["count"]
         q_casts = result["breakdown"]["Q"]["casts"]
-        assert autos + q_casts == int(1.29 * 10.0)  # 12, same as without Q
+        assert autos + q_casts == math.ceil(1.29 * 10.0)  # 13, same as without Q
 
     def test_reference_cast_and_auto_counts(self, reference_setup) -> None:
-        """Hand-derived: min(16 cooldown casts, 12 attacks) -> 12 casts.
+        """Hand-derived: min(16 cooldown casts, 13 attacks) -> 13 casts.
 
-        Every one of the 12 attacks is Q-empowered here, so all 12 are
+        Every one of the 13 attacks is Q-empowered here, so all 13 are
         reported on the Q row and no plain autos remain.
         """
         stats, abilities = reference_setup
         result = self._run_fight(stats, abilities)
-        assert result["breakdown"]["Q"]["casts"] == 12
+        assert result["breakdown"]["Q"]["casts"] == 13
         assert result["breakdown"]["auto_attacks"]["count"] == 0
 
     def test_one_rotation_q_casts_once(self, reference_setup) -> None:

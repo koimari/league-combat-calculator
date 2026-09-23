@@ -18,7 +18,6 @@ so it reaches the ledger as a ``self_shield_events`` payload on the first ranked
 damage slot, the ability hit the wiki says activates it.
 """
 
-import math
 import re
 from typing import Any
 
@@ -290,26 +289,20 @@ def _timed_cast_starts(ctx: SlotCtx, duration: float) -> dict[str, list[float]]:
 def _denting_stream(ctx: SlotCtx, duration: float) -> list[tuple[float, int]]:
     """Vi's stack-applying hits on this target over a timed fight.
 
-    Ambient autos land at ``i / rate`` with ``rate = attack_speed x
-    auto_attack_uptime``; Q hits land at each cast start plus the charge
-    and travel time and stack every enemy in Q's path.  E's empowered
-    attack consumes an ambient swing (the engine models attack resets as
-    spending attack-cooldown dead time), so with a stream it is already
-    one of the counted autos; with no stream each E cast forces its own
-    attack on the primary target only.  An ``auto_attacks_only`` window
-    schedules no casts at all, so the stream is the ambient swings alone.
+    Ambient autos are the engine's stream (``SlotCtx.ambient_swings``); Q
+    hits land at each cast start plus the charge and travel time and stack
+    every enemy in Q's path.  E's empowered attack is one of the ambient
+    swings (an attack reset spends attack-cooldown dead time); with no
+    stream each E cast forces its own attack on the primary target only.
+    An ``auto_attacks_only`` window casts nothing: ambient swings alone.
     """
-    events: list[tuple[float, int]] = []
-    rate = ctx.stat("attack_speed") * float(ctx.option("auto_attack_uptime"))
-    if rate > 0:
-        events.extend(
-            (index / rate, _ATTACK) for index in range(math.floor(rate * duration))
-        )
+    swings = ctx.ambient_swings(duration)
+    events = [(time, _ATTACK) for time in swings]
     if not ctx.option("auto_attacks_only"):
         starts = _timed_cast_starts(ctx, duration)
         q_hit_offset = _q_geometry(ctx)[3]
         events.extend((start + q_hit_offset, _ABILITY_HIT) for start in starts["Q"])
-        if rate <= 0 and _is_primary_target(ctx):
+        if not swings and _is_primary_target(ctx):
             events.extend((start, _ABILITY_HIT) for start in starts["E"])
     events.sort()
     return events

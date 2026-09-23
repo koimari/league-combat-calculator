@@ -104,10 +104,11 @@ class TestMarkOfTheStormWalk:
                 "auto_attack_uptime": 1.0,
             },
         )
-        # One swing per second: the empowered ones are at 0, 5, 10 and 15,
+        # One swing per second, each landing 0.2s (Kennen's windup) after
+        # its command: the empowered ones are at 0.2, 5.2, 10.2 and 15.2,
         # each inside the previous mark's 6s window, so the third lands at
-        # 10s and the 15s swing only re-opens the count.
-        assert "1 third-mark stun(s) at 10.00s/1.25s" in parsed["passive"]["detail"]
+        # 10.2s and the 15.2s swing only re-opens the count.
+        assert "1 third-mark stun(s) at 10.20s/1.25s" in parsed["passive"]["detail"]
 
     def test_a_cache_that_stops_stating_the_repeat_rule_fails_closed(self):
         data = copy.deepcopy(load_public_champion("Kennen"))

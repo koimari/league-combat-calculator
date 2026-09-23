@@ -19,7 +19,6 @@ R (Glacial Fissure) is a clean generic read; its knockup and slow field are
 control only.
 """
 
-import math
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -70,22 +69,13 @@ def _trigger_damage(level: int) -> float:
 def _hit_timeline(ctx: SlotCtx, duration: float) -> list[tuple[float, int]]:
     """Braum's stacking hits over a timed fight: autos + Q applications.
 
-    Mirrors the fight engine's scheduling: autos land at ``i / rate``
-    with ``rate = attack_speed x auto_attack_uptime`` (uptime 0 means no
-    autos), and Q is cast at t=0 then on cooldown (ability haste plus
-    basic-ability haste), giving ``1 + duration // cd`` casts — the same
-    count the rotation computes.  An ``auto_attacks_only`` window
+    Mirrors the fight engine's scheduling: autos are its ambient stream
+    (``SlotCtx.ambient_swings``), and Q is cast at t=0 then on cooldown
+    (ability haste plus basic-ability haste), giving ``1 + duration // cd``
+    casts — the same count the rotation computes.  An ``auto_attacks_only`` window
     schedules zero casts, so the stream is the ambient swings alone.
     """
-    events: list[tuple[float, int]] = []
-
-    uptime = float(ctx.option("auto_attack_uptime"))
-    autos_per_second = ctx.stat("attack_speed") * uptime
-    if autos_per_second > 0:
-        events.extend(
-            (i / autos_per_second, _AUTO)
-            for i in range(math.floor(autos_per_second * duration))
-        )
+    events = [(time, _AUTO) for time in ctx.ambient_swings(duration)]
 
     q_ability = ctx.ability("Q")
     q_rank = ctx.rank_for("Q")

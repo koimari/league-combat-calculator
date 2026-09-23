@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -35,15 +34,13 @@ def _final_round_count(ctx: SlotCtx) -> int:
     """Final rounds in the fight window (auto stream determines stack rate).
 
     Timed fights with an auto stream: the pre-stacked clip state
-    (``p_shot_number``) plus the fight's auto count determines how many
-    final rounds land — autos at positions congruent to
-    ``(5 - p_shot_number) mod 4``.  One-rotation / no-auto-stream
-    fights price exactly the one pre-stacked final round.
+    (``p_shot_number``) plus the fight's auto count decides how many land,
+    at autos congruent to ``(5 - p_shot_number) mod 4``.  Other fights
+    price exactly the one pre-stacked final round.
     """
     duration = ctx.options.get("fight_duration_seconds")
     if duration is not None:
-        uptime = float(ctx.option("auto_attack_uptime"))
-        num_autos = math.floor(ctx.stat("attack_speed") * uptime * duration)
+        num_autos = len(ctx.ambient_swings(float(duration)))
         if num_autos > 0:
             pre = min(max(int(ctx.option("p_shot_number")), 1), 4) - 1
             return (pre + num_autos) // 4 - pre // 4

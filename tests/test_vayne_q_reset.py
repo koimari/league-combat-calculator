@@ -43,7 +43,7 @@ or False.  Genuinely absent mechanics are ``xfail`` with reason
 reconciles any pin it disagrees with.
 
 CONTRACT SEMANTICS PINNED HERE (Model A — extra autos): the ordinary
-auto stream is untouched (floor(AS x duration x uptime)) and every
+auto stream is untouched (the impacts ``attack_cadence`` places) and every
 accepted Q cast adds one reset swing; total swings = ordinary autos +
 Q casts.  The alternative "re-timed swings" model (each reset swing
 replaces/advances the next ordinary auto) is flagged to the
@@ -91,6 +91,7 @@ grid and the reference build's own stats.
 
 import copy
 import json
+import math
 from pathlib import Path
 
 import pytest
@@ -153,6 +154,9 @@ _DURATION = 10.0
 # = 2/3 exactly, so the cooldown grid is k * 2/3.
 _Q_CD = 2.0 * (1.0 - 0.5) * 100.0 / (100.0 + _HAS)  # == 2/3
 _Q_GRID = [k * _Q_CD for k in range(16)]  # 0 .. 10.0 inclusive (16 casts)
+# The direct engine carries no champion windup, so impact k lands at k / AS
+# from the attack command: ceil(1.29 * 10) = 13 ordinary autos.
+_AMBIENT_AUTOS = math.ceil(_AS * _DURATION)
 # Engine AD = 200 total AD (incl. the 100 bonus) + 65 R buff = 265.
 _ENGINE_AD = 200.0 + 65.0
 # Q bonus at the reference build: 1.15 * 265 + 0.5 * 100.
@@ -430,15 +434,16 @@ class TestOptionContract:
 
     def test_default_parity_absent_vs_false_pipeline(self) -> None:
         """Same parity on the pipeline's registered-fight surface, with
-        the current default surface pinned: Q 10 casts on the 0.0..9.0
-        grid (R-coupled 1.0s cooldown), all 10 swings empowered, 3 Silver
-        Bolts procs.  The rotation opens on Q's own cast rather than
-        carrying E's 0.25s cast time in front of it."""
+        the current default surface pinned: Q 11 casts on the 0.0..10.0
+        grid (R-coupled 1.0s cooldown), capped by the 11 swings Vayne's
+        windup lands in 10s at 1.027 AS, all 11 empowered, 3 Silver Bolts
+        procs.  The rotation opens on Q's own cast rather than carrying
+        E's 0.25s cast time in front of it."""
         absent = _pipeline_fight(None)
         explicit = _pipeline_fight({OPTION_KEY: False})
         assert _json(absent) == _json(explicit)
-        assert absent["breakdown"]["Q"]["casts"] == 10
-        assert _q_times(absent) == _approx_times([float(k) for k in range(10)])
+        assert absent["breakdown"]["Q"]["casts"] == 11
+        assert _q_times(absent) == _approx_times([float(k) for k in range(11)])
         assert absent["breakdown"]["auto_attacks"]["count"] == 0
         assert absent["breakdown"]["on_hit_ability_W"]["count"] == 3
 
@@ -486,10 +491,10 @@ class TestOptionContract:
 # ---------------------------------------------------------------------------
 # MODEL A PINNED HERE: the ordinary auto stream is untouched and every
 # accepted Q cast buys one extra swing.  Reference fight (AS 1.29, 10s,
-# 100% uptime): 12 ordinary autos; Q's cooldown-limited schedule is 16
+# 100% uptime): 13 ordinary autos; Q's cooldown-limited schedule is 16
 # casts on the k*2/3 grid INCLUDING t=10.0 (a cast counts when it
 # STARTS at/before the duration — the engine's boundary, already live
-# in the zero-uptime forced-swing schedule).  Total swings 28 -> 9
+# in the zero-uptime forced-swing schedule).  Total swings 29 -> 9
 # Silver Bolts procs.  If the coordinator chooses the "re-timed swings"
 # model instead (each reset swing replaces the next ordinary auto), or
 # excludes the t=10.0 boundary cast, these pins are the ones to
@@ -499,7 +504,7 @@ class TestOptionContract:
 class TestOptedInResetSchedule:
     def test_q_casts_lift_to_the_cooldown_grid(self) -> None:
         """With the option on the cast cap lifts: Q casts 16 times on the
-        k*2/3 grid (0 .. 10.0 inclusive) instead of the 12 the ambient
+        k*2/3 grid (0 .. 10.0 inclusive) instead of the 13 the ambient
         auto count allowed."""
         result = _fight({OPTION_KEY: True})
         assert result["breakdown"]["Q"]["casts"] == 16
@@ -509,19 +514,19 @@ class TestOptedInResetSchedule:
         assert _q_times(result) == _approx_times([round(t, 3) for t in _Q_GRID])
 
     def test_each_cast_buys_one_extra_swing(self) -> None:
-        """Total swings = 12 ordinary autos + 16 reset swings = 28: the
-        auto row keeps 12 (the ordinary stream is untouched) and the Q
+        """Total swings = 13 ordinary autos + 16 reset swings = 29: the
+        auto row keeps 13 (the ordinary stream is untouched) and the Q
         row carries the 16 empowered swings (reattribution)."""
         result = _fight({OPTION_KEY: True})
-        assert result["breakdown"]["auto_attacks"]["count"] == 12
+        assert result["breakdown"]["auto_attacks"]["count"] == _AMBIENT_AUTOS
         assert result["breakdown"]["Q"]["casts"] == 16
         assert (
             result["breakdown"]["auto_attacks"]["count"]
             + result["breakdown"]["Q"]["casts"]
-        ) == 28
+        ) == 29
 
     def test_w_proc_count_and_damage_delta(self) -> None:
-        """28 swings -> 9 Silver Bolts procs (28 // 3): W goes from
+        """29 swings -> 9 Silver Bolts procs (29 // 3): W goes from
         4 procs / 800 true damage to 9 procs / 1800."""
         on = _fight({OPTION_KEY: True})
         off = _fight(None)
@@ -530,33 +535,35 @@ class TestOptedInResetSchedule:
         assert w_off["count"] == 4
         assert w_on["count"] == 9
         # The W row smears each proc's 200 over its 3-swing cycle (the
-        # Vayne-W-style row convention), so the 28th swing carries the
-        # first third of the 10th cycle: total = 28 x (200/3) = 1866.67,
+        # Vayne-W-style row convention), so the 28th and 29th swings carry
+        # two thirds of the 10th cycle: total = 29 x (200/3) = 1933.33,
         # not count x per_hit.
-        assert w_on["total_damage"] == pytest.approx(28 * _W_PROC / 3.0, abs=1e-9)
+        assert w_on["total_damage"] == pytest.approx(29 * _W_PROC / 3.0, abs=1e-9)
 
     def test_damage_delta_from_the_reference_fight(self) -> None:
-        """Q row 16 x 309.875 = 4958.0; auto row 12 x 132.5 = 1590.0; W
-        28 x (200/3) = 1866.67 (the smeared row, 9 completed procs);
-        E 681.25 unchanged; total 9095.92 vs 5199.75 off
-        (+3896.17: +1239.5 Q, +1590 autos, +1066.67 W)."""
+        """Q row 16 x 309.875 = 4958.0; auto row 13 x 132.5 = 1722.5; W
+        29 x (200/3) = 1933.33 (the smeared row, 9 completed procs);
+        E 681.25 unchanged; total 9295.08 vs 5576.29 off
+        (+3718.79: +929.625 Q, +1722.5 autos, +1066.67 W)."""
         on = _fight({OPTION_KEY: True})
         off = _fight(None)
         assert on["breakdown"]["Q"]["total_damage"] == pytest.approx(
             16 * _Q_SWING, abs=1e-6
         )
         assert on["breakdown"]["auto_attacks"]["total_damage"] == pytest.approx(
-            12 * _AUTO_HIT, abs=1e-6
+            _AMBIENT_AUTOS * _AUTO_HIT, abs=1e-6
         )
         assert on["breakdown"]["on_hit_ability_W"]["total_damage"] == pytest.approx(
-            28 * _W_PROC / 3.0, abs=1e-6
+            29 * _W_PROC / 3.0, abs=1e-6
         )
         assert on["breakdown"]["E"]["total_damage"] == pytest.approx(
             off["breakdown"]["E"]["total_damage"], abs=1e-9
         )
-        assert off["total_damage"] == pytest.approx(5199.75, abs=1e-6)
+        assert off["total_damage"] == pytest.approx(
+            _AMBIENT_AUTOS * (_Q_SWING + _W_PROC / 3.0) + 681.25, abs=1e-6
+        )
         assert on["total_damage"] == pytest.approx(
-            4958.0 + 1590.0 + 28 * _W_PROC / 3.0 + 681.25, abs=1e-6
+            4958.0 + 1722.5 + 29 * _W_PROC / 3.0 + 681.25, abs=1e-6
         )
 
 
@@ -595,15 +602,15 @@ class TestOneRotationAndZeroAuto:
 
     def test_one_rotation_with_auto_stream_buys_one_extra_swing(self) -> None:
         """Model A pin (flagged for the coordinator): one-rotation WITH an
-        auto stream (12 ambient autos) — the single accepted Q cast is a
-        reset, so it buys one extra swing: auto row 12 (was 11), Q 1,
-        total 13 swings.  If the coordinator keeps one-rotation mode
+        auto stream (13 ambient autos) — the single accepted Q cast is a
+        reset, so it buys one extra swing: auto row 13 (was 12), Q 1,
+        total 14 swings.  If the coordinator keeps one-rotation mode
         byte-identical instead, this pin is the one to reconcile."""
         on = _fight({OPTION_KEY: True}, one_rotation=True)
         off = _fight(None, one_rotation=True)
-        assert off["breakdown"]["auto_attacks"]["count"] == 11
+        assert off["breakdown"]["auto_attacks"]["count"] == _AMBIENT_AUTOS - 1
         assert on["breakdown"]["Q"]["casts"] == 1
-        assert on["breakdown"]["auto_attacks"]["count"] == 12
+        assert on["breakdown"]["auto_attacks"]["count"] == _AMBIENT_AUTOS
 
 
 # ---------------------------------------------------------------------------

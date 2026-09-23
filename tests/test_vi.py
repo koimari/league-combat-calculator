@@ -280,13 +280,14 @@ def test_timed_w_proc_count_grows_with_duration_and_ambient_autos():
 def test_auto_only_w_procs_count_only_the_ambient_swings():
     """auto_only casts nothing, so Q must not feed the Denting Blows walk.
 
-    Level 18, no items, 18s: the engine swings 12 ambient autos and casts
-    zero abilities, so every third swing procs — 4 procs, not the merged
-    stream's 5 (``test_timed_w_proc_count_grows_with_duration_and_ambient_autos``).
+    Level 18, no items, 18s: the engine swings 13 ambient autos (0.69
+    attacks/s, the first landing at Vi's windup) and casts zero abilities,
+    so every third swing procs — 4 procs, not the merged stream's 5
+    (``test_timed_w_proc_count_grows_with_duration_and_ambient_autos``).
     """
     payload = _auto_only_payload(18)
 
-    assert payload["breakdown"]["auto_attacks"]["count"] == 12
+    assert payload["breakdown"]["auto_attacks"]["count"] == 13
     for slot in ("Q", "E", "R"):
         assert payload["breakdown"][slot]["casts"] == 0
     row = payload["breakdown"]["W"]
@@ -341,7 +342,8 @@ def test_timed_starting_stacks_seed_the_counter():
 
 def test_timed_shred_falls_back_to_e_when_q_is_unranked():
     """With Q unranked the walk still procs (autos alone reach the third
-    stack), and E carries the shred windows: E recharges at 8s (rank 5),
+    stack: 12s at 0.69 attacks/s lands 9 swings, E's two among them, so
+    3 procs), and E carries the shred windows: E recharges at 8s (rank 5),
     so casts at 0 / 8s cover 4 + 4 = 8s of a 12s fight and the 20% shred
     weights to 13.333%, pricing 100 armor as 86.7."""
     payload = calculate_payload(
@@ -359,7 +361,7 @@ def test_timed_shred_falls_back_to_e_when_q_is_unranked():
     )
 
     assert "Q" not in payload["breakdown"]
-    assert payload["breakdown"]["W"]["count"] == 2
+    assert payload["breakdown"]["W"]["count"] == 3
     assert payload["effective_armor"] == pytest.approx(
         round(100.0 - 20.0 * (8.0 / 12.0), 1)
     )

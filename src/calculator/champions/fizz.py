@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -111,17 +110,10 @@ def _seastone_trident(
     # stream's swings — the swing stays priced (and evented) on the auto
     # row, keeping this row's ledger sum-exact (the engine's swing
     # reattribution would otherwise add un-evented swing damage here).
-    # Without a stream (one-rotation, zero uptime, or a window shorter
-    # than one swing) the cast must force its own attack: declare the
-    # empower so the engine appends the swing with this authored timing.
-    # The ambient count mirrors the engine's floor(AS x duration x uptime)
-    # (Diana P cleave precedent).
-    ambient_autos = math.floor(
-        ctx.stat("attack_speed")
-        * float(ctx.option("fight_duration_seconds"))
-        * float(ctx.option("auto_attack_uptime"))
-    )
-    if ambient_autos < 1:
+    # Without a stream (one-rotation, zero uptime, or a window that ends
+    # before the first swing lands) the cast must force its own attack:
+    # declare the empower so the engine appends it at the authored timing.
+    if not ctx.ambient_swings(float(ctx.option("fight_duration_seconds"))):
         entry["empowers_next_auto"] = {
             "hits": 1,
             "authored_timing": {"first_attack_delay": 0.0, "attack_interval": 0.0},
