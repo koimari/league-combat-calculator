@@ -90,9 +90,9 @@ def _channel_receipts(name: str, slot: str, channel: str) -> list[tuple[str, flo
                 "fight_mode": "time_based",
                 "fight_duration": 6,
                 "include_auto_attacks": False,
-                "deterministic": True,
                 "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
-            }
+            },
+            deterministic=True,
         )
         return [
             (row["name"], float(row.get("total_damage") or 0.0))

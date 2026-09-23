@@ -24,7 +24,7 @@ FIXTURE_REQUEST = {
     "level": 18,
     "items": ["Dusk and Dawn"],
     "fight_mode": "timed",
-    "fight_duration_seconds": 8.0,
+    "fight_duration": 8.0,
     "include_auto_attacks": True,
     "auto_attack_uptime": 1.0,
 }

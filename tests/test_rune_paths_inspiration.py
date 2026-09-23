@@ -131,12 +131,11 @@ class TestMagicalFootwearPricesItsBootsGrant:
             ],
             "fight_duration": 10,
             "fight_mode": "time_based",
-            "deterministic": True,
             "include_auto_attacks": True,
             "auto_attack_uptime": 1.0,
         }
         request.update(runes)
-        return calculate_payload(request)
+        return calculate_payload(request, deterministic=True)
 
     def test_the_grant_moves_movement_speed_and_swiftmarch_damage(self):
         bare = self._swiftmarch(
@@ -174,12 +173,11 @@ class TestMagicalFootwearPricesItsBootsGrant:
                 ],
                 "fight_duration": 10,
                 "fight_mode": "time_based",
-                "deterministic": True,
                 "include_auto_attacks": True,
                 "auto_attack_uptime": 1.0,
             }
             request.update(overrides)
-            return calculate_payload(request)
+            return calculate_payload(request, deterministic=True)
 
         bare = fight(keystone="Grasp of the Undying", minor_runes=[], stat_shards=[])
         held = fight(
@@ -221,7 +219,6 @@ class TestBiscuitDeliveryPricesTheHealthItKeeps:
             ],
             "fight_duration": 10,
             "fight_mode": "time_based",
-            "deterministic": True,
             "include_auto_attacks": True,
             "auto_attack_uptime": 1.0,
             "keystone": "Arcane Comet",
@@ -233,7 +230,7 @@ class TestBiscuitDeliveryPricesTheHealthItKeeps:
             payload["rune_options"] = {
                 "Biscuit Delivery": {"biscuits_consumed": consumed}
             }
-        return calculate_payload(payload)
+        return calculate_payload(payload, deterministic=True)
 
     def test_the_parser_reads_the_grant_and_the_number_of_biscuits(self):
         effects, _ = parse_rune_effects(

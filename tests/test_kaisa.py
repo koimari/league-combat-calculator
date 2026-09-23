@@ -378,9 +378,9 @@ def _seeded_plasma_row(stacks):
             "level": 18,
             "items": _MAGIC_BUILD,
             "fight_mode": "one_rotation",
-            "deterministic": True,
             "champion_options": {"plasma_starting_stacks": stacks},
-        }
+        },
+        deterministic=True,
     )
     return payload["breakdown"]["passive_plasma"]["total_damage"]
 

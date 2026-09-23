@@ -52,12 +52,12 @@ def _fight(champion: str, minute: float) -> dict:
             ],
             "fight_duration": 10,
             "fight_mode": "time_based",
-            "deterministic": True,
             "include_auto_attacks": True,
             "auto_attack_uptime": 1.0,
             **_PAGE,
             "rune_options": {"Conditioning": {"game_minute": minute}},
-        }
+        },
+        deterministic=True,
     )
 
 
@@ -156,13 +156,14 @@ class TestWhatTheResistancesBuyAndWhatTheyDoNot:
             ],
             "fight_duration": 10,
             "fight_mode": "time_based",
-            "deterministic": True,
             "include_auto_attacks": True,
             "auto_attack_uptime": 1.0,
             "enemies_attack": True,
         }
-        bare = calculate_payload({**request, "items": []})
-        armored = calculate_payload({**request, "items": ["Chain Vest"]})
+        bare = calculate_payload({**request, "items": []}, deterministic=True)
+        armored = calculate_payload(
+            {**request, "items": ["Chain Vest"]}, deterministic=True
+        )
         assert (
             armored["champion_stats"]["armor"] - bare["champion_stats"]["armor"] == 40
         )
@@ -232,18 +233,18 @@ class TestRevitalizeReachesEveryRecovery:
             ],
             "fight_duration": 10,
             "fight_mode": "time_based",
-            "deterministic": True,
             "include_auto_attacks": True,
             "auto_attack_uptime": 1.0,
         }
-        bare = calculate_payload(request)
+        bare = calculate_payload(request, deterministic=True)
         held = calculate_payload(
             {
                 **request,
                 "keystone": "Grasp of the Undying",
                 "minor_runes": ["Revitalize"],
                 "stat_shards": [],
-            }
+            },
+            deterministic=True,
         )
         assert bare["champion_stats"]["heal_and_shield_power_percent"] == 0.0
         assert held["champion_stats"]["heal_and_shield_power_percent"] == 5.0
@@ -282,12 +283,11 @@ class TestApproachVelocityReachesDamageThroughSwiftmarch:
             ],
             "fight_duration": 10,
             "fight_mode": "time_based",
-            "deterministic": True,
             "include_auto_attacks": True,
             "auto_attack_uptime": 1.0,
         }
         request.update(runes)
-        return calculate_payload(request)
+        return calculate_payload(request, deterministic=True)
 
     def test_the_parse_reads_the_total_form_beside_celerity_s_bonus_form(self):
         """One key, two spellings, because one channel reads it."""

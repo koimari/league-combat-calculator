@@ -121,13 +121,12 @@ class TestTheScheduleSpendsTheStockThenRecharges:
                 "champion": champion,
                 "level": 18,
                 "items": [],
-                "runes": {},
                 "target": {"champion": "Malphite", "level": 18},
                 "fight_mode": "time_based",
                 "fight_duration": seconds,
-                "deterministic": True,
                 "auto_attack_uptime": 1.0,
-            }
+            },
+            deterministic=True,
         )
         return int(payload["breakdown"][slot]["casts"])
 

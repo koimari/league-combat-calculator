@@ -138,14 +138,14 @@ class TestSecondWindRegeneratesOffAnIncomingHit:
                 ],
                 "fight_duration": duration,
                 "fight_mode": "time_based",
-                "deterministic": True,
                 "include_auto_attacks": True,
                 "auto_attack_uptime": 1.0,
                 "enemies_attack": enemies_attack,
                 "keystone": "Grasp of the Undying",
                 "minor_runes": list(runes),
                 "stat_shards": [],
-            }
+            },
+            deterministic=True,
         )
 
     @staticmethod
@@ -250,14 +250,14 @@ class TestBonePlatingTakesItsFlatCutOffIncomingHits:
                 ],
                 "fight_duration": duration,
                 "fight_mode": "time_based",
-                "deterministic": True,
                 "include_auto_attacks": True,
                 "auto_attack_uptime": 1.0,
                 "enemies_attack": True,
                 "keystone": "Grasp of the Undying",
                 "minor_runes": list(runes),
                 "stat_shards": [],
-            }
+            },
+            deterministic=True,
         )
 
     def test_the_parser_reads_the_count_and_the_activation(self):
