@@ -22,7 +22,7 @@ import math
 
 import pytest
 
-from src.calculator.attack_cadence import champion_windup
+from src.calculator.attack_cadence import champion_windup, impact_count
 from src.calculator.champion_loadout import load_public_champion
 from src.calculator.champions.slot_extract import (
     extract_named,
@@ -210,15 +210,17 @@ def test_the_attack_speed_grant_reaches_the_fights_auto_count(
     assert _autos(result) > unbuffed or gained < 1.0
 
 
-def test_tristana_rapid_fire_doubles_the_auto_count_it_was_missing():
-    """The deleted assumption, priced: 4 autos become 8."""
+def test_tristana_rapid_fire_prices_the_autos_its_window_buys():
+    """The deleted assumption, priced: the 5s window lands 9 autos, not 5."""
     build = _build_stats("Tristana")
     result = _fight("Tristana")
-    assert math.floor(build["attack_speed"] * _WINDOW) == 4
-    assert _autos(result) == 8
+    windup = champion_windup(_CHAMPIONS["Tristana"])
+    unbuffed = build["attack_speed"]
+    assert impact_count(unbuffed, _WINDOW, windup.phase(unbuffed)) == 5
+    assert _autos(result) == 9
     assert result["champion_stats"]["attack_speed"] == pytest.approx(1.6658, abs=5e-4)
-    assert result["auto_attack_damage"] == pytest.approx(472.0, abs=0.05)
-    assert result["total_damage"] == pytest.approx(899.5, abs=0.05)
+    assert result["auto_attack_damage"] == pytest.approx(531.0, abs=0.05)
+    assert result["total_damage"] == pytest.approx(958.5, abs=0.05)
 
 
 def test_nocturne_doubles_its_row_only_when_the_spell_shield_blocks():

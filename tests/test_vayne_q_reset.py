@@ -769,10 +769,10 @@ class TestFailClosedValidation:
             },
         )
         assert response.status_code == 200
-        # The API surface (10s, Q CD 1.0s, 8 ambient autos): the cap lifts
-        # from 8 to the full cooldown grid, the bought swings surface as
-        # the auto row (8 ordinary autos), and the W procs ride the
-        # augmented stream (6 vs 2).
+        # The API surface (10s, Q CD 1.0s, ceil(1.0271 x 10 x 0.8 - 0.175)
+        # = 9 ambient autos): the cap lifts to the full cooldown grid, the
+        # bought swings surface as the auto row (9 ordinary autos), and the
+        # W procs ride the augmented stream (6).
         #
         # The grid is 0.0..10.0 — eleven casts, the last landing exactly
         # at the fight's end.  Whether a cast at ``t == fight_duration``
@@ -782,7 +782,7 @@ class TestFailClosedValidation:
         # this row pins the reset's effect, not that boundary.
         body = response.get_json()["breakdown"]
         assert body["Q"]["casts"] == 11
-        assert body["auto_attacks"]["count"] == 8
+        assert body["auto_attacks"]["count"] == 9
         assert body["on_hit_ability_W"]["count"] == 6
 
 

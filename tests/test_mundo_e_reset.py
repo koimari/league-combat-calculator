@@ -800,9 +800,8 @@ class TestFailClosedValidation:
     def test_api_accepts_the_option_and_applies_it(self) -> None:
         """Post-contract: the declared bool option is accepted (200) and
         the reset is applied on the API surface (10s, 0.8 uptime default
-        -> floor(1.020625 x 10 x 0.8) = 8 ordinary autos + 2 bought
-        swings): auto count 6 -> 8, E stays 2 casts.  Today the key is
-        unknown (400), hence the xfail."""
+        -> ceil(1.020625 x 10 x 0.8 - 0.160 windup) = 9 impacts, 2 of them
+        E's, + 2 bought swings): auto count 7 -> 9, E stays 2 casts."""
         client = app_module.app.test_client()
 
         def call(options: dict) -> dict:
@@ -828,8 +827,8 @@ class TestFailClosedValidation:
 
         default_body = call({})
         on_body = call({OPTION_KEY: True})
-        assert default_body["auto_attacks"]["count"] == 6
-        assert on_body["auto_attacks"]["count"] == 8
+        assert default_body["auto_attacks"]["count"] == 7
+        assert on_body["auto_attacks"]["count"] == 9
         assert on_body["E"]["casts"] == 2
         assert default_body["E"]["total_damage"] == pytest.approx(
             on_body["E"]["total_damage"], abs=0.05
