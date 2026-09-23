@@ -126,9 +126,11 @@ root|passive_parser.py
 root|patch_identity.py
 root|program/__init__.py
 root|program/amp.py
+root|program/build.py
 root|program/capability.py
 root|program/compile.py
 root|program/dependency.py
+root|program/events.py
 root|program/identity.py
 root|program/precision.py
 root|program/route.py
@@ -173,6 +175,7 @@ root|survival/defense_contracts.py
 root|survival/event_slots.py
 root|survival/phases.py
 root|survival/pricing.py
+root|survival/score_state.py
 root|survival/typed_action.py
 root|timeline/__init__.py
 root|timeline/records.py
@@ -207,7 +210,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|90
+er5-tail-ceiling|87
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
