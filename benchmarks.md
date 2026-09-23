@@ -71,7 +71,7 @@ python scripts/bench_survival_action.py                           # tables
 python scripts/bench_survival_action.py --compare benchmarks.md   # exits 1 on a >25% median regression
 ```
 
-Captured at `7905938d` on the machine above, CPython 3.14.2, each cell the median of three
+Captured at `38e47659` on the machine above, CPython 3.14.2, each cell the median of three
 consecutive runs. Every input is a real action from the named golden scenario's walk. A
 group's representative is its first action at the group's median count of fields set away
 from the class default. Construction is `timeit`, the median of 15 repeats of 20,000 calls.
@@ -79,25 +79,25 @@ The four source walks hold 873 actions of 96 fields: a median of 16 set, 56 neve
 
 | group | scenario | set fields | all-kw µs | set-kw µs | narrow µs |
 |---|---|---|---|---|---|
-| damage | crit_onhit_carry_roster | 16 | 3.526 | 1.564 | 0.403 |
-| heal | cleaver_bloodsong_roster | 12 | 3.524 | 1.529 | 0.337 |
-| shield | lethality_window_assassin_roster | 14 | 3.527 | 1.552 | 0.369 |
-| buff | cleaver_bloodsong_roster | 19 | 3.53 | 1.69 | 0.45 |
-| state | control_event_roster | 19 | 3.569 | 1.639 | 0.463 |
+| damage | crit_onhit_carry_roster | 16 | 3.513 | 1.559 | 0.397 |
+| heal | cleaver_bloodsong_roster | 12 | 3.474 | 1.478 | 0.337 |
+| shield | lethality_window_assassin_roster | 14 | 3.512 | 1.526 | 0.362 |
+| buff | cleaver_bloodsong_roster | 19 | 3.533 | 1.674 | 0.45 |
+| state | control_event_roster | 19 | 3.583 | 1.608 | 0.443 |
 
 `all-kw` passes every field by keyword, the shape of `program/compile.action_from_event`,
 which names 95 of the 96 and builds every action a request walks. `set-kw` passes only the
 set fields, and `narrow` builds a NamedTuple of only those fields from the same values. The
-width costs about 3.1 µs an action, 8.7x the narrow type. `narrow` is the target a
+width costs about 3.1 µs an action, 8.8x the narrow type. `narrow` is the target a
 per-group split is measured against: on `crit_onhit_carry_roster` the gap is 354 actions,
-about 1.1 ms of a 33.8 ms request. No golden scenario walks a utility action, so that group
+about 1.1 ms of a 34.1 ms request. No golden scenario walks a utility action, so that group
 has no row, and none walks more than three shields.
 
 | constructor | fields | µs |
 |---|---|---|
-| row_copy | 29 | 1.21 |
-| keywords | 29 | 1.795 |
-| narrow | 29 | 0.696 |
+| row_copy | 29 | 1.189 |
+| keywords | 29 | 1.776 |
+| narrow | 29 | 0.68 |
 
 `row_copy` is `survival/actions.compiled_damage_action` fed the damage representative's 29
 fields. `keywords` is `SurvivalAction(**those fields)`, which the bench asserts it equals.
@@ -107,9 +107,9 @@ keyword beats it. No coupled golden scenario reaches it: only the score path's
 
 | scenario | actions | walk median µs | p10-p90 µs | request ms |
 |---|---|---|---|---|
-| crit_onhit_carry_roster | 354 | 2195 | 82 | 33.76 |
-| cleaver_bloodsong_roster | 182 | 1798 | 89 | 18.9 |
-| lethality_window_assassin_roster | 139 | 1217 | 45 | 14.59 |
+| crit_onhit_carry_roster | 354 | 2199 | 103 | 34.08 |
+| cleaver_bloodsong_roster | 182 | 1795 | 87 | 19.1 |
+| lethality_window_assassin_roster | 139 | 1216 | 52 | 14.68 |
 
 The walk rows time `run_survival_walk` inside a warm `calculate_payload(deterministic=True)`
 over 50 requests, and `request ms` is the whole request's median. The three scenarios carry
