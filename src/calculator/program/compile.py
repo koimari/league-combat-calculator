@@ -524,6 +524,11 @@ def _batch_slot(event: Mapping[str, Any], _index_of: Mapping[str, int]) -> int:
     return EVENT_SLOTS.slot(str(batch_id)) if batch_id else NO_SLOT
 
 
+def _cc_kind(event: Mapping[str, Any], _index_of: Mapping[str, int]) -> str:
+    """The raw control token, copied onto the action and never classified."""
+    return str(event.get("cc_kind", ""))
+
+
 def _utility_kind(event: Mapping[str, Any], _index_of: Mapping[str, int]) -> str:
     """The event's authored kind when it is a utility kind, else ``""``."""
     kind = str(event.get("kind", ""))
@@ -556,7 +561,7 @@ _FROM_EVENT: Mapping[str, _Reader] = {
     "basic_attack": _flag("basic_attack"),
     "ability_instance": _value("ability_instance"),
     "immobilized": _immobilized,
-    "cc_kind": _text("cc_kind"),
+    "cc_kind": _cc_kind,
     "cc_duration": _share("cc_duration"),
     "skillshot": _flag("skillshot"),
     "area_damage": _flag("area_damage"),

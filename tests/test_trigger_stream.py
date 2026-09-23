@@ -991,19 +991,18 @@ CC_KIND_READERS = {
     # ``_damage_event_row`` copies the token onto the ledger row; it is
     # the one reader that never classifies.
     "src/calculator/fight/ledger/event_rows.py": frozenset({"_damage_event_row"}),
-    # The two compiler entries are copies too, and the distinction is the
+    # The two compiler readers are copies too, and the distinction is the
     # whole of A1: each stamps the raw token onto ``SurvivalAction.cc_kind``
     # and neither branches on it.  Every "is this an immobilize?" question
-    # they ask goes to ``is_immobilizing_event`` on the line above the copy,
-    # so the classifier still has one home.  ``_compile_pair``, the body
+    # they ask goes to ``is_immobilizing_event`` beside the copy, so the
+    # classifier still has one home.  ``_cc_kind`` is the receipt path's
+    # field reader.  ``_compile_pair``, the body
     # both compiler entry points share, joined when the merge restored the
     # delivery facts on compiled damage rows: Force of Nature's Steadfast
     # and the spell-shield cast grouping read ``action.cc_kind`` off the
     # action, and a compiled packet that carried none priced differently
     # from the receipt packet with nothing saying so.
-    "src/calculator/program/compile.py": frozenset(
-        {"action_from_event", "_compile_pair"}
-    ),
+    "src/calculator/program/compile.py": frozenset({"_cc_kind", "_compile_pair"}),
     # The receipt view publishes the token as a public field; a projection
     # that classified it would be a second classifier inside a layer that
     # may not compute at all (criterion 3).
