@@ -19,8 +19,6 @@ def _context(*, level=11, ability_power=0.0, bonus_attack_damage=0.0, options=No
     return rune_effects.RuneStatContext(
         level=level,
         is_melee=False,
-        bonus_attack_damage=bonus_attack_damage,
-        ability_power=ability_power,
         options=options or {},
     )
 

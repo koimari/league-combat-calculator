@@ -167,22 +167,37 @@ class TestAbsoluteFocus:
         with pytest.raises(ValueError, match="must be a number"):
             option.validated("yes")
 
-    def test_adaptive_force_takes_the_larger_bonus_and_ties_take_attack_damage(self):
-        """30 force is 18 bonus AD (0.6 each) or 30 AP, per Template:Adaptive."""
-        assert rune_effects.adaptive_force_attack_damage_ratio() == pytest.approx(0.6)
+    def test_the_page_totals_its_adaptive_force_unsplit(self):
+        """Which stat 30 force buys is the build's question, not the page's."""
         effect = rune_effects.resolve_rune("Absolute Focus")
-        ap_build = _context(level=18, ability_power=200.0, bonus_attack_damage=10.0)
-        assert rune_effects.resolve_stat_grants([effect], ap_build).ability_power == (
-            pytest.approx(30.0)
+        grants = rune_effects.resolve_stat_grants([effect], _context(level=18))
+        assert grants.adaptive_force == pytest.approx(30.0)
+
+
+class TestAdaptiveForceSplit:
+    """Adaptive_force: 0.6 bonus AD or 1 AP, the larger bonus wins, a tie
+    goes to the champion's adaptive type."""
+
+    split = staticmethod(rune_effects.adaptive_force_split)
+
+    def test_the_larger_bonus_takes_the_force(self):
+        assert rune_effects.adaptive_force_attack_damage_ratio() == pytest.approx(0.6)
+        assert self.split(30.0, 10.0, 200.0, "PHYSICAL_DAMAGE") == (0.0, 30.0)
+        ad = self.split(30.0, 200.0, 10.0, "MAGIC_DAMAGE")
+        assert ad == (pytest.approx(18.0), 0.0)
+
+    def test_a_tie_takes_the_adaptive_type(self):
+        assert self.split(30.0, 0.0, 0.0, "PHYSICAL_DAMAGE") == (
+            pytest.approx(18.0),
+            0.0,
         )
-        ad_build = _context(level=18, ability_power=10.0, bonus_attack_damage=200.0)
-        grants = rune_effects.resolve_stat_grants([effect], ad_build)
-        assert grants.bonus_attack_damage == pytest.approx(18.0)
-        assert grants.ability_power == 0.0
-        tie = _context(level=18)
-        assert rune_effects.resolve_stat_grants([effect], tie).bonus_attack_damage == (
-            pytest.approx(18.0)
-        )
+        assert self.split(30.0, 0.0, 0.0, "MAGIC_DAMAGE") == (0.0, 30.0)
+
+    def test_a_tie_with_no_adaptive_type_is_refused(self):
+        with pytest.raises(RuntimeError, match="'ADAPTIVE'"):
+            self.split(30.0, 0.0, 0.0, "ADAPTIVE")
+        assert self.split(30.0, 0.0, 1.0, "ADAPTIVE") == (0.0, 30.0)
+        assert self.split(0.0, 0.0, 0.0, "ADAPTIVE") == (0.0, 0.0)
 
 
 class TestScorch:
@@ -214,12 +229,10 @@ class TestCosmicInsight:
         )
 
 
-def _context(*, level, ability_power=0.0, bonus_attack_damage=0.0, options=None):
+def _context(*, level, options=None):
     return rune_effects.RuneStatContext(
         level=level,
         is_melee=False,
-        bonus_attack_damage=bonus_attack_damage,
-        ability_power=ability_power,
         options=options or {},
     )
 

@@ -140,7 +140,8 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   `capture_coverage_classification.py capture` rewrite `sha` and `git_head` with no
   value change: revert those rather than commit a stamp. `golden_snapshot.py
   capture` refuses while `src/` differs from HEAD, so a behaviour fix is two
-  commits. A regenerator's own docstring is prose its receipt can falsify, so a
+  commits. Settle the code commit's message before capturing: the baseline's
+  `git_head` names that commit, and an amend strands it. A regenerator's own docstring is prose its receipt can falsify, so a
   count lives in the artifact and the docstring names which.
 - **A field read with a literal default is the rule-5 failure shape, inside a
   raise message too.** `program/compile` reading a published raw as
@@ -176,11 +177,18 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   `program.events.Defer` and `Execute`, so `program/events.py` keeps `RIDER_KINDS`
   and the rider classes. `behavior_frontier.py` pins counter-2 exclusions by symbol
   per module, and its `--check` fails when a zero-policy population moves either
-  way, so the branch retiring sites owns the `--write`. Measure a base through `scan(root=...)` over a
+  way, so the branch retiring sites owns the `--write`. Its `class_c` count is
+  every item-name literal in a declarative home, so deleting a name-keyed table
+  moves the receipt too. Measure a base through `scan(root=...)` over a
   `git archive <sha> src` copy, never against the shared receipt.
 
 ## Engine and pricing
 
+- **The fight prices the rounded stat card.** `calculate_total_stats` rounds
+  every stat it publishes and the engine reads those, so a stat change under one
+  point can move no damage. A test pinning the damage delta of a small stat
+  change pins a rounding crossing. Give it a change that clears a whole point, as
+  the Swiftmarch movement-speed tests do on Ahri, where force is 1:1 AP.
 - **`return factor * sum_modifiers(...)` reads `factor` before the call**, so a
   `nonlocal` the callee's closure sets is invisible. Akshan E's attack-speed
   factor priced 1.0 that way. Bind the call to a name, then multiply.

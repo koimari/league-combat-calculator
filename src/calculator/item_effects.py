@@ -6,9 +6,9 @@ Functions compute bonus damage based on fight context (stats, target, duration).
 **Data sourcing:** Values are parsed from the tracked item cache via
 ``passive_parser``; a missing cache or a failed parse raises at import.
 ``_REFERENCE_ITEM_EFFECTS`` is the reviewed shape of every registered entry:
-it supplies ``_STATIC_ITEM_EFFECTS`` (the keys the parser cannot provide),
-declares which keys the parser owns, and is the parity reference the cached
-parse must reproduce. When JSON data is refreshed, ``refresh_item_effects()``
+it supplies ``_STATIC_ITEM_EFFECTS`` (its schema fields and ``CodeOwned``
+values), and every other value in it is parser-owned and the parity reference
+the cached parse must reproduce. When JSON data is refreshed, ``refresh_item_effects()``
 re-parses and updates ``ITEM_EFFECTS`` in place.
 """
 
@@ -2041,10 +2041,17 @@ MANAFLOW_LEDGER_KEYS = (
 # ---------------------------------------------------------------------------
 # Reference item effect entries
 # ---------------------------------------------------------------------------
-# The reviewed shape of every registered entry.  The live registry never reads
-# a parser-owned value from this table: ``_STATIC_ITEM_EFFECTS`` takes the
-# code-owned keys, ``_PARSEABLE_ITEM_KEYS`` the rest, and the parity test
-# holds the cached parse to these values.
+@dataclass(frozen=True, slots=True)
+class CodeOwned:
+    """A reference value the registry takes from code, because no parse states it."""
+
+    value: Any
+
+
+# The reviewed shape of every registered entry.  A value is code-owned when it
+# is a ``CodeOwned`` or its key is a schema field (``_STRUCTURAL_EFFECT_KEYS``);
+# every other value is parser-owned, so the live registry never reads it from
+# here and the parity test holds the cached parse to it.
 _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # ── Ordered sustain packets ─────────────────────────────────────────
     # These values are intentionally registry-owned.  The cached item JSON
@@ -2060,23 +2067,27 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # fail-closed and raises when a cached lifesteal item has no entry.
     "Vampiric Scepter": {
         "type": "sustain",
-        "lifesteal_percent": 7.0,
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Vampiric_Scepter",
-        "source_revision_id": 4030549,
+        "lifesteal_percent": CodeOwned(7.0),
+        "source_url": CodeOwned(
+            "https://wiki.leagueoflegends.com/en-us/Vampiric_Scepter"
+        ),
+        "source_revision_id": CodeOwned(4030549),
     },
     "Mercurial Scimitar": {
         "type": "sustain",
-        "lifesteal_percent": 10.0,
+        "lifesteal_percent": CodeOwned(10.0),
         # Quicksilver: "... and grants 50% bonus movement speed for 2
         # seconds" (cached active branch, rev 3984461; catalog atom
         # control.movement_speed 5e5f100f08a793f9 carries the same pair).
         # The cleanse leaf reads both through
         # ``mercurial_quicksilver_movement`` so neither the declaration nor
         # its atom receipt spells a number.
-        "quicksilver_move_speed_percent": 50.0,
-        "quicksilver_move_speed_seconds": 2.0,
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Mercurial_Scimitar",
-        "source_revision_id": 3984461,
+        "quicksilver_move_speed_percent": CodeOwned(50.0),
+        "quicksilver_move_speed_seconds": CodeOwned(2.0),
+        "source_url": CodeOwned(
+            "https://wiki.leagueoflegends.com/en-us/Mercurial_Scimitar"
+        ),
+        "source_revision_id": CodeOwned(3984461),
     },
     # Bloodthirster, Blade of the Ruined King and Ravenous Hydra already
     # have typed effect entries (defensive_start / on_hit / active); their
@@ -2084,7 +2095,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # per item.
     "Gunmetal Greaves": {
         "type": "sustain",
-        "lifesteal_percent": 5.0,
+        "lifesteal_percent": CodeOwned(5.0),
         # Noxian Gait (Riot-only branch): the cached Wiki cache has NO
         # passive branch (passives=[], noEffects=true; audit rev 4013706
         # records effect_count 0 — the Wiki page removed the effect in
@@ -2098,42 +2109,46 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # target ride the named-boundary receipt
         # (item_state_receipts noxian_gait_boundary); the branch is
         # NEVER a movement packet and never changes fight numbers.
-        "noxian_gait_decay_seconds": 2.0,
-        "noxian_gait_champions_only": True,
-        "noxian_gait_magnitude_unsourced": True,
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Gunmetal_Greaves",
-        "source_revision_id": 4013706,
+        "noxian_gait_decay_seconds": CodeOwned(2.0),
+        "noxian_gait_champions_only": CodeOwned(True),
+        "noxian_gait_magnitude_unsourced": CodeOwned(True),
+        "source_url": CodeOwned(
+            "https://wiki.leagueoflegends.com/en-us/Gunmetal_Greaves"
+        ),
+        "source_revision_id": CodeOwned(4013706),
     },
     "Guardian's Hammer": {
         "type": "sustain",
-        "lifesteal_percent": 5.0,
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Guardian%27s_Hammer",
-        "source_revision_id": 3878343,
+        "lifesteal_percent": CodeOwned(5.0),
+        "source_url": CodeOwned(
+            "https://wiki.leagueoflegends.com/en-us/Guardian%27s_Hammer"
+        ),
+        "source_revision_id": CodeOwned(3878343),
     },
     "Doran's Blade": {
         "type": "sustain",
-        "direct_heal_post_mitigation_ratio": 0.025,
-        "direct_heal_aoe_effectiveness": 0.333,
+        "direct_heal_post_mitigation_ratio": CodeOwned(0.025),
+        "direct_heal_aoe_effectiveness": CodeOwned(0.333),
         # The current entry replaced the old Warmonger omnivamp stat with
         # Life Draining.  Keep the override beside the sourced replacement so
         # a stale cache value cannot leak into the public stat bundle.
-        "stat_override_omnivamp_percent": 0.0,
+        "stat_override_omnivamp_percent": CodeOwned(0.0),
     },
     "Doran's Ring": {
         "type": "sustain",
-        "drain_restoration_per_second": 1.0,
-        "drain_combat_restoration_per_second": 2.0,
-        "drain_combat_duration": 5.0,
-        "drain_health_conversion": 0.45,
-        "drain_tick_interval": 1.0,
+        "drain_restoration_per_second": CodeOwned(1.0),
+        "drain_combat_restoration_per_second": CodeOwned(2.0),
+        "drain_combat_duration": CodeOwned(5.0),
+        "drain_health_conversion": CodeOwned(0.45),
+        "drain_tick_interval": CodeOwned(1.0),
     },
     "Doran's Shield": {
         "type": "sustain",
-        "enduring_focus_total_melee": 40.0,
-        "enduring_focus_total_reduced": 30.0,
-        "enduring_focus_missing_health_cap": 0.75,
-        "enduring_focus_duration": 8.0,
-        "health_regen_tick_interval": 0.5,
+        "enduring_focus_total_melee": CodeOwned(40.0),
+        "enduring_focus_total_reduced": CodeOwned(30.0),
+        "enduring_focus_missing_health_cap": CodeOwned(0.75),
+        "enduring_focus_duration": CodeOwned(8.0),
+        "health_regen_tick_interval": CodeOwned(0.5),
     },
     "Doran's Helm": {
         "type": "stat_conversion",
@@ -2145,7 +2160,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # champion model has no minion targets, so the value rides the
         # named-boundary receipt only (item_state_receipts
         # helping_hand_minion_only) — never an on-champion packet.
-        "helping_hand_minion_damage": 5.0,
+        "helping_hand_minion_damage": CodeOwned(5.0),
     },
     "Ionian Boots of Lucidity": {
         "type": "stat_conversion",
@@ -2158,7 +2173,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # NEVER an ability-haste packet (the item's own 10 ability haste
         # is the separate stats.abilityHaste.flat stat, applied by
         # stats.py; the passive must not reduce champion cooldowns).
-        "summoner_spell_haste": 10.0,
+        "summoner_spell_haste": CodeOwned(10.0),
     },
     "Catalyst of Aeons": {
         "type": "sustain",
@@ -2166,23 +2181,25 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # quarter of mana spent, capped at 20 per accepted cast/second.  The
         # wiki revision receipt (page 2964, rev 3960416) is code-owned so a
         # parser refresh cannot overwrite it (docs/wiki-full-entry-audit.json).
-        "damage_taken_to_mana_ratio": 0.10,
-        "mana_spent_heal_ratio": 0.25,
-        "mana_spent_heal_cap_per_cast": 20.0,
-        "mana_spent_heal_cap_per_second": 20.0,
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Catalyst_of_Aeons",
-        "source_revision_id": 3960416,
+        "damage_taken_to_mana_ratio": CodeOwned(0.10),
+        "mana_spent_heal_ratio": CodeOwned(0.25),
+        "mana_spent_heal_cap_per_cast": CodeOwned(20.0),
+        "mana_spent_heal_cap_per_second": CodeOwned(20.0),
+        "source_url": CodeOwned(
+            "https://wiki.leagueoflegends.com/en-us/Catalyst_of_Aeons"
+        ),
+        "source_revision_id": CodeOwned(3960416),
     },
     "Immortal Path": {
         "type": "damage_amp",
-        "health_state_damage_amp_above_half": 0.04,
-        "health_state_healing_multiplier_below_half": 0.12,
+        "health_state_damage_amp_above_half": CodeOwned(0.04),
+        "health_state_healing_multiplier_below_half": CodeOwned(0.12),
         # Slay, inherited whole from the Gluttonous Greaves this builds from:
         # the same three keys under the same spelling, sourced on that entry,
         # so one mechanic reaches one stacked-stat declaration.
-        "slay_omnivamp_per_takedown": 0.6,
-        "slay_max_stacks": 10,
-        "slay_max_omnivamp": 6.0,
+        "slay_omnivamp_per_takedown": CodeOwned(0.6),
+        "slay_max_stacks": CodeOwned(10),
+        "slay_max_omnivamp": CodeOwned(6.0),
     },
     "Gluttonous Greaves": {
         "type": "sustain",
@@ -2193,11 +2210,13 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # item_state_receipts row — takedown-driven stats are not
         # pre-fight-projectable (the scenario slay_stacks option is the
         # authored admission, the Immortal Path precedent).
-        "slay_omnivamp_per_takedown": 0.6,
-        "slay_max_stacks": 10,
-        "slay_max_omnivamp": 6.0,
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Gluttonous_Greaves",
-        "source_revision_id": 4030444,
+        "slay_omnivamp_per_takedown": CodeOwned(0.6),
+        "slay_max_stacks": CodeOwned(10),
+        "slay_max_omnivamp": CodeOwned(6.0),
+        "source_url": CodeOwned(
+            "https://wiki.leagueoflegends.com/en-us/Gluttonous_Greaves"
+        ),
+        "source_revision_id": CodeOwned(4030444),
     },
     # ── On-Hit (per auto attack) ──────────────────────────────────────────
     "Cull": {
@@ -2206,44 +2225,44 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # health.  The cached passive branch only contains the quest/gold
         # progression, so this sourced value is intentionally code-owned;
         # the progression remains fail-closed in item_coverage.py.
-        "health_per_on_hit": 3.0,
-        "reap_gold_per_minion": 1.0,
-        "reap_max_gold": 100.0,
-        "reap_completion_gold": 350.0,
+        "health_per_on_hit": CodeOwned(3.0),
+        "reap_gold_per_minion": CodeOwned(1.0),
+        "reap_max_gold": CodeOwned(100.0),
+        "reap_completion_gold": CodeOwned(350.0),
     },
     "Phage": {
         "type": "stat_conversion",
-        "rage_bonus_move_speed_melee": 20.0,
-        "rage_bonus_move_speed_ranged": 10.0,
-        "rage_duration": 2.0,
+        "rage_bonus_move_speed_melee": CodeOwned(20.0),
+        "rage_bonus_move_speed_ranged": CodeOwned(10.0),
+        "rage_duration": CodeOwned(2.0),
     },
     "Runic Compass": {
         "type": "stat_conversion",
-        "shared_riches_interval": 20.0,
-        "shared_riches_gold_minion": 20.0,
-        "shared_riches_gold_melee": 24.0,
-        "shared_riches_gold_ranged": 22.0,
-        "support_quest_threshold": 800.0,
-        "ward_charges": 3.0,
+        "shared_riches_interval": CodeOwned(20.0),
+        "shared_riches_gold_minion": CodeOwned(20.0),
+        "shared_riches_gold_melee": CodeOwned(24.0),
+        "shared_riches_gold_ranged": CodeOwned(22.0),
+        "support_quest_threshold": CodeOwned(800.0),
+        "ward_charges": CodeOwned(3.0),
     },
     "Tear of the Goddess": {
         "type": "stat_conversion",
-        "manaflow_charge_interval": 8.0,
+        "manaflow_charge_interval": CodeOwned(8.0),
         # Manaflow banks a sourced charge every 8 seconds, up to 4 charges
         # (cached Wiki branch: "Grants a charge every 8 seconds, up to 4
         # charges").  Each authored ability cast that affects a champion
         # consumes one charge for the champion amount; the minion-target
         # floor stays the 3-mana trigger amount.
-        "manaflow_max_charges": 4.0,
-        "manaflow_bonus_mana_per_trigger": 3.0,
-        "manaflow_bonus_mana_per_champion": 6.0,
-        "manaflow_bonus_mana_max": 360.0,
+        "manaflow_max_charges": CodeOwned(4.0),
+        "manaflow_bonus_mana_per_trigger": CodeOwned(3.0),
+        "manaflow_bonus_mana_per_champion": CodeOwned(6.0),
+        "manaflow_bonus_mana_max": CodeOwned(360.0),
         # Tear's cached clause spends a charge on an ability cast instance
         # only ("Dealing ability damage, or applying a buff or debuff ...
         # with a non-innate ability cast instance"), so the fight model
         # prices the whole clause.
         "manaflow_on_hit_charge": False,
-        "helping_hand_minion_damage": 5.0,
+        "helping_hand_minion_damage": CodeOwned(5.0),
     },
     "Lost Chapter": {
         "type": "stat_conversion",
@@ -2254,32 +2273,32 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # modifier parser has no Enlighten branch, so these values are
         # intentionally code-owned and consumed only through the typed
         # accessors; a parser refresh can never overwrite them.
-        "enlighten_restore_percent": 20.0,
-        "enlighten_duration_seconds": 3.0,
-        "enlighten_ticks": 3,
+        "enlighten_restore_percent": CodeOwned(20.0),
+        "enlighten_duration_seconds": CodeOwned(3.0),
+        "enlighten_ticks": CodeOwned(3),
     },
     "World Atlas": {
         "type": "stat_conversion",
-        "shared_riches_interval": 20.0,
-        "shared_riches_gold_minion": 15.0,
-        "shared_riches_gold_melee": 22.0,
-        "shared_riches_gold_ranged": 20.0,
-        "support_quest_threshold": 400.0,
-        "ward_charges": 3.0,
+        "shared_riches_interval": CodeOwned(20.0),
+        "shared_riches_gold_minion": CodeOwned(15.0),
+        "shared_riches_gold_melee": CodeOwned(22.0),
+        "shared_riches_gold_ranged": CodeOwned(20.0),
+        "support_quest_threshold": CodeOwned(400.0),
+        "ward_charges": CodeOwned(3.0),
     },
     "Umbral Glaive": {
         "type": "on_hit_once",
         "formula": "flat_plus_lethality",
-        "base": 50.0,
-        "lethality_ratio": 1.5,
-        "nightstalker_unseen_seconds": 1.0,
-        "nightstalker_trigger_window": 4.0,
+        "base": CodeOwned(50.0),
+        "lethality_ratio": CodeOwned(1.5),
+        "nightstalker_unseen_seconds": CodeOwned(1.0),
+        "nightstalker_trigger_window": CodeOwned(4.0),
         # Blackout's sourced aura duration (cached Wiki branch: "When
         # spotted by enemy stealthed wards or traps, gain Blackout for 8
         # seconds").  The aura denies/reveals wards only, so it rides the
         # vision-dimension receipt; Nightstalker's true damage stays on the
         # typed first-auto packet.
-        "blackout_duration": 8.0,
+        "blackout_duration": CodeOwned(8.0),
         "damage_type": "true",
         "breakdown_key": "on_hit_once_Umbral Glaive",
         "display_name": "Umbral Glaive (Nightstalker)",
@@ -2297,12 +2316,14 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "damage_type": "physical",
         "current_hp_ratio_melee": 0.09,
         "current_hp_ratio_ranged": 0.06,
-        "min_damage": 5.0,  # Flat minimum when target HP is modeled at 0
+        "min_damage": CodeOwned(5.0),  # Flat minimum when target HP is modeled at 0
         # Typed sustain stat: 10% life steal (wiki Module:ItemData/data +
         # item page revision).
-        "lifesteal_percent": 10.0,
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Blade_of_the_Ruined_King",
-        "source_revision_id": 4044693,
+        "lifesteal_percent": CodeOwned(10.0),
+        "source_url": CodeOwned(
+            "https://wiki.leagueoflegends.com/en-us/Blade_of_the_Ruined_King"
+        ),
+        "source_revision_id": CodeOwned(4044693),
     },
     "Wit's End": {
         "type": "on_hit",
@@ -2346,7 +2367,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "active_max_hp_ratio_ranged": 0.02,
         "active_secondary_max_hp_ratio_melee": 0.09,
         "active_secondary_max_hp_ratio_ranged": 0.045,
-        "active_cooldown": 10.0,
+        "active_cooldown": CodeOwned(10.0),
     },
     "Guinsoo's Rageblade": {
         "type": "on_hit",
@@ -2384,8 +2405,8 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Wiki revision receipt (page 747852, rev 4005926 — see
         # docs/wiki-full-entry-audit.json); code-owned so a parser refresh
         # cannot overwrite it (P3 package 3E).
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Muramana",
-        "source_revision_id": 4005926,
+        "source_url": CodeOwned("https://wiki.leagueoflegends.com/en-us/Muramana"),
+        "source_revision_id": CodeOwned(4005926),
     },
     "Endless Hunger": {
         "type": "stat_conversion",
@@ -2433,8 +2454,8 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "crit_bonus_max": 50.0,
         # Manaflow restores half of Spellblade's damage formula: 62.5% base
         # AD plus 0.25 mana per 1% critical strike chance.
-        "mana_restore_base_ad_ratio": 0.625,
-        "mana_restore_crit_ratio": 25.0,
+        "mana_restore_base_ad_ratio": CodeOwned(0.625),
+        "mana_restore_crit_ratio": CodeOwned(25.0),
         "cooldown": 1.5,
         "weave_delay": 1.5,  # CD starts after empowered attack
     },
@@ -2476,7 +2497,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Inflame: 2.5 per 0.5s for 3s = 15 total, no AP scaling
         "base_total": 15.0,
         "duration": 3.0,
-        "tick_interval": 0.5,
+        "tick_interval": CodeOwned(0.5),
     },
     "Liandry's Torment": {
         "type": "burn",
@@ -2485,7 +2506,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # 1% max HP every 0.5s for 3s = 6% max HP total
         "max_hp_ratio_total": 0.06,
         "duration": 3.0,
-        "tick_interval": 0.5,
+        "tick_interval": CodeOwned(0.5),
         # Suffering: 2% increased damage per second, up to 6%
         "damage_amp_per_second": 0.02,
         "damage_amp_max": 0.06,
@@ -2498,7 +2519,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "base_total": 60.0,
         "ap_ratio_total": 0.06,
         "duration": 3.0,
-        "tick_interval": 0.5,
+        "tick_interval": CodeOwned(0.5),
         # 4% bonus AP per burning champion
         "ap_amp_per_target": 0.04,
     },
@@ -2506,7 +2527,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "type": "immolate",
         "formula": "bonus_hp_dps",
         "damage_type": "magic",
-        "event_interval": 1.0,
+        "event_interval": CodeOwned(1.0),
         # 20 + 1.5% bonus HP per second
         "base_per_second": 20.0,
         "bonus_hp_ratio_per_second": 0.015,
@@ -2515,7 +2536,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "type": "immolate",
         "formula": "bonus_hp_dps",
         "damage_type": "magic",
-        "event_interval": 1.0,
+        "event_interval": CodeOwned(1.0),
         # 15 + 1% bonus HP per second
         "base_per_second": 15.0,
         "bonus_hp_ratio_per_second": 0.01,
@@ -2524,7 +2545,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "type": "immolate",
         "formula": "flat_dps",
         "damage_type": "magic",
-        "event_interval": 1.0,
+        "event_interval": CodeOwned(1.0),
         # Flat 15 per second (bonus-health scaling removed in V14.19)
         "base_per_second": 15.0,
     },
@@ -2556,7 +2577,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "chain_targets_max": 8,
         "energized_max_stacks": 100,
         "energized_attack_stacks": 15,
-        "energized_distance_units_per_stack": 24.0,
+        "energized_distance_units_per_stack": CodeOwned(24.0),
     },
     "Stormsurge": {
         "type": "proc",
@@ -2570,8 +2591,8 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "cooldown": 30.0,
         # Squall arms after this share of the target's max health is
         # dealt within the rolling window below (Stormraider's trigger).
-        "damage_threshold_ratio": 0.25,
-        "damage_threshold_window": 2.5,
+        "damage_threshold_ratio": CodeOwned(0.25),
+        "damage_threshold_window": CodeOwned(2.5),
         "is_ability_damage": True,  # Amplified by Actualizer
     },
     "Hextech Alternator": {
@@ -2618,9 +2639,9 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Hatefog: (60 + 5% AP) per second for 3s = 180 + 15% AP per
         # application.  Each R dash refreshes the zone timer, extending
         # effective duration to (R_dash_spread + 3) seconds.
-        "base": 180.0,
-        "ap_ratio": 0.15,
-        "duration": 3.0,
+        "base": CodeOwned(180.0),
+        "ap_ratio": CodeOwned(0.15),
+        "duration": CodeOwned(3.0),
         # Also reduces target MR by 10 for 3s
         "mr_reduction": 10.0,
     },
@@ -2632,7 +2653,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # 100 + 10% AP magic damage
         "base": 100.0,
         "ap_ratio": 0.10,
-        "cooldown": 40.0,
+        "cooldown": CodeOwned(40.0),
     },
     "Profane Hydra": {
         "type": "active",
@@ -2643,17 +2664,17 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "secondary_ad_ratio_ranged": 0.20,
         # Active: 80% total AD
         "total_ad_ratio": 0.80,
-        "cooldown": 10.0,
+        "cooldown": CodeOwned(10.0),
     },
     "Hextech Gunblade": {
         "type": "active",
         "formula": "level_ap",
         "damage_type": "magic",
         # Lightning Bolt: 175-262 (scales linearly levels 1-20) + 30% AP
-        "base_min": 175.0,
-        "base_max": 262.0,
+        "base_min": CodeOwned(175.0),
+        "base_max": CodeOwned(262.0),
         "ap_ratio": 0.30,
-        "cooldown": 60.0,
+        "cooldown": CodeOwned(60.0),
     },
     "Ravenous Hydra": {
         "type": "active",
@@ -2670,10 +2691,12 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "lifesteal_effectiveness": 1.0,
         # Typed sustain stat: 12% life steal (wiki Module:ItemData/data +
         # item page revision).
-        "lifesteal_percent": 12.0,
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Ravenous_Hydra",
-        "source_revision_id": 4047314,
-        "cooldown": 10.0,
+        "lifesteal_percent": CodeOwned(12.0),
+        "source_url": CodeOwned(
+            "https://wiki.leagueoflegends.com/en-us/Ravenous_Hydra"
+        ),
+        "source_revision_id": CodeOwned(4047314),
+        "cooldown": CodeOwned(10.0),
     },
     "Runaan's Hurricane": {
         "type": "secondary_target",
@@ -2695,7 +2718,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "secondary_ad_ratio_ranged": 0.20,
         # Crescent: 75% total AD
         "total_ad_ratio": 0.75,
-        "cooldown": 10.0,
+        "cooldown": CodeOwned(10.0),
         # Cleave (the on-hit passive) strikes OTHER enemies in a radius
         # around the attack target — it never damages the selected target,
         # so its splash belongs to the shared multi-target roster model.
@@ -2714,15 +2737,15 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "secondary_ad_ratio_ranged": 0.20,
         # Breaking Shockwave: 80% total AD + slow
         "total_ad_ratio": 0.80,
-        "cooldown": 15.0,
+        "cooldown": CodeOwned(15.0),
         # Breaking Shockwave's sourced utility siblings. These values are
         # consumed through required_effect_value by the participant ledger.
-        "slow_percent": 35.0,
-        "slow_duration": 3.0,
-        "bonus_move_speed_percent": 35.0,
-        "bonus_move_speed_duration": 3.0,
-        "area_radius": 450.0,
-        "front_offset": 100.0,
+        "slow_percent": CodeOwned(35.0),
+        "slow_duration": CodeOwned(3.0),
+        "bonus_move_speed_percent": CodeOwned(35.0),
+        "bonus_move_speed_duration": CodeOwned(3.0),
+        "area_radius": CodeOwned(450.0),
+        "front_offset": CodeOwned(100.0),
     },
     # Note: Goredrinker, Everfrost, Galeforce, Prowler's Claw are
     # DISTRIBUTED items (Arena only) — not available on Summoner's Rift.
@@ -2739,7 +2762,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # keeps the first branch of the Wiki's rd pair; retain the ranged
         # branch as a static, revision-backed value so it cannot disappear
         # during a parser refresh.
-        "max_stack_omnivamp_ranged": 6.0,
+        "max_stack_omnivamp_ranged": CodeOwned(6.0),
         # Void Infusion: 2% of bonus health as ability power.
         "bonus_health_to_ap_ratio": 0.02,
     },
@@ -2808,7 +2831,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # scales the amp down linearly (2% with current values).
         "max_amp": 0.10,
         "max_distance": 500.0,
-        "melee_assumed_distance": 100.0,
+        "melee_assumed_distance": CodeOwned(100.0),
     },
     "Horizon Focus": {
         "type": "hypershot_amp",
@@ -2831,7 +2854,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "mana_made_real_duration": 8.0,
         "mana_cost_multiplier": 2.0,
         "basic_cooldown_progress_multiplier": 1.30,
-        "mana_made_real_cooldown": 60.0,
+        "mana_made_real_cooldown": CodeOwned(60.0),
     },
     # ── Ultimate-Triggered Attack Speed Buffs ──────────────────────────────
     "Experimental Hexplate": {
@@ -2869,8 +2892,8 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "target_max_hp_ratio_ranged": 0.05,
         # The passive arms on two separate champion hits within this window;
         # the completed pair starts the per-target cooldown.
-        "stack_required": 2,
-        "stack_window": 2.0,
+        "stack_required": CodeOwned(2),
+        "stack_window": CodeOwned(2.0),
         "cooldown": 6.0,
         # Ever Rising Moon's self-shield is attached to the exact completed
         # pair event and consumed by the coupled participant timeline.
@@ -2893,8 +2916,10 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Wiki revision receipt (page 1714197, rev 4046567 — see
         # docs/wiki-full-entry-audit.json); code-owned so a parser refresh
         # cannot overwrite it (P3 package 3D).
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Bastionbreaker",
-        "source_revision_id": 4046567,
+        "source_url": CodeOwned(
+            "https://wiki.leagueoflegends.com/en-us/Bastionbreaker"
+        ),
+        "source_revision_id": CodeOwned(4046567),
     },
     # ── Reactive strike-back (consumed by the coupled timeline) ───────────
     "Bramble Vest": {
@@ -2904,14 +2929,14 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # also wounded for 3 seconds. Fires only from modeled incoming
         # attack events — never assumed in a one-attacker fight.
         "base": 10.0,
-        "bonus_armor_ratio": 0.0,
+        "bonus_armor_ratio": CodeOwned(0.0),
         "grievous_duration": 3.0,
     },
     "Thornmail": {
         "type": "thorns",
         "damage_type": "magic",
         "base": 20.0,
-        "bonus_armor_ratio": 0.10,
+        "bonus_armor_ratio": CodeOwned(0.10),
         "grievous_duration": 3.0,
     },
     # ── Resistance Reduction ──────────────────────────────────────────────
@@ -2966,8 +2991,8 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Sharpshooter: 40 bonus magic damage on first energized auto
         "base": 40.0,
         "energized_max_stacks": 100,
-        "energized_attack_stacks": 6,
-        "energized_distance_units_per_stack": 24.0,
+        "energized_attack_stacks": CodeOwned(6),
+        "energized_distance_units_per_stack": CodeOwned(24.0),
     },
     # ── Other single-proc items ───────────────────────────────────────────
     "Dead Man's Plate": {
@@ -3066,32 +3091,32 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Fimbulwinter": {
         "type": "stat_conversion",
-        "bonus_mana_to_health_ratio": 0.15,
+        "bonus_mana_to_health_ratio": CodeOwned(0.15),
         # Everlasting is event-driven.  The participant timeline only arms
         # this branch when a champion module supplies explicit crowd-control
         # metadata; it never infers a slow or immobilize from an ability name.
-        "everlasting_base_shield": 100.0,
-        "everlasting_current_mana_ratio": 0.045,
+        "everlasting_base_shield": CodeOwned(100.0),
+        "everlasting_current_mana_ratio": CodeOwned(0.045),
         # The gate is sourced (Fimbulwinter rev 3984419): a melee holder's
         # slow arms Everlasting
         # above the 20%-maximum-mana gate, and the whole champion x
         # Fimbulwinter coverage fan-out prices through it.
-        "everlasting_mana_gate_status": "source_authorized",
-        "everlasting_mana_threshold_ratio": 0.20,
+        "everlasting_mana_gate_status": CodeOwned("source_authorized"),
+        "everlasting_mana_threshold_ratio": CodeOwned(0.20),
         # Everlasting arms on crowd control and on nothing else, which is
         # what gates the fight engine's authored-control requirement.
-        "everlasting_trigger_kind": "crowd_control",
+        "everlasting_trigger_kind": CodeOwned("crowd_control"),
         # The Wiki and client binary both place the multi-enemy branch at
         # 1200 units around the shield holder.  The exact boundary operator
         # and a runtime spatial-input contract remain unavailable.
-        "everlasting_nearby_enemy_range": 1200.0,
-        "everlasting_multi_target_minimum_enemy_count": 2,
-        "everlasting_range_center": "holder",
-        "everlasting_range_target_kind": "enemy_champion",
-        "everlasting_range_boundary_status": "source_unavailable",
-        "everlasting_multi_target_multiplier": 1.80,
-        "everlasting_duration": 3.0,
-        "everlasting_cooldown": 8.0,
+        "everlasting_nearby_enemy_range": CodeOwned(1200.0),
+        "everlasting_multi_target_minimum_enemy_count": CodeOwned(2),
+        "everlasting_range_center": CodeOwned("holder"),
+        "everlasting_range_target_kind": CodeOwned("enemy_champion"),
+        "everlasting_range_boundary_status": CodeOwned("source_unavailable"),
+        "everlasting_multi_target_multiplier": CodeOwned(1.80),
+        "everlasting_duration": CodeOwned(3.0),
+        "everlasting_cooldown": CodeOwned(8.0),
     },
     "Winter's Approach": {
         "type": "stat_conversion",
@@ -3177,53 +3202,53 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Warmog's Armor": {
         "type": "stat_conversion",
         "item_bonus_health_ratio": 0.12,
-        "heart_bonus_health_threshold": 2000.0,
-        "heart_max_health_ratio_per_tick": 0.015,
-        "heart_tick_interval": 0.5,
-        "heart_champion_damage_cooldown": 8.0,
-        "heart_nonchampion_damage_cooldown": 3.0,
+        "heart_bonus_health_threshold": CodeOwned(2000.0),
+        "heart_max_health_ratio_per_tick": CodeOwned(0.015),
+        "heart_tick_interval": CodeOwned(0.5),
+        "heart_champion_damage_cooldown": CodeOwned(8.0),
+        "heart_nonchampion_damage_cooldown": CodeOwned(3.0),
     },
     # ── Starting defenses (consumed by defensive_effects.py) ─────────────
     "Armored Advance": {
         "type": "defensive_start",
-        "basic_damage_multiplier": 0.90,
-        "reactive_shield_damage_type": "physical",
-        "reactive_shield_base": 100.0,
-        "reactive_shield_max": 200.0,
-        "reactive_shield_scale_start_level": 9,
-        "reactive_shield_scale_end_level": 18,
-        "reactive_shield_bonus_health_ratio": 0.08,
-        "reactive_shield_duration": 5.0,
-        "reactive_shield_cooldown": 15.0,
+        "basic_damage_multiplier": CodeOwned(0.90),
+        "reactive_shield_damage_type": CodeOwned("physical"),
+        "reactive_shield_base": CodeOwned(100.0),
+        "reactive_shield_max": CodeOwned(200.0),
+        "reactive_shield_scale_start_level": CodeOwned(9),
+        "reactive_shield_scale_end_level": CodeOwned(18),
+        "reactive_shield_bonus_health_ratio": CodeOwned(0.08),
+        "reactive_shield_duration": CodeOwned(5.0),
+        "reactive_shield_cooldown": CodeOwned(15.0),
     },
     "Chainlaced Crushers": {
         "type": "defensive_start",
-        "reactive_shield_damage_type": "magic",
-        "reactive_shield_base": 100.0,
-        "reactive_shield_max": 200.0,
-        "reactive_shield_scale_start_level": 9,
-        "reactive_shield_scale_end_level": 18,
-        "reactive_shield_bonus_health_ratio": 0.08,
-        "reactive_shield_duration": 5.0,
-        "reactive_shield_cooldown": 15.0,
+        "reactive_shield_damage_type": CodeOwned("magic"),
+        "reactive_shield_base": CodeOwned(100.0),
+        "reactive_shield_max": CodeOwned(200.0),
+        "reactive_shield_scale_start_level": CodeOwned(9),
+        "reactive_shield_scale_end_level": CodeOwned(18),
+        "reactive_shield_bonus_health_ratio": CodeOwned(0.08),
+        "reactive_shield_duration": CodeOwned(5.0),
+        "reactive_shield_cooldown": CodeOwned(15.0),
     },
     "Celestial Opposition": {
         "type": "defensive_start",
-        "incoming_damage_multiplier": 0.65,
-        "incoming_damage_linger": 2.0,
-        "incoming_damage_cooldown": 20.0,
+        "incoming_damage_multiplier": CodeOwned(0.65),
+        "incoming_damage_linger": CodeOwned(2.0),
+        "incoming_damage_cooldown": CodeOwned(20.0),
     },
     "Bloodthirster": {
         "type": "defensive_start",
-        "ichorshield_min": 165.0,
-        "ichorshield_max": 315.0,
-        "ichorshield_scale_start_level": 9,
-        "ichorshield_scale_end_level": 18,
+        "ichorshield_min": CodeOwned(165.0),
+        "ichorshield_max": CodeOwned(315.0),
+        "ichorshield_scale_start_level": CodeOwned(9),
+        "ichorshield_scale_end_level": CodeOwned(18),
         # Typed sustain stat: 15% life steal (wiki Module:ItemData/data +
         # item page revision).
-        "lifesteal_percent": 15.0,
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Bloodthirster",
-        "source_revision_id": 4025103,
+        "lifesteal_percent": CodeOwned(15.0),
+        "source_url": CodeOwned("https://wiki.leagueoflegends.com/en-us/Bloodthirster"),
+        "source_revision_id": CodeOwned(4025103),
     },
     "Kaenic Rookern": {
         "type": "defensive_start",
@@ -3246,18 +3271,20 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "type": "target_mitigation",
         # Undaunted blocks 15 damage from champion attacks and abilities.
         # Damage-over-time abilities use the authored 25% effectiveness.
-        "champion_damage_flat_reduction": 15.0,
-        "champion_dot_damage_flat_reduction": 3.75,
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Guardian%27s_Horn",
-        "source_revision_id": 0,
+        "champion_damage_flat_reduction": CodeOwned(15.0),
+        "champion_dot_damage_flat_reduction": CodeOwned(3.75),
+        "source_url": CodeOwned(
+            "https://wiki.leagueoflegends.com/en-us/Guardian%27s_Horn"
+        ),
+        "source_revision_id": CodeOwned(0),
     },
     "Frozen Heart": {
         "type": "target_attack_speed_aura",
         # Winter's Caress cripples nearby champions' total attack speed by 20%.
-        "attack_speed_reduction": 0.20,
+        "attack_speed_reduction": CodeOwned(0.20),
         # The roster has no coordinates; the coupled pair is explicitly
         # treated as being inside this sourced enemy-only aura.
-        "range_units": 700.0,
+        "range_units": CodeOwned(700.0),
     },
     "Randuin's Omen": {
         "type": "target_mitigation",
@@ -3281,46 +3308,52 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # binary Items/3026 mEffectAmount [0.5, 4.0, 300.0, 1.0]; source
         # revision 4046863 (2026-07-28) is newer than the audit JSON row
         # 4001358 (stale — recorded as a follow-up).
-        "revive_health_ratio": 0.50,
-        "revive_delay": 4.0,
-        "revive_cooldown": 300.0,
-        "revive_mana_ratio": 1.0,
-        "one_use": True,
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Guardian_Angel",
-        "source_revision_id": 4046863,
+        "revive_health_ratio": CodeOwned(0.50),
+        "revive_delay": CodeOwned(4.0),
+        "revive_cooldown": CodeOwned(300.0),
+        "revive_mana_ratio": CodeOwned(1.0),
+        "one_use": CodeOwned(True),
+        "source_url": CodeOwned(
+            "https://wiki.leagueoflegends.com/en-us/Guardian_Angel"
+        ),
+        "source_revision_id": CodeOwned(4046863),
     },
     "Force of Nature": {
         "type": "target_state",
-        "steadfast_stack_duration": 7.0,
-        "steadfast_max_stacks": 8,
-        "steadfast_stack_interval": 1.0,
-        "steadfast_immobilize_stacks": 2,
-        "steadfast_bonus_magic_resistance": 70.0,
-        "steadfast_bonus_move_speed_percent": 6.0,
+        "steadfast_stack_duration": CodeOwned(7.0),
+        "steadfast_max_stacks": CodeOwned(8),
+        "steadfast_stack_interval": CodeOwned(1.0),
+        "steadfast_immobilize_stacks": CodeOwned(2),
+        "steadfast_bonus_magic_resistance": CodeOwned(70.0),
+        "steadfast_bonus_move_speed_percent": CodeOwned(6.0),
     },
     "Jak'Sho, The Protean": {
         "type": "target_state",
-        "voidborn_stack_interval": 1.0,
-        "voidborn_max_stacks": 5,
-        "voidborn_bonus_resistance_multiplier": 0.30,
+        "voidborn_stack_interval": CodeOwned(1.0),
+        "voidborn_max_stacks": CodeOwned(5),
+        "voidborn_bonus_resistance_multiplier": CodeOwned(0.30),
     },
     "Zhonya's Hourglass": {
         "type": "defensive_start",
-        "stasis_duration": 2.5,
+        "stasis_duration": CodeOwned(2.5),
         # Wiki revision receipt (page 43052, rev 3902922 — see
         # docs/wiki-full-entry-audit.json); code-owned so a parser refresh
         # cannot overwrite it (P3 package 3F).
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Zhonya's_Hourglass",
-        "source_revision_id": 3902922,
+        "source_url": CodeOwned(
+            "https://wiki.leagueoflegends.com/en-us/Zhonya's_Hourglass"
+        ),
+        "source_revision_id": CodeOwned(3902922),
     },
     "Seeker's Armguard": {
         "type": "defensive_start",
-        "stasis_duration": 2.5,
+        "stasis_duration": CodeOwned(2.5),
         # Shares Zhonya's Time Stop evidence (page 43052, rev 3902922);
         # Seeker's own audit revision is 3837259 (page 860703) — both
         # carry the identical 2.5s value.
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Zhonya's_Hourglass",
-        "source_revision_id": 3902922,
+        "source_url": CodeOwned(
+            "https://wiki.leagueoflegends.com/en-us/Zhonya's_Hourglass"
+        ),
+        "source_revision_id": CodeOwned(3902922),
     },
     "Death's Dance": {
         "type": "defensive_start",
@@ -3330,11 +3363,11 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "damage_deferral_melee": 0.30,
         "damage_deferral_ranged": 0.10,
         "damage_deferral_duration": 3.0,
-        "damage_deferral_ticks": 3,
+        "damage_deferral_ticks": CodeOwned(3),
         "defy_window": 3.0,
         "defy_heal_bonus_ad_ratio": 0.75,
         "defy_heal_duration": 2.0,
-        "defy_heal_ticks": 2,
+        "defy_heal_ticks": CodeOwned(2),
     },
     # Annul is ready at the opening of a modeled exchange.  The timeline
     # consumes it on the first authored hostile ability and rearms it on the
@@ -3346,27 +3379,31 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     # read from, and receipt_for's resolution order reads the entry first.
     "Banshee's Veil": {
         "type": "defensive_start",
-        "spell_shield_ready": True,
-        "spell_shield_cooldown": 40.0,
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Banshee%27s_Veil",
-        "source_revision_id": 3957919,
-        "source_revision_timestamp": "2025-10-05T20:03:50Z",
+        "spell_shield_ready": CodeOwned(True),
+        "spell_shield_cooldown": CodeOwned(40.0),
+        "source_url": CodeOwned(
+            "https://wiki.leagueoflegends.com/en-us/Banshee%27s_Veil"
+        ),
+        "source_revision_id": CodeOwned(3957919),
+        "source_revision_timestamp": CodeOwned("2025-10-05T20:03:50Z"),
     },
     "Edge of Night": {
         "type": "defensive_start",
-        "spell_shield_ready": True,
-        "spell_shield_cooldown": 40.0,
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Edge_of_Night",
-        "source_revision_id": 4013389,
-        "source_revision_timestamp": "2026-04-29T06:32:04Z",
+        "spell_shield_ready": CodeOwned(True),
+        "spell_shield_cooldown": CodeOwned(40.0),
+        "source_url": CodeOwned("https://wiki.leagueoflegends.com/en-us/Edge_of_Night"),
+        "source_revision_id": CodeOwned(4013389),
+        "source_revision_timestamp": CodeOwned("2026-04-29T06:32:04Z"),
     },
     "Verdant Barrier": {
         "type": "defensive_start",
-        "spell_shield_ready": True,
-        "spell_shield_cooldown": 60.0,
-        "source_url": "https://wiki.leagueoflegends.com/en-us/Verdant_Barrier",
-        "source_revision_id": 3957920,
-        "source_revision_timestamp": "2025-10-05T20:04:20Z",
+        "spell_shield_ready": CodeOwned(True),
+        "spell_shield_cooldown": CodeOwned(60.0),
+        "source_url": CodeOwned(
+            "https://wiki.leagueoflegends.com/en-us/Verdant_Barrier"
+        ),
+        "source_revision_id": CodeOwned(3957920),
+        "source_revision_timestamp": CodeOwned("2025-10-05T20:04:20Z"),
     },
     "Immortal Shieldbow": {
         "type": "target_threshold_shield",
@@ -3380,68 +3417,68 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Hexdrinker": {
         "type": "target_threshold_shield",
-        "health_threshold": 0.30,
-        "shield_melee_min": 110.0,
-        "shield_melee_max": 280.0,
-        "shield_ranged_min": 82.5,
-        "shield_ranged_max": 210.0,
-        "duration": 2.5,
+        "health_threshold": CodeOwned(0.30),
+        "shield_melee_min": CodeOwned(110.0),
+        "shield_melee_max": CodeOwned(280.0),
+        "shield_ranged_min": CodeOwned(82.5),
+        "shield_ranged_max": CodeOwned(210.0),
+        "duration": CodeOwned(2.5),
         "damage_type": "magic",
     },
     "Maw of Malmortius": {
         "type": "stat_conversion",
-        "health_threshold": 0.30,
-        "shield_melee_base": 200.0,
-        "shield_melee_bonus_ad_ratio": 1.50,
-        "shield_ranged_base": 150.0,
-        "shield_ranged_bonus_ad_ratio": 1.125,
-        "duration": 3.0,
+        "health_threshold": CodeOwned(0.30),
+        "shield_melee_base": CodeOwned(200.0),
+        "shield_melee_bonus_ad_ratio": CodeOwned(1.50),
+        "shield_ranged_base": CodeOwned(150.0),
+        "shield_ranged_bonus_ad_ratio": CodeOwned(1.125),
+        "duration": CodeOwned(3.0),
         "damage_type": "magic",
-        "lifeline_omnivamp_percent": 10.0,
+        "lifeline_omnivamp_percent": CodeOwned(10.0),
     },
     "Seraph's Embrace": {
         "type": "stat_conversion",
         "bonus_mana_to_ap_ratio": 0.02,
-        "health_threshold": 0.30,
-        "shield_max_mana_ratio": 0.18,
-        "duration": 3.0,
+        "health_threshold": CodeOwned(0.30),
+        "shield_max_mana_ratio": CodeOwned(0.18),
+        "duration": CodeOwned(3.0),
         "damage_type": "all",
     },
     "Sterak's Gage": {
         "type": "stat_conversion",
         "base_ad_to_bonus_ad_ratio": 0.5,
-        "health_threshold": 0.30,
-        "shield_bonus_health_ratio": 0.60,
-        "duration": 4.5,
+        "health_threshold": CodeOwned(0.30),
+        "shield_bonus_health_ratio": CodeOwned(0.60),
+        "duration": CodeOwned(4.5),
         "damage_type": "all",
     },
     "Protoplasm Harness": {
         "type": "target_threshold_health",
-        "health_threshold": 0.30,
-        "bonus_health_min": 100.0,
-        "bonus_health_max": 300.0,
-        "heal_min": 100.0,
-        "heal_max": 400.0,
-        "heal_bonus_armor_ratio": 1.75,
-        "heal_bonus_mr_ratio": 1.75,
-        "duration": 5.0,
+        "health_threshold": CodeOwned(0.30),
+        "bonus_health_min": CodeOwned(100.0),
+        "bonus_health_max": CodeOwned(300.0),
+        "heal_min": CodeOwned(100.0),
+        "heal_max": CodeOwned(400.0),
+        "heal_bonus_armor_ratio": CodeOwned(1.75),
+        "heal_bonus_mr_ratio": CodeOwned(1.75),
+        "duration": CodeOwned(5.0),
         # ASSUMED, not sourced: the entry says the heal lands "over the same
         # duration" and neither it nor Community Dragon's 2525 subdivides the
         # five seconds.  0.25s is the cadence this calculator already authors
         # every other heal-over-time on (Lissandra's Frozen Tomb, ten 0.25s
         # ticks reconciling a 2.5s total).  Re-verify with this item's other
         # code-owned keys on patch day.
-        "heal_tick_interval": 0.25,
-        "cooldown": 90.0,
+        "heal_tick_interval": CodeOwned(0.25),
+        "cooldown": CodeOwned(90.0),
     },
     # ── Shield reduction (attacker passives that cut the target's shields) ──
     "Serpent's Fang": {
         "type": "shield_reduction",
         # Shield Reaver: dealing damage inflicts a 3-second venom cutting
         # shields the target gains; magic-damage shields are unaffected.
-        "shield_reduction_melee": 0.50,
-        "shield_reduction_ranged": 0.35,
-        "venom_duration": 3.0,
+        "shield_reduction_melee": CodeOwned(0.50),
+        "shield_reduction_ranged": CodeOwned(0.35),
+        "venom_duration": CodeOwned(3.0),
     },
     "Stormrazor": {
         "type": "on_hit_once",
@@ -3451,8 +3488,8 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "damage_type": "magic",
         "base": 100.0,
         "energized_max_stacks": 100,
-        "energized_attack_stacks": 6,
-        "energized_distance_units_per_stack": 24.0,
+        "energized_attack_stacks": CodeOwned(6),
+        "energized_distance_units_per_stack": CodeOwned(24.0),
     },
     # ── Sundered Sky (first-auto crit modifier) ─────────────────────────────
     "Sundered Sky": {
@@ -3465,11 +3502,11 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # missing health (wiki {{rd|100%|50%}}: melee 100% bAD, ranged 50% bAD).
         # The latter is evaluated against the live participant state when the
         # ordered ledger is replayed.
-        "heal_base_ad_ratio": 1.0,
-        "heal_base_ad_ratio_ranged": 0.5,
-        "heal_missing_health_ratio": 0.06,
+        "heal_base_ad_ratio": CodeOwned(1.0),
+        "heal_base_ad_ratio_ranged": CodeOwned(0.5),
+        "heal_missing_health_ratio": CodeOwned(0.06),
         # Excess Lightshield Strike healing becomes bonus health for 8 seconds.
-        "temporary_health_duration": 8.0,
+        "temporary_health_duration": CodeOwned(8.0),
     },
     # ── Voltaic Cyclosword (energized first-auto) ───────────────────────────
     "Voltaic Cyclosword": {
@@ -3488,8 +3525,8 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "temporary_lethality_ranged": 12.0,
         "temporary_lethality_duration": 4.0,
         "energized_max_stacks": 100,
-        "energized_attack_stacks": 6,
-        "energized_distance_units_per_stack": 24.0,
+        "energized_attack_stacks": CodeOwned(6),
+        "energized_distance_units_per_stack": CodeOwned(24.0),
         # V26.09 Galvanize lets a damaging ability consume a ready
         # Energized effect before the triggering attack/ability packet.
         "energized_ability_trigger": True,
@@ -3502,7 +3539,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Anguish: every 4 seconds, deal 3% bonus health as magic damage
         "interval": 4.0,
         # Anguish saps every enemy champion within this radius.
-        "range_units": 650.0,
+        "range_units": CodeOwned(650.0),
         "bonus_hp_ratio": 0.03,
         # Anguish heals the holder for 250% of post-mitigation damage dealt.
         "self_heal_post_mitigation_multiplier": 2.50,
@@ -3526,8 +3563,8 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
 }
 
 
-# Fields owned by code rather than wiki parsing. Every remaining reference field
-# is explicitly parser-owned through ``_PARSEABLE_ITEM_KEYS`` below.
+# The schema fields an entry's shape is spelled in: code-owned in every entry
+# without a ``CodeOwned`` marker.
 _STRUCTURAL_EFFECT_KEYS = frozenset(
     {
         "type",
@@ -3556,447 +3593,25 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
     }
 )
 
+#: Each item's code-owned values, read off its ``CodeOwned`` markers: the
+#: numbers patch day re-checks by hand against the new wiki text.
 _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
-    "Armored Advance": frozenset(
-        {
-            "basic_damage_multiplier",
-            "reactive_shield_damage_type",
-            "reactive_shield_base",
-            "reactive_shield_max",
-            "reactive_shield_scale_start_level",
-            "reactive_shield_scale_end_level",
-            "reactive_shield_bonus_health_ratio",
-            "reactive_shield_duration",
-            "reactive_shield_cooldown",
-        }
-    ),
-    "Chainlaced Crushers": frozenset(
-        {
-            "reactive_shield_damage_type",
-            "reactive_shield_base",
-            "reactive_shield_max",
-            "reactive_shield_scale_start_level",
-            "reactive_shield_scale_end_level",
-            "reactive_shield_bonus_health_ratio",
-            "reactive_shield_duration",
-            "reactive_shield_cooldown",
-        }
-    ),
-    "Celestial Opposition": frozenset(
-        {
-            "incoming_damage_multiplier",
-            "incoming_damage_linger",
-            "incoming_damage_cooldown",
-        }
-    ),
-    "Bloodthirster": frozenset(
-        {
-            "ichorshield_min",
-            "ichorshield_max",
-            "ichorshield_scale_start_level",
-            "ichorshield_scale_end_level",
-            "lifesteal_percent",
-            "source_url",
-            "source_revision_id",
-        }
-    ),
-    "Doran's Blade": frozenset(
-        {
-            "direct_heal_post_mitigation_ratio",
-            "direct_heal_aoe_effectiveness",
-            "stat_override_omnivamp_percent",
-        }
-    ),
-    "Doran's Ring": frozenset(
-        {
-            "drain_restoration_per_second",
-            "drain_combat_restoration_per_second",
-            "drain_combat_duration",
-            "drain_health_conversion",
-            "drain_tick_interval",
-        }
-    ),
-    "Doran's Shield": frozenset(
-        {
-            "enduring_focus_total_melee",
-            "enduring_focus_total_reduced",
-            "enduring_focus_missing_health_cap",
-            "enduring_focus_duration",
-            "health_regen_tick_interval",
-        }
-    ),
-    "Doran's Helm": frozenset(
-        {
-            "helping_hand_minion_damage",
-        }
-    ),
-    "Ionian Boots of Lucidity": frozenset(
-        {
-            "summoner_spell_haste",
-        }
-    ),
-    "Catalyst of Aeons": frozenset(
-        {
-            "damage_taken_to_mana_ratio",
-            "mana_spent_heal_ratio",
-            "mana_spent_heal_cap_per_cast",
-            "mana_spent_heal_cap_per_second",
-            "source_url",
-            "source_revision_id",
-        }
-    ),
-    "Immortal Path": frozenset(
-        {
-            "health_state_damage_amp_above_half",
-            "health_state_healing_multiplier_below_half",
-            "slay_omnivamp_per_takedown",
-            "slay_max_stacks",
-            "slay_max_omnivamp",
-        }
-    ),
-    "Gluttonous Greaves": frozenset(
-        {
-            "slay_omnivamp_per_takedown",
-            "slay_max_stacks",
-            "slay_max_omnivamp",
-            "source_url",
-            "source_revision_id",
-        }
-    ),
-    "Warmog's Armor": frozenset(
-        {
-            "heart_bonus_health_threshold",
-            "heart_max_health_ratio_per_tick",
-            "heart_tick_interval",
-            "heart_champion_damage_cooldown",
-            "heart_nonchampion_damage_cooldown",
-        }
-    ),
-    "Fimbulwinter": frozenset(
-        {
-            "bonus_mana_to_health_ratio",
-            "everlasting_base_shield",
-            "everlasting_current_mana_ratio",
-            "everlasting_mana_gate_status",
-            "everlasting_mana_threshold_ratio",
-            "everlasting_trigger_kind",
-            "everlasting_nearby_enemy_range",
-            "everlasting_multi_target_minimum_enemy_count",
-            "everlasting_range_center",
-            "everlasting_range_target_kind",
-            "everlasting_range_boundary_status",
-            "everlasting_multi_target_multiplier",
-            "everlasting_duration",
-            "everlasting_cooldown",
-        }
-    ),
-    "Cull": frozenset(
-        {
-            "health_per_on_hit",
-            "reap_gold_per_minion",
-            "reap_max_gold",
-            "reap_completion_gold",
-        }
-    ),
-    "Phage": frozenset(
-        {
-            "rage_bonus_move_speed_melee",
-            "rage_bonus_move_speed_ranged",
-            "rage_duration",
-        }
-    ),
-    "Runic Compass": frozenset(
-        {
-            "shared_riches_interval",
-            "shared_riches_gold_minion",
-            "shared_riches_gold_melee",
-            "shared_riches_gold_ranged",
-            "support_quest_threshold",
-            "ward_charges",
-        }
-    ),
-    "Tear of the Goddess": frozenset(
-        {*MANAFLOW_LEDGER_KEYS, "helping_hand_minion_damage"}
-    ),
-    "World Atlas": frozenset(
-        {
-            "shared_riches_interval",
-            "shared_riches_gold_minion",
-            "shared_riches_gold_melee",
-            "shared_riches_gold_ranged",
-            "support_quest_threshold",
-            "ward_charges",
-        }
-    ),
-    "Umbral Glaive": frozenset(
-        {
-            "base",
-            "lethality_ratio",
-            "nightstalker_unseen_seconds",
-            "nightstalker_trigger_window",
-            "blackout_duration",
-        }
-    ),
-    "Banshee's Veil": frozenset(
-        {
-            "spell_shield_ready",
-            "spell_shield_cooldown",
-            "source_url",
-            "source_revision_id",
-            "source_revision_timestamp",
-        }
-    ),
-    "Edge of Night": frozenset(
-        {
-            "spell_shield_ready",
-            "spell_shield_cooldown",
-            "source_url",
-            "source_revision_id",
-            "source_revision_timestamp",
-        }
-    ),
-    "Verdant Barrier": frozenset(
-        {
-            "spell_shield_ready",
-            "spell_shield_cooldown",
-            "source_url",
-            "source_revision_id",
-            "source_revision_timestamp",
-        }
-    ),
-    "Guardian's Horn": frozenset(
-        {
-            "champion_damage_flat_reduction",
-            "champion_dot_damage_flat_reduction",
-            "source_url",
-            "source_revision_id",
-        }
-    ),
-    "Blade of the Ruined King": frozenset(
-        {"min_damage", "lifesteal_percent", "source_url", "source_revision_id"}
-    ),
-    "Blackfire Torch": frozenset({"tick_interval"}),
-    "Bami's Cinder": frozenset({"event_interval"}),
-    "Fated Ashes": frozenset({"tick_interval"}),
-    "Hexdrinker": frozenset(
-        {
-            "health_threshold",
-            "shield_melee_min",
-            "shield_melee_max",
-            "shield_ranged_min",
-            "shield_ranged_max",
-            "duration",
-        }
-    ),
-    "Hexoptics C44": frozenset({"melee_assumed_distance"}),
-    "Hextech Gunblade": frozenset({"base_min", "base_max", "cooldown"}),
-    "Hextech Rocketbelt": frozenset({"cooldown"}),
-    "Bramble Vest": frozenset({"bonus_armor_ratio"}),
-    "Frozen Heart": frozenset({"attack_speed_reduction", "range_units"}),
-    "Unending Despair": frozenset({"range_units"}),
-    "Guardian Angel": frozenset(
-        {
-            "revive_health_ratio",
-            "revive_delay",
-            "revive_cooldown",
-            "revive_mana_ratio",
-            "one_use",
-            "source_url",
-            "source_revision_id",
-        }
-    ),
-    "Force of Nature": frozenset(
-        {
-            "steadfast_stack_duration",
-            "steadfast_max_stacks",
-            "steadfast_stack_interval",
-            "steadfast_immobilize_stacks",
-            "steadfast_bonus_magic_resistance",
-            "steadfast_bonus_move_speed_percent",
-        }
-    ),
-    "Jak'Sho, The Protean": frozenset(
-        {
-            "voidborn_stack_interval",
-            "voidborn_max_stacks",
-            "voidborn_bonus_resistance_multiplier",
-        }
-    ),
-    "Zhonya's Hourglass": frozenset(
-        {"stasis_duration", "source_url", "source_revision_id"}
-    ),
-    "Seeker's Armguard": frozenset(
-        {"stasis_duration", "source_url", "source_revision_id"}
-    ),
-    "Malignance": frozenset({"base", "ap_ratio", "duration"}),
-    "Liandry's Torment": frozenset({"tick_interval"}),
-    "Hollow Radiance": frozenset({"event_interval"}),
-    "Maw of Malmortius": frozenset(
-        {
-            "health_threshold",
-            "shield_melee_base",
-            "shield_melee_bonus_ad_ratio",
-            "shield_ranged_base",
-            "shield_ranged_bonus_ad_ratio",
-            "duration",
-            "lifeline_omnivamp_percent",
-        }
-    ),
-    "Sunfire Aegis": frozenset({"event_interval"}),
-    "Profane Hydra": frozenset({"cooldown"}),
-    "Protoplasm Harness": frozenset(
-        {
-            "health_threshold",
-            "bonus_health_min",
-            "bonus_health_max",
-            "heal_min",
-            "heal_max",
-            "heal_bonus_armor_ratio",
-            "heal_bonus_mr_ratio",
-            "duration",
-            "heal_tick_interval",
-            "cooldown",
-        }
-    ),
-    "Ravenous Hydra": frozenset(
-        {"cooldown", "lifesteal_percent", "source_url", "source_revision_id"}
-    ),
-    "Tiamat": frozenset({"cooldown"}),
-    "Thornmail": frozenset({"bonus_armor_ratio"}),
-    "Seraph's Embrace": frozenset(
-        {"health_threshold", "shield_max_mana_ratio", "duration"}
-    ),
-    "Serpent's Fang": frozenset(
-        {"shield_reduction_melee", "shield_reduction_ranged", "venom_duration"}
-    ),
-    "Sterak's Gage": frozenset(
-        {"health_threshold", "shield_bonus_health_ratio", "duration"}
-    ),
-    "Stormsurge": frozenset({"damage_threshold_ratio", "damage_threshold_window"}),
-    "Eclipse": frozenset({"stack_required", "stack_window"}),
-    "Bastionbreaker": frozenset(
-        {
-            # The five Shaped Charge numbers stay parser-owned (auto-update
-            # on patch pulls); only the wiki revision receipt is code-owned.
-            "source_url",
-            "source_revision_id",
-        }
-    ),
-    "Muramana": frozenset(
-        {
-            # Shock/Awe numbers stay parser-owned (auto-update on patch
-            # pulls); only the wiki revision receipt is code-owned (P3
-            # package 3E).
-            "source_url",
-            "source_revision_id",
-        }
-    ),
-    "Death's Dance": frozenset({"damage_deferral_ticks", "defy_heal_ticks"}),
-    "Stridebreaker": frozenset(
-        {
-            "cooldown",
-            "slow_percent",
-            "slow_duration",
-            "bonus_move_speed_percent",
-            "bonus_move_speed_duration",
-            "area_radius",
-            "front_offset",
-        }
-    ),
-    "Titanic Hydra": frozenset({"active_cooldown"}),
-    "Rapid Firecannon": frozenset(
-        {
-            "energized_attack_stacks",
-            "energized_distance_units_per_stack",
-        }
-    ),
-    "Statikk Shiv": frozenset({"energized_distance_units_per_stack"}),
-    "Stormrazor": frozenset(
-        {
-            "energized_attack_stacks",
-            "energized_distance_units_per_stack",
-        }
-    ),
-    "Voltaic Cyclosword": frozenset(
-        {
-            "energized_attack_stacks",
-            "energized_distance_units_per_stack",
-        }
-    ),
-    "Sundered Sky": frozenset(
-        {
-            "heal_base_ad_ratio",
-            "heal_base_ad_ratio_ranged",
-            "heal_missing_health_ratio",
-            "temporary_health_duration",
-        }
-    ),
-    # The parser reports 0.25 for Manaflow's "per 1% critical strike"
-    # wording.  The typed accessor consumes a 0..1 critical fraction, so the
-    # equivalent coefficient is 25.0.  Keep this unit conversion code-owned.
-    "Essence Reaver": frozenset(
-        {"mana_restore_base_ad_ratio", "mana_restore_crit_ratio"}
-    ),
-    # The cached item packet does not carry Actualizer's active cooldown;
-    # the full Wiki entry is the source receipt for this code-owned value.
-    "Actualizer": frozenset({"mana_made_real_cooldown"}),
-    # Enlighten's restore schedule has no parser branch (see the offline
-    # entry); the values are code-owned so a parser refresh cannot overwrite
-    # them.  The ledger's typed declarations read them through
-    # required_effect_value, which raises (naming the item and key) if a
-    # future refresh ever drops the entry.
-    "Lost Chapter": frozenset(
-        {"enlighten_restore_percent", "enlighten_duration_seconds", "enlighten_ticks"}
-    ),
-    "Riftmaker": frozenset({"max_stack_omnivamp_ranged"}),
-    # Typed lifesteal stats: the percent and its item-page source receipt are
-    # code-owned so a parser refresh cannot overwrite them.  Bloodthirster,
-    # Blade of the Ruined King and Ravenous Hydra merge these keys into their
-    # existing entries above so the registry keeps one record per item.
-    "Vampiric Scepter": frozenset(
-        {"lifesteal_percent", "source_url", "source_revision_id"}
-    ),
-    "Mercurial Scimitar": frozenset(
-        {
-            "lifesteal_percent",
-            "quicksilver_move_speed_percent",
-            "quicksilver_move_speed_seconds",
-            "source_url",
-            "source_revision_id",
-        }
-    ),
-    "Gunmetal Greaves": frozenset(
-        {
-            "lifesteal_percent",
-            "noxian_gait_decay_seconds",
-            "noxian_gait_champions_only",
-            "noxian_gait_magnitude_unsourced",
-            "source_url",
-            "source_revision_id",
-        }
-    ),
-    "Guardian's Hammer": frozenset(
-        {"lifesteal_percent", "source_url", "source_revision_id"}
-    ),
+    item_name: owned
+    for item_name, values in _REFERENCE_ITEM_EFFECTS.items()
+    if (owned := frozenset(k for k, v in values.items() if isinstance(v, CodeOwned)))
 }
-
-
-def _static_keys(item_name: str) -> frozenset[str]:
-    """Return the code-owned registry keys for one item."""
-    return _STRUCTURAL_EFFECT_KEYS | _STATIC_VALUE_KEYS_BY_ITEM.get(
-        item_name, frozenset()
-    )
-
 
 _STATIC_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     item_name: {
-        key: value for key, value in values.items() if key in _static_keys(item_name)
+        key: value.value if isinstance(value, CodeOwned) else value
+        for key, value in values.items()
+        if isinstance(value, CodeOwned) or key in _STRUCTURAL_EFFECT_KEYS
     }
     for item_name, values in _REFERENCE_ITEM_EFFECTS.items()
 }
 
 _PARSEABLE_ITEM_KEYS: dict[str, frozenset[str]] = {
-    item_name: frozenset(values) - _static_keys(item_name)
+    item_name: frozenset(values) - frozenset(_STATIC_ITEM_EFFECTS[item_name])
     for item_name, values in _REFERENCE_ITEM_EFFECTS.items()
 }
 
@@ -6082,6 +5697,9 @@ class StatBonuses:
     bonus_omnivamp: float  # Endless Hunger Feast's explicit takedown window
     bonus_heal_shield_power: float  # Harmony's bonus-mana conversion
     item_bonus_health_multiplier: float  # Warmog's Vitality (1.0 = none)
+    # Swiftmarch's Noxian Fervor, unsplit: ``stats.py`` splits it with the rune
+    # force through ``rune_effects.adaptive_force_split``.
+    adaptive_force: float
     # Permanent item-owned subsets used by Kai'Sa's Living Weapon. These
     # exclude temporary combat effects (Blackfire, Rapids, AS windows).
     permanent_bonus_ap: float
@@ -6102,7 +5720,6 @@ def resolve_stat_effects(
     item_options: Mapping[str, Mapping[str, int]] | None = None,
     bonus_attack_damage: float = 0.0,
     total_move_speed: float = 0.0,
-    adaptive_type: str = "",
 ) -> StatBonuses:
     """Compile the stat-granting passives of *items* into one bundle.
 
@@ -6168,23 +5785,11 @@ def resolve_stat_effects(
         if "Whispering Circlet" in _item_names(items)
         else 0.0
     )
-    adaptive_force = swiftmarch_adaptive_force(items, total_move_speed=total_move_speed)
-    normalized_adaptive_type = str(adaptive_type or "").upper()
-    adaptive_ap = (
-        adaptive_force
-        if normalized_adaptive_type in {"AP", "ABILITY_POWER", "MAGIC_DAMAGE"}
-        else 0.0
-    )
-    adaptive_ad = (
-        adaptive_force
-        if normalized_adaptive_type in {"AD", "ATTACK_DAMAGE", "PHYSICAL_DAMAGE"}
-        else 0.0
-    )
     return StatBonuses(
-        bonus_ap=permanent_bonus_ap + flowing_water_bonus_ap(items) + adaptive_ap,
+        bonus_ap=permanent_bonus_ap + flowing_water_bonus_ap(items),
         bonus_health=mana_bonus_health,
         ap_multiplier=ap_multiplier(items),
-        bonus_ad=permanent_bonus_ad + hubris_ad + adaptive_ad,
+        bonus_ad=permanent_bonus_ad + hubris_ad,
         attack_speed_percent=passive_attack_speed_bonus(items, is_melee),
         bonus_resists=terminus_resists,
         bonus_pen_percent=terminus_pen,
@@ -6194,6 +5799,9 @@ def resolve_stat_effects(
         bonus_omnivamp=feast_omnivamp + slay_omnivamp,
         bonus_heal_shield_power=harmony_power,
         item_bonus_health_multiplier=health_multiplier,
+        adaptive_force=swiftmarch_adaptive_force(
+            items, total_move_speed=total_move_speed
+        ),
         permanent_bonus_ap=permanent_bonus_ap,
         permanent_ap_multiplier=permanent_ap_multiplier(items),
         permanent_bonus_ad=permanent_bonus_ad,

@@ -56,14 +56,14 @@ def _parse_my_item(text: str) -> dict[str, Any]:
 
 ### Step 3: Add schema and reference values in `item_effects.py`
 
-Add the complete reviewed entry to `_REFERENCE_ITEM_EFFECTS`. Put schema fields in `_STRUCTURAL_EFFECT_KEYS`; add truly unparseable numeric keys to `_STATIC_VALUE_KEYS_BY_ITEM`:
+Add the complete reviewed entry to `_REFERENCE_ITEM_EFFECTS`. A plain value is parser-owned: the parse supplies it and the parity test holds the parse to it. Wrap a value in `CodeOwned(...)` only when the cached text truly cannot state it. A new schema field joins `_STRUCTURAL_EFFECT_KEYS`:
 
 ```python
 "My Item": {
-    "type": "on_hit",       # Required: selects the compiler behavior
+    "type": "on_hit",               # schema field: selects the compiler behavior
     "damage_type": "magic",
-    # Only include values NOT available in JSON markup:
-    "cooldown": 10.0,       # If cooldown isn't in JSON passive/active fields
+    "base_damage": 15.0,            # parser-owned reference value
+    "cooldown": CodeOwned(10.0),    # the cache states no cooldown
 },
 ```
 

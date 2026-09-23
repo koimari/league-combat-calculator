@@ -687,10 +687,8 @@ def stack_count_option(
 class RuneStatContext:
     """What a stat grant is allowed to read when it resolves its amount.
 
-    The build's own bonus attack damage and ability power are here because
-    adaptive force asks which of them is larger; ``options`` carries the
-    explicit inputs the request has no other home for (a stack count, a game
-    minute), each with a default the rune discloses.
+    ``options`` carries the explicit inputs the request has no other home for
+    (a stack count, a game minute), each with a default the rune discloses.
 
     ``item_stat_types`` is how many distinct stat types the build's items
     grant — a fact about the build rather than an option, because the build
@@ -700,8 +698,6 @@ class RuneStatContext:
 
     level: int
     is_melee: bool
-    bonus_attack_damage: float
-    ability_power: float
     options: Mapping[str, Mapping[str, float]]
     item_stat_types: int = 0
 
@@ -2186,16 +2182,36 @@ def adaptive_force_attack_damage_ratio() -> float:
     return RuneValues("adaptive force", ADAPTIVE_FORCE).number("attack_damage_ratio")
 
 
-# The runes state "Grants bonuses based on which stat you already have the most
-# bonuses for. *Defaults to the first listed*", and ``Template:Adaptive`` lists
-# attack damage first, so an adaptive-force tie takes attack damage.  Adaptive
-# *damage* defaults the other way (:func:`pure_adaptive_type`), which is why
-# the two rules are separate functions.
+#: Which stat an adaptive-force tie grants, by the champion's cached adaptiveType.
+_TIE_GRANTS_ABILITY_POWER: Mapping[str, bool] = MappingProxyType(
+    {"PHYSICAL_DAMAGE": False, "MAGIC_DAMAGE": True}
+)
+
+
+# Every adaptive grant, rune or item, splits here.  ``Template:Adaptive``
+# renders each one as bonus AD or AP and links ``Adaptive_force`` as the rule:
+# the larger of bonus AD and AP wins, and a tie goes to the champion's adaptive
+# type.  That page's worked tie (Veigar's shards with no items are AP) overrules
+# the runes' own "Defaults to the first listed".  Adaptive *damage* ties the
+# other way (:func:`pure_adaptive_type`), which is why the rules are separate.
 def adaptive_force_split(
-    force: float, bonus_attack_damage: float, ability_power: float
+    force: float, bonus_attack_damage: float, ability_power: float, adaptive_type: str
 ) -> tuple[float, float]:
     """Split one adaptive-force grant into (bonus attack damage, ability power)."""
-    if ability_power > bonus_attack_damage:
+    # A zero grant picks no stat, so a build holding no adaptive force never
+    # asks the tie: the practice dummy's adaptiveType names neither class.
+    if not force:
+        return 0.0, 0.0
+    if ability_power != bonus_attack_damage:
+        grants_ability_power = ability_power > bonus_attack_damage
+    elif adaptive_type in _TIE_GRANTS_ABILITY_POWER:
+        grants_ability_power = _TIE_GRANTS_ABILITY_POWER[adaptive_type]
+    else:
+        raise RuntimeError(
+            f"adaptiveType {adaptive_type!r} names neither physical nor magic "
+            "damage, so an adaptive-force tie has no stat to grant"
+        )
+    if grants_ability_power:
         return 0.0, force
     return force * adaptive_force_attack_damage_ratio(), 0.0
 
@@ -2205,15 +2221,16 @@ class RuneStatGrants:
     """What one rune page adds to the holder's stats, by channel.
 
     Named fields rather than a mapping so ``stats.py`` reads each grant
-    where that stat belongs — rune adaptive force is bonus attack damage
-    for Rabadon's and for the ability ratios, and is *not* a permanent item
-    stat for Kai'Sa's evolutions, which a single lump added to the item
-    totals could not express.  Every field is zero for a page with no stat
-    runes, so a request without runes stays bit-identical.
+    where that stat belongs — rune adaptive force lands in the bonus attack
+    damage or ability power Rabadon's and the ability ratios read, and is
+    *not* a permanent item stat for Kai'Sa's evolutions, which a single lump
+    added to the item totals could not express.  Every field is zero for a
+    page with no stat runes, so a request without runes stays bit-identical.
     """
 
-    bonus_attack_damage: float = 0.0
-    ability_power: float = 0.0
+    #: Unsplit: ``stats.py`` splits it with Swiftmarch's through
+    #: :func:`adaptive_force_split`, once the build's totals are known.
+    adaptive_force: float = 0.0
     attack_speed_percent: float = 0.0
     ability_haste: float = 0.0
     basic_ability_haste: float = 0.0
@@ -2256,6 +2273,7 @@ class RuneStatGrants:
 #: Which :class:`RuneStatGrants` field each grant channel lands in.
 _STAT_FIELDS: Mapping[RuneStat, str] = MappingProxyType(
     {
+        RuneStat.ADAPTIVE_FORCE: "adaptive_force",
         RuneStat.ATTACK_SPEED_PERCENT: "attack_speed_percent",
         RuneStat.ABILITY_HASTE: "ability_haste",
         RuneStat.BASIC_ABILITY_HASTE: "basic_ability_haste",
@@ -2282,79 +2300,39 @@ def resolve_stat_grants(
 
     Both grant kinds land here through one channel-by-channel adder, so a
     rune granting one stat and a rune granting three reach the fight's stat
-    block by exactly the same route — including adaptive force, whose split
-    into attack damage or ability power belongs to the channel and not to
-    the kind that named it.
+    block by exactly the same route.
     """
     totals: dict[str, float] = {}
 
-    def add(field: str, amount: float) -> None:
+    def add(stat: RuneStat, amount: float) -> None:
+        field = _STAT_FIELDS[stat]
         totals[field] = totals.get(field, 0.0) + amount
-
-    def grant(stat: RuneStat, amount: float) -> None:
-        if stat is RuneStat.ADAPTIVE_FORCE:
-            bonus_ad, ability_power = adaptive_force_split(
-                amount, context.bonus_attack_damage, context.ability_power
-            )
-            add("bonus_attack_damage", bonus_ad)
-            add("ability_power", ability_power)
-            return
-        add(_STAT_FIELDS[stat], amount)
 
     for effect in effects:
         if isinstance(effect, RuneStatGrantEffect):
-            grant(effect.stat, effect.amount(context))
+            add(effect.stat, effect.amount(context))
         elif isinstance(effect, RuneMultiStatGrantEffect):
             for stat, amount in effect.declared_amounts(context).items():
-                grant(stat, amount)
+                add(stat, amount)
     return RuneStatGrants(**totals)
 
 
-@dataclass(frozen=True, slots=True)
-class CompiledRunePage:
-    """One validated page compiled once, ready to be totalled.
-
-    The stat fold asks the page two questions at two points: what movement
-    speed it grants, before an item converts the build's total movement
-    speed into adaptive force (Swiftmarch), and everything else after those
-    conversions have decided which of bonus attack damage and ability power
-    is larger. Compiling once and totalling twice is what makes one request
-    see one rune page.
-    """
-
-    effects: tuple[RuneEffect, ...] = ()
-    options: Mapping[str, Mapping[str, float]] = MappingProxyType({})
-
-    def grants(
-        self,
-        *,
-        level: int,
-        is_melee: bool,
-        bonus_attack_damage: float,
-        ability_power: float,
-        item_stat_types: int = 0,
-    ) -> RuneStatGrants:
-        """Total this page against one build state."""
-        return resolve_stat_grants(
-            self.effects,
-            RuneStatContext(
-                level=level,
-                is_melee=is_melee,
-                bonus_attack_damage=bonus_attack_damage,
-                ability_power=ability_power,
-                options=self.options,
-                item_stat_types=item_stat_types,
-            ),
-        )
-
-
-# The door ``stats.py`` uses: it knows the build's stats and nothing else
-# about runes.
-def compile_rune_page(page: RunePage | None) -> CompiledRunePage:
-    """Compile a validated page; ``None`` grants nothing."""
+# The door ``stats.py`` uses: it knows the build and nothing else about runes.
+def rune_stat_grants(
+    page: RunePage | None, *, level: int, is_melee: bool, item_stat_types: int = 0
+) -> RuneStatGrants:
+    """Total a validated page's stat grants for one build; ``None`` grants nothing."""
     if page is None:
-        return CompiledRunePage()
-    return CompiledRunePage(resolve_rune_page(page), page.options)
+        return RuneStatGrants()
+    return resolve_stat_grants(
+        resolve_rune_page(page),
+        RuneStatContext(
+            level=level,
+            is_melee=is_melee,
+            options=page.options,
+            item_stat_types=item_stat_types,
+        ),
+    )
 
 
 def rune_catalog() -> list[dict[str, Any]]:

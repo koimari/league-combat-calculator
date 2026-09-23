@@ -19,7 +19,7 @@ from .item_stat_block import (
     item_stat_type_count,
 )
 from .role_quests import MID_QUEST_AP_PERCENT, MID_QUEST_BONUS_AD_PERCENT
-from .rune_effects import RunePage, compile_rune_page
+from .rune_effects import RunePage, adaptive_force_split, rune_stat_grants
 from .stat_formulas import (
     ATTACK_SPEED_CAP,
     MAX_LEVEL,
@@ -123,24 +123,14 @@ def calculate_total_stats(
     total_item_stats["ability_power"] += float(external.get("ability_power", 0.0))
     total_item_stats["ability_haste"] += float(external.get("ability_haste", 0.0))
 
-    # The page compiles once and is totalled twice, because the fold needs
-    # some of its answers before the item conversions and the rest after.
-    page = compile_rune_page(rune_page)
-    item_stat_types = item_stat_type_count(total_item_stats)
-
-    # The first of the two totals, and the two channels it is read for are
-    # the two an item converts into adaptive force: maximum mana, which the
-    # Awe family buys attack damage and ability power from, and movement
-    # speed, which Swiftmarch does. Both have to be settled before the
-    # conversions that read them, and no rune granting either reads the
-    # adaptive comparison those conversions decide, which is why this total
-    # can be taken here.
-    rune_pre_conversion = page.grants(
+    # The page is totalled before the item conversions, which read two of its
+    # grants: maximum mana (the Awe family) and movement speed (Swiftmarch).
+    # Its adaptive force stays unsplit until the build's totals are known.
+    runes = rune_stat_grants(
+        rune_page,
         level=level,
         is_melee=is_melee,
-        bonus_attack_damage=total_item_stats["attack_damage"],
-        ability_power=total_item_stats["ability_power"],
-        item_stat_types=item_stat_types,
+        item_stat_types=item_stat_type_count(total_item_stats),
     )
 
     # Mana first — stat conversions read it (Awe → AP, Muramana → AD).
@@ -154,7 +144,7 @@ def calculate_total_stats(
     # bonus-mana conversions exactly as an item's mana is.
     pool_takes_item_mana = item_mana_reaches_pool(champion_data)
     pool_item_mana = total_item_stats["mana"] if pool_takes_item_mana else 0.0
-    pool_rune_mana = rune_pre_conversion.max_mana if pool_takes_item_mana else 0.0
+    pool_rune_mana = runes.max_mana if pool_takes_item_mana else 0.0
     pool_bonus_mana = pool_item_mana + pool_rune_mana
     pool_item_mana_regen_percent = (
         total_item_stats["mana_regen_percent"] if pool_takes_item_mana else 0.0
@@ -202,12 +192,12 @@ def calculate_total_stats(
     move_speed_flat = (
         base_stats["move_speed"]
         + total_item_stats["move_speed_flat"]
-        + rune_pre_conversion.move_speed_flat
+        + runes.move_speed_flat
     )
     move_speed_percent = (
         total_item_stats["move_speed_percent"]
         + input_bonuses.move_speed_percent
-        + rune_pre_conversion.move_speed_percent
+        + runes.move_speed_percent
     )
     final_move_speed = resolve_move_speed(move_speed_flat, move_speed_percent)
 
@@ -225,7 +215,6 @@ def calculate_total_stats(
         level=level,
         item_options=item_options,
         total_move_speed=final_move_speed,
-        adaptive_type=str(champion_data.get("adaptiveType", "")),
     )
 
     quest_ap_multiplier = (
@@ -237,27 +226,24 @@ def calculate_total_stats(
         else 1.0
     )
 
-    # Rune stat grants resolve here, after the item passives, because every
-    # adaptive grant asks which of the build's bonus attack damage and
-    # ability power is larger — and neither is complete until the
-    # conversions (Muramana → AD, Awe → AP), the %AP multiplier and the role
-    # quest have been applied. The grants themselves are excluded from that
-    # comparison, as in game, and are kept out of ``total_item_stats``: each
-    # is added below where that stat belongs, because a rune's adaptive
-    # force is not an item stat (Kai'Sa's evolutions exclude it) even though
-    # it lands in the same total.
-    runes = page.grants(
-        level=level,
-        is_melee=is_melee,
-        bonus_attack_damage=(total_item_stats["attack_damage"] + bonuses.bonus_ad)
+    # All adaptive force, rune and Swiftmarch alike, splits once, here: the
+    # choice reads bonus AD and AP after the item passives Adaptive_force
+    # counts (Rabadon's Magical Opus among them) and the role quest. The
+    # grants themselves stay out of the comparison, as in game, and out of
+    # ``total_item_stats``, because adaptive force is not an item stat
+    # (Kai'Sa's evolutions exclude it). The basis also counts passives the
+    # page excludes, which docs/surface-area-backlog.md row SA4 holds.
+    adaptive_ad, adaptive_ap = adaptive_force_split(
+        bonuses.adaptive_force + runes.adaptive_force,
+        (total_item_stats["attack_damage"] + bonuses.bonus_ad)
         * quest_bonus_ad_multiplier,
-        ability_power=(
+        (
             base_stats["ability_power"]
             + total_item_stats["ability_power"]
             + bonuses.bonus_ap
         )
         * (bonuses.ap_multiplier + quest_ap_multiplier),
-        item_stat_types=item_stat_types,
+        champion_data["adaptiveType"],
     )
 
     # Ability power: base + items + converted AP, then the additive %AP
@@ -266,7 +252,7 @@ def calculate_total_stats(
         base_stats["ability_power"]
         + total_item_stats["ability_power"]
         + bonuses.bonus_ap
-        + runes.ability_power
+        + adaptive_ap
     )
     # Total AP modifiers stack additively with Rabadon's/Blackfire.
     final_ability_power = raw_ability_power * (
@@ -309,7 +295,7 @@ def calculate_total_stats(
     raw_bonus_ad = (
         total_item_stats["attack_damage"]
         + bonuses.bonus_ad
-        + runes.bonus_attack_damage
+        + adaptive_ad
         + converted_bonus_ad
     )
     final_bonus_ad = raw_bonus_ad * quest_bonus_ad_multiplier

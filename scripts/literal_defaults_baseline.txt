@@ -560,7 +560,6 @@ CACHED_SOURCE_ROW|rune_parser.py|rune_payload|dict.get|key 1
 CACHED_SOURCE_ROW|rune_pull.py|reparse_cached_rune_effects|dict.get|"options" 1
 CACHED_SOURCE_ROW|rune_pull.py|rune_roster|dict.get|"runes" 1
 CACHED_SOURCE_ROW|rune_pull.py|rune_roster|dict.get|"slots" 1
-CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"adaptiveType" 1
 CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"attackSpeedRatio" 1
 CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"attackType" 1
 CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"flat" 3
