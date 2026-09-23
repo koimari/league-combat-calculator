@@ -403,10 +403,12 @@ def test_incoming_damage_blocked_during_stasis_and_lands_after():
     landed = [event for event in stasis_enemy_events if event["time"] >= 2.0]
     assert landed
     assert all(event.get("skipped_reason") is None for event in landed)
-    assert landed[0]["time"] == pytest.approx(2.119)
+    # Janna's third auto: (2 + her 0.2 windup share) cycles of 1.0596s.
+    assert landed[0]["time"] == pytest.approx(2.331)
 
-    assert survival_of(stasis)["damage_taken"] == pytest.approx(301.1)
-    assert survival_of(plain)["damage_taken"] == pytest.approx(301.1 + blocked_sum)
+    # What lands: six post-stasis autos at 37.2 and one W at 115.1.
+    assert survival_of(stasis)["damage_taken"] == pytest.approx(338.3)
+    assert survival_of(plain)["damage_taken"] == pytest.approx(338.3 + blocked_sum)
 
 
 def test_holder_outgoing_actions_blocked_during_stasis():

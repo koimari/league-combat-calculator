@@ -133,7 +133,9 @@ class TestSecondWindIsPaidOnTheWalkSRecoveryLane:
         bare = _fight()["combat"]["breakdown"][0]
         held = _fight(minor_runes=["Second Wind"])["combat"]["breakdown"][0]
         assert bare["healing_received"] == pytest.approx(0.0)
-        assert held["healing_received"] == pytest.approx(19.6, abs=0.1)
+        # Darius's first auto, at his 0.297s windup, arms it: three 1s ticks
+        # land before he kills the holder at 3.75s.
+        assert held["healing_received"] == pytest.approx(19.8, abs=0.1)
         assert held["effective_health"] > bare["effective_health"]
 
     def test_it_rides_the_same_lane_doran_s_shield_does(self):

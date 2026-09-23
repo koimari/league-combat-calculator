@@ -34,13 +34,13 @@ Contract under test (current runtime facts, verified before pinning):
   EVERY incoming damage event (participant_timeline.py ~3086-3110,
   survival/compile.py revive_candidate_actions); the kernel applies the
   earliest candidate that finds the participant dead.  In the aligned case
-  (lethal packet is the fight's first damage, e.g. death at t=0) the
-  applied revive lands exactly at death_time + 4.0 and the death interval
-  spans exactly [death_time, revive_time] (4.0s).  The window is now
-  lethal-anchored in sustained fights too: candidates authored from
-  PRE-lethal packets are skipped (``revive_window_not_elapsed``) until the
-  full sourced 4.0s has elapsed since the lethal hit, so the sustained case
-  (death 9.981 -> revive 13.981) matches the aligned case.
+  (lethal packet is the holder's first incoming damage, e.g. death at Ahri's
+  first impact, 0.222) the applied revive lands exactly at death_time + 4.0
+  and the death interval spans exactly [death_time, revive_time] (4.0s).
+  The window is now lethal-anchored in sustained fights too: candidates
+  authored from PRE-lethal packets are skipped (``revive_window_not_elapsed``)
+  until the full sourced 4.0s has elapsed since the lethal hit, so the
+  sustained case (death 10.202 -> revive 14.202) matches the aligned case.
 * STASIS DURING THE WINDOW: authored EXPLICITLY at the lethal packet
   (P3-3P) — ``stasis_until == revive_time``, ``stasis_source "Guardian
   Angel (Rebirth)"``, ``stasis_started_at == first_death_time``, plus one
@@ -168,9 +168,19 @@ BRANCH_FRAGMENTS = (
     "4 seconds",
     "Stasis",
 )
-# The main champion's attack cadence in the auto-only fixtures: hits land at
-# 0.0 then every AS_INTERVAL seconds (Ahri level 18, deterministic walk).
-AS_INTERVAL = 1.109
+# Ahri's level-18 cadence in the auto-only fixtures (deterministic walk): one
+# cycle is 1 / 0.90175 (her attack speed) seconds, and impact k lands k cycles
+# plus her windup share in, the cached 0.3 + attackDelayOffset (-0.1).
+AS_INTERVAL = 1.10895
+AHRI_WINDUP_SHARE = 0.2
+# The aligned fixtures end between the revive (_impact(0) + 4.0 = 4.222) and
+# the next auto (_impact(4) = 4.658), inside the post-revive lull.
+ALIGNED_FIGHT = 4.4
+
+
+def _impact(k: int) -> float:
+    """When Ahri's k-th auto lands on the holder."""
+    return (k + AHRI_WINDUP_SHARE) * AS_INTERVAL
 
 
 def _ga_item() -> dict:
@@ -237,34 +247,6 @@ def _holder_fight(
 def _holder_survival(result: dict) -> dict:
     """The GA holder's survival row (the enemy participant)."""
     return result["participants"][1]["survival"]
-
-
-def _holder_target_damage_times(result: dict) -> list[float]:
-    """Times of every damage packet aimed at the GA holder."""
-    holder_id = result["participants"][1]["participant_id"]
-    return [
-        float(event["time"])
-        for event in result["events"]
-        if str(event.get("target", "")) == holder_id
-        and float(event.get("damage", 0.0)) >= 0.0
-        and event.get("source") is not None
-    ]
-
-
-def _earliest_revive_candidate(result: dict, delay: float) -> float:
-    """The engine's actual rule: the earliest (packet_time + delay) that
-    lands while the holder is dead.  The walk authors one candidate after
-    every incoming damage packet and applies the first one that finds the
-    participant dead (participant_timeline.py ~3086-3110)."""
-    result["participants"][1]["participant_id"]
-    death_time = _holder_survival(result)["first_death_time"]
-    candidates = [
-        packet_time + delay
-        for packet_time in _holder_target_damage_times(result)
-        if packet_time + delay >= death_time
-    ]
-    assert candidates, "a lethal packet always authors a candidate at death+delay"
-    return min(candidates)
 
 
 # ---------------------------------------------------------------------------
@@ -424,11 +406,11 @@ def test_lethal_death_records_window_and_revive_at_death_plus_four():
     """A fight where the holder takes lethal damage records the death and
     the 4-second resurrection window: first_death_time is set, the revive
     lands exactly at first_death_time + 4.0 (aligned case: the lethal packet
-    is the fight's first damage), the death downtime interval spans exactly
-    [death, revive], and the holder ends terminal "revived" with
+    is the holder's first incoming damage), the death downtime interval spans
+    exactly [death, revive], and the holder ends terminal "revived" with
     survived_window True when the fight ends inside the post-revive lull."""
     result = _holder_fight(
-        4.1,
+        ALIGNED_FIGHT,
         stats={
             "health": 100.0,
             "base_health": 200.0,
@@ -438,7 +420,7 @@ def test_lethal_death_records_window_and_revive_at_death_plus_four():
         },
     )
     survival = _holder_survival(result)
-    assert survival["first_death_time"] == pytest.approx(0.0, abs=1e-3)
+    assert survival["first_death_time"] == pytest.approx(_impact(0), abs=1e-3)
     assert survival["revived"] is True
     assert survival["revive_time"] == pytest.approx(
         survival["first_death_time"] + REVIVE_DELAY, abs=1e-3
@@ -453,8 +435,8 @@ def test_lethal_death_records_window_and_revive_at_death_plus_four():
         {
             "recipient": "enemy:Ashe",
             "kind": "death",
-            "start": survival["first_death_time"],
-            "end": survival["revive_time"],
+            "start": pytest.approx(survival["first_death_time"], abs=1e-3),
+            "end": pytest.approx(survival["revive_time"], abs=1e-3),
             "source": "auto_attacks",
         }
     ]
@@ -498,7 +480,7 @@ def test_incoming_damage_during_the_window_is_ignored_not_compounded():
     health_damage counts only the lethal hit (100.0 of the 100-health
     holder), not the window hits."""
     result = _holder_fight(
-        4.1,
+        ALIGNED_FIGHT,
         stats={
             "health": 100.0,
             "base_health": 200.0,
@@ -575,7 +557,7 @@ def test_explicit_stasis_state_is_authored_for_the_window():
     to the typed registry (delay 4.0, cooldown 300.0, source label) plus the
     resolution (``resolved`` / ``ready_at == revive_time + 300``)."""
     result = _holder_fight(
-        4.1,
+        ALIGNED_FIGHT,
         stats={
             "health": 100.0,
             "base_health": 200.0,
@@ -622,7 +604,7 @@ def test_explicit_stasis_adds_no_second_gate_and_no_row_without_a_window():
         "armor": 0.0,
         "magic_resistance": 0.0,
     }
-    result = _holder_fight(4.1, stats=stats)
+    result = _holder_fight(ALIGNED_FIGHT, stats=stats)
     survival = _holder_survival(result)
     holder_id = result["participants"][1]["participant_id"]
     window = (survival["first_death_time"], survival["revive_time"])
@@ -645,7 +627,7 @@ def test_explicit_stasis_adds_no_second_gate_and_no_row_without_a_window():
     assert [row["kind"] for row in survival["action_downtime_intervals"]] == ["death"]
     assert survival["action_downtime"] == pytest.approx(REVIVE_DELAY, abs=1e-3)
 
-    bare = _holder_survival(_holder_fight(4.1, holder_items=(), stats=stats))
+    bare = _holder_survival(_holder_fight(ALIGNED_FIGHT, holder_items=(), stats=stats))
     assert "revive_stasis" not in bare
     assert bare["stasis_until"] == 0.0
     assert bare["stasis_source"] == ""
@@ -653,7 +635,7 @@ def test_explicit_stasis_adds_no_second_gate_and_no_row_without_a_window():
 
 def test_stasis_window_unresolved_at_the_fight_end_claims_nothing():
     """Fail-closed on a truncated window: when the fight ends INSIDE the 4s
-    stasis (death at 0.0, fight ends at 2.0), the receipt records the armed
+    stasis (death at 0.222, fight ends at 2.0), the receipt records the armed
     window with ``resolved`` False and NO ``ready_at`` — the cooldown starts
     only after a resurrection that never happened, so it is never claimed.
     The row makes no revive claim either (revived False, revive_time None,
@@ -679,10 +661,10 @@ def test_stasis_window_unresolved_at_the_fight_end_claims_nothing():
     (window,) = survival["revive_stasis"]
     assert window["resolved"] is False
     assert "ready_at" not in window
-    assert window["start"] == pytest.approx(0.0, abs=1e-3)
-    assert window["end"] == pytest.approx(REVIVE_DELAY)
+    assert window["start"] == pytest.approx(_impact(0), abs=1e-3)
+    assert window["end"] == pytest.approx(_impact(0) + REVIVE_DELAY, abs=1e-3)
     assert window["cooldown"] == pytest.approx(REVIVE_COOLDOWN)
-    assert survival["action_downtime"] == pytest.approx(2.0, abs=1e-3)
+    assert survival["action_downtime"] == pytest.approx(2.0 - _impact(0), abs=1e-3)
     assert survival["action_downtime_intervals"][0]["end"] == pytest.approx(2.0)
 
 
@@ -877,11 +859,11 @@ def test_ordinary_stasis_stacked_beyond_the_revive_window_blocks_on_its_own_term
 
 
 def test_second_lethal_after_revive_does_not_revive_again():
-    """One-use rule: the holder dies at 0.0, revives at 4.0 with 100
-    health, and the next auto (4.436) is lethal again — the second lethal
+    """One-use rule: the holder dies at 0.222, revives at 4.222 with 100
+    health, and the next auto (4.658) is lethal again — the second lethal
     does NOT trigger a second Rebirth.  revived stays True with the SINGLE
     original revive_time/restored amount, the second death is recorded
-    (death_time 4.436, terminal_phase "dead"), and no second revive_time
+    (death_time 4.658, terminal_phase "dead"), and no second revive_time
     appears (revive_time != death_time + 4.0)."""
     result = _holder_fight(
         12.0,
@@ -895,10 +877,10 @@ def test_second_lethal_after_revive_does_not_revive_again():
     )
     survival = _holder_survival(result)
     assert survival["revived"] is True
-    assert survival["revive_time"] == pytest.approx(4.0, abs=1e-3)
+    assert survival["revive_time"] == pytest.approx(_impact(0) + 4.0, abs=1e-3)
     assert survival["revive_health_restored"] == pytest.approx(100.0)
-    assert survival["death_time"] == pytest.approx(4.436, abs=1e-3)
-    assert survival["first_death_time"] == pytest.approx(0.0, abs=1e-3)
+    assert survival["death_time"] == pytest.approx(_impact(4), abs=1e-3)
+    assert survival["first_death_time"] == pytest.approx(_impact(0), abs=1e-3)
     assert survival["terminal_phase"] == "dead"
     assert survival["revive_time"] != pytest.approx(
         survival["death_time"] + REVIVE_DELAY, abs=1e-3
@@ -1049,11 +1031,11 @@ def test_requested_fights_cannot_reach_the_300s_rebirth_cooldown():
         },
     )
     survival = _holder_survival(result)
-    assert survival["revive_time"] == pytest.approx(4.0, abs=1e-3)
-    assert survival["death_time"] == pytest.approx(4.436, abs=1e-3)
+    assert survival["revive_time"] == pytest.approx(_impact(0) + 4.0, abs=1e-3)
+    assert survival["death_time"] == pytest.approx(_impact(4), abs=1e-3)
     assert survival["terminal_phase"] == "dead"
-    # One armed window only: the second lethal (4.436) is inside the 300s
-    # cooldown that opened at revive_time + 300 = 304.0.
+    # One armed window only: the second lethal (4.658) falls inside the 300s
+    # cooldown, which re-arms at revive_time + 300 = 304.222.
     assert len(survival["revive_stasis"]) == 1
     assert survival["revive_stasis"][0]["ready_at"] == pytest.approx(
         survival["revive_time"] + REVIVE_COOLDOWN
@@ -1123,7 +1105,7 @@ def test_rebirth_cooldown_gate_is_exact_and_named_on_the_receipt():
 
 def test_post_death_damage_after_final_death_is_ignored_too():
     """The same ignore rule applies after the FINAL death: packets landing
-    after the last lethal (5.545, 6.654, ...) are kept with damage 0.0 +
+    after the last lethal (5.767, 6.876, ...) are kept with damage 0.0 +
     skipped_reason "target_dead"; damage_taken counts exactly the two
     lethal hits (2 x 104 = 208) and health_damage exactly their applied
     amounts (2 x 100 = 200) — nothing else compounds."""
@@ -1350,7 +1332,7 @@ def test_absent_ga_produces_no_revive_and_no_receipt_row():
     assert survival["revive_source"] == ""
     assert survival["revive_time"] is None
     assert survival["revive_health_restored"] == 0.0
-    assert survival["death_time"] == pytest.approx(0.0, abs=1e-3)
+    assert survival["death_time"] == pytest.approx(_impact(0), abs=1e-3)
     assert survival["terminal_phase"] == "dead"
     assert (
         item_state_receipts([], {}, fight_duration_seconds=12.0, is_melee=False) == []
@@ -1366,7 +1348,7 @@ def test_holder_without_a_valid_base_health_arms_no_revive():
     )
     assert defenses.revive_health_amount == 0.0
     result = _holder_fight(
-        4.1,
+        ALIGNED_FIGHT,
         stats={
             "health": 100.0,
             "base_health": 0.0,
@@ -1429,7 +1411,7 @@ def test_sustained_fight_revive_is_anchored_to_the_lethal_hit():
     candidate after EVERY incoming damage packet, but the kernel skips
     any candidate that fires before death_time + 4.0 — the lethal packet's
     own candidate applies at exactly death_time + 4.0 (here death at
-    9.981, revive at 13.981), so the full sourced 4-second stasis elapses
+    10.202, revive at 14.202), so the full sourced 4-second stasis elapses
     even in sustained fights."""
     result = _holder_fight(
         20.0,
@@ -1454,8 +1436,8 @@ def test_sustained_fight_revive_lands_exactly_four_seconds_after_the_lethal_pack
     """THE contract pin for item 4 in a sustained fight, in ABSOLUTE numbers
     (the test above pins the same rule relationally).  The engine never
     lets a pre-lethal candidate shorten the window (it would have revived at
-    10.654): the lethal packet at 9.981 arms the stasis, the applied revive
-    lands at exactly 13.981 = 9.981 + the sourced 4.0s, and the armed window
+    10.876): the lethal packet at 10.202 arms the stasis, the applied revive
+    lands at exactly 14.202 = 10.202 + the sourced 4.0s, and the armed window
     receipt spans exactly those two timestamps with the sourced 300s
     cooldown."""
     result = _holder_fight(
@@ -1470,14 +1452,14 @@ def test_sustained_fight_revive_lands_exactly_four_seconds_after_the_lethal_pack
     )
     survival = _holder_survival(result)
     assert survival["revived"] is True
-    assert survival["first_death_time"] == pytest.approx(9.981, abs=1e-3)
-    assert survival["revive_time"] == pytest.approx(13.981, abs=1e-3)
+    assert survival["first_death_time"] == pytest.approx(_impact(9), abs=1e-3)
+    assert survival["revive_time"] == pytest.approx(_impact(9) + 4.0, abs=1e-3)
     assert survival["revive_time"] == pytest.approx(
         survival["first_death_time"] + REVIVE_DELAY, abs=1e-3
     )
     (window,) = survival["revive_stasis"]
-    assert window["start"] == pytest.approx(9.981, abs=1e-3)
-    assert window["end"] == pytest.approx(13.981, abs=1e-3)
+    assert window["start"] == pytest.approx(_impact(9), abs=1e-3)
+    assert window["end"] == pytest.approx(_impact(9) + 4.0, abs=1e-3)
     assert window["duration"] == pytest.approx(REVIVE_DELAY)
     assert window["cooldown"] == pytest.approx(REVIVE_COOLDOWN)
     assert window["resolved"] is True
@@ -1569,7 +1551,7 @@ def test_regression_surface_guardian_angel_timeline_stays_green():
     first lethal packet records the death and the revive lands at +4.0 with
     50% of base health (100.0 from base_health 200.0)."""
     result = _holder_fight(
-        4.1,
+        ALIGNED_FIGHT,
         holder="Aatrox",
         stats={
             "health": 100.0,

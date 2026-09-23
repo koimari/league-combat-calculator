@@ -134,16 +134,20 @@ def test_frozen_heart_target_aura_reduces_main_swing_schedule():
         if event["attacker"] == "main"
     ]
     assert len(crippled_events) < len(baseline_events)
-    assert len(crippled_events) == 7
+    # Frozen Heart's 20% cripple leaves Ahri 0.8 x 0.90175 attacks a second;
+    # with her 0.2 windup share, ceil(10 x 0.7214 - 0.2) = 8 impacts land.
+    assert len(crippled_events) == 8
 
 
 def test_guardian_angel_revives_target_after_first_lethal_packet():
     main = get_champion("Ahri")
     main_stats = calculate_total_stats(main, 18, [])
+    # Ahri's first auto kills at 0.222 and her fifth lands at 4.658, so a
+    # 4.4s fight ends after the 4.222 revive and before the next lethal.
     params = FightParams.from_request(
         {
             "fight_mode": "auto_only",
-            "fight_duration": 4.1,
+            "fight_duration": 4.4,
             "auto_attacks_only": True,
             "include_auto_attacks": True,
             "auto_attack_uptime": 1.0,
@@ -186,8 +190,8 @@ def test_guardian_angel_revives_target_after_first_lethal_packet():
         {
             "recipient": "enemy:Aatrox",
             "kind": "death",
-            "start": survival["first_death_time"],
-            "end": survival["revive_time"],
+            "start": pytest.approx(survival["first_death_time"], abs=1e-3),
+            "end": pytest.approx(survival["revive_time"], abs=1e-3),
             "source": "auto_attacks",
         }
     ]
@@ -623,11 +627,11 @@ def test_sundered_sky_heal_uses_live_missing_health_in_both_walks():
         if event["source"] == "Sundered Sky (Lightshield Strike)"
     )
     assert heal["raw_amount"] > heal["amount"]
-    # Ahri's Essence Theft passive heal (95, 20% AP) lands first at t=0,
-    # so the item heal's missing-health component re-prices from the
-    # already-healed live health. Ahri is ranged, so Lightshield Strike
-    # heals 50% base AD.
-    assert heal["raw_amount"] == pytest.approx(69.6)
+    # Lightshield Strike rides Ahri's first auto at 0.222, after Annie's R
+    # (339) and Essence Theft's heal (95) at t=0 and before Annie's first
+    # auto, so it re-prices from the already-healed live health. Ahri is
+    # ranged: 50% of 104 base AD + 6% of 244 missing health = 66.6.
+    assert heal["raw_amount"] == pytest.approx(66.6)
     assert fast["participants"] == legacy["participants"]
     assert fast["breakdown"] == legacy["breakdown"]
 
@@ -709,9 +713,10 @@ def test_dusk_and_dawn_self_heal_mutates_main_participant_health_ledger():
     main = next(
         row for row in combat["participants"] if row["participant_id"] == "main"
     )
-    # Ahri's Essence Theft passive heal (107 with Dusk and Dawn's 60 AP) and
-    # the item heal land at t=0 and t=1.5.
-    assert main["survival"]["healing_received"] == 122.0
+    # Ahri's Essence Theft heal (107 with Dusk and Dawn's 60 AP) lands at t=0,
+    # before Aatrox's first auto at its windup, so it restores nothing; only
+    # the item heal at t=1.5 is received.
+    assert main["survival"]["healing_received"] == 15.0
 
 
 def test_life_steal_keeps_pair_target_attribution_at_shared_timestamps():
@@ -5513,8 +5518,9 @@ def test_search_context_keeps_item_heals_and_ignores_post_window_packets():
 
     assert fast == legacy
     main = next(row for row in fast["participants"] if row["participant_id"] == "main")
-    # 107 Essence Theft (60 AP from Dusk and Dawn) + 15 item heal.
-    assert main["survival"]["healing_received"] == 122.0
+    # The 107 Essence Theft heal lands at t=0 at full health, before Aatrox's
+    # first auto at its windup; only the 15 item heal is received.
+    assert main["survival"]["healing_received"] == 15.0
 
 
 def test_search_context_replays_the_rounded_death_cutoff():

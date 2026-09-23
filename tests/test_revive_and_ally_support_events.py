@@ -110,10 +110,12 @@ def _revive_fight(champion: str, level: int, stats_override=None):
     defenses = replace(
         resolve_starting_defenses(champion, level, main_stats, []), **revive
     )
+    # Aatrox's lethal first swing lands at his windup, 0.213s, so the window
+    # ends 0.3s past the revive delay: after the revive, before his next swing.
     params = FightParams.from_request(
         {
             "fight_mode": "auto_only",
-            "fight_duration": float(revive["revive_delay"]) + 0.2,
+            "fight_duration": float(revive["revive_delay"]) + 0.3,
             "auto_attacks_only": True,
             "include_auto_attacks": True,
             "auto_attack_uptime": 1.0,
