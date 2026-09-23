@@ -2,31 +2,31 @@
 
 Package layout (top-level flow: compile -> transition -> accumulate):
 
-* :mod:`typed_action` — the :class:`SurvivalAction`/:class:`ActionKind`
+* :mod:`typed_action`, the :class:`SurvivalAction`/:class:`ActionKind`
   interface, its live amplification and its trigger linkage;
-* :mod:`action_families` — the record each kind is built as, storing the
+* :mod:`action_families`, the record each kind is built as, storing the
   fields its transitions read;
-* :mod:`actions` — the total order a walk consumes actions in (the shared
+* :mod:`actions`, the total order a walk consumes actions in (the shared
   ordering helpers);
-* :mod:`classify` — what an event *is*: its damage and attack class, the
+* :mod:`classify`, what an event *is*: its damage and attack class, the
   modifier classes it declares, and its transition rank;
-* :mod:`phases` — when a transition resolves, and what the public timeline
+* :mod:`phases`, when a transition resolves, and what the public timeline
   calls that phase;
-* :mod:`event_slots` — the kernel's four event references, as integers;
-* :mod:`transitions` — the single kernel: the :func:`run_survival_walk`
+* :mod:`event_slots`, the kernel's four event references, as integers;
+* :mod:`transitions`, the single kernel: the :func:`run_survival_walk`
   loop with the one dispatch ladder per kind, and the embedded
   transitions (reactive shields, Maw omnivamp, Defy).  Shield and health
   absorption itself belongs to :mod:`calculator.shield_ledger`, which the
   one-pair engine drives too;
-* :mod:`receipt_state` — the annotating ledger adapter (public timeline),
+* :mod:`receipt_state`, the annotating ledger adapter (public timeline),
   over the outcome rows in :mod:`receipt_ledger` and the four interaction
   resolvers read into a participant state in :mod:`defense_contracts`;
-* :mod:`score_state` — the parallel-array ledger adapter (optimizer);
-* :mod:`compile` — the packet compiler with fail-closed capability
+* :mod:`score_state`, the parallel-array ledger adapter (optimizer);
+* :mod:`compile`, the packet compiler with fail-closed capability
   receipts (:class:`UncompilableActionError`);
-* :mod:`pricing` — raw declared damage becoming a mitigated number: the
+* :mod:`pricing`, raw declared damage becoming a mitigated number: the
   one arithmetic home a family's declaration reaches the walk through;
-* :mod:`accumulate` — per-attacker float-sum order, rounded death-time
+* :mod:`accumulate`, per-attacker float-sum order, rounded death-time
   cutoff, breakdown rows.
 
 ``__all__`` is the package's declared API, so growing it is an API change.

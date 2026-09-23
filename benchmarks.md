@@ -75,9 +75,9 @@ Captured at `3fb9b938` on the machine above, CPython 3.14.2. Each cell is the me
 runs alternating with base `6ad828b5`, whose rows carry `@6ad828b5`. Every input is a real
 action from the named golden scenario's walk. A group's representative is its first action at
 the group's median count of fields set away from the neutral value. Construction is `timeit`,
-the median of 15 repeats of 20,000 calls. The four source walks hold 873 actions. The base
-built each as one 96-field tuple. Here each is the record of its kind in
-`survival/action_families`, a median of 48 fields stored and 16 set.
+the median of 15 repeats of 20,000 calls. The four source walks hold 873 actions. A
+`@6ad828b5` row builds each as one 96-field tuple. The other rows build the record of its kind
+in `survival/action_families`, a median of 48 fields stored and 16 set.
 
 | group | scenario | set fields | all-kw µs | set-kw µs | narrow µs |
 |---|---|---|---|---|---|
@@ -94,10 +94,11 @@ built each as one 96-field tuple. Here each is the record of its kind in
 
 `all-kw` builds the action's own record by every field it stores, the width
 `program/compile.action_from_event` pays. `set-kw` passes only the set fields, and `narrow`
-builds a NamedTuple of only those fields. The records cut `all-kw` by 2.3x to 3.6x. The shield
-and buff representatives set one field fewer because their records do not store
-`duration_set`, which only the utility transition reads. Timed over the 354 events of
-`crit_onhit_carry_roster`, `action_from_event` fell from about 9.9 µs an event to 4.4.
+builds a NamedTuple of only those fields. A record's `all-kw` is 2.3x to 3.6x below its
+`@6ad828b5` row. The shield and buff representatives set one field fewer because their records
+do not store `duration_set`, which only the utility transition reads. Over the 354 events of
+`crit_onhit_carry_roster`, `action_from_event` takes about 4.4 µs an event, and 9.9 at
+`6ad828b5`.
 
 | constructor | fields | µs |
 |---|---|---|
@@ -108,9 +109,9 @@ and buff representatives set one field fewer because their records do not store
 | narrow | 29 | 0.689 |
 
 `keywords` is the score compiler's damage construction: the 29 keywords
-`WalkCompiler._compile_pair` passes, read off its call. The base built the 96-field tuple that
-way, so its compiler used `row_copy`, a default row assigned through 29 field indices. The
-48-field `DamageAction` by keyword beats that copy, so the copy is gone.
+`WalkCompiler._compile_pair` passes, read off its call. `row_copy @6ad828b5` is that commit's
+compiler, a default 96-field row assigned through 29 field indices. The 48-field
+`DamageAction` by keyword is below it.
 
 | scenario | actions | walk median µs | p10-p90 µs | request ms |
 |---|---|---|---|---|
@@ -124,8 +125,8 @@ way, so its compiler used `row_copy`, a default row assigned through 29 field in
 The walk rows time `run_survival_walk` inside a warm `calculate_payload(deterministic=True)`
 over 50 requests, and `request ms` is the whole request's median. The walk reads a field a
 record does not store off the `SurvivalAction` class attribute, no slower than a tuple slot,
-so each walk median stays inside its spread. The requests fall 7 to 8%, the construction they
-no longer pay.
+so each walk median sits inside the spread of its `@6ad828b5` row. Requests sit 7 to 8% below
+those rows, and construction is the difference.
 
 ## Optimizer search: `/api/optimize`
 

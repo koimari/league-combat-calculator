@@ -3,12 +3,11 @@
 file-length-ok: the module under test is the one-constructor boundary, and
 one suite per boundary is what keeps its field list provable in one place.
 
-``program/compile`` is the front door for action construction.  Its claim is
-a location claim first — every expression building an action record in
-``src/`` is in this module, which ``tests/test_program_structure.py`` asserts
-over the tree — and a
-fail-closed claim second: an engine row the kernel cannot stage raises with a
-named receipt rather than compiling a hole.
+``program/compile`` is the front door for action construction.  Its first
+claim is location: every expression building an action record in ``src/`` is
+in this module, which ``tests/test_program_structure.py`` asserts over the
+tree.  Its second is fail-closed: an engine row the kernel cannot stage
+raises with a named receipt rather than compiling a hole.
 
 The behaviour of the relocated builders is pinned by the suites that own them
 (``test_event_slots``, ``test_modifier_classes``,
