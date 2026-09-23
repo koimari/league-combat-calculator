@@ -166,7 +166,6 @@ class SurvivalAction:
     deferred_batch_slot: int = NO_SLOT
     redirect_holder_health_ratio: float = 0.0
     redirect_original_damage: float = 0.0
-    redirect_cancelled: bool = False
     # Attack metadata
     is_ability: bool = False
     basic_attack: bool = False
@@ -274,8 +273,6 @@ class SurvivalAction:
     # ``ActionKind.UTILITY``.  The cleanse dispatch reads it (QSS/Mercurial
     # ride ``cleanse``-kind utility packets).
     utility_kind: str = ""
-    gold_amount: float = 0.0
-    ward_uses: float = 0.0
     duration_set: bool = False
     # Cleanse-activation fields (item actives that remove crowd control).
     # ``cleanse`` marks a packet as a cleanse activation (Mikael's Purify

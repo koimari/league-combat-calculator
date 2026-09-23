@@ -3912,9 +3912,7 @@ def run_survival_walk(actions: list[SurvivalAction], ctx: TransitionContext) -> 
                 preserve_reason=True,
             )
             continue
-        if action.redirect_cancelled or (
-            action.event_slot != NO_SLOT and action.event_slot in ctx.redirect_cancelled
-        ):
+        if action.event_slot != NO_SLOT and action.event_slot in ctx.redirect_cancelled:
             ledger.skip(
                 action,
                 "redirect_gate",

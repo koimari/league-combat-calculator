@@ -569,7 +569,6 @@ def action_from_event(
         redirect_original_damage=max(
             0.0, float(get("_redirect_original_damage", 0.0) or 0.0)
         ),
-        redirect_cancelled=bool(get("_redirect_cancelled")),
         is_ability=bool(get("is_ability")),
         basic_attack=bool(get("basic_attack")),
         ability_instance=get("ability_instance"),
@@ -686,8 +685,6 @@ def action_from_event(
         # utility marker must come from the event, not the classified
         # ActionKind enum (an enum is never a member of the string set).
         utility_kind=kind_str if kind_str in UTILITY_KINDS else "",
-        gold_amount=float(get("gold_amount", 0.0) or 0.0),
-        ward_uses=float(get("ward_uses", 0.0) or 0.0),
         duration_set="duration" in event,
         cleanse=bool(get("cleanse")),
         cleanse_item=str(get("cleanse_item", "") or ""),
