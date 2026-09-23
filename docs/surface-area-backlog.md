@@ -1,9 +1,9 @@
 # Surface-area backlog
 
 Everything the coverage-frontier (rows `CF*`), engine-retirement (`ER*`), resolution
-(`SR*`), rotation-derivation (`RV*`) and source-review (`SA*`) work surfaced and did not
-close. Delete a row when its fix lands; this file is the one home for the list. Traps live
-in `TRAPS.md`.
+(`SR*`), rotation-derivation (`RV*`), source-review (`SA*`) and code-health (`CH*`) work
+surfaced and did not close. Delete a row when its fix lands; this file is the one home for
+the list. Traps live in `TRAPS.md`.
 
 | # | Where | What | Action |
 |---|---|---|---|
@@ -15,3 +15,18 @@ in `TRAPS.md`.
 | SA1 | `champions/gwen.py` | A Thousand Cuts heals 50% of post-mitigation champion damage in the module (`derive_self_healing`), where the cached description says 67%. The per-instance cap is read from the cache and is correct. | Re-read the share from the cache and re-capture the golden, which moves every Gwen self-healing leaf. |
 | SA2 | `champions/camille.py` | Adaptive Defenses prices `ADAPTIVE_DEFENSES_MAX_HP_RATIO = 0.20` flat, where the cached passive gives 10% / 15% / 20% based on level, so the shield is overstated at every level below the top band. The ratio is prose-only in the cache, with no amount row in the dump. | Read the level axis out of the passive prose and re-capture the golden, which moves every Camille shield leaf under level 18. |
 | SA3 | `champions/yasuo.py` | The Flow row's `detail` calls the shield a "magic-damage shield". The cached passive says Yasuo "consumes all Flow to grant himself a shield" and names no damage type. The amount is right, the published sentence is not. | Drop the damage type from the sentence and re-capture the coupled golden, which carries the detail string. |
+| CH1 | `champions/module_helpers.py` | All 27 cross-slot `ctx.ranked("<slot>")` calls are guard sites wanting a `ranked_at(slot, index)` factory, and `module_helpers.py` has no room for one under its 500-line cap. | Add the factory in a sibling module and convert the guards. |
+| CH2 | champion prose | 8 prose sites in 5 files name two option keys neither `Rumble` nor `Seraphine` declares. | Repoint each site at a declared key or drop it. |
+| CH3 | `champions/shared_option_keys.py` | `w_charge` is declared by Irelia and K'Sante both, so the K'Sante Path Maker walk publishes a `w` resource ledger on an Irelia fight that sets it. Every `fight/stacks/` gate has that shape. | Gate each stack walk on the champion as well as the option key. |
+| CH4 | `scripts/literal_defaults.py` | A named option key is not resolved, so a `.get(OPTION_KEY, literal)` site is invisible to the report. | Resolve module-level string constants before matching. |
+| CH5 | `item_effects.sustain_effect_value` | Read 134 times over 20 files, mostly for values that are not sustain. | Rename it in a unit of its own, since `item_effects.py` is rule 5's home. |
+| CH6 | `item_support_everlasting._everlasting_packets` | 264 lines, the largest block left after the item-support carve. | Carve it by producer. |
+| CH7 | `tests/` | `scripts/one_spelling.py` reads only `src/` and `scripts/`, and `tests/` holds 84 findings over 38 files, three of them the gate's own fixture. | Codemod the findings, then extend the gate to `tests/`. |
+| CH8 | `scripts/assignments/ledger_projection.json`, `docs/receipts/expected-golden-diff-slots18-alistar-r.json` | Each cites a class that no longer exists: `UndeclaredStatRead` and `DuplicateSumMember`. | Drop the citations. |
+| CH9 | `scripts/tail_site_triage._tolerance_modules` | `from src.calculator.<pkg> import <module>` credits the package, not the module, so a tolerance pin written that way credits nothing. | Resolve the imported name as a submodule first. |
+| CH10 | `scripts/behavior_frontier.ZERO_POLICY_ISSUE` | The tree's last `issue #N` citation, published as a field of `docs/behavior-frontier.json`. | Drop it, `--write`, and refresh the fingerprints. |
+| CH11 | `behavior_frontier._receiver`, `tail_site_triage._receiver` | One receiver rule in two scripts. The `tail_site_triage` copy compares a whole dotted path against the bare names in `NON_ROW_RECEIVERS`, so six cached-champion reads and two stat-block reads in `participant_timeline.py` carry an engine-row bucket. | One shared receiver that compares the root name. |
+| CH12 | `timeline/utility.py` | 42 literal-default sites that cannot fall until the support and healing books are censused the way `internal_row_census.py` censuses the damage books. | Census those books. |
+| CH13 | sightline | #55 owns arity but runs in no CI job, and #23 complexity has no owner that fails, so a new wide signature or complex function fails nothing. | Run `sightline gate` in CI against `.sightline-baseline`. |
+| CH14 | `scripts/receipt_walk_schedule.py` | The label `survival.actions.SurvivalAction.<field>` names the home the action split retired. | Relabel, `--write`, and refresh the fingerprints the golden reads. |
+| CH15 | `calculate.py` | Two `.get("timeline_coverage", {})` calls hand an empty dict to a reader that indexes. | Index directly, so a missing key raises. |
