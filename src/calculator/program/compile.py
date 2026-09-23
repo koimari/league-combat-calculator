@@ -69,7 +69,6 @@ from ..survival.action_families import (
     HealAction,
     ModifierAction,
     StateAction,
-    WideAction,
 )
 from ..survival.actions import (
     action_key,
@@ -822,6 +821,18 @@ def revive_candidate_actions(
     return candidates, aidx
 
 
+def _support_action(**fields: Any) -> SurvivalAction:
+    """The record of the packet's ``kind``, over the fields that record stores.
+
+    A support template states one field set whatever its kind, and a field
+    its record does not store is one no transition of that kind reads.
+    """
+    record = FAMILY_OF[fields["kind"]]
+    return record(
+        **{name: value for name, value in fields.items() if name in record._fields}
+    )
+
+
 class WalkCompiler:
     """Accumulates flat survival actions with stable per-action ids.
 
@@ -1557,7 +1568,7 @@ class WalkCompiler:
             time_value = optional_field(template, "time", float) or 0.0
             category = optional_field(template, "healing_category", str) or ""
             self.actions.append(
-                WideAction(
+                _support_action(
                     sort_key=action_key(time_value, priority, target_id, template),
                     time=time_value,
                     phase=priority,
