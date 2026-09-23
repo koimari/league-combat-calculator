@@ -153,8 +153,11 @@ def autos_for(result, actor):
 def test_w_increases_only_the_selected_allies_attack_cadence():
     baseline = attack_payload([])
     buffed = attack_payload([event(slot="W", recipient="ally:Ashe")])
-    assert len(autos_for(baseline, "ally:Ashe")) == 19
-    assert len(autos_for(buffed, "ally:Ashe")) == 20
+    # Ashe runs 20 x 0.9936 = 19.87 cycles; impacts land at her 0.219 windup
+    # share, so ceil(19.87 - 0.219) = 20.  Whimsy's 30% x 0.658 ratio for 4s
+    # adds 0.79 cycles: ceil(20.66 - 0.219) = 21.
+    assert len(autos_for(baseline, "ally:Ashe")) == 20
+    assert len(autos_for(buffed, "ally:Ashe")) == 21
     assert [row["time"] for row in autos_for(buffed, "main")] == [
         row["time"] for row in autos_for(baseline, "main")
     ]
@@ -431,14 +434,33 @@ def test_ashe_q_and_whimsy_preserve_each_cast_window():
         deterministic=True,
     )
     base_autos, buffed_autos = ashe_garen_autos(baseline), ashe_garen_autos(buffed)
-    assert len(base_autos) == 19
-    assert len(buffed_autos) == 20
+    # One attack timer runs through Q's [0, 6) and Whimsy's [2, 5) windows.
+    # Whimsy's 0.39 extra cycles fall short of another impact.
+    assert len(base_autos) == len(buffed_autos) == 21
     assert [
         (row["time"], row["pair_damage"]) for row in buffed_autos if row["time"] < 2
     ] == [(row["time"], row["pair_damage"]) for row in base_autos if row["time"] < 2]
-    assert [
-        (row["time"], row["pair_damage"]) for row in buffed_autos if row["time"] >= 6
-    ] == [(row["time"], row["pair_damage"]) for row in base_autos if row["time"] >= 6]
+    base_after = [row for row in base_autos if row["time"] >= 6]
+    buffed_after = [row for row in buffed_autos if row["time"] >= 6]
+    assert [row["pair_damage"] for row in buffed_after] == [
+        row["pair_damage"] for row in base_after
+    ]
+    # Past both windows the streams share the base cycle; the buffed one runs
+    # ahead by Whimsy's extra cycles, carried through rather than reset at 6s.
+    whimsy = next(
+        row for row in buffed["combat"]["support_events"] if row["kind"] == "stat_buff"
+    )
+    extra_cycles = (
+        whimsy["bonus_attack_speed_percent"]
+        / 100.0
+        * buffed["champion_stats"]["attack_speed_ratio"]
+        * whimsy["duration"]
+    )
+    base_cycle = base_after[1]["time"] - base_after[0]["time"]
+    for base_row, buffed_row in zip(base_after, buffed_after, strict=True):
+        assert base_row["time"] - buffed_row["time"] == pytest.approx(
+            extra_cycles * base_cycle, abs=2e-3
+        )
     assert buffed["cast_timeline"] == baseline["cast_timeline"]
 
 

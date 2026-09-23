@@ -58,8 +58,15 @@ def test_akshan_passive_and_double_shot_follow_the_auto_ledger():
     result = run_fight(_load_public_champion("Akshan"), 18, [], _timed_params())
     assert result["timeline_coverage"]["complete"] is True
     passive = result["breakdown"]["passive"]
-    assert passive["count"] == 1  # five swings yield one complete 3-stack proc
-    assert passive["damage_events"]
+    # ceil(8s x 0.91 AS x 0.8 uptime - 0.133 windup share) = six swings yield
+    # two complete 3-stack procs, on the third and the sixth.
+    autos = result["breakdown"]["auto_attacks"]["damage_events"]
+    assert len(autos) == 6
+    assert passive["count"] == 2
+    assert [event["time"] for event in passive["damage_events"]] == [
+        autos[2]["time"],
+        autos[5]["time"],
+    ]
     double_shot = result["breakdown"]["double_shot"]
     assert len(double_shot["damage_events"]) == double_shot["count"]
     assert sum(
@@ -73,7 +80,11 @@ def test_ziggs_short_fuse_uses_cached_cooldown_and_cast_refunds():
     passive = result["breakdown"]["passive"]
     assert passive["event_phase"] == "auto"
     assert len(passive["damage_events"]) == passive["count"]
-    assert passive["damage_events"][0]["time"] == pytest.approx(0.0)
+    # The first charge rides the first auto, which lands at Ziggs's 0.2
+    # windup share of a 0.879 AS x 0.8 uptime cycle.
+    first_auto = result["breakdown"]["auto_attacks"]["damage_events"][0]["time"]
+    assert passive["damage_events"][0]["time"] == first_auto
+    assert first_auto == pytest.approx(0.2 / (0.879 * 0.8), abs=1e-3)
     assert [event["event_precision"] for event in passive["damage_events"]] == [
         "exact"
     ] * passive["count"]
