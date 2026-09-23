@@ -45,7 +45,8 @@ from __future__ import annotations
 
 import math
 from collections import defaultdict
-from collections.abc import Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, MutableMapping, Sequence
+from enum import Enum
 from operator import itemgetter
 from typing import Any, NamedTuple
 
@@ -73,7 +74,7 @@ from ..resistance import (
     apply_magic_penetration,
     apply_resistance,
 )
-from ..survival.action_families import WideAction
+from ..survival.action_families import CORE, FAMILY_OF, WideAction
 from ..survival.actions import (
     action_key,
     compiled_damage_action,
@@ -461,6 +462,199 @@ def declared_packet_of(
     return route_declared_packet(packet, routing)
 
 
+#: How one event dict states one action field, called as ``read(event, index_of)``.
+_Reader = Callable[[Mapping[str, Any], Mapping[str, int]], Any]
+
+
+def _flag(key: str) -> _Reader:
+    """``bool`` of the event's *key*; absent is False."""
+    return lambda event, _index_of: bool(event.get(key))
+
+
+def _text(key: str) -> _Reader:
+    """The event's *key* as text; absent is ``""``."""
+    return lambda event, _index_of: str(event.get(key, ""))
+
+
+def _label(key: str) -> _Reader:
+    """The event's *key* as text; absent or ``None`` is ``""``."""
+    return lambda event, _index_of: str(event.get(key, "") or "")
+
+
+def _number(key: str) -> _Reader:
+    """The event's *key* as a float; absent or falsy is 0.0."""
+    return lambda event, _index_of: float(event.get(key, 0.0) or 0.0)
+
+
+def _share(key: str) -> _Reader:
+    """The event's *key* as a float floored at 0.0."""
+    return lambda event, _index_of: max(0.0, float(event.get(key, 0.0) or 0.0))
+
+
+def _value(key: str) -> _Reader:
+    """The event's *key* as stated; absent is ``None``."""
+    return lambda event, _index_of: event.get(key)
+
+
+def _optional_number(key: str) -> _Reader:
+    """The event's *key* as a float, or ``None`` when the event states none."""
+
+    def read(event: Mapping[str, Any], _index_of: Mapping[str, int]) -> Any:
+        value = event.get(key)
+        return float(value) if value is not None else None
+
+    return read
+
+
+def _classes(key: str, vocabulary: type[Enum]) -> _Reader:
+    """The class set the event declares under *key*, over *vocabulary*."""
+    return lambda event, _index_of: declared_class_set(event.get(key), vocabulary)
+
+
+def _wound(event: Mapping[str, Any], _index_of: Mapping[str, int]) -> Any:
+    """The Grievous Wounds the packet applies, as ``(duration, source)``."""
+    duration = float(event.get("grievous_duration", 0.0) or 0.0)
+    if duration <= 0.0:
+        return None
+    return (duration, str(event.get("_wound_source", "Grievous Wounds")))
+
+
+def _immobilized(event: Mapping[str, Any], _index_of: Mapping[str, int]) -> bool:
+    """The bus's immobilize answer, with the bare ``crowd_control`` marker.
+
+    The marker stays a disjunct: the bus classifies it
+    ``UNCLASSIFIED_CONTROL``, and narrowing Steadfast to reject it would move
+    a number.
+    """
+    return is_immobilizing_event(event) or bool(event.get("crowd_control"))
+
+
+def _amplified_recovery(event: Mapping[str, Any], _index_of: Mapping[str, int]) -> bool:
+    """Whether heal and shield power reaches this recovery, from its kind."""
+    return amplifies_recovery(
+        str(event.get("kind", "")), str(event.get("healing_category", ""))
+    )
+
+
+def _shield_gate_subject(event: Mapping[str, Any], index_of: Mapping[str, int]) -> int:
+    """The roster slot a shield gate names; ``"attacker"`` is the packet's own."""
+    target = event.get("shield_gate_target")
+    if target == "attacker":
+        target = event.get("attacker")
+    return index_of.get(str(target), -1) if target is not None else -1
+
+
+def _defy_trigger_slot(event: Mapping[str, Any], _index_of: Mapping[str, int]) -> int:
+    """The one reference the walk authors, so the key already holds a slot."""
+    slot = event.get("_defy_trigger_slot")
+    return int(slot) if slot is not None else NO_SLOT
+
+
+def _batch_slot(event: Mapping[str, Any], _index_of: Mapping[str, int]) -> int:
+    """The deferred batch this packet belongs to, as a slot."""
+    batch_id = event.get("_deferred_batch_id")
+    return EVENT_SLOTS.slot(str(batch_id)) if batch_id else NO_SLOT
+
+
+def _utility_kind(event: Mapping[str, Any], _index_of: Mapping[str, int]) -> str:
+    """The event's authored kind when it is a utility kind, else ``""``."""
+    kind = str(event.get("kind", ""))
+    return kind if kind in UTILITY_KINDS else ""
+
+
+# Every field past the core, by the reader that states it from an event.
+# ``execute_source`` has no fallback name: an execution whose packet did not
+# carry its item is an unstamped packet.  ``live_amp`` and ``declared`` stay
+# ``None`` when nobody declared one, which the kernel tells apart from a zero.
+# ``holder`` resolves the packet's owner id to its roster slot, ``-1`` for an
+# owner outside the roster.  ``grievous`` is the compiled path's alone.
+_FROM_EVENT: Mapping[str, _Reader] = {
+    "rebinds_on_ability_hit": _flag("_rebind_on_ability_hit"),
+    "damage_type": _text("damage_type"),
+    "declared": _value("_declared"),
+    "raw_formula": _value("raw_formula"),
+    "raw_damage": _number("raw_damage"),
+    "grievous": lambda _event, _index_of: None,
+    "wound": _wound,
+    "reactive": _flag("_reactive"),
+    "live_amp": _value("_live_amp"),
+    "execute_threshold_ratio": _share("execute_threshold_ratio"),
+    "execute_source": _text("execute_source"),
+    "deferred": _flag("_deferred"),
+    "deferred_batch_slot": _batch_slot,
+    "redirect_holder_health_ratio": _share("redirect_holder_health_ratio"),
+    "redirect_original_damage": _share("_redirect_original_damage"),
+    "is_ability": _flag("is_ability"),
+    "basic_attack": _flag("basic_attack"),
+    "ability_instance": _value("ability_instance"),
+    "immobilized": _immobilized,
+    "cc_kind": _text("cc_kind"),
+    "cc_duration": _share("cc_duration"),
+    "skillshot": _flag("skillshot"),
+    "area_damage": _flag("area_damage"),
+    "damage_over_time": _flag("damage_over_time"),
+    "baseline_effective_armor": _optional_number("_baseline_effective_armor"),
+    "baseline_effective_mr": _optional_number("_baseline_effective_mr"),
+    "healing_category": _text("healing_category"),
+    "amplified_recovery": _amplified_recovery,
+    "amount_formula": _value("amount_formula"),
+    "requires_existing_shield": _flag("requires_existing_shield"),
+    "cast_while_disabled": _flag("cast_while_disabled"),
+    "cast_blocked_by_attacker_control": _flag("cast_blocked_by_attacker_control"),
+    "cleanse_group": _label("cleanse_group"),
+    "requires_maw_lifeline_omnivamp": _flag("requires_maw_lifeline_omnivamp"),
+    "shield_gate_subject": _shield_gate_subject,
+    "shield_gate_time": _optional_number("shield_gate_time"),
+    "requires_holder_health_ratio": _share("requires_holder_health_ratio"),
+    "requires_damage_free_seconds": _share("requires_damage_free_seconds"),
+    "overheal_to_temporary_health": _flag("overheal_to_temporary_health"),
+    "temporary_health_duration": _share("temporary_health_duration"),
+    "overheal_to_shield": _flag("overheal_to_shield"),
+    "overheal_shield_cap": _share("overheal_shield_cap"),
+    "overheal_shield_duration": _share("overheal_shield_duration"),
+    "defy_trigger_slot": _defy_trigger_slot,
+    "duration": _share("duration"),
+    "delay": _share("delay"),
+    "health_ratio": _share("health_ratio"),
+    "on_block_heal_amount": _share("on_block_heal_amount"),
+    "on_block_heal_delay": _share("on_block_heal_delay"),
+    "on_block_heal_source": _label("on_block_heal_source"),
+    "bonus_attack_speed_percent": _number("bonus_attack_speed_percent"),
+    "bonus_move_speed_percent": _number("bonus_move_speed_percent"),
+    "bonus_armor": _number("bonus_armor"),
+    "bonus_magic_resistance": _number("bonus_magic_resistance"),
+    "bonus_health": _number("bonus_health"),
+    "ability_power": _number("ability_power"),
+    "ability_haste": _number("ability_haste"),
+    "on_hit_magic_damage": _number("on_hit_magic_damage"),
+    "shield_pool": _label("shield_pool"),
+    "crowd_control_immunity_while_shield": _flag("crowd_control_immunity_while_shield"),
+    "crowd_control_immunity_source": _label("crowd_control_immunity_source"),
+    "persistent": _flag("persistent"),
+    "multiplier": lambda event, _index_of: float(event.get("multiplier", 1.0) or 1.0),
+    "damage_reduction": _flag("damage_reduction"),
+    "next_event_only": _flag("next_event_only"),
+    "all_sources": _flag("all_sources"),
+    "armor_reduction_percent": _number("armor_reduction_percent"),
+    "mr_reduction_percent": _number("mr_reduction_percent"),
+    "resistance_type": _text("resistance_type"),
+    "holder": lambda event, index_of: index_of.get(str(event.get("owner", "")), -1),
+    "damage_classes": _classes("damage_classes", DamageClass),
+    "attack_classes": _classes("attack_classes", AttackClass),
+    "source_participant": _text("source_participant"),
+    "utility_kind": _utility_kind,
+    "duration_set": lambda event, _index_of: "duration" in event,
+    "cleanse": _flag("cleanse"),
+    "cleanse_item": _label("cleanse_item"),
+}
+
+#: Each record's readers, in its field order past the core.
+_EVENT_READERS: Mapping[type[SurvivalAction], tuple[_Reader, ...]] = {
+    family: tuple(_FROM_EVENT[field] for field in family._fields[len(CORE) :])
+    for family in set(FAMILY_OF.values())
+}
+
+
 def action_from_event(
     event: Mapping[str, Any],
     phase: TransitionRank,
@@ -477,30 +671,25 @@ def action_from_event(
     the annotated ledger then consume the same typed interface the score
     compiler produces.  ``subject_id`` is the ledger bucket the event was
     authored into (the receipt walk's sort key uses it, not the event's
-    target field).  Missing optional metadata fails closed to the field's
-    neutral value, never to a guessed number.
+    target field).  The kind picks the record, and the record's fields are
+    read through :data:`_FROM_EVENT`; missing optional metadata fails closed
+    to the field's neutral value, never to a guessed number.
     """
     get = event.get
-    kind_str = str(get("kind", ""))
     execute_ratio_raw = get("execute_threshold_ratio")
-    deferred_raw = get("_deferred")
     redirected_raw = get("_redirected")
-    raw_formula = get("raw_formula")
-    raw_damage = float(get("raw_damage", 0.0) or 0.0)
-    grievous_duration = float(get("grievous_duration", 0.0) or 0.0)
     kind = classify_prefetched(
         event,
         phase,
-        kind_str,
+        str(get("kind", "")),
         execute_ratio_raw,
-        deferred_raw=deferred_raw,
+        deferred_raw=get("_deferred"),
         redirected_raw=redirected_raw,
-        raw_formula=raw_formula,
-        raw_damage=raw_damage,
-        grievous_duration=grievous_duration,
+        raw_formula=get("raw_formula"),
+        raw_damage=float(get("raw_damage", 0.0) or 0.0),
+        grievous_duration=float(get("grievous_duration", 0.0) or 0.0),
     )
     attacker_id = get("attacker")
-    attacker_index = index_of.get(str(attacker_id), -1) if attacker_id else -1
     event_id = get("_event_id")
     time_value = float(get("time", 0.0))
     if not math.isfinite(time_value):
@@ -510,184 +699,35 @@ def action_from_event(
             f"timestamp cannot establish a stable total order"
         )
     trigger_id = get("_trigger_event_id")
-    batch_id = get("_deferred_batch_id")
-    # A shield gate names its subject as a participant id, or as the literal
-    # ``"attacker"`` meaning "whoever dealt this packet"; the kernel wants a
-    # roster slot either way.
-    shield_gate_target = get("shield_gate_target")
-    if shield_gate_target == "attacker":
-        shield_gate_target = attacker_id
-    shield_gate_time_raw = get("shield_gate_time")
-    # The one reference the *walk* authors rather than reads: ``trigger_defy``
-    # stamps the slot it already holds, so this key carries a slot and the
-    # other three carry the id text a pre-walk author wrote.
-    defy_slot = get("_defy_trigger_slot")
-    baseline_armor = get("_baseline_effective_armor")
-    baseline_mr = get("_baseline_effective_mr")
-    cc_kind = str(get("cc_kind", ""))
-    return WideAction(
-        sort_key=get("_sk")
-        or action_key(
+    family = FAMILY_OF[kind]
+    # The core, in ``CORE`` order.  ``event_slot`` tests ``is not None``
+    # rather than truth: an event carrying an empty id string had one.
+    return family._make(
+        (
+            get("_sk")
+            or action_key(
+                time_value,
+                phase,
+                subject_id or str(get("target", "") or ""),
+                event,
+            ),
             time_value,
             phase,
-            subject_id or str(get("target", "") or ""),
+            kind,
+            subject_index,
+            index_of.get(str(attacker_id), -1) if attacker_id else -1,
+            aidx,
+            -1,
+            EVENT_SLOTS.slot(str(trigger_id)) if trigger_id else NO_SLOT,
             event,
-        ),
-        time=time_value,
-        phase=phase,
-        kind=kind,
-        subject=subject_index,
-        attacker=attacker_index,
-        aidx=aidx,
-        trigger=-1,
-        trigger_slot=EVENT_SLOTS.slot(str(trigger_id)) if trigger_id else NO_SLOT,
-        rebinds_on_ability_hit=bool(get("_rebind_on_ability_hit")),
-        event=event,
-        amount=max(0.0, float(get("damage", get("amount", 0.0)) or 0.0)),
-        damage_type=str(get("damage_type", "")),
-        raw_formula=raw_formula,
-        raw_damage=raw_damage,
-        wound=(
-            (grievous_duration, str(get("_wound_source", "Grievous Wounds")))
-            if grievous_duration > 0.0
-            else None
-        ),
-        reactive=bool(get("_reactive")),
-        execute_threshold_ratio=max(0.0, float(execute_ratio_raw or 0.0)),
-        # The source is the declaring item's own name, stamped on the packet
-        # beside the ratio by whoever authored the execution.  There is no
-        # fallback name: an execution whose source the packet did not carry
-        # is an unstamped packet, and naming a plausible item here would be
-        # the stale literal this migration removes.
-        execute_source=str(get("execute_source", "")),
-        deferred=bool(deferred_raw),
-        deferred_batch_slot=(EVENT_SLOTS.slot(str(batch_id)) if batch_id else NO_SLOT),
-        redirected=bool(redirected_raw),
-        redirect_holder_health_ratio=max(
-            0.0, float(get("redirect_holder_health_ratio", 0.0) or 0.0)
-        ),
-        redirect_original_damage=max(
-            0.0, float(get("_redirect_original_damage", 0.0) or 0.0)
-        ),
-        is_ability=bool(get("is_ability")),
-        basic_attack=bool(get("basic_attack")),
-        ability_instance=get("ability_instance"),
-        source_key=str(get("source_key", "")),
-        source=str(get("source", get("source_key", ""))),
-        # ``is not None`` rather than a truth test, deliberately: an event
-        # carrying an empty id string had one, and the walk keyed its applied
-        # status by that empty string.  It gets a slot of its own.
-        event_slot=(
-            EVENT_SLOTS.slot(str(event_id)) if event_id is not None else NO_SLOT
-        ),
-        sequence=get("sequence"),
-        # The bus answers "is this an immobilize?" for every consumer, so
-        # the walk does not answer it again.  The bare ``crowd_control``
-        # marker stays a disjunct: the bus classifies it
-        # ``UNCLASSIFIED_CONTROL``, control
-        # nobody narrowed — and narrowing Steadfast to reject it would be a
-        # semantic correction, which moves a number.
-        immobilized=is_immobilizing_event(event) or bool(get("crowd_control")),
-        cc_kind=cc_kind,
-        cc_duration=max(0.0, float(get("cc_duration", 0.0) or 0.0)),
-        skillshot=bool(get("skillshot")),
-        area_damage=bool(get("area_damage")),
-        damage_over_time=bool(get("damage_over_time")),
-        # The live-predicate amplifier the composition stamped on this
-        # packet, if its holder declared one that rides this damage class.
-        # ``None`` is "nobody declared one", which the kernel tells apart
-        # from a bonus that measured zero.
-        live_amp=get("_live_amp"),
-        # The declaration this packet's family handed the walk, if its row
-        # was stamped as a re-priced preview.  ``None`` is "the pair engine
-        # prices this family".
-        declared=get("_declared"),
-        baseline_effective_armor=(
-            float(baseline_armor) if baseline_armor is not None else None
-        ),
-        baseline_effective_mr=(float(baseline_mr) if baseline_mr is not None else None),
-        healing_category=str(get("healing_category", "")),
-        amplified_recovery=amplifies_recovery(
-            kind_str, str(get("healing_category", ""))
-        ),
-        amount_formula=get("amount_formula"),
-        requires_existing_shield=bool(get("requires_existing_shield")),
-        cast_while_disabled=bool(get("cast_while_disabled")),
-        cast_blocked_by_attacker_control=bool(get("cast_blocked_by_attacker_control")),
-        cleanse_group=str(get("cleanse_group", "") or ""),
-        requires_maw_lifeline_omnivamp=bool(get("requires_maw_lifeline_omnivamp")),
-        shield_gate_subject=(
-            index_of.get(str(shield_gate_target), -1)
-            if shield_gate_target is not None
-            else -1
-        ),
-        shield_gate_time=(
-            float(shield_gate_time_raw) if shield_gate_time_raw is not None else None
-        ),
-        requires_holder_health_ratio=max(
-            0.0, float(get("requires_holder_health_ratio", 0.0) or 0.0)
-        ),
-        requires_damage_free_seconds=max(
-            0.0, float(get("requires_damage_free_seconds", 0.0) or 0.0)
-        ),
-        overheal_to_temporary_health=bool(get("overheal_to_temporary_health")),
-        temporary_health_duration=max(
-            0.0, float(get("temporary_health_duration", 0.0) or 0.0)
-        ),
-        overheal_to_shield=bool(get("overheal_to_shield")),
-        overheal_shield_cap=max(0.0, float(get("overheal_shield_cap", 0.0) or 0.0)),
-        overheal_shield_duration=max(
-            0.0, float(get("overheal_shield_duration", 0.0) or 0.0)
-        ),
-        defy_trigger_slot=int(defy_slot) if defy_slot is not None else NO_SLOT,
-        duration=max(0.0, float(get("duration", 0.0) or 0.0)),
-        delay=max(0.0, float(get("delay", 0.0) or 0.0)),
-        health_ratio=max(0.0, float(get("health_ratio", 0.0) or 0.0)),
-        on_block_heal_amount=max(0.0, float(get("on_block_heal_amount", 0.0) or 0.0)),
-        on_block_heal_delay=max(0.0, float(get("on_block_heal_delay", 0.0) or 0.0)),
-        on_block_heal_source=str(get("on_block_heal_source", "") or ""),
-        bonus_attack_speed_percent=float(get("bonus_attack_speed_percent", 0.0) or 0.0),
-        bonus_move_speed_percent=float(get("bonus_move_speed_percent", 0.0) or 0.0),
-        bonus_armor=float(get("bonus_armor", 0.0) or 0.0),
-        bonus_magic_resistance=float(get("bonus_magic_resistance", 0.0) or 0.0),
-        bonus_health=float(get("bonus_health", 0.0) or 0.0),
-        ability_power=float(get("ability_power", 0.0) or 0.0),
-        ability_haste=float(get("ability_haste", 0.0) or 0.0),
-        on_hit_magic_damage=float(get("on_hit_magic_damage", 0.0) or 0.0),
-        shield_pool=str(get("shield_pool", "") or ""),
-        crowd_control_immunity_while_shield=bool(
-            get("crowd_control_immunity_while_shield")
-        ),
-        crowd_control_immunity_source=str(
-            get("crowd_control_immunity_source", "") or ""
-        ),
-        persistent=bool(get("persistent")),
-        multiplier=float(get("multiplier", 1.0) or 1.0),
-        damage_reduction=bool(get("damage_reduction")),
-        next_event_only=bool(get("next_event_only")),
-        all_sources=bool(get("all_sources")),
-        armor_reduction_percent=float(get("armor_reduction_percent", 0.0) or 0.0),
-        mr_reduction_percent=float(get("mr_reduction_percent", 0.0) or 0.0),
-        resistance_type=str(get("resistance_type", "")),
-        # A *restriction* on which participant's damage this modifier applies
-        # to, never the holder: ``holder`` below still resolves the owner.
-        source_participant=str(get("source_participant", "")),
-        # The packet declares its holder as a participant id, because that is
-        # what an item support author knows; the kernel wants the roster slot.
-        # An owner outside this roster resolves to ``-1`` and arms no skip,
-        # which is byte-identical to the string compare it replaces: the id
-        # the packet carries always comes from a combatant, so a miss here
-        # would have been a miss there.
-        holder=index_of.get(str(get("owner", "")), -1),
-        damage_classes=declared_class_set(get("damage_classes"), DamageClass),
-        attack_classes=declared_class_set(get("attack_classes"), AttackClass),
-        # ``kind_str`` is the event's authored kind string — the typed
-        # utility marker must come from the event, not the classified
-        # ActionKind enum (an enum is never a member of the string set).
-        utility_kind=kind_str if kind_str in UTILITY_KINDS else "",
-        duration_set="duration" in event,
-        cleanse=bool(get("cleanse")),
-        cleanse_item=str(get("cleanse_item", "") or ""),
+            EVENT_SLOTS.slot(str(event_id)) if event_id is not None else NO_SLOT,
+            str(get("source_key", "")),
+            str(get("source", get("source_key", ""))),
+            get("sequence"),
+            max(0.0, float(get("damage", get("amount", 0.0)) or 0.0)),
+            bool(redirected_raw),
+            *[read(event, index_of) for read in _EVENT_READERS[family]],
+        )
     )
 
 

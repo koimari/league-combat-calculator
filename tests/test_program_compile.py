@@ -461,3 +461,50 @@ class TestTheCompiledHealCarriesItsGateFields:
         heal = self.compiled_heal(cleanse=True, cleanse_item="Mikael's Blessing")
         assert heal.cleanse is True
         assert heal.cleanse_item == "Mikael's Blessing"
+
+
+class TestTheEventBuilderFillsTheCoreByName:
+    """``action_from_event`` hands the core positionally, so each is pinned by name."""
+
+    def test_every_core_field_lands_on_its_own_name(self) -> None:
+        from src.calculator.survival.event_slots import EVENT_SLOTS
+
+        event = {
+            "_sk": ("sort", "key"),
+            "time": 4.5,
+            "kind": "heal",
+            "attacker": "ally:Lulu",
+            "_trigger_event_id": "trigger:1",
+            "_event_id": "event:1",
+            "source_key": "W",
+            "source": "Whimsy",
+            "sequence": 9,
+            "amount": 30.0,
+            "_redirected": True,
+        }
+        action = program_compile.action_from_event(
+            event,
+            TransitionRank.RECOVERY,
+            2,
+            {"ally:Lulu": 1},
+            aidx=7,
+        )
+        expected = {
+            "sort_key": ("sort", "key"),
+            "time": 4.5,
+            "phase": TransitionRank.RECOVERY,
+            "kind": ActionKind.HEAL,
+            "subject": 2,
+            "attacker": 1,
+            "aidx": 7,
+            "trigger": -1,
+            "trigger_slot": EVENT_SLOTS.slot("trigger:1"),
+            "event_slot": EVENT_SLOTS.slot("event:1"),
+            "source_key": "W",
+            "source": "Whimsy",
+            "sequence": 9,
+            "amount": 30.0,
+            "redirected": True,
+        }
+        assert {name: getattr(action, name) for name in expected} == expected
+        assert action.event is event
