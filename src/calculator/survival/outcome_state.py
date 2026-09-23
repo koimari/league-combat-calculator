@@ -205,7 +205,6 @@ class OutcomeLedger(TriggerLinkage):
         if first != slot:
             raise duplicate_applied(key, first, slot)
 
-    # pylint: disable=unused-argument  # protocol shape
     def restore(self, action: SurvivalAction, **fields: Any) -> None:
         """An input, not an outcome.  Dropped, and that is the whole point."""
 
@@ -214,7 +213,6 @@ class OutcomeLedger(TriggerLinkage):
         if self.annotating:
             self.write(action, **fields)
 
-    # pylint: disable=unused-argument  # damage_phase is protocol shape
     def skip(
         self,
         action: SurvivalAction,

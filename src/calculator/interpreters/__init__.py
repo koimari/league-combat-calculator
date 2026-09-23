@@ -37,7 +37,6 @@ derived front-door check is what would notice.
 # file and the excuse in another, which is the prose-outruns-code shape the
 # whole table exists to refuse.  Same trade, same idiom, as
 # ``trigger_stream``'s own table.
-# pylint: disable=too-many-lines
 
 from __future__ import annotations
 

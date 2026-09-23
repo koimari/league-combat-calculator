@@ -34,7 +34,7 @@ TEMPLATE = TEMPLATE_PATH.read_text(encoding="utf-8")
 def _payloads(tmp_path, paths: list[str]) -> dict:
     """Run app.js's own BIS payload builders over ``paths``."""
     node = shutil.which("node")
-    if node is None:  # pragma: no cover - toolchain dependent
+    if node is None:
         pytest.skip("node is not installed")
     fixture = tmp_path / "fixture.json"
     fixture.write_text(

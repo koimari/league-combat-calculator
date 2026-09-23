@@ -173,7 +173,7 @@ class ValueRef:
         if not self.owner or not self.key:
             raise ValueRefError("a ValueRef names an owner and a key")
 
-    def get(self, level: int | None = None) -> float:  # sightline-ok: 37 - subclass
+    def get(self, level: int | None = None) -> float:
         """Read the number now, raising with owner and key context if absent."""
         del level
         if self.registry == "ITEM_EFFECTS":

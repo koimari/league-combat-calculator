@@ -103,10 +103,6 @@ from src.calculator.public_response import (
     public_loadout_summary,
 )
 from src.calculator.purchase_search import optimize_purchase
-
-# The sys.path bootstrap above forces every first-party import below it;
-# this one line carries the disable rather than the whole block, because
-# widening it is another lane's file to change.
 from src.calculator.quantity import StarvedSignal
 from src.calculator.request_parsing import (
     request_bool,
@@ -200,7 +196,6 @@ def _configure_sentry() -> None:
         _sentry = None
         return
     try:
-        # pylint: disable-next=import-outside-toplevel  # deliberate lazy import
         import sentry_sdk
     except ImportError:
         app.logger.warning(
@@ -379,7 +374,7 @@ def _anon_session_id() -> str:
     session_id = secrets.token_urlsafe(24)
 
     @after_this_request
-    def _persist_anon_cookie(response):  # pylint: disable=unused-variable
+    def _persist_anon_cookie(response):
         response.set_cookie(
             _ANON_SESSION_COOKIE,
             session_id,
@@ -687,7 +682,6 @@ def _local_dev_request() -> bool:
 def _run_data_update():
     """Import data_updater only when actually updating: its import chain
     pulls in vendor/lolstaticdata, which production images don't ship."""
-    # pylint: disable-next=import-outside-toplevel  # deliberate, see docstring
     from src.calculator.data_updater import update_data
 
     return update_data()
@@ -864,7 +858,6 @@ def _health_db_check() -> dict:
     try:
         with session() as db_session:
             db_session.execute(text("SELECT 1"))
-    # pylint: disable-next=broad-exception-caught
     except Exception as exc:
         app.logger.exception("Deep health: database check failed")
         return {
@@ -1447,7 +1440,6 @@ def api_optimize() -> Response | tuple[Response, int]:
     items, budgets) are parsed after the shared call, and the deterministic
     result is cached under the ``optimize`` namespace.
     """
-    # pylint: disable=too-many-return-statements
     try:
         data = _json_object()
         request = parse_scenario_request(
@@ -1736,7 +1728,6 @@ def api_list_feedback() -> Response | tuple[Response, int]:
 
 
 @app.route("/api/receipts", methods=["POST"])
-# pylint: disable=too-many-branches,too-many-locals,too-many-statements
 def api_receipts() -> Response | tuple[Response, int]:
     """Record one game-receipt validation observation.
 
@@ -1754,7 +1745,6 @@ def api_receipts() -> Response | tuple[Response, int]:
     the stored receipt stays numeric.  When ``observed`` is omitted the
     receipt is a positive confirmation (observed := predicted).
     """
-    # pylint: disable=too-many-return-statements
     try:
         data = _json_object()
         champion = request_string(data, "champion", required=True)
@@ -1919,7 +1909,6 @@ def api_metrics() -> Response | tuple[Response, int]:
     missing DB and "Metrics module unavailable" is a deploy break.
     """
     try:
-        # pylint: disable-next=import-outside-toplevel  # deliberate lazy import
         from src.metrics import compute_scorecard
     except ImportError:
         app.logger.exception("Failed to import the beta metrics scorecard")

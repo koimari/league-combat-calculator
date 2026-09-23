@@ -282,7 +282,7 @@ _TABLES = (
 _FLAT: dict[str, int] = {}
 for _table in _TABLES:
     _COLLISIONS = set(_FLAT) & set(_table)
-    if _COLLISIONS:  # pragma: no cover - a declaration defect, not a runtime one
+    if _COLLISIONS:
         raise ValueError(
             "two views declare a precision for the same leaf: "
             + ", ".join(sorted(_COLLISIONS))

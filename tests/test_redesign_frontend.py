@@ -351,7 +351,7 @@ EVENT_ORDER_HARNESS = Path(__file__).resolve().parent / "js" / "event_order_harn
 def _event_order_panel(results, tmp_path):
     """Dispatch each result as one ``scryglass:result`` and read the mount."""
     node = shutil.which("node")
-    if node is None:  # pragma: no cover - toolchain dependent
+    if node is None:
         pytest.skip("node is not installed")
     fixture = tmp_path / "fixture.json"
     fixture.write_text(json.dumps({"results": results}), encoding="utf-8")

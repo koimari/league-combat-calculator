@@ -42,12 +42,12 @@ sys.path.insert(0, str(ROOT))
 
 from scripts.generated_file import (
     write_or_check,
-)  # pylint: disable=wrong-import-position
-from src.calculator import (  # pylint: disable=wrong-import-position
+)
+from src.calculator import (
     item_effects,
     rune_effects,
 )
-from src.calculator.champions import (  # pylint: disable=wrong-import-position
+from src.calculator.champions import (
     _CHAMPION_MODULES,
     get_champion_module_contract,
     get_champion_options_meta,
@@ -379,7 +379,7 @@ def _backlog_rows() -> int:
 
 def _swing_frontier() -> int:
     """Rows on the swing-stream audit's pinned frontier."""
-    import swing_stream_audit  # pylint: disable=import-outside-toplevel
+    import swing_stream_audit
 
     return len(swing_stream_audit.FRONTIER)
 

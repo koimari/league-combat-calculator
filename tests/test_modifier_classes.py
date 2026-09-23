@@ -259,11 +259,11 @@ class _LedgerCtx:
 
     class _Ledger:
         @staticmethod
-        def write(action, **fields):  # pylint: disable=unused-argument
+        def write(action, **fields):
             """Record nothing: this suite reads the armed modifier, not the receipt."""
 
         @staticmethod
-        def skip(action, reason):  # pylint: disable=unused-argument
+        def skip(action, reason):
             """Record nothing."""
 
     ledger = _Ledger()

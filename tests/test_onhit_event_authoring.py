@@ -783,10 +783,10 @@ class TestADeclaredControlKindRidesTheConsumedSwing:
     """
 
     def test_fimbulwinter_certifies_once_the_kind_is_declared(self, monkeypatch):
-        from dataclasses import replace as _replace  # pylint: disable=C0415
+        from dataclasses import replace as _replace
 
-        from src.calculator import champions  # pylint: disable=C0415
-        from src.calculator.champions import chogath  # pylint: disable=C0415
+        from src.calculator import champions
+        from src.calculator.champions import chogath
 
         parse = chogath.parse_abilities
 

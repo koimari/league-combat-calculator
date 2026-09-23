@@ -172,8 +172,8 @@ def _row(
             "none; a row the engine publishes has to be somebody's statement"
         )
     key, name = declared or (
-        f"{derived[0]}{rule.owner}",  # type: ignore[index]
-        f"{rule.owner} ({derived[1]})",  # type: ignore[index]
+        f"{derived[0]}{rule.owner}",
+        f"{rule.owner} ({derived[1]})",
     )
     return DamageSource(
         item_name=rule.owner,

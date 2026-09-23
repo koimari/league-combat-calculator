@@ -294,8 +294,8 @@ class TestEveryViewTakesTheWalkAndNothingElse:
 
         module, name = spec.split(":")
         path = f"src.calculator.{module}"
-        imported = importlib.import_module(path)  # sightline-ok: 24 - dotted spec
-        return getattr(imported, name)  # sightline-ok: 24 - dotted spec
+        imported = importlib.import_module(path)
+        return getattr(imported, name)
 
     def test_each_view_takes_a_program_and_a_walk_result_and_no_third_thing(
         self,

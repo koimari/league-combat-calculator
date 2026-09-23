@@ -3572,7 +3572,7 @@ def _routing_slot():
 
     def capture(state):
         bolts = state.declared.secondary_target_bolts
-        if bolts is None:  # pragma: no cover - the seed always holds one
+        if bolts is None:
             return
         captured.setdefault(
             "slot",

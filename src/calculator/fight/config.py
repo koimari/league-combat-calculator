@@ -49,9 +49,7 @@ def declared_option_spec(family: str, owner: str, key: str) -> Mapping[str, Any]
     return spec
 
 
-def declared_option_default(  # sightline-ok: 1 - key-typed read
-    family: str, owner: str, key: str
-) -> Any:
+def declared_option_default(family: str, owner: str, key: str) -> Any:
     """The value an unset option prices at, as its own spec declares it."""
     return declared_option_spec(family, owner, key)["default"]
 

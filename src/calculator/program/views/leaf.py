@@ -97,14 +97,9 @@ class LeafBlock:
         self._set = target.__setitem__
 
     def put(self, key: str, quantity: Quantity) -> None:
-        """Serialize one leaf into the block and record its entry.
-
-        A withheld quantity writes no key and still lands its entry, so a
-        consumer tells "refused, and why" from "no such field".
-        """
+        """Serialize one leaf and record its entry; a withheld one writes no key."""
         out = serialize_leaf(f"{self._dot}{key}", quantity, self._tag)
-        # pylint: disable-next=protected-access
-        self._writer._record(out)  # noqa: SLF001 - the writer's ledger
+        self._writer._record(out)
         if out.present:
             self._target[key] = out.value
 
@@ -151,21 +146,16 @@ class LeafBlock:
         return value
 
     def _member(self, value: object, path: str) -> object:
-        """One list member, with a bare number inside it written as a leaf.
+        """One list member; a bare float in it is published as a leaf.
 
-        A float sitting directly in a list is as published as one behind a
-        key, so one function emits its leaf and its entry too.
-
-        The discarding branch is :meth:`measured`'s, for :data:`DISCARD`'s
-        reason and no other: a member nobody records is the same float.
+        Unrecorded members return the float as is, :meth:`measured`'s rule.
         """
         if not isinstance(value, float):
             return self._walk(value, path)
         if not self._records:
             return float(value)
         out = serialize_leaf(path, Measured(amount=float(value)), self._tag)
-        # pylint: disable-next=protected-access
-        self._writer._record(out)  # noqa: SLF001 - the writer's ledger
+        self._writer._record(out)
         return out.value
 
     def raw(self, key: str, value: object) -> None:

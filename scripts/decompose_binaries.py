@@ -159,7 +159,7 @@ def decompose_map11(out: Path) -> tuple[Path | None, int]:
     for mw in map_wads:
         try:
             w = open_wad(mw)
-        except Exception:  # noqa: S112 - skip an unreadable wad
+        except Exception:
             continue
         data = extract_path(w, "data/maps/map11/map11.bin")
         if data:

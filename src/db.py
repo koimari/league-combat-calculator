@@ -376,7 +376,6 @@ def _redis_client() -> Any:
     """Return the lazily created Redis client for ``REDIS_URL``."""
     if _redis_state["client"] is None:
         try:
-            # pylint: disable-next=import-outside-toplevel  # deliberate, see docstring
             import redis as redis_lib
         except ImportError as exc:
             raise RuntimeError(
@@ -390,16 +389,10 @@ def _redis_client() -> Any:
 
 
 def _redis_call(method: str, *args: Any, **kwargs: Any) -> Any:
-    """Run one Redis command, normalizing backend failures to a clean error.
-
-    The cache is an availability optimization, but it must never silently
-    serve stale data: any backend failure surfaces as ``CacheUnavailable``
-    so the caller can fail closed instead of guessing.
-    """
+    """Run one Redis command; any backend failure raises ``CacheUnavailable``."""
     client = _redis_client()
     try:
         return getattr(client, method)(*args, **kwargs)
-    # pylint: disable-next=broad-exception-caught
     except Exception as exc:
         raise CacheUnavailable(f"Redis cache unavailable: {exc}") from exc
 

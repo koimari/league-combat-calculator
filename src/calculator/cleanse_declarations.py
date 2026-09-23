@@ -10,9 +10,7 @@ from .delivery_facts import PacketIdentity
 from .item_effects import ally_item_effect_value, mercurial_quicksilver_movement
 
 
-class CleanseActivation(
-    PacketIdentity, Protocol
-):  # pylint: disable=too-few-public-methods
+class CleanseActivation(PacketIdentity, Protocol):
     """One cleanse activation as :meth:`CleanseEligibility.decide` reads it.
 
     The walk builds it from the activating action, the recipient and holder

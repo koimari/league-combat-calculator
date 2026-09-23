@@ -80,7 +80,7 @@ def coverage(*, no_damage: str = "", out_of_scope: str = "") -> dict[str, str]:
 
 
 @dataclass(frozen=True, slots=True)
-class ChampionModuleContract:  # pylint: disable=too-many-instance-attributes
+class ChampionModuleContract:
     """The single runtime and review view of one registered champion."""
 
     name: str

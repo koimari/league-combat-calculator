@@ -44,7 +44,7 @@ from src.calculator.crowd_control_eligibility import (
 )
 
 
-class _Action:  # pylint: disable=too-few-public-methods
+class _Action:
     """The minimum an action needs to be classified."""
 
     def __init__(self, cc_kind: str) -> None:

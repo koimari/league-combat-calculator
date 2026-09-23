@@ -243,7 +243,7 @@ _SESSION_CONFIG: pytest.Config | None = None
 
 def record_session(config: pytest.Config) -> None:
     """Hand the resolver the session whose stash holds the collected nodes."""
-    global _SESSION_CONFIG  # pylint: disable=global-statement
+    global _SESSION_CONFIG
     _SESSION_CONFIG = config
 
 

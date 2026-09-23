@@ -69,7 +69,7 @@ def test_a_rune_reference_routes_through_the_rune_accessor() -> None:
 def test_a_reference_into_an_unknown_registry_is_refused() -> None:
     """A fourth registry is a decision, not a typo that resolves anyway."""
     with pytest.raises(ValueRefError):
-        ValueRef("ITEM_INPUT_OPTIONS", "Black Cleaver", "stacks")  # type: ignore[arg-type]
+        ValueRef("ITEM_INPUT_OPTIONS", "Black Cleaver", "stacks")
 
 
 def test_a_reference_moves_when_the_registry_moves() -> None:
@@ -93,7 +93,7 @@ def test_a_structural_constant_may_not_be_a_magnitude() -> None:
     with pytest.raises(ValueRefError, match="flag"):
         Const(2, "flag")
     with pytest.raises(ValueRefError):
-        Const(3, "vibes")  # type: ignore[arg-type]
+        Const(3, "vibes")
     with pytest.raises(ValueRefError):
         Const(math.inf, "cap")
 
@@ -138,7 +138,7 @@ def test_a_derived_reference_refuses_an_arity_it_cannot_fold() -> None:
     with pytest.raises(ValueRefError):
         DerivedValueRef("ADD", ())
     with pytest.raises(ValueRefError):
-        DerivedValueRef("POW", (Const(1, "count"),))  # type: ignore[arg-type]
+        DerivedValueRef("POW", (Const(1, "count"),))
 
 
 def test_a_zero_denominator_raises_rather_than_returning_a_number() -> None:
@@ -150,7 +150,7 @@ def test_a_zero_denominator_raises_rather_than_returning_a_number() -> None:
 def test_resolve_rejects_a_bare_number() -> None:
     """The one entry point consumers use will not take a float."""
     with pytest.raises(ValueRefError):
-        resolve(1.0)  # type: ignore[arg-type]
+        resolve(1.0)
 
 
 def test_a_level_scaled_reference_needs_a_level() -> None:

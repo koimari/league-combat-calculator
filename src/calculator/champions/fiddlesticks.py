@@ -67,7 +67,6 @@ _terrify_fearing = with_control(_terrify, kind="fear", duration_attr="Fear Durat
 
 def _terrify_slot(ctx: SlotCtx) -> dict[str, Any] | None:
     if bool(ctx.option("q_target_already_feared")):
-        # pylint: disable-next=no-value-for-parameter  # ranked_slot takes (ctx)
         return _terrify(ctx)
     return _terrify_fearing(ctx)
 

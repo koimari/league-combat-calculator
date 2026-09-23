@@ -29,12 +29,6 @@ Naming: the unit is a **rule**, never an "atom".  ``atomizer.Atom``,
 live meanings of that word already.
 """
 
-# file-length-ok: the bulk is the closed union itself, one frozen payload per
-# family beside the enum naming it, and a payload lifted out is a union member
-# whose family lives in another file.  The leaf-import contract above is the
-# other half: every consumer depends on this module, so a split is a second
-# import edge for each of them.  docs/plans/2026-09-09-fight-navigability.md
-# carves the interpreters that read these payloads, not the vocabulary.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -1127,7 +1121,7 @@ class SelfShield:
 
 
 @dataclass(frozen=True, slots=True)
-class CooldownProcRule:  # pylint: disable=too-many-instance-attributes
+class CooldownProcRule:
     """Damage a trigger arms and a cooldown re-arms.
 
     The family's biggest payload, and every optional field is a mechanic some
@@ -1170,7 +1164,7 @@ class UltimateProcRule:
 
 
 @dataclass(frozen=True, slots=True)
-class SpellbladeRule:  # pylint: disable=too-many-instance-attributes
+class SpellbladeRule:
     """The empowered attack an ability cast arms.
 
     Nine fields because a spellblade really does answer nine questions, and
@@ -1317,7 +1311,7 @@ class ResistanceShredRule:
 
 
 @dataclass(frozen=True, slots=True)
-class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
+class DeltaAmpRule:
     """One amplification slot: which events, when, how much, and to whom.
 
     One field per independent question the amp chain asks; collapsing any
@@ -1342,7 +1336,7 @@ class DeltaAmpRule:  # pylint: disable=too-many-instance-attributes
 
 
 @dataclass(frozen=True, slots=True)
-class PartAmpRule:  # pylint: disable=too-many-instance-attributes
+class PartAmpRule:
     """An amplifier that multiplies each part it prices, not the fight's total.
 
     Every :class:`AmpChainSlot` position acts on one running total,

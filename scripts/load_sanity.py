@@ -201,7 +201,7 @@ def _spawn_server(port: int, database: str) -> subprocess.Popen:
 async def _wait_until_healthy(
     client: httpx.AsyncClient,
     base_url: str,
-    timeout: float = 60.0,  # noqa: ASYNC109 - the poll window
+    timeout: float = 60.0,
 ) -> None:
     """Poll /healthz until the server responds."""
     deadline = time.monotonic() + timeout

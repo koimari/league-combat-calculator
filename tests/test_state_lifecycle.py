@@ -153,7 +153,7 @@ class TestTimedStackRefreshAndDrain:
             refresh="refresh",
             expiry="step_down",
             expiry_step_seconds=1.0,
-            cap_behavior=cap_behavior,  # type: ignore[arg-type]
+            cap_behavior=cap_behavior,
         )
 
     def test_gain_refresh_and_drain_sequence(self):
@@ -230,7 +230,7 @@ class TestStackRefreshPolicies:
             max_stacks=3,
             gain_per_application=1,
             duration_seconds=4.0,
-            refresh=refresh,  # type: ignore[arg-type]
+            refresh=refresh,
         )
 
     def test_extend_keeps_the_later_deadline(self):

@@ -370,7 +370,7 @@ def write_runtime_cache(
     # state any less module-level.
     _read_json_version.cache_clear()
     _item_name_index.cache_clear()
-    global _DATA_VERSION  # pylint: disable=global-statement
+    global _DATA_VERSION
     _DATA_VERSION += 1
 
     metadata: dict[str, Any] = {

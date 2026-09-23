@@ -248,7 +248,7 @@ def test_every_magnitude_shape_has_arithmetic() -> None:
 def test_a_magnitude_with_no_arithmetic_raises_rather_than_pricing_zero() -> None:
     """A new magnitude shape is a stop, not a slot that quietly contributes 0."""
 
-    class _NotInTheUnion:  # pylint: disable=too-few-public-methods
+    class _NotInTheUnion:
         """A magnitude shape somebody added and nobody interpreted."""
 
     with pytest.raises(InterpretationError, match="_NotInTheUnion"):

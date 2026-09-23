@@ -972,7 +972,7 @@ class TestAtomAndSourceReceipts:
         # roots trips the tests.
         from src.calculator.champions import (
             yasuo as yasuo_module,
-        )  # pylint: disable=import-outside-toplevel
+        )
 
         # A typed certification surface (like AURELION_SOL_STARDUST_RULE's
         # certified_constants / atom_ids / public_receipt) must exist and
@@ -1080,7 +1080,7 @@ class TestScoreReceiptParity:
                 # authored them; ``raw_damage`` rides only the rows that
                 # carry a raw figure, so the comparison is over what
                 # BOTH rows hold rather than what the light shape packs.
-                score_event = {  # noqa: PLW2901 - the row is narrowed to the shared fields in place
+                score_event = {
                     field: getattr(row, field)
                     for field in SHARED_ROW_FIELDS
                     if field in full_event

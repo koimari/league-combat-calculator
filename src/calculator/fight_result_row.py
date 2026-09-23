@@ -52,7 +52,7 @@ FIGHT_RESULT_REQUIRED_FIELDS = (
 _required = partial(required_field, kind="fight result", stamper="pipeline.run_fight")
 
 
-def result_damage_events(  # sightline-ok: 1 - three row shapes, one key
+def result_damage_events(
     result: Mapping[str, Any],
 ) -> Sequence[Any]:
     """Every damage packet the fight priced, in engine order."""

@@ -1440,7 +1440,7 @@ class RuneValues:
         self.rune_name = rune_name
         self.values = values
 
-    def value(self, key: str) -> Any:  # sightline-ok: 1 - key-typed read
+    def value(self, key: str) -> Any:
         """Return one required value or raise with rune and key context."""
         if key not in self.values or self.values[key] is None:
             raise KeyError(
@@ -1762,7 +1762,6 @@ def register_rune_compilers(
     registers. A name both tables claim raises, because a rune is compiled by
     exactly one of them.
     """
-    # pylint: disable-next=global-statement
     global _COMPILERS, _DECLARED_OPTIONS, _SHARD_COMPILERS
     merged: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = dict(keystones)
     for name, compiler in paths.items():

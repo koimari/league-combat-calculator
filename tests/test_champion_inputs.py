@@ -164,7 +164,7 @@ def test_the_reserved_option_keys_are_the_pipeline_s_own_set() -> None:
     """One set of pipeline-owned keys, not two that can disagree."""
     # Imported here: champions/__init__ imports every champion module, and
     # this file's other assertions are source reads that must not need it.
-    from src.calculator.champions import (  # pylint: disable=import-outside-toplevel
+    from src.calculator.champions import (
         RESERVED_OPTION_KEYS,
     )
 

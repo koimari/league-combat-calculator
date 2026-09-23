@@ -137,7 +137,7 @@ def _row(
         damage_type=payload.formula.damage_type,
         raw_damage=damage_formula.compile_formula(payload.formula, ctx),
         mechanic_id=rule.mechanic_id,
-        **fields,  # type: ignore[arg-type]
+        **fields,
     )
 
 

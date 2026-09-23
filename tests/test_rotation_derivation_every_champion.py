@@ -20,9 +20,6 @@ This suite asserts the combo invariants for EVERY champion:
     same champion;
 (d) the order is a permutation of the certified/base slots (no invented
     slots, none dropped), and the verified seeds stay as overrides.
-
-file-length-ok: one case per invariant per registered champion, and the
-denominator is the registry rather than a chosen sample.
 """
 
 from dataclasses import replace

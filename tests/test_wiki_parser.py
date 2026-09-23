@@ -1,5 +1,6 @@
 """Tests for lolstaticdata wiki parser — specifically champions that set nvalues=None."""
 
+import importlib
 import sys
 from pathlib import Path
 
@@ -13,9 +14,10 @@ sys.path.insert(0, str(_LOLSTATICDATA_ROOT))
 
 # Apply the Windows download_soup patch before importing the parser
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-from lolstaticdata.champions.pull_champions_wiki import LolWikiDataHandler
-
-import calculator.data_updater  # noqa: F401 - triggers the monkey-patch
+importlib.import_module("calculator.data_updater")
+LolWikiDataHandler = importlib.import_module(
+    "lolstaticdata.champions.pull_champions_wiki"
+).LolWikiDataHandler
 
 # Champions that have nvalues=None in the parser
 NVALUES_NONE_CHAMPIONS = ["Heimerdinger", "Sona", "Karma", "Nidalee"]

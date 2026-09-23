@@ -199,7 +199,7 @@ def part_damage_types() -> frozenset[str]:
 
 
 @dataclass(frozen=True)
-class DamagePart:  # pylint: disable=too-many-instance-attributes
+class DamagePart:
     """One mitigation unit of one ability cast.
 
     The attribute-count check is disabled because this is a data record and

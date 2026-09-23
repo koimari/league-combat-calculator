@@ -50,7 +50,7 @@ def test_the_tag_map_is_total_and_single_valued() -> None:
 def test_a_new_effect_tag_fails_the_catalog() -> None:
     """The red for the tag closure, through the validator's seam."""
     with pytest.raises(RuntimeError, match="unmapped"):
-        catalog._validate_tag_closure(  # pylint: disable=protected-access
+        catalog._validate_tag_closure(
             frozenset(known_effect_types()) | {"brand_new_mechanic"}
         )
 
@@ -100,7 +100,7 @@ def test_every_action_kind_has_a_family() -> None:
 def test_a_new_action_kind_fails_the_catalog() -> None:
     """The red for the ActionKind closure."""
     with pytest.raises(RuntimeError, match="ActionKind"):
-        catalog._validate_action_kind_closure(  # pylint: disable=protected-access
+        catalog._validate_action_kind_closure(
             frozenset(ActionKind) | {"a_new_transition"}
         )
 
@@ -124,14 +124,14 @@ def test_every_defense_mechanic_is_declared_or_cited() -> None:
 def test_a_new_defense_mechanic_fails_the_catalog() -> None:
     """The red for the defensive closure."""
     with pytest.raises(RuntimeError, match="unmapped"):
-        catalog._validate_defense_source_closure(  # pylint: disable=protected-access
+        catalog._validate_defense_source_closure(
             frozenset(DefenseMechanic) | {"a_new_defence"}
         )
 
 
 def test_one_compiler_per_family() -> None:
     """The compiler registry: closed enum key, module-level defs, totality."""
-    compilers = catalog._COMPILERS  # pylint: disable=protected-access
+    compilers = catalog._COMPILERS
     assert frozenset(compilers) == frozenset(RuleFamily)
     assert all(
         getattr(compiler, "__name__", "") and compiler.__name__ != "<lambda>"
@@ -267,7 +267,7 @@ def test_an_unknown_tag_in_the_registry_raises_rather_than_compiling_nothing(
 
 def test_the_build_context_carries_the_data_version() -> None:
     """Every downstream memo keys on one counter, read in one place."""
-    from src.calculator import data_registry  # pylint: disable=import-outside-toplevel
+    from src.calculator import data_registry
 
     context = catalog.build_context(
         "Black Cleaver",
@@ -342,14 +342,12 @@ def test_an_unexplained_certified_mechanic_fails_the_catalog() -> None:
     exists to remove rather than a new one it may introduce.
     """
     with pytest.raises(RuntimeError, match="unexplained"):
-        catalog._validate_event_certification(  # pylint: disable=protected-access
-            {DefenseMechanic.LIFELINE_MAW: ""}
-        )
+        catalog._validate_event_certification({DefenseMechanic.LIFELINE_MAW: ""})
 
 
 def test_every_certified_mechanic_is_one_the_catalog_declares() -> None:
     """The live set passes the closure the seam above reproduces red."""
-    catalog._validate_event_certification()  # pylint: disable=protected-access
+    catalog._validate_event_certification()
     assert catalog.EVENT_CERTIFIED_MECHANICS
     assert all(
         isinstance(mechanic, DefenseMechanic)
@@ -603,7 +601,7 @@ def test_a_dropped_secondary_signature_key_raises_naming_item_and_key(
     entry = {name: value for name, value in ITEM_EFFECTS[owner].items() if name != key}
     monkeypatch.setitem(ITEM_EFFECTS, owner, entry)
     (rule,) = [rule for rule in catalog.behavior_rules(owner) if rule.family is family]
-    with pytest.raises(KeyError, match=key):  # noqa: PT012 - the loop is the read
+    with pytest.raises(KeyError, match=key):
         for reference in _declared_references(rule.payload):
             reference.get()
 

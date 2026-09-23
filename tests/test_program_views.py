@@ -30,11 +30,16 @@ from src.calculator.program.views import (
     breakdown,
     score,
     survival,
-    tdd,  # noqa: F401 - the front door D-95 counts (tests/test_architecture.py)
+    tdd,
 )
 from src.calculator.program.views.leaf import DISCARD, LeafWriter, serialize_leaf
 from src.calculator.program.views.view_tag import ViewTag
-from src.calculator.program.walk import AttackerOutcome, WalkResult, survival_folds
+from src.calculator.program.walk import (
+    AttackerOutcome,
+    ObjectiveFold,
+    WalkResult,
+    survival_folds,
+)
 from src.calculator.quantity import (
     Measured,
     ProjectionStarvation,
@@ -163,6 +168,27 @@ def _row(**overrides: object) -> dict[str, object]:
     """The published row for one at-rest participant."""
     states = [_state(**overrides)]
     return survival.survival(roster_program([_combatant()]), _result(states))["target"]
+
+
+def test_the_tdd_view_publishes_the_walks_fold_and_no_survival_entry() -> None:
+    """It projects the one objective fold; survival rows go through DISCARD."""
+    fold = ObjectiveFold(
+        main_team_damage_before_death=1200.0,
+        enemy_team_damage_before_death=800.0,
+        surviving_main_team=1,
+        focus_damage_before_death=600.0,
+        focus_support_value=0.0,
+        focus_healing=50.0,
+        main_team_effective_health=3000.0,
+        enemy_team_effective_health=2500.0,
+        total_support_value=0.0,
+        total_healing_reduced=0.0,
+    )
+    out = tdd.tdd(roster_program([_combatant()]), _result([_state()], objective=fold))
+    assert out["main_team_damage_before_death"] == 1200.0
+    assert out["surviving_main_team"] == 1
+    assert out["dispositions"]
+    assert all(path.startswith("objective.") for path in out["dispositions"])
 
 
 def test_the_projection_publishes_one_row_per_participant() -> None:
@@ -502,7 +528,7 @@ def _outcome(**overrides: object) -> AttackerOutcome:
         "death_time": None,
     }
     fields.update(overrides)
-    return AttackerOutcome(**fields)  # type: ignore[arg-type]
+    return AttackerOutcome(**fields)
 
 
 def test_the_breakdown_row_key_order_is_the_published_order() -> None:

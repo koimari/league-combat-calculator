@@ -258,7 +258,7 @@ _OPTIONS_ROWS: OptionsRows | None = None
 
 def use_options_rows(source: OptionsRows) -> None:
     """Wire the reader that yields one champion's declared OPTIONS rows."""
-    global _OPTIONS_ROWS  # pylint: disable=global-statement
+    global _OPTIONS_ROWS
     _OPTIONS_ROWS = source
 
 

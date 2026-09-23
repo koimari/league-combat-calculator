@@ -41,8 +41,8 @@ def _item_by_id() -> dict[int, dict[str, Any]]:
     check catches a replaced cache, and the version catches a cache
     refreshed in place, which identity alone cannot see.
     """
-    global _ITEM_BY_ID_SOURCE, _ITEM_BY_ID_MEMO  # pylint: disable=global-statement
-    global _ITEM_BY_ID_VERSION  # pylint: disable=global-statement
+    global _ITEM_BY_ID_SOURCE, _ITEM_BY_ID_MEMO
+    global _ITEM_BY_ID_VERSION
     source = fetch_item_data()
     version = data_version()
     if source is not _ITEM_BY_ID_SOURCE or version != _ITEM_BY_ID_VERSION:
@@ -210,7 +210,7 @@ def _combinable_recipe_rows(
     recipes thousands of times per request, and re-walking every item's
     purchasability and recipe per scan dominated plan pricing.
     """
-    global _COMBINABLE_ROWS_SOURCE, _COMBINABLE_ROWS  # pylint: disable=global-statement
+    global _COMBINABLE_ROWS_SOURCE, _COMBINABLE_ROWS
     if by_id is not _COMBINABLE_ROWS_SOURCE:
         rows = []
         for item_id, item in by_id.items():

@@ -46,7 +46,7 @@ class TestResolutionIsTotal:
 
     def test_a_type_outside_the_union_raises(self) -> None:
         with pytest.raises(TypeError, match="closed"):
-            route.resolve_route(object(), CTX, roster_size=ROSTER)  # type: ignore[arg-type]
+            route.resolve_route(object(), CTX, roster_size=ROSTER)
 
 
 class TestEachPolicyDeliversWhatItNames:

@@ -304,7 +304,7 @@ def main() -> int:
             origin=args.base_url.rstrip("/"),
         )
     else:
-        from src.app import app  # pylint: disable=import-outside-toplevel
+        from src.app import app
 
         app.config["RATE_LIMIT_ENABLED"] = False
         with app.test_client() as client:
@@ -313,7 +313,7 @@ def main() -> int:
                 origin="local:test_client",
             )
 
-    from gate_receipt import build_receipt  # pylint: disable=import-outside-toplevel
+    from gate_receipt import build_receipt
 
     successes = [result for result in results if result["success"]]
     report = build_receipt(

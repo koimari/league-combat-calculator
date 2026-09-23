@@ -64,7 +64,7 @@ def test_no_script_points_an_image_at_an_object_url_the_csp_blocks() -> None:
 def test_a_pasted_file_is_refused_by_size_before_it_decodes() -> None:
     """Over the cap the status names the size and the cap; under it the file
     reaches the decoder, and one that is not an image says so."""
-    if shutil.which("node") is None:  # pragma: no cover - toolchain dependent
+    if shutil.which("node") is None:
         pytest.skip("node is not installed")
     harness = ROOT / "tests" / "js" / "scoreboard_paste_harness.mjs"
     cases = CORPUS / "paste_cases.json"
@@ -88,7 +88,7 @@ def test_a_pasted_file_is_refused_by_size_before_it_decodes() -> None:
 @pytest.fixture(scope="module")
 def readings() -> dict:
     """Labels and the reader's output for every corpus frame, read once."""
-    if shutil.which("node") is None:  # pragma: no cover - toolchain dependent
+    if shutil.which("node") is None:
         pytest.skip("node is not installed")
     labels = json.loads(LABELS.read_text(encoding="utf-8"))
     return {"labels": labels, "read": read_frames([CORPUS / name for name in labels])}

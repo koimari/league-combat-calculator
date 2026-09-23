@@ -182,9 +182,13 @@ class TestLegendHaste:
         assert bare["champion_stats"]["ability_haste"] == (
             stacked["champion_stats"]["ability_haste"]
         )
-        casts = lambda result: {  # noqa: E731 - a one-use inline mapping
-            slot: result["breakdown"][slot]["casts"] for slot in ("Q", "W", "E", "R")
-        }
+
+        def casts(result):
+            return {
+                slot: result["breakdown"][slot]["casts"]
+                for slot in ("Q", "W", "E", "R")
+            }
+
         assert casts(bare) == {"Q": 3, "W": 3, "E": 2, "R": 1}
         assert casts(stacked) == {"Q": 4, "W": 4, "E": 2, "R": 1}
         assert bare["total_damage"] == pytest.approx(1091.0, abs=0.05)

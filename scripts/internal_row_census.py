@@ -35,11 +35,11 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from src.calculator.champions import (  # noqa: E402
+from src.calculator.champions import (
     registered_champion_names,
 )
-from src.calculator.pipeline import run_fight  # noqa: E402
-from src.calculator.scenario import (  # noqa: E402
+from src.calculator.pipeline import run_fight
+from src.calculator.scenario import (
     parse_scenario_request,
     resolve_scenario,
 )

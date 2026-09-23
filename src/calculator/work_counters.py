@@ -53,7 +53,7 @@ class Rung(StrEnum):
     signature panel — so no later evaluation in this search can compile."""
 
 
-class WorkCounterSink(Protocol):  # pylint: disable=too-few-public-methods
+class WorkCounterSink(Protocol):
     """What the optimizer needs of a work-counter sink: six mutable fields.
 
     A structural type with no methods is the whole point — the sink is data,

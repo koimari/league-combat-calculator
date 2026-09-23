@@ -38,7 +38,7 @@ sys.path.insert(0, str(REPO_ROOT))
 from src.calculator.item_source import is_ordinary_sr_item
 
 try:
-    from patch_regression import extract_ddragon_version  # pylint: disable=import-error
+    from patch_regression import extract_ddragon_version
 except ImportError:  # imported as scripts.refresh_economics_data in tests
     from scripts.patch_regression import extract_ddragon_version
 

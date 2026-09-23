@@ -49,7 +49,6 @@ never invents a number or a policy the caches do not evidence.
 
 from __future__ import annotations
 
-# pylint: disable=too-many-lines,too-many-return-statements  # one
 # dependency-light leaf owns the typed contracts; the decision path's named
 # reasons map one-to-one onto returns, and splitting it would create a
 # second decision path.

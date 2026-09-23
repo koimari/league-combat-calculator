@@ -56,7 +56,7 @@ def _prose(cache_key: str, slot: str) -> str:
 
 def _bin(stem: str) -> dict:
     path = BINS / f"{stem}.bin.json"
-    if not path.exists():  # pragma: no cover - local evidence only
+    if not path.exists():
         pytest.skip(f"local game-file evidence is unavailable: {path.name}")
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -84,7 +84,7 @@ def test_the_watch_covers_exactly_the_axis_less_slots():
     Read from ``coverage_status``'s own scan of the registered modules, which
     is what writes the published page, so this and the page cannot disagree.
     """
-    import coverage_status  # noqa: PLC0415
+    import coverage_status
 
     _, _, out_of_scope = coverage_status._champion_slots()
     assert set(out_of_scope) == set(WATCHED), sorted(set(out_of_scope) ^ set(WATCHED))
@@ -98,7 +98,7 @@ def test_the_watch_would_notice_a_slot_arriving_or_leaving():
     removed, and requires both to be caught. Sivir R leaving the real list is
     what this stands in for: it closed, and this file has no row for it.
     """
-    import coverage_status  # noqa: PLC0415
+    import coverage_status
 
     _, _, out_of_scope = coverage_status._champion_slots()
     live = set(out_of_scope)
@@ -113,7 +113,7 @@ def test_the_watch_would_notice_a_slot_arriving_or_leaving():
 
 def test_every_watched_slot_still_declares_itself_out_of_scope():
     """The module's own claim, checked against the watch it justifies."""
-    from src.calculator.champions import (  # noqa: PLC0415
+    from src.calculator.champions import (
         get_champion_module_contract,
     )
 
@@ -129,7 +129,7 @@ def test_every_watched_slot_states_its_blocker_in_its_own_module(module, slot):
     The verdict has to be written where the next reader of that champion is,
     not only in a published page they may never open.
     """
-    from src.calculator.champions import (  # noqa: PLC0415
+    from src.calculator.champions import (
         get_champion_module_contract,
     )
 

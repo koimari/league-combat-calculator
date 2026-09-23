@@ -1,9 +1,4 @@
-"""`scripts/extract_modules.py` on a synthetic package: what moves, what refuses.
-
-file-length-ok: one test file per module under test, and the tool's contract is
-one thing: the units it cuts, the imports it computes, the refusals, the residue
-and the readers it repoints.
-"""
+"""`scripts/extract_modules.py` on a synthetic package: what moves, what refuses."""
 
 import ast
 import json

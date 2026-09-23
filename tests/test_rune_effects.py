@@ -292,10 +292,10 @@ class TestFirstStrike:
 
     def test_the_window_and_the_ratio_live_in_the_declaration(self):
         """One number, one home: the amp chain slot owns both (3.2)."""
-        from src.calculator.interpreters import (  # pylint: disable=import-outside-toplevel
+        from src.calculator.interpreters import (
             delta_amp,
         )
-        from src.calculator.item_behavior import (  # pylint: disable=import-outside-toplevel
+        from src.calculator.item_behavior import (
             AmpChainSlot,
         )
 
@@ -334,10 +334,10 @@ class TestPressTheAttack:
 
     def test_the_lasting_amp_lives_in_the_declaration(self):
         """One number, one home: the amp chain slot owns the ratio (3.2)."""
-        from src.calculator.interpreters import (  # pylint: disable=import-outside-toplevel
+        from src.calculator.interpreters import (
             delta_amp,
         )
-        from src.calculator.item_behavior import (  # pylint: disable=import-outside-toplevel
+        from src.calculator.item_behavior import (
             AmpChainSlot,
         )
 
@@ -404,7 +404,7 @@ class TestPressTheAttack:
             for name, entry in rune_effects.RUNE_EFFECTS.items()
         }
         monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
-        from src.calculator.value_ref import (  # pylint: disable=import-outside-toplevel
+        from src.calculator.value_ref import (
             ValueRef,
         )
 

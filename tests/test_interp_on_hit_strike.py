@@ -48,7 +48,7 @@ def _inputs(is_melee: bool = True) -> DamageInputs:
     )
 
 
-def _strike(owner: str) -> "on_hit_strike.PerHitEffect":  # type: ignore[name-defined]
+def _strike(owner: str) -> "on_hit_strike.PerHitEffect":
     """The one on-hit strike an owner declares."""
     strikes = on_hit_strike.per_hit_effects(
         [owner],

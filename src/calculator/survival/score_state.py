@@ -76,7 +76,6 @@ class ScoreLedger:
         self.compile_event: Callable[..., SurvivalAction] | None = compile_event
 
     # -- observation ---------------------------------------------------------
-    # pylint: disable=unused-argument  # protocol-shaped no-op
     def write(self, action: SurvivalAction, **fields: Any) -> None:
         """Record the applied amounts the kernel observes; nothing else."""
         if "damage" in fields:
@@ -92,11 +91,9 @@ class ScoreLedger:
         if 0 <= action.aidx < self.n_actions:
             self.applied[action.aidx] = amount
 
-    # pylint: disable=unused-argument  # protocol-shaped no-op
     def annotate(self, action: SurvivalAction, **fields: Any) -> None:
         return None
 
-    # pylint: disable=unused-argument  # protocol-shaped no-op
     def skip(
         self,
         action: SurvivalAction,
@@ -120,7 +117,6 @@ class ScoreLedger:
         if 0 <= action.aidx < self.n_actions:
             self.status[action.aidx] = 1
 
-    # pylint: disable=unused-argument  # protocol-shaped no-op
     def mark_blocked(self, action: SurvivalAction) -> None:
         """Score mode has no blocked-state consumer; compilation rejects those."""
         # A blocked action never gets the applied marker, failing the same gate.

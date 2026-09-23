@@ -113,7 +113,6 @@ def _bailout_denied_components() -> tuple[str, ...]:
 
 def _bailout_w_source() -> Mapping[str, Any]:
     """Return the reviewed W wiki-entry receipt (url + revision)."""
-    # pylint: disable=import-outside-toplevel
     from .champions import renata_glasc
 
     for entry in renata_glasc.SOURCES:

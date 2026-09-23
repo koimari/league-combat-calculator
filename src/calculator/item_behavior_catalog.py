@@ -23,11 +23,6 @@ enumerations this package can read directly, so no closure depends on parsing
 another module's source text and this stays a light import.
 """
 
-# file-length-ok: the bulk is one compiler per family beside the three total
-# maps ``validate_catalog`` closes over, and a compiler in another file is a
-# family whose shape and whose totality check live apart.
-# docs/plans/2026-09-09-fight-navigability.md carves the interpreters that
-# read these declarations, not the compilers that build them.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
@@ -518,7 +513,7 @@ class DefenseShape:
 
 
 @dataclass(frozen=True, slots=True)
-class DefenseDeclaration:  # pylint: disable=too-many-instance-attributes
+class DefenseDeclaration:
     """One defensive mechanic's shape, before an owner is known.
 
     ``reads``, ``ramps`` and ``late_ramps`` are the three reference shapes a

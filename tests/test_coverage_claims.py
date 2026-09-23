@@ -289,7 +289,7 @@ def test_the_context_is_frozen_and_carries_exactly_three_seams() -> None:
         "nodes",
     }
     with pytest.raises(AttributeError):
-        ctx.nodes = {}  # type: ignore[misc]
+        ctx.nodes = {}
 
 
 def test_node_ids_split_into_the_parts_the_rules_read() -> None:
@@ -2378,6 +2378,6 @@ def test_the_receipt_names_a_producer_a_reader_can_look_up() -> None:
     for lane, dotted in recorded.items():
         module, _, symbol = dotted.rpartition(".")
         assert module == "src.calculator.item_coverage", lane
-        resolved = getattr(item_coverage, symbol)  # sightline-ok: 24 - receipt symbol
+        resolved = getattr(item_coverage, symbol)
         assert callable(resolved), dotted
         assert symbol == capture_coverage_classification.CLASSIFIER_NAMES[lane]

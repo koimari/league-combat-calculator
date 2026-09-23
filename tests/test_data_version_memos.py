@@ -24,9 +24,6 @@ Two properties are checked here and neither is a convention:
   lookup would pass a source scan and fail these.
 """
 
-# file-length-ok: the bulk is the memo matrix, one declared table and one
-# front door per memo. Splitting it separates a memo from the table that
-# governs it.
 from __future__ import annotations
 
 import ast
@@ -557,9 +554,7 @@ def test_state_proto_memo_key_carries_the_version_and_every_input() -> None:
     """
     from src.calculator.survival import receipt_state
 
-    key = receipt_state._state_proto_key(  # pylint: disable=protected-access
-        _combatant_stub(), 0.25
-    )
+    key = receipt_state._state_proto_key(_combatant_stub(), 0.25)
     assert key[0] == data_registry.data_version()
     assert 0.25 in key
     assert len(key) == 3 + len(receipt_state._STATE_KEY_STATS)
@@ -589,7 +584,7 @@ def test_the_state_proto_key_covers_every_stat_the_prototype_reads() -> None:
         and node.args
         and isinstance(node.args[0], ast.Constant)
     }
-    assert read == set(receipt_state._STATE_KEY_STATS)  # pylint: disable=W0212
+    assert read == set(receipt_state._STATE_KEY_STATS)
 
 
 def test_the_prototype_holds_no_health_derived_value() -> None:
@@ -606,9 +601,7 @@ def test_the_prototype_holds_no_health_derived_value() -> None:
     """
     from src.calculator.survival import receipt_state
 
-    proto = receipt_state._build_state_uncached(  # pylint: disable=W0212
-        _combatant_stub(), 0.0
-    )
+    proto = receipt_state._build_state_uncached(_combatant_stub(), 0.0)
     for field in PER_CALL_FIELDS:
         assert field in proto
     assert proto["pools"] is None

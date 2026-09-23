@@ -66,7 +66,7 @@ SHARED_ROW_FIELDS: tuple[str, ...] = (
 )
 
 
-class ThresholdHealFacts(Protocol):  # pylint: disable=too-few-public-methods
+class ThresholdHealFacts(Protocol):
     """The one fact both gates' shared condition is derived from.
 
     A structural type rather than a base class: the two input records below
@@ -78,7 +78,7 @@ class ThresholdHealFacts(Protocol):  # pylint: disable=too-few-public-methods
     target_threshold_health_heal: float
 
 
-class HeldItemFacts(Protocol):  # pylint: disable=too-few-public-methods
+class HeldItemFacts(Protocol):
     """The held build, as the name list every item-keyed projection reads."""
 
     item_names: tuple[str, ...]
@@ -100,7 +100,7 @@ class ShieldOutcomeInputs:
 
 
 @dataclass(frozen=True, slots=True)
-class LedgerInputs:  # pylint: disable=too-many-instance-attributes
+class LedgerInputs:
     """The facts the damage ledger's readers are decided by.
 
     ``self_heal_rule`` is the champion half of the answer, supplied as a

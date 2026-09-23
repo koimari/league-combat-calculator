@@ -104,7 +104,7 @@ from tests.survival_probe import simulate_survival, survival_of
 
 try:  # P2 Slice 4 planned kernel — not landed yet; rows fail with the marker.
     from src.calculator import cleanse_eligibility as ce
-except ImportError:  # pragma: no cover - expected until the kernel lands
+except ImportError:
     ce = None
 
 
@@ -189,7 +189,7 @@ def _calculate_status(payload: dict) -> tuple[int, dict]:
     response = app.test_client().post("/api/calculate", json=payload)
     try:
         body = response.get_json()
-    except Exception:  # noqa: BLE001 - non-JSON body  # pragma: no cover
+    except Exception:
         body = {}
     return response.status_code, body
 

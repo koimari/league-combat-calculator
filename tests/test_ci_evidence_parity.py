@@ -182,7 +182,7 @@ def test_the_locally_built_receipt_trees_are_watched() -> None:
     """
     assert "docs/receipts/champions/" in scanner.WATCHED_PREFIXES
     assert "docs/receipts/items/" in scanner.WATCHED_PREFIXES
-    fabricated = "\n".join(  # noqa: FLY002 - one fabricated line per shape
+    fabricated = "\n".join(
         (
             '_R = Path("docs/receipts/champions/vladimir.json")',
             'ITEM = ROOT / "docs" / "receipts" / "items" / "1001.json"',

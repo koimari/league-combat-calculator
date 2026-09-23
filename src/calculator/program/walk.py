@@ -425,7 +425,7 @@ def walk(
     ctx: TransitionContext,
     *,
     coverage: Sequence[Mapping[str, Any]] = (),
-    rung: Rung = CompiledFast(),  # noqa: B008 - a frozen sentinel; one instance is the default
+    rung: Rung = CompiledFast(),
     counters: WorkCounterSink | None = None,
 ) -> WalkResult:
     """Run the kernel exactly once and freeze what it produced.

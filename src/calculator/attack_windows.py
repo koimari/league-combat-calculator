@@ -18,7 +18,7 @@ class AttackSpeedWindow:
     stack_group: str = "whimsy"
 
 
-def attack_times_for_windows(  # pylint: disable=too-many-locals
+def attack_times_for_windows(
     windows: tuple[AttackSpeedWindow, ...],
     *,
     attack_speed: float,

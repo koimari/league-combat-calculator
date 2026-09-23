@@ -55,7 +55,7 @@ def atomize_champions(champions: Mapping[str, Any]) -> dict[str, list[dict[str, 
     module = importlib.util.module_from_spec(spec)
     try:
         spec.loader.exec_module(module)
-    except Exception as exc:  # pragma: no cover - asset-dependent
+    except Exception as exc:
         return {
             "_error": [
                 {

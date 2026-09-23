@@ -128,7 +128,7 @@ class TestTheGrammarIsClosed:
     def test_an_origin_outside_the_union_raises(self) -> None:
         """Fail closed: a fifth origin never renders as a stringified object."""
         with pytest.raises(TypeError, match="is not an Origin"):
-            identity.origin_text("main:enemy:0")  # type: ignore[arg-type]
+            identity.origin_text("main:enemy:0")
 
     def test_a_negative_ordinal_that_is_not_unnumbered_raises(self) -> None:
         """``-1`` means unnumbered; ``-2`` is a numbering bug, not an id."""

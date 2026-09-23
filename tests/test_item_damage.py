@@ -113,10 +113,10 @@ def _spellblade_slot(*owners: str, level: int = 18, is_melee: bool = True):
 
 def _hypershot_slot(owners):
     """Resolve the Hypershot chain slot for a build, as the engine does."""
-    from src.calculator.interpreters import (  # pylint: disable=import-outside-toplevel
+    from src.calculator.interpreters import (
         delta_amp,
     )
-    from src.calculator.item_behavior import (  # pylint: disable=import-outside-toplevel
+    from src.calculator.item_behavior import (
         AmpChainSlot,
     )
 
@@ -134,10 +134,10 @@ def _hypershot_slot(owners):
 
 def _whole_total_fraction(owner: str, duration: float) -> float:
     """One holder's contribution to the whole-total amp slot."""
-    from src.calculator.interpreters import (  # pylint: disable=import-outside-toplevel
+    from src.calculator.interpreters import (
         delta_amp,
     )
-    from src.calculator.item_behavior import (  # pylint: disable=import-outside-toplevel
+    from src.calculator.item_behavior import (
         AmpChainSlot,
     )
 
@@ -206,10 +206,10 @@ def _calculate_phantom_hits(num_auto_attacks, item_names):
 
 def _shadowflame_effect():
     """The declared Cinderbloom chain slot, resolved for a Shadowflame build."""
-    from src.calculator.interpreters import (  # pylint: disable=import-outside-toplevel
+    from src.calculator.interpreters import (
         delta_amp,
     )
-    from src.calculator.item_behavior import (  # pylint: disable=import-outside-toplevel
+    from src.calculator.item_behavior import (
         AmpChainSlot,
     )
 

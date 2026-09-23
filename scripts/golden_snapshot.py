@@ -37,11 +37,6 @@ Usage:
     python scripts/golden_snapshot.py fingerprint <snapshot.json>
 """
 
-# file-length-ok: the bulk is the two acceptance matrices themselves, one
-# entry per scenario with the reason it is captured beside it, and a matrix
-# split from the harness that runs it is a scenario whose reason lives in
-# another file.  docs/plans/2026-09-09-fight-navigability.md rules the
-# scripts carve out of scope for the same reason.
 import argparse
 import ast
 import copy
@@ -92,10 +87,7 @@ from src.calculator.pipeline import run_fight
 from src.calculator.public_response import serialize_fight_result
 from src.calculator.scenario import parse_scenario_request, resolve_scenario
 from src.calculator.stats import calculate_total_stats
-
-# The sys.path bootstrap above forces every first-party import below it;
-# this one line carries the disable rather than the whole block.
-from src.calculator.trigger_stream import (  # pylint: disable=wrong-import-position
+from src.calculator.trigger_stream import (
     CAPABILITIES,
     cross_participant_packet_source,
 )
@@ -400,7 +392,7 @@ def snapshot_keystone_fights(
                                 keystone=keystone,
                             )
                         )
-                    except Exception as exc:  # pylint: disable=broad-except
+                    except Exception as exc:
                         arms[key] = _error_entry(exc)
             levels[str(level)] = arms
         out[display_name] = levels
@@ -646,7 +638,7 @@ INVESTIGATION_DAMAGE_ABS_DELTA = 1.0
 INVESTIGATION_LEAF_RATIO = 0.01
 
 
-class _Absent:  # pylint: disable=too-few-public-methods
+class _Absent:
     """The sentinel a missing key compares as; never a snapshot value."""
 
     def __repr__(self):
@@ -1496,7 +1488,6 @@ def bench_roster_scenarios() -> tuple[CoupledScenario, ...]:
     # and hoisting this to the top would make importing the capture harness
     # import the bench harness -- a scripts-to-scripts dependency at module
     # scope, for a set only ``--exact`` reads.
-    # pylint: disable-next=import-error,import-outside-toplevel
     from bench_coupled_optimizer import SCENARIOS
 
     return tuple(

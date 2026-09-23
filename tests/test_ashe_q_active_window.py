@@ -67,6 +67,7 @@ game-file evidence.
 
 import copy
 import hashlib
+import importlib
 import itertools
 import json
 from pathlib import Path
@@ -1139,10 +1140,8 @@ class TestUnchangedBoundaries:
             RENGAR_FEROCITY_STACK_RULE.public_receipt()["combat_extension_seconds"]
             == 10.0
         )
-        from src.calculator import (
-            cleanse_eligibility,  # noqa: F401 - imported to register cleanse
-            defensive_effects,  # noqa: F401 - imported to register grey health
-        )
+        for module in ("cleanse_eligibility", "defensive_effects"):
+            assert importlib.import_module(f"src.calculator.{module}")
 
     def test_module_source_and_review_status_unchanged(self):
         # MERGE: review status and coverage have ONE home now — the

@@ -13,9 +13,6 @@ Covers the combo layer (src/calculator/rotation_resolver.py) end to end:
    between reapplications (and strictly more E casts than the fixed
    default order in a short window); Varus' Blight detonation rides the
    Q cast that follows the auto-applied stacks.
-
-file-length-ok: one case per combo champion and per cadence claim, and the
-override table is the denominator rather than a chosen sample.
 """
 
 import re

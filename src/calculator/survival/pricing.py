@@ -272,7 +272,7 @@ class DeclaredPacket(NamedTuple):
         Its own factors are already folded into ``swing.crit_raw_amount``.
         """
         swing = self.swing
-        if swing is None:  # pragma: no cover - guarded by the caller
+        if swing is None:
             return self.amped_raw
         return float(swing.crit_raw_amount) * float(self.holder_amp)
 

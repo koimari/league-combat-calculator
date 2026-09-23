@@ -91,7 +91,7 @@ class TestValidateChampionData:
 
     def test_non_dict_raises(self) -> None:
         with pytest.raises(ValueError, match="must be a dictionary"):
-            _validate_champion_data([])  # type: ignore[arg-type]
+            _validate_champion_data([])
 
     def test_empty_dict_raises(self) -> None:
         with pytest.raises(ValueError, match="is empty"):
@@ -116,7 +116,7 @@ class TestValidateItemData:
 
     def test_non_dict_raises(self) -> None:
         with pytest.raises(ValueError, match="must be a dictionary"):
-            _validate_item_data("not a dict")  # type: ignore[arg-type]
+            _validate_item_data("not a dict")
 
     def test_empty_dict_raises(self) -> None:
         with pytest.raises(ValueError, match="is empty"):

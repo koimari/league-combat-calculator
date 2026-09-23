@@ -250,7 +250,7 @@ def test_every_declared_routing_payload_has_a_reference_row():
 def test_a_flat_reader_stops_rather_than_defaulting_a_shape_it_cannot_read():
     """Both refusals are raised, not returned as a zero."""
     with pytest.raises(InterpretationError, match="melee/ranged share"):
-        damage_routing._flat_fields(  # pylint: disable=protected-access
+        damage_routing._flat_fields(
             rules_of([_sole("shield_reduction")], RuleFamily.DAMAGE_ROUTING)[0],
             EngineLane.PAIR_ENGINE,
         )
@@ -294,7 +294,7 @@ def test_the_two_part_amp_selectors_are_disjoint_and_total():
     every = {
         rule.mechanic_id
         for owner in ITEM_EFFECTS
-        for rule in part_amp._part_amps([owner])  # pylint: disable=protected-access
+        for rule in part_amp._part_amps([owner])
     }
     by_attack = {
         rule.mechanic_id

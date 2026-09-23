@@ -49,7 +49,7 @@ SRC_ROOT = Path(__file__).parents[1] / "src" / "calculator"
 UNDECLARED_ON_ARRIVAL: frozenset[str] = frozenset()
 
 
-def _stub_fields(rule, ctx, lane):  # pragma: no cover - never called here
+def _stub_fields(rule, ctx, lane):
     """A registered reading, so the registry's own gates have a subject."""
     del rule, ctx, lane
     return ()
@@ -143,7 +143,7 @@ def test_the_fold_concatenates_receipt_only_reasons_in_declaration_order(
 ) -> None:
     """The compilability fold, stated here rather than left to each caller."""
 
-    class _Rule:  # pylint: disable=too-few-public-methods
+    class _Rule:
         def __init__(self, compilability) -> None:
             self.compilability = compilability
 
@@ -170,7 +170,7 @@ def test_the_fold_concatenates_receipt_only_reasons_in_declaration_order(
 def test_all_compilable_folds_to_compilable(monkeypatch: pytest.MonkeyPatch) -> None:
     """The other half of the fold."""
 
-    class _Rule:  # pylint: disable=too-few-public-methods
+    class _Rule:
         def __init__(self, compilability) -> None:
             self.compilability = compilability
 
@@ -383,7 +383,7 @@ def test_deleting_a_families_interpreter_withholds_it_rather_than_pricing_zero(
             assert not after.calculation_eligible
 
 
-class _StubRule:  # pylint: disable=too-few-public-methods
+class _StubRule:
     """A declaration with just the fields the registration gates read."""
 
     def __init__(self, family: RuleFamily, compilability) -> None:
@@ -537,8 +537,7 @@ def test_a_subject_its_authority_cannot_see_is_refused(
         for owner in sorted(catalog.rule_owners())
         for rule in catalog.behavior_rules(owner)
         if getattr(rule.payload, "subject", None) is not None
-        and Authority.PAIR_ONLY
-        not in SUBJECT_AUTHORITY[rule.payload.subject]  # type: ignore[index]
+        and Authority.PAIR_ONLY not in SUBJECT_AUTHORITY[rule.payload.subject]
     ]
     assert roster_scoped, "no declaration acts on a roster-scoped subject"
     rule = roster_scoped[0]

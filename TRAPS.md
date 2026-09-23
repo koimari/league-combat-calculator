@@ -28,13 +28,12 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   others, `E0401` vendor imports and `E1101` on `_replace` and `Pattern.search`,
   are false. Read the output for `: E[0-9]`, never the
   score.
-- **A bare `# pylint: disable=` at column 0 is a module-scope block disable running
-  to end of file**, so dropping one token can surface messages in every later
-  function. `--enable=useless-suppression` skips pragmas for a message the config
-  disables, so census those with grep, and a deleted pragma can strand the
-  `# comment-ok: width` above it. A config `disable` hides what your branch adds
-  and R0801 varies between identical runs, so diff the checker output, never the
-  score.
+- **A config `disable` hides what your branch adds, and R0801 varies between
+  identical runs**, so diff pylint's checker output, never the score.
+- **An import that exists for its side effect reads as unused (F401)**, and
+  `ruff --fix` deletes it silently. The tree carries no `noqa`, so state the
+  intent in code: `importlib.import_module(...)` for a patch or registration, or
+  a real use of the module in the test that is its front door.
 - **pylint cannot infer any decorator that returns a closure**, so calling a
   decorated parser by name raises E1120 against the body's own signature. A parser
   `@ability_slot` decorates is never called by name.
@@ -74,7 +73,7 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 - **A required read is only as safe as the doubles that drive it.** Grep the FIELD
   name over `tests/`, never the producing function: three unrelated files build a
   partial version of one row, and a double whose docstring says it is built as its
-  producer writes it is the tell that it no longer is.
+  producer writes it is the tell that it has drifted from the producer.
 - **A pytest `-p` plugin proves what collection would otherwise hide**, loading
   before collection imports the test module, so it can wrap the callee or stub an
   absent resource's probe. A `match=` pattern is a regex, so an unescaped version
@@ -300,9 +299,8 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   sightline rule.** #23, complexity, only reports. #55 owns arity at repo scope,
   so only `--full` runs it, and skips any signature with a `*`, so a wide one
   takes its `*` early; pylint's R0917 skips `_ctx`, so the two count differently.
-- **A `sightline-ok` marker covers its own line, or the whole definition when it
-  sits on the `def` line.** Rule #1 reports once per signature at the `def` line,
-  so a marker on the `) -> Any:` line covers nothing, and #1 skips dunders: moving
+- **Sightline rule #1 reports once per signature, at the `def` line**, and skips
+  dunders: moving
   an `__init__(..., old: Any)` to a module-level factory surfaces a finding the
   class never had. It counts a bare `Any` or `Sequence[Any]` and not
   `Mapping[str, Any]`, so the concrete type clears it.

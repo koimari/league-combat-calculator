@@ -9,31 +9,90 @@ Format: list of 18 strings, one per champion level.
 
 # Each table row is a level bracket (1-6 / 7-12 / 13-18) — keep the
 # 6-per-line layout black would otherwise explode.
-# fmt: off
 
 # Default: Q max first, then W, then E. R at 6/11/16.
 DEFAULT_SKILL_ORDER: list[str] = [
-    "Q", "W", "E", "Q", "Q", "R",
-    "Q", "W", "Q", "W", "R", "W",
-    "W", "E", "E", "R", "E", "E",
+    "Q",
+    "W",
+    "E",
+    "Q",
+    "Q",
+    "R",
+    "Q",
+    "W",
+    "Q",
+    "W",
+    "R",
+    "W",
+    "W",
+    "E",
+    "E",
+    "R",
+    "E",
+    "E",
 ]
 
 # The three shapes 13 of the overrides share. Each is one maxing order; the
 # first two differ only in the level-2 pick.
 _Q_MAX_THEN_E: list[str] = [
-    "Q", "W", "E", "Q", "Q", "R",
-    "Q", "E", "Q", "E", "R", "E",
-    "E", "W", "W", "R", "W", "W",
+    "Q",
+    "W",
+    "E",
+    "Q",
+    "Q",
+    "R",
+    "Q",
+    "E",
+    "Q",
+    "E",
+    "R",
+    "E",
+    "E",
+    "W",
+    "W",
+    "R",
+    "W",
+    "W",
 ]
 _Q_MAX_THEN_E_E_AT_TWO: list[str] = [
-    "Q", "E", "W", "Q", "Q", "R",
-    "Q", "E", "Q", "E", "R", "E",
-    "E", "W", "W", "R", "W", "W",
+    "Q",
+    "E",
+    "W",
+    "Q",
+    "Q",
+    "R",
+    "Q",
+    "E",
+    "Q",
+    "E",
+    "R",
+    "E",
+    "E",
+    "W",
+    "W",
+    "R",
+    "W",
+    "W",
 ]
 _W_MAX_THEN_Q: list[str] = [
-    "Q", "W", "E", "W", "W", "R",
-    "W", "Q", "W", "Q", "R", "Q",
-    "Q", "E", "E", "R", "E", "E",
+    "Q",
+    "W",
+    "E",
+    "W",
+    "W",
+    "R",
+    "W",
+    "Q",
+    "W",
+    "Q",
+    "R",
+    "Q",
+    "Q",
+    "E",
+    "E",
+    "R",
+    "E",
+    "E",
 ]
 
 # Per-champion overrides. Only champions with non-standard skill orders
@@ -59,15 +118,45 @@ _SKILL_ORDERS: dict[str, list[str]] = {
     "Kog'Maw": _W_MAX_THEN_Q,
     # ── E max first (Twin Fang is the core spam spell), Q second ──
     "Cassiopeia": [
-        "Q", "E", "W", "E", "E", "R",
-        "E", "Q", "E", "Q", "R", "Q",
-        "Q", "W", "W", "R", "W", "W",
+        "Q",
+        "E",
+        "W",
+        "E",
+        "E",
+        "R",
+        "E",
+        "Q",
+        "E",
+        "Q",
+        "R",
+        "Q",
+        "Q",
+        "W",
+        "W",
+        "R",
+        "W",
+        "W",
     ],
     # ── W start, W max first (soldiers are the kit; standard since V13.7) ──
     "Azir": [
-        "W", "Q", "E", "W", "W", "R",
-        "W", "Q", "W", "Q", "R", "Q",
-        "Q", "E", "E", "R", "E", "E",
+        "W",
+        "Q",
+        "E",
+        "W",
+        "W",
+        "R",
+        "W",
+        "Q",
+        "W",
+        "Q",
+        "R",
+        "Q",
+        "Q",
+        "E",
+        "E",
+        "R",
+        "E",
+        "E",
     ],
     # ── NO "R" ON PURPOSE — do not "fix" this by adding one ──
     # Jayce starts with Transform at rank 1 and can never level it, so
@@ -78,9 +167,24 @@ _SKILL_ORDERS: dict[str, list[str]] = {
     # ``jayce.py``'s R slot ignores rank entirely and keys off level.
     # Q max first (level 8), then W (13), then E (18).
     "Jayce": [
-        "Q", "W", "E", "Q", "Q", "Q",
-        "Q", "Q", "W", "W", "W", "W",
-        "W", "E", "E", "E", "E", "E",
+        "Q",
+        "W",
+        "E",
+        "Q",
+        "Q",
+        "Q",
+        "Q",
+        "Q",
+        "W",
+        "W",
+        "W",
+        "W",
+        "W",
+        "E",
+        "E",
+        "E",
+        "E",
+        "E",
     ],
 }
 
@@ -97,4 +201,3 @@ def get_ability_rank(
         if order[i] == ability_key:
             rank += 1
     return rank
-# fmt: on

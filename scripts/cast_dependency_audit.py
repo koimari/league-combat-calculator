@@ -577,7 +577,7 @@ def _record_markers(
         cc_markers.setdefault((name, slot), set()).update(kinds)
         try:
             _validate_cc_event_contract(EmittedSlot(name, slot), dict(entry))
-        except ValueError as error:  # pragma: no cover - a red gate
+        except ValueError as error:
             cc_contract[(name, slot)] = str(error)
 
 

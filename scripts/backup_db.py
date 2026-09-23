@@ -37,9 +37,7 @@ import sys
 from pathlib import Path
 
 BACKUP_PREFIX = "scryglass-db"
-_FALLBACK_SQLITE_PATH = (
-    "/tmp/lol-calculator-fallback.sqlite3"  # noqa: S108 - the container fallback db
-)
+_FALLBACK_SQLITE_PATH = "/tmp/lol-calculator-fallback.sqlite3"
 # Mirrors db.py's fallback when DATABASE_URL is unset.
 _TIMESTAMP_PATTERN = re.compile(r"^" + BACKUP_PREFIX + r"-(\d{8}-\d{6})\.(sql|sqlite)$")
 
@@ -72,7 +70,7 @@ def build_commands(
     ``timestamp`` defaults to local ``YYYYMMDD-HHMMSS``; Redis SAVE is only
     included when ``include_redis`` is true AND ``redis_url`` is configured.
     """
-    now = _datetime.datetime.now()  # noqa: DTZ005 - local time names the file
+    now = _datetime.datetime.now()
     stamp = timestamp or now.strftime("%Y%m%d-%H%M%S")
     destination = Path(out_dir)
     kind, source = _resolve_target(database_url)
@@ -158,9 +156,7 @@ def main(argv: list[str] | None = None) -> int:
         if not out_dir.exists():
             out_dir.mkdir(parents=True)
         for command in commands:
-            result = subprocess.run(  # noqa: S602 - operator-built lines
-                command, shell=True, check=False
-            )
+            result = subprocess.run(command, shell=True, check=False)
             if result.returncode != 0:
                 print(f"[backup_db] FAILED: {command}", file=sys.stderr)
                 return result.returncode

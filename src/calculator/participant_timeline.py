@@ -13,8 +13,6 @@ event schedulers, the survival walk and the compiled score lane.
 pool, the utility receipt and the published combat receipt.
 """
 
-# pylint: disable=duplicate-code
-
 from __future__ import annotations
 
 import math
@@ -2969,7 +2967,7 @@ class CoupledSearchContext:
         self.main_champion_wounds: dict[str, Any] | None = None
 
 
-class _SignaturePanel:  # pylint: disable=too-few-public-methods
+class _SignaturePanel:
     """The invariant walk actions for one main defensive signature.
 
     ``sig`` holds only the fights into this signature (enemies into the

@@ -1,8 +1,5 @@
 """The one constructor, and what it refuses.
 
-file-length-ok: the module under test is the one-constructor boundary, and
-one suite per boundary is what keeps its field list provable in one place.
-
 ``program/compile`` is the front door for action construction.  Its first
 claim is location: every expression building an action record in ``src/`` is
 in this module, which ``tests/test_program_structure.py`` asserts over the

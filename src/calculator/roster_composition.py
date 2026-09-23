@@ -71,7 +71,7 @@ class ActorRequest:
 
 
 @dataclass(frozen=True, slots=True)
-class Combatant:  # pylint: disable=too-many-instance-attributes
+class Combatant:
     """One participant with its resolved stats and build."""
 
     participant_id: str

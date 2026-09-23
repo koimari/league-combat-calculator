@@ -496,7 +496,7 @@ APP_JS_PATH = Path(__file__).resolve().parent.parent / "static" / "js" / "app.js
 def _control_gates(contract: dict, tmp_path) -> dict:
     """Run app.js's control-family gating over one capability contract."""
     node = shutil.which("node")
-    if node is None:  # pragma: no cover - toolchain dependent
+    if node is None:
         pytest.skip("node is not installed")
     fixture = tmp_path / "fixture.json"
     fixture.write_text(json.dumps({"capabilities": contract}), encoding="utf-8")

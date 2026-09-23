@@ -61,7 +61,7 @@ class TestEveryDecisionHasExactlyOneLabel:
 
     def test_a_value_outside_the_union_raises(self) -> None:
         with pytest.raises(TypeError, match="closed"):
-            rung.counter_label(object())  # type: ignore[arg-type]
+            rung.counter_label(object())
 
 
 class TestTheTwoFailureRungsAreNotInterchangeable:
@@ -279,7 +279,7 @@ class TestTheLadderIsReachableFromProduction:
         """A gate fallback is a ``ReceiptWalk`` too, so it owes a receipt."""
         from src.calculator import participant_timeline
 
-        reason = participant_timeline._GATE_REFUSAL_RECEIPT  # pylint: disable=W0212
+        reason = participant_timeline._GATE_REFUSAL_RECEIPT
         assert reason.strip()
         assert (
             rung.reason_of(rung.ReceiptWalk(reason, rung.FallbackScope.REQUEST_GATE))

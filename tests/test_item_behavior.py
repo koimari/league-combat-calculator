@@ -85,7 +85,7 @@ def _rule(**overrides: object) -> BehaviorRule:
         "zero_policy": ZeroPolicy(Disposition.MEASURED, "a formula produced it"),
     }
     fields.update(overrides)
-    return BehaviorRule(**fields)  # type: ignore[arg-type]
+    return BehaviorRule(**fields)
 
 
 def test_the_family_union_is_closed_at_eighteen() -> None:
@@ -147,7 +147,7 @@ def test_a_zero_policy_is_required_and_carries_a_reason() -> None:
 
 def _rule_without_zero_policy() -> BehaviorRule:
     """Constructing a rule with no zero_policy is a TypeError, not a default."""
-    return BehaviorRule(  # type: ignore[call-arg]
+    return BehaviorRule(
         family=RuleFamily.DELTA_AMP,
         owner="Test Item",
         mechanic_id="test_item.amp",
@@ -330,7 +330,7 @@ def test_the_open_string_refusal_reaches_inside_a_collection() -> None:
         rule,
         payload=replace(
             rule.payload,
-            typing=Typing(frozenset({"magic"}), frozenset({"ability"})),  # type: ignore[arg-type]
+            typing=Typing(frozenset({"magic"}), frozenset({"ability"})),
         ),
     )
     with pytest.raises(ValueError, match=r"damage_classes\[\] holds a str"):

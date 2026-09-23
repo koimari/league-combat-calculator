@@ -51,7 +51,6 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-# pylint: disable=wrong-import-position,wrong-import-order
 import golden_snapshot
 
 from calculator import (
@@ -450,7 +449,7 @@ def _probe_rows(champion: str, items: Sequence[str]) -> frozenset[str]:
         data["name"]: data for data in golden_snapshot.fetch_item_data().values()
     }
     return priced_rows(
-        golden_snapshot._run_fight(  # noqa: SLF001 - the gate's own fight runner  # pylint: disable=protected-access
+        golden_snapshot._run_fight(
             champions[champion],
             PROBE_LEVEL,
             [by_name[name] for name in items],
@@ -1744,5 +1743,5 @@ def main(argv: Sequence[str] | None = None) -> int:
     return 1 if failures else 0
 
 
-if __name__ == "__main__":  # pragma: no cover - CLI
+if __name__ == "__main__":
     sys.exit(main())

@@ -12,8 +12,6 @@ parse must reproduce. When JSON data is refreshed, ``refresh_item_effects()``
 re-parses and updates ``ITEM_EFFECTS`` in place.
 """
 
-# file-length-ok: rule 5 makes this module the one home for every item number,
-# so a split would give the numbers a second home rather than fewer lines.
 import logging
 import math
 import re
@@ -4060,9 +4058,7 @@ def refresh_item_effects() -> None:
 ITEM_EFFECTS: dict[str, dict[str, Any]] = _build_item_effects()
 
 
-def required_effect_value(  # sightline-ok: 1 - key-typed read
-    item_name: str, key: str
-) -> Any:
+def required_effect_value(item_name: str, key: str) -> Any:
     """Read a required key from an item's effect entry, failing loudly.
 
     A missing key means the parser omitted a required parser-owned value or
@@ -4920,7 +4916,7 @@ def counter_trigger(item_name: str) -> CounterTrigger:
             f"ITEM_EFFECTS[{item_name!r}]['counter_trigger'] is {declared!r}; "
             "the taxonomy admits 'on_attack' and 'on_hit' only"
         )
-    return declared  # type: ignore[return-value]
+    return declared
 
 
 @dataclass(frozen=True, slots=True)

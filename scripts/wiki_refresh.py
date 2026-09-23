@@ -41,7 +41,7 @@ def scheduled_refresh(
     The result is the report the action returned, or a record naming why
     nothing ran.
     """
-    today = today or date.today()  # noqa: DTZ011 - launchd fires on local calendar day
+    today = today or date.today()
     if anchor.weekday() != 2:
         raise ValueError("The fortnight anchor must be a Wednesday")
     elapsed = (today - anchor).days

@@ -14,7 +14,6 @@ W (Spirit Cleave) and R (Fate Sealed) read the sourced physical and magic rows.
 
 from __future__ import annotations
 
-# pylint: disable=duplicate-code  # Yone deliberately mirrors Yasuo's Q/P
 # crit-conversion shape (the shared yasuo_yone rule); the parallel
 # blocks are the documented contract, not accidental duplication.
 from typing import Any

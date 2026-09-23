@@ -37,7 +37,7 @@ class TestTheVocabularyIsClosed:
 
     def test_a_policy_the_union_does_not_hold_raises_rather_than_resolving(self):
         with pytest.raises(TypeError) as excinfo:
-            scope.scope_policy(object())  # type: ignore[arg-type]
+            scope.scope_policy(object())
         assert "the union is closed" in str(excinfo.value)
 
     def test_a_multi_target_scope_that_reaches_nobody_is_unconstructible(self):

@@ -29,7 +29,7 @@ def test_every_declared_precision_is_a_digit_count() -> None:
 def test_the_registry_is_not_writable_through_its_public_name() -> None:
     """One home means one writer: the mapping is a read-only view."""
     with pytest.raises(TypeError):
-        precision.ROUNDING["death_time"] = 9  # type: ignore[index]
+        precision.ROUNDING["death_time"] = 9
 
 
 def test_a_field_with_no_declared_precision_raises_naming_itself() -> None:

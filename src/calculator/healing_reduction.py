@@ -124,7 +124,7 @@ def champion_grievous_wound_sources(
     # Resolved lazily so this module never participates in the package
     # import order; the champions registry is heavy and not needed unless
     # a wound-declaring module is actually on the roster.
-    from .champions import _CHAMPION_MODULES  # pylint: disable=import-outside-toplevel
+    from .champions import _CHAMPION_MODULES
 
     module = _CHAMPION_MODULES.get(champion_name)
     if module is None:

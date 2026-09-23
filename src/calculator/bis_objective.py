@@ -493,7 +493,6 @@ def _bis_coverage_receipt(
     )
 
 
-# pylint: disable=too-many-locals,too-many-branches,too-many-statements
 def _bis_dispositions(payload: dict) -> dict[str, dict[str, object]]:
     """The payload's parallel ``dispositions`` map, keyed by leaf path."""
     return name_every_number(payload, RankingWriter())

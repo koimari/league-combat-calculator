@@ -2450,7 +2450,7 @@ def test_a_panel_that_repeats_an_event_id_is_a_400_and_not_a_receipt(monkeypatch
     """
     from src.calculator.program.views import receipt as receipt_view
 
-    real_rows = receipt_view._damage_event_rows  # pylint: disable=W0212
+    real_rows = receipt_view._damage_event_rows
 
     def duplicating_rows(events, writer, section):
         rows = real_rows(events, writer, section)

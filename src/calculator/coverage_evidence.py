@@ -38,7 +38,6 @@ lane vocabularies answering different questions must never both be spelled
 # one responsibility", and splitting a claim's *shape* across two files is the
 # failure this module exists to prevent — a reader would have to hold two
 # files open to know what a claim may say.
-# pylint: disable=too-many-lines
 
 import keyword
 from collections.abc import Mapping
@@ -516,7 +515,7 @@ _POSITIVE_EVIDENCE_KINDS: frozenset[str] = EVIDENCE_KINDS - {"Absence"}
 # counter would put a claim's shape in two places, which is the failure this
 # module exists to prevent.
 @dataclass(frozen=True, slots=True)
-class Claim:  # pylint: disable=too-many-instance-attributes
+class Claim:
     """One coverage assertion about one item or rule, and what backs it.
 
     ``status`` is a **pinned expectation, never an authority**: the classifier

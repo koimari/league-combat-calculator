@@ -436,7 +436,7 @@ def _variant_slot(
         ctx: SlotCtx,
         parsers=tuple(parsers),
         key=option_key,
-        default=spec.get("default", 0),  # noqa: B008 - bound at definition
+        default=spec.get("default", 0),
     ):
         try:
             index = int(ctx.options.get(key, default))

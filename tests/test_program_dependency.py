@@ -18,7 +18,7 @@ import pytest
 from src.calculator.program import dependency
 
 
-class Params:  # pylint: disable=too-few-public-methods
+class Params:
     """The one parameter a patch in these tests overrides."""
 
     catalyst_pool = 0.0
@@ -47,7 +47,7 @@ class TestADependencyIsBoundedByDeclaration:
 
     def test_a_declaration_is_frozen(self) -> None:
         with pytest.raises(AttributeError):
-            CATALYST.max_passes = 3  # type: ignore[misc]
+            CATALYST.max_passes = 3
 
 
 class TestPassesAreSharedNotSummed:

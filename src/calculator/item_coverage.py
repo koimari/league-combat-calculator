@@ -14,10 +14,6 @@ open — pylint's line ceiling is a proxy for "more than one responsibility",
 and this is one.
 """
 
-# file-length-ok: the paragraph above is the argument, and it is the reason
-# pylint's own ceiling is waived on the next line.
-# pylint: disable=too-many-lines
-
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any, Literal

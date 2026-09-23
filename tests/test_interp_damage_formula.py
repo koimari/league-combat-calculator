@@ -147,11 +147,11 @@ def test_a_formula_with_no_terms_is_refused_at_declaration_time() -> None:
 def test_a_basis_with_no_reading_stops_the_build_not_the_fight() -> None:
     """A programming error must surface when the build is made, never on an event."""
 
-    class _Unknown:  # pylint: disable=too-few-public-methods
+    class _Unknown:
         value = "unknown_basis"
 
     with pytest.raises(InterpretationError, match="no reading in DamageInputs"):
-        damage_formula.basis_value(_Unknown(), INPUTS)  # type: ignore[arg-type]
+        damage_formula.basis_value(_Unknown(), INPUTS)
 
 
 def test_reading_the_targets_live_health_is_read_off_the_declaration() -> None:

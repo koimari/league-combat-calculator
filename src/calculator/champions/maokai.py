@@ -156,8 +156,6 @@ OPTIONS = [
 ]
 
 
-# pylint: disable=too-many-locals
-# pylint: disable=too-many-branches,too-many-statements
 def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Sap Magic's cooldown and empowered-attack heal."""
     passive = ability_json(ctx.champion_data, "P")

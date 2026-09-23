@@ -161,7 +161,7 @@ def run_passes[Result](
     patch: ParamPatch | None = None
     # Reaching the raise below requires at least one loop pass to have set
     # this: every other exit from the loop body returns or raises.
-    pending: PassRequest = None  # type: ignore[assignment]
+    pending: PassRequest = None
     for index in range(1, budget + 1):
         outcome = run_pass(index, patch)
         if not isinstance(outcome, PassRequest):

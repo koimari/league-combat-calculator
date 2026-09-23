@@ -67,7 +67,6 @@ never invents a number or policy the caches do not evidence.
 
 from __future__ import annotations
 
-# pylint: disable=too-many-return-statements  # the decision path's named
 # reasons map one-to-one onto returns.
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field

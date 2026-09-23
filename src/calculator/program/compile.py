@@ -24,10 +24,6 @@ constructor parameter instead -- the same device ``build_state``'s
 that builds the walk compiles what the walk may not reach and hands it over.
 """
 
-# file-length-ok: the module IS the one-constructor boundary its docstring
-# argues for — splitting it puts SurvivalAction fields back in two files,
-# which is the disagreement (a field one builder stamps and the other does
-# not) this file exists to make impossible.
 from __future__ import annotations
 
 import math

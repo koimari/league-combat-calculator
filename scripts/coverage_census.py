@@ -88,7 +88,7 @@ def _probe(fn, payload):
         return {"ok": True, "resp": fn(payload)}
     except ValueError as exc:
         return {"ok": False, "error": str(exc)}
-    except Exception as exc:  # noqa: BLE001 - a census records crashes, class apart
+    except Exception as exc:
         return {"ok": False, "error": f"CRASH {type(exc).__name__}: {exc}"}
 
 

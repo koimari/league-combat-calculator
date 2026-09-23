@@ -423,9 +423,7 @@ def _scenario(name):
 def _capture(name):
     """Run a named scenario live, rounded exactly as the baseline is."""
     snapshot = _golden_snapshot()
-    return snapshot._rounded(  # pylint: disable=protected-access
-        snapshot.coupled_entry(_scenario(name))
-    )
+    return snapshot._rounded(snapshot.coupled_entry(_scenario(name)))
 
 
 def _casts(entry):

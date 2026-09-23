@@ -72,7 +72,6 @@ def normalize_observed_payload(
 
 
 # Parsing deliberately accepts several compact user-paste shapes.
-# pylint: disable=too-many-branches
 def parse_observed_paste(text: str) -> dict[str, Any]:
     """Parse JSON or tolerant slot/value combat-log text into a receipt."""
     text = text.strip()

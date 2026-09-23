@@ -127,7 +127,7 @@ def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...
 
 
 @dataclass(frozen=True, slots=True)
-class ForcedCrit:  # pylint: disable=too-many-instance-attributes
+class ForcedCrit:
     """One build's forced critical strike, resolved.
 
     ``heals`` is the declared-absence question answered once: an item that

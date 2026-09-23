@@ -165,7 +165,7 @@ def reprobe_failures(
     The receipt kinds live once, in ``tests/test_practice_tool_corpus.py``; the writer
     borrows them rather than growing a second copy that could disagree.
     """
-    from tests.test_practice_tool_corpus import (  # sightline-ok: 35 - borrows the suite's receipts
+    from tests.test_practice_tool_corpus import (
         _KIND_ASSERTIONS,
         _run_calculate,
     )

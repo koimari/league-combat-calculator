@@ -106,7 +106,7 @@ class TestTheResultIsFrozen:
         ctx, _ = one_participant_context()
         result = walk_module.walk([damage_action(5.0)], ctx)
         with pytest.raises(AttributeError):
-            result.rung = rung.CompiledFull()  # type: ignore[misc]
+            result.rung = rung.CompiledFull()
 
     def test_the_rung_rides_the_result_rather_than_the_caller(self) -> None:
         ctx, _ = one_participant_context()
@@ -223,11 +223,7 @@ class TestOneWalkPerPassAtRuntime:
             include_receipt=False,
             search_context=CoupledSearchContext(work_counters=sink),
         )
-        passes = pass_count(
-            timeline_module._cross_pass_dependencies(  # pylint: disable=W0212
-                items, (), ()
-            )
-        )
+        passes = pass_count(timeline_module._cross_pass_dependencies(items, (), ()))
         assert passes == 1
         assert sink.walk_invocations == passes
 
@@ -267,7 +263,7 @@ class TestOneWalkPerPassAtRuntime:
             for name in ("Aatrox", "Malphite")
         ]
         composed: list[int] = []
-        original = timeline_module._compose_pass  # pylint: disable=W0212
+        original = timeline_module._compose_pass
 
         def spy(*args, **kwargs):
             composed.append(kwargs["pass_index"])
@@ -290,9 +286,7 @@ class TestOneWalkPerPassAtRuntime:
         )
 
         budget = pass_count(
-            timeline_module._cross_pass_dependencies(  # pylint: disable=W0212
-                list(main.item_data), enemies, []
-            )
+            timeline_module._cross_pass_dependencies(list(main.item_data), enemies, [])
         )
         assert composed == [1, 2]
         assert budget == 2

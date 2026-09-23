@@ -20,16 +20,6 @@ structural only and reads no file — item-name resolution lives in the
 test that pins the projections.
 """
 
-# file-length-ok: the bulk is one declaration table, and the reason it stays
-# whole is the paragraph below.
-# The module is long because most of it is one declaration table; splitting
-# the registry out would make every projection a cross-module round trip and
-# duplicate the acyclicity proof, which is the trade this phase deliberately
-# rejected.  The repo idiom (``rune_paths.keystones.COMPILERS``,
-# ``item_source.ACKNOWLEDGED_SOURCE_CONFLICTS``) co-locates a frozen table
-# with its reader for the same reason.
-# pylint: disable=too-many-lines
-
 from __future__ import annotations
 
 import math
@@ -275,7 +265,7 @@ _DAMAGE_TYPES = frozenset({"physical", "magic", "true"})
 # shape for it, and collapsing them into sub-objects would put the bus's
 # own vocabulary behind another indirection.
 @dataclass(frozen=True, slots=True)
-class Trigger:  # pylint: disable=too-many-instance-attributes
+class Trigger:
     """One authored event, classified once, read by both engines.
 
     Frozen and slotted with ``eq=True``/``order=False``: triggers are
@@ -506,7 +496,7 @@ SELF_SCOPED_DELIVERIES = (RiderDelivery, HolderPacket)
 # Thirteen fields, and a declaration record is exactly as wide as the facts it
 # declares.
 @dataclass(frozen=True, slots=True)
-class MechanicCapability:  # pylint: disable=too-many-instance-attributes
+class MechanicCapability:
     """One mechanic's declared transport, authority and implementation site.
 
     Every field is required with no default, so a field added later forces

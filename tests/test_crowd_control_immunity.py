@@ -116,7 +116,7 @@ _BY_TIME = itemgetter("time")
 
 try:  # P2 Slice 3 planned kernel — not landed yet; rows fail with the marker.
     from src.calculator import crowd_control_eligibility as cce
-except ImportError:  # pragma: no cover - expected until the kernel lands
+except ImportError:
     cce = None
 
 

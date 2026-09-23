@@ -5,9 +5,6 @@ Timeline-level walk integration (through
 (Quicksilver Sash / Mercurial Scimitar item options), the Mikael's Purify
 heal+cleanse marker, and what the compiled score compiler stages for each.
 Roster-level compiled/receipt parity is ``test_compiled_support_parity.py``.
-
-file-length-ok: one acceptance matrix per kernel, and this is the cleanse
-kernel's.
 """
 
 import pytest

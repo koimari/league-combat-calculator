@@ -180,7 +180,7 @@ def _calculate_status(payload: dict) -> tuple[int, dict]:
     response = app.test_client().post("/api/calculate", json=payload)
     try:
         body = response.get_json()
-    except Exception:  # noqa: BLE001 - non-JSON body  # pragma: no cover
+    except Exception:
         body = {}
     return response.status_code, body
 

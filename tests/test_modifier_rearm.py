@@ -56,7 +56,7 @@ class _Ledger:
         if action.event is not None:
             action.event.update(fields)
 
-    def skip(self, action, reason):  # pylint: disable=unused-argument
+    def skip(self, action, reason):
         """Record nothing: no test here arms an unavailable modifier."""
 
 

@@ -421,7 +421,6 @@ OPTIONS = [
 MODULE_COVERAGE = coverage(no_damage="E")
 
 
-# pylint: disable=too-many-locals
 def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Aphelios self-healing events from its authored packet."""
     healing = []

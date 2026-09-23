@@ -23,8 +23,7 @@ _NO_STEPS: Mapping[str, str] = MappingProxyType({})
 def _writing_step() -> str:
     """The module and outermost function of the frame writing a row."""
     # The caller's caller is the frame that wrote the row.
-    # pylint: disable=protected-access
-    frame = sys._getframe(2)  # noqa: SLF001 - the writer of the row being stored
+    frame = sys._getframe(2)
     module = str(frame.f_globals["__name__"])
     function = frame.f_code.co_qualname.split(".<locals>.")[0]
     return f"{module.removeprefix(_PACKAGE_PREFIX)}.{function}"

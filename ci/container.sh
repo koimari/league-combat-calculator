@@ -26,7 +26,6 @@ fi
 ci_section "container: build production image"
 run_step "docker build --tag $IMAGE ." docker build --tag "$IMAGE" .
 
-# shellcheck disable=SC2329  # invoked through run_step
 smoke() {
   docker rm --force "$NAME" >/dev/null 2>&1 || true
   docker run --detach --name "$NAME" --publish "127.0.0.1:$PORT:8000" "$IMAGE" >/dev/null || return 1

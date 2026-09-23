@@ -53,9 +53,7 @@ class TestShadowSurgeSplit:
         assert parts[0].amount == pytest.approx(195.0)
         assert parts[1].amount == pytest.approx(400.0)
         assert parts[0].time_offset == pytest.approx(0.0)
-        assert parts[1].time_offset == pytest.approx(
-            vex._R_RECAST_DELAY_SECONDS  # pylint: disable=protected-access
-        )
+        assert parts[1].time_offset == pytest.approx(vex._R_RECAST_DELAY_SECONDS)
 
     def test_the_split_keeps_the_cached_total(self):
         entry = _parse()["R"]
@@ -67,15 +65,9 @@ class TestShadowSurgeSplit:
     def test_the_authored_cadence_fits_inside_the_cached_mark(self):
         """The recast's instant is the player's; the window it sits in is
         cached, and the parser refuses the slot without one."""
-        window = extract_description_duration(
-            _r_ability(), vex._R_MARK_EFFECT_INDEX  # pylint: disable=protected-access
-        )
+        window = extract_description_duration(_r_ability(), vex._R_MARK_EFFECT_INDEX)
         assert window == pytest.approx(4.0)
-        assert (
-            0.0
-            < vex._R_RECAST_DELAY_SECONDS  # pylint: disable=protected-access
-            <= window
-        )
+        assert 0.0 < vex._R_RECAST_DELAY_SECONDS <= window
 
 
 class TestReviewedCrowdControl:

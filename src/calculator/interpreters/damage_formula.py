@@ -108,7 +108,7 @@ def _split_rates(coefficient: object, ctx: BuildContext) -> tuple[float, float]:
             resolve(coefficient.melee, ctx.level),
             resolve(coefficient.ranged, ctx.level),
         )
-    rate = resolve(coefficient, ctx.level)  # type: ignore[arg-type]
+    rate = resolve(coefficient, ctx.level)
     return (rate, rate)
 
 

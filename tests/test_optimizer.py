@@ -1,9 +1,4 @@
-"""Tests for the build optimizer.
-
-file-length-ok: one file per public entry point, and the two the optimizer has
-(``optimize_build`` and ``optimize_purchase``) are scored through synthetic
-item pools whose scaffolding is most of these lines.
-"""
+"""Tests for the build optimizer."""
 
 import pytest
 

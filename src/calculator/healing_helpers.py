@@ -12,7 +12,6 @@ of the ledger the module happened to author.
 
 # The slotlib readers are re-exported here so a champion module reaches one
 # healing surface.
-# pylint: disable=unused-import
 
 from __future__ import annotations
 

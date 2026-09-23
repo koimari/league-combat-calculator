@@ -407,7 +407,7 @@ ABILITY_PAYLOAD_SCHEMA: Mapping[str, Mapping[str, Any]] = MappingProxyType(
 _MISSING = object()
 
 
-def ability_field(  # sightline-ok: 1 - key-typed read
+def ability_field(
     payload: Mapping[str, Any], key: str, *, form: str = "ability"
 ) -> Any:
     """One field of an authored ability payload, through its declared schema.
@@ -469,7 +469,7 @@ def declared_payload(
     return found[0]
 
 
-def required_declaration(  # sightline-ok: 1 - key-typed read
+def required_declaration(
     payload: Mapping[str, Any], key: str, *, owner: str, mechanic: str
 ) -> Any:
     """One number the declaring module must state; a missing one is refused."""

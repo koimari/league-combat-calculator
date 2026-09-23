@@ -135,7 +135,7 @@ def _evaluate(expression: ast.expr | None, module: ModuleType) -> Any:
     """One declared keyword's value, or ``None`` when the site omits it."""
     if expression is None:
         return None
-    return eval(  # noqa: S307 - evaluates the module's own declaration AST  # pylint: disable=eval-used
+    return eval(
         compile(ast.Expression(expression), "<declaration>", "eval"),
         vars(module),
     )

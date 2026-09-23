@@ -138,7 +138,6 @@ export function Timeline({
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId, enabled, events]);
 
   const ticks: number[] = [];

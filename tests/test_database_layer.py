@@ -385,7 +385,7 @@ def test_concurrent_cache_set_on_one_key_never_raises(sqlite_database):
     def writer(index):
         try:
             db.cache_set(key, {"total_damage": float(index)})
-        except Exception as exc:  # noqa: BLE001 - the raise under test
+        except Exception as exc:
             errors.append(exc)
 
     event.listen(engine, "after_cursor_execute", hold_after_existence_check)

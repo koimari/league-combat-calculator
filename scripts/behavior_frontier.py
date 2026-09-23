@@ -103,7 +103,6 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-# pylint: disable=wrong-import-position
 from src.calculator import (
     interpreters,
     item_coverage,
@@ -494,7 +493,7 @@ def unserved_lane_block() -> dict[str, Any]:
                     rule.compilability, ReceiptOnly
                 ):
                     per_rule.add(key)
-                else:  # pragma: no cover - the import gate forbids this state
+                else:
                     unreceipted.add(key)
     return {
         "dated": dict(sorted(dated.items())),
@@ -814,10 +813,7 @@ def no_runtime_behavior_block() -> dict[str, Any]:
     return {
         "members": members,
         "sourced": sorted(
-            name
-            for name in members
-            if name
-            in item_coverage._SOURCE_REFS  # noqa: SLF001 - the frontier reads the map
+            name for name in members if name in item_coverage._SOURCE_REFS
         ),
         "declaring": sorted(
             name
@@ -930,7 +926,7 @@ def _receiver(call: ast.Call) -> str:
     ``options`` says a champion option is being defaulted, ``entry`` says a
     produced entry is.  A tail that is itself a call buckets as ``chained``.
     """
-    receiver = ast.unparse(call.func.value)  # type: ignore[attr-defined]
+    receiver = ast.unparse(call.func.value)
     tail = receiver.split(".")[-1].strip("() ")
     if not tail or "(" in tail or ")" in tail or " " in tail:
         return "chained"
@@ -945,7 +941,7 @@ def _reads_an_input_block(call: ast.Call) -> bool:
     ``(ctx.target or {})`` and a bare ``stats_context`` parameter all count
     while ``entry`` and ``ability_damages.get("R", {})`` do not.
     """
-    receiver = call.func.value  # type: ignore[attr-defined]
+    receiver = call.func.value
     for node in ast.walk(receiver):
         if isinstance(node, ast.Attribute) and node.attr in INPUT_BLOCK_NAMES:
             return True

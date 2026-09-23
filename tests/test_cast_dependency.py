@@ -5,10 +5,6 @@ its two vocabularies are closed and disjoint, that every import-time failure
 has a negative test which reaches it, and that its two order functions
 behave. The precedence table and the resolver merge belong to
 ``rotation_resolver`` and are tested with it.
-
-file-length-ok: one test file per module under test, and this one is a matrix
-over the leaf's vocabularies, its import-time refusals and the derivation
-modules that read them.
 """
 
 import ast
@@ -855,7 +851,7 @@ class TestNonDeclaringChampionsReachNoNewCode:
         seen: list[tuple[str, str]] = []
 
         def spy(name):
-            original = getattr(module_survey, name)  # sightline-ok: 24 - spy table
+            original = getattr(module_survey, name)
 
             def record(*args, **kwargs):
                 seen.append((name, kwargs["module"]))

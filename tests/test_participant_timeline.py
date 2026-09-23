@@ -5779,7 +5779,7 @@ def test_a_ledger_without_the_capability_flags_is_refused():
     never declared; the read now names the missing attribute.
     """
 
-    class Bare:  # pylint: disable=too-few-public-methods
+    class Bare:
         """A ledger-shaped object that declares no capability flags."""
 
     with pytest.raises(AttributeError, match="records_annotations"):
@@ -6174,7 +6174,6 @@ class TestThePublishedReceiptFieldsHaveOneProducer:
         from src.calculator.program.views.leaf import LeafWriter
 
         with pytest.raises(KeyError):
-            # pylint: disable-next=protected-access
             receipt_view._healing_event_rows(
                 [{"time": 0.0, "amount": 5.0}], LeafWriter(), "healing_events"
             )
@@ -6187,7 +6186,6 @@ class TestThePublishedReceiptFieldsHaveOneProducer:
         from src.calculator.program.views.leaf import LeafWriter
 
         with pytest.raises(KeyError):
-            # pylint: disable-next=protected-access
             receipt_view._damage_event_rows(
                 [{"time": 1.0, "grievous_duration": 3.0}], LeafWriter(), "events"
             )

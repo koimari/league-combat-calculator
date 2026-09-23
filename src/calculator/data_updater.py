@@ -28,7 +28,7 @@ if sys.platform == "win32":
     def _win_download_soup(
         url: str,
         use_cache: bool = True,
-        dir: str = "__cache__",  # noqa: A002 - the vendor signature this replaces
+        dir: str = "__cache__",
     ) -> str:
         import os
 
@@ -128,7 +128,7 @@ def _build_champion_payload(
                         icon_filenames,
                     )
                     ability.icon = url
-        except Exception:  # noqa: S110 - icons are decoration
+        except Exception:
             pass
 
     champion_payload = json.loads(champion.__json__(ensure_ascii=False))

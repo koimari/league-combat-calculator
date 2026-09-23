@@ -13,7 +13,7 @@ from functools import partial
 from typing import Any
 
 
-def required_field(  # sightline-ok: 1 - key-typed read
+def required_field(
     event: Mapping[str, Any], field: str, *, kind: str, stamper: str
 ) -> Any:
     """The field every *kind* row carries; absent is a producer break, never a default."""

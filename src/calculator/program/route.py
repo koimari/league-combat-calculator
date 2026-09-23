@@ -191,7 +191,7 @@ def _checked(policy: RoutePolicy, subjects: Sequence[PIdx], roster: int) -> tupl
     return tuple(subjects)
 
 
-def resolve_route(  # pylint: disable=too-many-return-statements
+def resolve_route(
     policy: RoutePolicy, ctx: RouteContext, *, roster_size: int
 ) -> tuple[PIdx, ...]:
     """Total, fail-closed subject resolution for item and champion packets.

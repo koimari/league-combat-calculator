@@ -274,9 +274,9 @@ def test_trigger_is_frozen_hashable_and_unordered():
     (trigger,) = ts.event_triggers(_row())
     assert hash(trigger) == hash(ts.event_triggers(_row())[0])
     with pytest.raises(AttributeError):
-        trigger.time = 2.0  # type: ignore[misc]
+        trigger.time = 2.0
     with pytest.raises(TypeError):
-        _ = trigger < trigger  # noqa: PLR0124 - the refusal  # type: ignore[operator]
+        _ = trigger < trigger
 
 
 def test_an_unmarked_row_classifies_unreviewed_and_never_none():
@@ -1422,9 +1422,7 @@ def pairing_defects(
             defects.append(f"{mechanic}: pair_of resolves to no capability")
             continue
         module, attribute = partner.impl.rsplit(".", 1)
-        resolved = importlib.import_module(  # sightline-ok: 24 - dotted receipt
-            f"src.calculator.{module}"
-        )
+        resolved = importlib.import_module(f"src.calculator.{module}")
         if not hasattr(resolved, attribute):
             defects.append(f"{mechanic}: pair half {partner.impl} does not import")
     return tuple(defects)
@@ -2696,7 +2694,6 @@ def test_every_compiled_rune_declares_exactly_one_capability():
     item-name projections are pinned — and a rune compiled without a
     capability (or the reverse) fails here rather than in review.
     """
-    # pylint: disable-next=import-outside-toplevel
     from src.calculator import rune_effects
 
     declared = {

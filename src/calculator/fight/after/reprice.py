@@ -34,7 +34,7 @@ def _apply_liandry_reprice(state: FightState, adjustments: PoolAdjustments) -> N
     if abs(liandry_delta) <= 1e-9:
         return
     liandry_row = state.breakdown.get(_LIANDRY_BURN_KEY)
-    if liandry_row is None:  # pragma: no cover - registry invariant
+    if liandry_row is None:
         raise RuntimeError("Liandry adjustment has no breakdown row")
     repriced = _carry_declarations_onto_repriced_ticks(
         liandry_row.get("damage_events"), adjustments.liandry_events

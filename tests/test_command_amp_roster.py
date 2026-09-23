@@ -355,11 +355,11 @@ class _RecordingLedger:
         self.combatants = ()
         self.states = []
 
-    def write(self, action, **fields):  # pylint: disable=unused-argument
+    def write(self, action, **fields):
         """Keep the receipt fields."""
         self.written.append(fields)
 
-    def skip(self, action, reason):  # pylint: disable=unused-argument
+    def skip(self, action, reason):
         """Keep the refusal."""
         self.written.append({"skip": reason})
 

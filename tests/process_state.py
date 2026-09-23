@@ -85,7 +85,7 @@ def _same(was, now) -> bool:
         return True
     try:
         return bool(was == now)
-    except Exception:  # noqa: BLE001 - an unanswerable == is a difference
+    except Exception:
         return False
 
 

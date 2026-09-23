@@ -460,7 +460,7 @@ def test_the_phase_slot_guard_sees_every_spelling(tmp_path: Path) -> None:
     """The guard's own red: each shape it claims to cover, made to fail."""
     sample = tmp_path / "sample.py"
     sample.write_text(
-        "\n".join(  # noqa: FLY002 - one sample line per shape
+        "\n".join(
             (
                 # The definitions shapes 2 and 3 read their positions from.
                 "def action_key(event_time, phase, participant_id, event):\n    pass",

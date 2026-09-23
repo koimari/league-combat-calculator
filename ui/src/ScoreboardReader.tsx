@@ -140,7 +140,6 @@ export function ScoreboardReader({
     }
     document.addEventListener("paste", onPaste);
     return () => document.removeEventListener("paste", onPaste);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function drawPreview(

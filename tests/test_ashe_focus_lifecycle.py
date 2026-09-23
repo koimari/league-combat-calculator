@@ -76,6 +76,7 @@ appear as literal contract constants beside their game-file evidence.
 """
 
 import copy
+import importlib
 import itertools
 import json
 from pathlib import Path
@@ -1056,11 +1057,8 @@ class TestUnchangedBoundaries:
             RENGAR_FEROCITY_STACK_RULE.public_receipt()["combat_extension_seconds"]
             == 10.0
         )
-        from src.calculator import (
-            cleanse_eligibility,  # noqa: F401 - imported to register cleanse
-            defensive_effects,  # noqa: F401 - imported to register grey health
-            healing,  # noqa: F401 - imported to register the heal packages
-        )
+        for module in ("cleanse_eligibility", "defensive_effects", "healing"):
+            assert importlib.import_module(f"src.calculator.{module}")
 
 
 # ---------------------------------------------------------------------------

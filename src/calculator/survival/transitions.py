@@ -126,8 +126,6 @@ class SurvivalLedger(Protocol):
     the kernel reads the capability flags directly instead of asking.
     """
 
-    # pylint: disable=missing-function-docstring  # documented above
-
     # Verbosity, read once per walk onto ``TransitionContext``.
     records_annotations: bool
     records_event_fields: bool
@@ -1069,7 +1067,7 @@ def schedule_regeneration_recovery(
             # diminishing-return formula at every sourced tick.
             "amount": 0.0,
             "amount_formula": (
-                lambda current_health, maximum_health, total_cap=total_cap, missing_cap=missing_cap, ticks=ticks: (  # noqa: E501 - lambda parameters do not wrap
+                lambda current_health, maximum_health, total_cap=total_cap, missing_cap=missing_cap, ticks=ticks: (
                     total_cap
                     * min(
                         1.0,

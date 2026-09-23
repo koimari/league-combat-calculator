@@ -39,7 +39,7 @@ class TestArmingDedupeIsDeclaredInBothDirections:
     def test_a_mechanic_with_no_declaration_raises(self) -> None:
         """No default to fall through to — that is what defaultless means."""
         with pytest.raises(TypeError, match="closed"):
-            amp.arm_key(4, "m", 1, None)  # type: ignore[arg-type]
+            amp.arm_key(4, "m", 1, None)
 
 
 class TestTheStackingEnumLivesBesideTheRegistryItDeclares:

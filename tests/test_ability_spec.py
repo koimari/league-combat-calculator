@@ -4,9 +4,6 @@ Exercises fight.rotation.cast_parts._evaluate_cast_parts directly with a stub Fi
 the evaluator owns HP-threading, per-part mitigation, and reduced-
 effectiveness crit — champion files own only the closures.  Also pins the
 four closed vocabularies the leaf declares, member for member.
-
-file-length-ok: one test file per module under test, and the leaf's four
-vocabularies plus the contract they serve are one module.
 """
 
 import ast
@@ -613,7 +610,7 @@ def test_the_algebra_is_frozen_so_a_fold_cannot_mutate_its_operands() -> None:
         # A frozen slots dataclass refuses a field with FrozenInstanceError and any other
         # name with TypeError (CPython rebinds the class for slots); both are refusals.
         with pytest.raises((FrozenInstanceError, TypeError)):
-            member.disposition = Disposition.MEASURED  # type: ignore[misc]
+            member.disposition = Disposition.MEASURED
 
 
 # ---------------------------------------------------------------------------

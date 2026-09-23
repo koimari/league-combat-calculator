@@ -41,11 +41,6 @@ an ability that applies the build's item on-hits is ``on_hit_stream``.
     ramp, with stacks assumed never to drop mid-fight.
 """
 
-# file-length-ok: the bulk is the champion-rider region, 24 modules'
-# on-hit contracts read through one dict dispatch.  Typing that contract
-# is stage 4 of docs/plans/2026-09-09-fight-navigability.md, and a
-# stampability predicate that flips there makes a row coarse, which moves
-# the coupled golden's leaf set with no number moving.
 from collections.abc import Sequence
 from typing import Any
 

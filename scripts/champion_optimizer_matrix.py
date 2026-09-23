@@ -28,7 +28,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from scripts.gate_receipt import (  # pylint: disable=wrong-import-position
+from scripts.gate_receipt import (
     build_receipt,
 )
 
@@ -186,8 +186,8 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="emit JSON only")
     args = parser.parse_args()
 
-    from src.app import app  # pylint: disable=import-outside-toplevel
-    from src.calculator.champions import (  # pylint: disable=import-outside-toplevel
+    from src.app import app
+    from src.calculator.champions import (
         registered_champion_names,
     )
 

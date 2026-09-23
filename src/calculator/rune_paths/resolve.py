@@ -299,7 +299,7 @@ def _compile_revitalize(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
         "low_health_recovery_gate_ratio",
     )
 
-    def amount(context: RuneStatContext) -> float:  # pylint: disable=unused-argument
+    def amount(context: RuneStatContext) -> float:
         return power
 
     return RuneStatGrantEffect(

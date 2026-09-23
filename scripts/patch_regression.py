@@ -969,7 +969,7 @@ def verify_wads(
     champion bin, then ``cdtb bin-dump --json`` produces the ground truth.
     Returns a per-champion report of stat deltas (empty = identical).
     """
-    tmp_root = os.environ.get("TMPDIR", "/tmp")  # noqa: S108 - cdtb scratch
+    tmp_root = os.environ.get("TMPDIR", "/tmp")
     storage = storage or str(Path(tmp_root) / "lcc-p3-cdtb")
     report = {}
     for name in champion_names:

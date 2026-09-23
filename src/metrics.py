@@ -65,7 +65,6 @@ from .beta_gate import (
 PACKAGE_ROOT = Path(__file__).resolve().parent.parent
 
 
-# pylint: disable=too-many-locals,too-many-branches,too-many-statements
 # The gate composes four independent weekly criteria into one scorecard; the
 # verbatim computation is moved from the operator CLI (scripts/beta_metrics.py).
 
@@ -220,7 +219,7 @@ def _cache_context(db_module: Any) -> dict:
     """The result cache's stats, or the reason they are unavailable."""
     try:
         return db_module.cache_stats()
-    except Exception:  # pylint: disable=broad-exception-caught
+    except Exception:
         return {"error": "cache stats unavailable"}
 
 

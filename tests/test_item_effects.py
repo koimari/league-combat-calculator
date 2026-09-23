@@ -191,10 +191,10 @@ def test_giant_slayer_scales_on_the_targets_bonus_health_not_the_holders() -> No
     whole-total chain slot; the reading it encodes is the same one the
     registry accessor documented in its signature.
     """
-    from src.calculator.interpreters import (  # pylint: disable=import-outside-toplevel
+    from src.calculator.interpreters import (
         delta_amp,
     )
-    from src.calculator.item_behavior import (  # pylint: disable=import-outside-toplevel
+    from src.calculator.item_behavior import (
         AmpChainSlot,
     )
 

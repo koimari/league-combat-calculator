@@ -85,7 +85,7 @@ _AUDIT_CACHE: dict[str, object] = {"loaded": False, "entries": {}}
 def _audit_entries() -> dict[str, dict]:
     """Lazily load the P1 champion-audit slot-coverage receipts."""
     if _AUDIT_CACHE["loaded"]:
-        return _AUDIT_CACHE["entries"]  # type: ignore[return-value]
+        return _AUDIT_CACHE["entries"]
     entries: dict[str, dict] = {}
     audit_dir = Path(__file__).resolve().parents[2] / "data" / "champion-audit"
     try:

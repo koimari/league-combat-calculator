@@ -367,7 +367,7 @@ APP_JS = Path(__file__).resolve().parent.parent / "static" / "js" / "app.js"
 @pytest.fixture(scope="module")
 def shard_page_ui(tmp_path_factory):
     """Run app.js over a page whose three shard rows are all filled."""
-    if shutil.which("node") is None:  # pragma: no cover - toolchain dependent
+    if shutil.which("node") is None:
         pytest.skip("node is not installed")
     config = app_module.app.test_client().get("/api/config").get_json()
     fixture = {

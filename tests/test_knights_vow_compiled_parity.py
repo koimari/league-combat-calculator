@@ -134,9 +134,6 @@ test_knights_vow_* tests ~3512/3557 and the typed-action reuse
 (test_knights_vow_redirect_poisons_context_and_falls_back ~657); the
 front-end option schema in ``tests/test_app.py`` (~1644/1686).  This
 file is disjoint and pins only the Knight's Vow acceptance observables.
-
-file-length-ok: one acceptance matrix per item, and the tether, the split
-and the holder heal are one item's observables.
 """
 
 from collections import defaultdict

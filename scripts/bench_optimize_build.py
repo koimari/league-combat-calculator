@@ -284,7 +284,7 @@ def _budget_terms(
         ),
         Term(
             "item_effects._item_names",
-            partial(item_effects._item_names, items),  # noqa: SLF001 - the fold
+            partial(item_effects._item_names, items),
             1,
             None,
             ("item_effects.py", "_item_names"),

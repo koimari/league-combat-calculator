@@ -73,7 +73,7 @@ def source_total_raw(row: Mapping[str, Any]) -> float | None:
     return optional_field(row, "total_raw", float)
 
 
-def source_damage_events(  # sightline-ok: 1 - the packet shapes a producer may author
+def source_damage_events(
     row: Mapping[str, Any],
 ) -> Sequence[Any] | None:
     """The packets it authored, as its producer left them; ``None`` where none."""

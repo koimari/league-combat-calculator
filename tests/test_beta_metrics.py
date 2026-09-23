@@ -38,7 +38,7 @@ def _recorded_events():
 
 
 # Fixed beta timeline: 2 complete weeks, UTC-naive (storage convention).
-BETA_START = datetime(2026, 7, 23, 0, 0, 0)  # noqa: DTZ001 - naive by convention
+BETA_START = datetime(2026, 7, 23, 0, 0, 0)
 BETA_END = BETA_START + timedelta(days=14)
 NOW = BETA_END
 DAY = timedelta(days=1)

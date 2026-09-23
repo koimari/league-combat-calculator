@@ -12,9 +12,6 @@ that reads it: stack acceleration and ``on_hit`` in
 ``stack_triggered_buff`` in ``fight/rotation/stack_timeline.py``.
 """
 
-# file-length-ok: the bulk is the import block naming every step and the one
-# ordered call list that is this module's whole job; a step lifted out is a
-# call whose place in the order lives in another file.
 import math
 from collections.abc import Iterable, Mapping
 from typing import Any

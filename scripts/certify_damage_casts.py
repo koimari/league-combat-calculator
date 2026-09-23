@@ -28,19 +28,19 @@ sys.path.insert(0, str(ROOT))
 
 from scripts.generated_file import (
     write_or_check,
-)  # pylint: disable=wrong-import-position
-from src.calculator.champions import (  # pylint: disable=wrong-import-position
+)
+from src.calculator.champions import (
     _CHAMPION_MODULES,
     get_custom_cast_order_refusal,
     parse_champion_abilities,
 )
-from src.calculator.combat_events import (  # pylint: disable=wrong-import-position
+from src.calculator.combat_events import (
     CERTIFIED_ENEMY_CASTS,
     CERTIFIED_SUPPORT_CASTS,
 )
 from src.calculator.data_fetcher import (
     get_champion,
-)  # pylint: disable=wrong-import-position
+)
 
 TARGET = ROOT / "src" / "calculator" / "certified_casts.py"
 SLOTS = ("Q", "W", "E", "R")

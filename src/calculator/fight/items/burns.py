@@ -47,7 +47,7 @@ def _declared_periodic_ticks(
             declaration, float(event["damage"]), total_damage
         )
         if share is not None:
-            event["declared"] = share  # type: ignore[assignment]
+            event["declared"] = share
     return events
 
 

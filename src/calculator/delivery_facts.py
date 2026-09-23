@@ -11,7 +11,7 @@ from typing import Any, Protocol
 _EPS = 1e-9
 
 
-class PacketIdentity(Protocol):  # pylint: disable=too-few-public-methods
+class PacketIdentity(Protocol):
     """The three fields :func:`stable_event_key` identifies a packet by."""
 
     time: float
@@ -19,7 +19,7 @@ class PacketIdentity(Protocol):  # pylint: disable=too-few-public-methods
     sequence: int | None
 
 
-class PacketFacts(PacketIdentity, Protocol):  # pylint: disable=too-few-public-methods
+class PacketFacts(PacketIdentity, Protocol):
     """One survival action as the eligibility kernels read it.
 
     ``survival.typed_action.SurvivalAction``'s records are the production
@@ -38,7 +38,7 @@ class PacketFacts(PacketIdentity, Protocol):  # pylint: disable=too-few-public-m
     cc_kind: str
 
 
-class RequestFacts(Protocol):  # pylint: disable=too-few-public-methods
+class RequestFacts(Protocol):
     """The request fields the kernels read off a combatant."""
 
     current_health: float | None
@@ -46,7 +46,7 @@ class RequestFacts(Protocol):  # pylint: disable=too-few-public-methods
     ability_ranks: Mapping[str, int] | None
 
 
-class ChampionFacts(Protocol):  # pylint: disable=too-few-public-methods
+class ChampionFacts(Protocol):
     """A champion record with its request and stats.
 
     What a roster ``Combatant`` and a pre-combat ``ResolvedLoadout`` share,
@@ -58,7 +58,7 @@ class ChampionFacts(Protocol):  # pylint: disable=too-few-public-methods
     stats: Mapping[str, float]
 
 
-class CombatantFacts(ChampionFacts, Protocol):  # pylint: disable=too-few-public-methods
+class CombatantFacts(ChampionFacts, Protocol):
     """A roster combatant as the kernels and the program layer read it.
 
     The structural face of ``roster_composition.Combatant`` for the modules

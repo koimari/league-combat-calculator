@@ -115,7 +115,7 @@ class ControlScope(Enum):
 
 
 @dataclass(frozen=True)
-class ControlEvent:  # pylint: disable=too-many-instance-attributes
+class ControlEvent:
     """One authored control interval without a damage packet.
 
     Damage parts carry control metadata when damage and control land together.

@@ -44,7 +44,6 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 # The sys.path bootstrap above forces every first-party import below it.
-# pylint: disable=wrong-import-position
 from src.calculator.data_fetcher import fetch_item_data
 from src.calculator.item_coverage import (
     ATTACKER_LANES,

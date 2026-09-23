@@ -439,7 +439,7 @@ def pytest_sessionfinish(session: pytest.Session) -> None:
         wire[NOT_RUN_WIRE] = dict(session.config.stash.get(NOT_RUN, {}))
 
 
-def pytest_testnodedown(node, error) -> None:  # pylint: disable=unused-argument
+def pytest_testnodedown(node, error) -> None:
     """Take one worker's counts; every worker collects the same whole set."""
     counts = getattr(node, "workeroutput", {}).get(NOT_RUN_WIRE, {})
     not_run = node.config.stash.setdefault(NOT_RUN, {})
