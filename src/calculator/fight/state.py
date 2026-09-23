@@ -211,15 +211,13 @@ class FightState:
         """The kit attack-speed window's stream: one attack timer at the base
         rate, at the window's rate inside it, then at the base rate again."""
         base_rate = self.as_window_base_rate * self.auto_attack_uptime
+        end = self.fight_duration_seconds
+        opens, closes = min(self.as_window_start, end), min(self.as_window_end, end)
         return attack_cadence.impact_times(
             (
-                (0.0, self.as_window_start, base_rate),
-                (
-                    self.as_window_start,
-                    self.as_window_end,
-                    self.attack_speed * self.auto_attack_uptime,
-                ),
-                (self.as_window_end, self.fight_duration_seconds, base_rate),
+                (0.0, opens, base_rate),
+                (opens, closes, self.attack_speed * self.auto_attack_uptime),
+                (closes, end, base_rate),
             ),
             self.impact_phase(self.as_window_base_rate),
         )

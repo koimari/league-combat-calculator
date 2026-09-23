@@ -132,8 +132,8 @@ def _rate_attack_speed_grant(
     second windowed grant on the same kit raises rather than overwriting
     the first.  The build's own ramp (Rageblade's stacks) keeps walking
     through either grant: its swings are authored here for the autos step
-    to read.  A flat stream is counted per phase, the floor convention the
-    fight end uses.
+    to read.  A flat stream runs one attack timer through the window
+    (``FightState.as_window_impacts``).
     """
     base_as = state.attack_speed
     state.attack_speed = calculate_attack_speed(
