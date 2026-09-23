@@ -1,10 +1,9 @@
 """Fight setup: resolve resistances, amps and attack timing into a `FightState`."""
 
-import math
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from ... import item_effects, rune_effects
+from ... import attack_cadence, item_effects, rune_effects
 from ...ability_spec import AttackClass
 from ...interpreters import (
     active_cast,
@@ -135,6 +134,11 @@ def _page_walk_runes(
         stat_shards=page.stat_shards,
         options=page.options,
     )
+
+
+def _impact_phase(config: FightConfig, attack_speed: float) -> float:
+    """Where the fight's first impact lands in its cycle, before a state exists."""
+    return 0.0 if config.windup is None else config.windup.phase(attack_speed)
 
 
 def _resolve_combat_state(
@@ -309,20 +313,24 @@ def _resolve_combat_state(
 
         # Fiendhunter: 3 empowered autos at buffed AS, then normal AS
         buff_dur = min(ultimate_auto_buff.duration, fight_duration_seconds)
-        possible_in_window = math.floor(buffed_as * buff_dur * auto_attack_uptime)
+        phase = _impact_phase(config, buffed_as)
         empowered_autos = min(
             ultimate_auto_buff.empowered_auto_count,
-            possible_in_window,
+            attack_cadence.impact_count(
+                buffed_as * auto_attack_uptime, buff_dur, phase
+            ),
         )
-        if empowered_autos > 0 and buffed_as > 0:
-            time_for_empowered = empowered_autos / (buffed_as * auto_attack_uptime)
-        else:
-            time_for_empowered = 0.0
-        remaining_dur = fight_duration_seconds - time_for_empowered
-        normal_autos = math.floor(
-            attack_speed * max(0, remaining_dur) * auto_attack_uptime
+        num_auto_attacks = len(
+            attack_cadence.impact_times(
+                attack_cadence.opener_spans(
+                    buffed_as * auto_attack_uptime,
+                    empowered_autos,
+                    attack_speed * auto_attack_uptime,
+                    fight_duration_seconds,
+                ),
+                phase,
+            )
         )
-        num_auto_attacks = empowered_autos + normal_autos
     elif swing_schedule is not None and swing_schedule.schedules(
         one_rotation=config.one_rotation
     ):
@@ -332,13 +340,16 @@ def _resolve_combat_state(
                 attack_speed=attack_speed,
                 attack_speed_ratio=as_ratio,
                 duration_seconds=fight_duration_seconds,
+                phase=_impact_phase(config, attack_speed),
                 uptime=auto_attack_uptime,
                 critical_chance=champion_stats["critical_strike_chance"] / 100.0,
             )
         )
     else:
-        num_auto_attacks = math.floor(
-            attack_speed * fight_duration_seconds * auto_attack_uptime
+        num_auto_attacks = attack_cadence.impact_count(
+            attack_speed * auto_attack_uptime,
+            fight_duration_seconds,
+            _impact_phase(config, attack_speed),
         )
 
     # Terminus Juxtaposition: stacking armor/magic pen every other auto.
@@ -485,6 +496,7 @@ def _resolve_combat_state(
         basic_amp_owner=basic_part_amp[1],
         attack_speed=attack_speed,
         attack_speed_ratio=as_ratio,
+        windup=config.windup,
         num_auto_attacks=num_auto_attacks,
         empowered_autos=empowered_autos,
         runes=rune_effects.resolve_rune_page(

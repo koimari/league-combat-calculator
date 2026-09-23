@@ -10,6 +10,7 @@ from dataclasses import replace
 from functools import partial
 from typing import Any
 
+from .attack_cadence import champion_windup
 from .auto_attack_policy import (
     AUTO_ATTACK_UPTIME_MODE_CALCULATED,
     AUTO_ATTACK_UPTIME_MODE_EXPLICIT,
@@ -352,14 +353,17 @@ def run_fight(
     # reviewed answer, not the request's: a silent module and an
     # unregistered name both keep the conservative one-cast rule (CF18).
     ultimate_recasts = get_champion_ultimate_recasts(champion_data.get("name", ""))
+    windup = champion_windup(champion_data)
     engine_config = (
         params
         if params.enforce_resource_limits
         and params.ultimate_recasts == ultimate_recasts
+        and params.windup == windup
         else replace(
             params,
             enforce_resource_limits=True,
             ultimate_recasts=ultimate_recasts,
+            windup=windup,
         )
     )
     result = calculate_fight_damage(

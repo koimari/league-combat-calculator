@@ -5,12 +5,12 @@ from collections.abc import Callable, Mapping
 from functools import partial
 from typing import Any
 
-from ... import item_effects, mana_item_schedules, manaflow_ledger
+from ... import attack_cadence, item_effects, mana_item_schedules, manaflow_ledger
 from ...ability_atoms import ability_field, ability_payload
 from ...event_row_field import required_field
 from ...interpreters import stat_derivation
 from ...item_behavior import ResourceRestoreRule
-from ..autos.swing_schedule import _restore_stream_attack_timestamps, _swings_at_rate
+from ..autos.swing_schedule import _restore_stream_attack_timestamps
 from ..config import declared_option_default
 from ..empower_declaration import _empower_burst_attack_speed, _empower_hits
 from ..results import CastPlan
@@ -198,13 +198,16 @@ def _return_denied_burst_budget(
     planned_burst = _planned_burst_seconds(state, plan)
     ordinary_total = sum(1 for row in auto_restore_rows if row["kind"] == "ordinary")
     leftover = max(0.0, state.fight_duration_seconds - (planned_burst - burst_seconds))
-    new_total = math.floor(normal_rate * leftover)
+    phase = state.impact_phase(state.attack_speed)
+    new_total = attack_cadence.impact_count(normal_rate, leftover, phase)
     delta = max(0, new_total - ordinary_total)
     if delta <= 0:
         return
     base_index = len(auto_restore_rows)
     for offset, swing_time in enumerate(
-        _swings_at_rate(delta, normal_rate, ordinary_total / normal_rate)
+        attack_cadence.counted_impacts(
+            delta, normal_rate, phase, ordinary_total / normal_rate
+        )
     ):
         row_index = len(auto_restore_rows)
         auto_restore_rows.append(
@@ -330,12 +333,14 @@ def _auto_restore_schedule(
         if burst_as <= 0.0:
             continue
         hits = _empower_hits(empower)
+        phase = state.impact_phase(burst_as)
         for ordinal, cast_time in enumerate(plan.times.get(key, ())):
             burst_swings += hits
             burst_seconds += hits / burst_as
+            impacts = attack_cadence.counted_impacts(hits, burst_as, phase, cast_time)
             swing_events.extend(
                 {
-                    "time": cast_time + (swing_index + 1) / burst_as,
+                    "time": impacts[swing_index],
                     "arming_key": key,
                     "arming_ordinal": ordinal,
                     "swing_index": swing_index + 1,
@@ -355,8 +360,12 @@ def _auto_restore_schedule(
     if normal_rate <= 0.0:
         return (), swing_events
     leftover = max(0.0, state.fight_duration_seconds - burst_seconds)
-    ordinary = math.floor(normal_rate * leftover)
-    return tuple(_swings_at_rate(ordinary, normal_rate)), swing_events
+    return (
+        attack_cadence.stream_impacts(
+            normal_rate, leftover, state.impact_phase(state.attack_speed)
+        ),
+        swing_events,
+    )
 
 
 def _declared_mapping(info: Mapping[str, Any], key: str) -> Mapping[str, Any] | None:

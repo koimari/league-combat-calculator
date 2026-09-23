@@ -105,6 +105,17 @@ def character_record_root(champion_name: str) -> dict[str, Any]:
     )
 
 
+def basic_attack_value(champion_name: str, field: str) -> float | None:
+    """One field of the champion's ``basicAttack`` record, or None when the
+    record leaves it at its class default."""
+    attack = character_record_root(champion_name).get("basicAttack")
+    if not isinstance(attack, Mapping):
+        raise RuntimeError(f"{champion_name}: basicAttack record not found")
+    if field not in attack:
+        return None
+    return _snapped(attack[field], f"{champion_name} basicAttack {field}")
+
+
 def record_value(root: Mapping[str, Any], field: str) -> float:
     """One ModifiableFloat-style record field's ``baseValue``, snapped like
     :func:`data_value`; absent and unusable are distinct refusals."""

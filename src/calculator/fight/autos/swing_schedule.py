@@ -4,7 +4,7 @@ import math
 from collections.abc import Iterable
 from typing import NamedTuple
 
-from ... import rune_effects
+from ... import attack_cadence, rune_effects
 from ...attack_windows import AttackSpeedWindow, attack_times_for_windows
 from ...interpreters import rearmed_swings
 from ...stats import calculate_attack_speed
@@ -33,11 +33,6 @@ def _weave_around_bursts(
     return times
 
 
-def _swings_at_rate(count: int, rate: float, start: float = 0.0) -> list[float]:
-    """The one index/rate swing sequence: ``count`` swings from ``start``."""
-    return [start + index / rate for index in range(count)]
-
-
 def _base_auto_attack_timestamps(state: FightState) -> list[float]:
     """Return the per-swing schedule the auto count is derived from.
 
@@ -59,6 +54,7 @@ def _base_auto_attack_timestamps(state: FightState) -> list[float]:
     normal_rate = state.attack_speed * state.auto_attack_uptime
     if normal_rate <= 0:
         return []
+    phase = state.impact_phase(state.attack_speed)
     burst = state.burst_swings
     if burst is not None:
         ordinary = state.num_auto_attacks - len(burst.times)
@@ -66,7 +62,7 @@ def _base_auto_attack_timestamps(state: FightState) -> list[float]:
             burst.times
             + tuple(
                 _weave_around_bursts(
-                    _swings_at_rate(ordinary, normal_rate),
+                    attack_cadence.counted_impacts(ordinary, normal_rate, phase),
                     burst.blocks,
                 )
             )
@@ -74,33 +70,10 @@ def _base_auto_attack_timestamps(state: FightState) -> list[float]:
         # Lich Bane's proc-timed speedup is applied once, by
         # ``_auto_attack_timestamps``, over whichever schedule this returns.
     if state.as_window_end > 0.0:
-        # The kit's attack-speed window (Ashe Q, Kennen E): the autos ride
-        # the base rate before the cast, the buffed rate inside
-        # [as_window_start, as_window_end), then the base rate again from
-        # the window end (end-exclusive — a swing landing exactly at the
-        # boundary is normal).
-        buffed_rate = state.attack_speed * state.auto_attack_uptime
-        base_rate = state.as_window_base_rate * state.auto_attack_uptime
-        times = []
-        if base_rate > 0.0:
-            times.extend(_swings_at_rate(state.as_window_pre_autos, base_rate))
-        if buffed_rate > 0.0:
-            times.extend(
-                _swings_at_rate(
-                    state.as_window_autos, buffed_rate, state.as_window_start
-                )
-            )
-        if base_rate > 0.0:
-            times.extend(
-                _swings_at_rate(
-                    state.num_auto_attacks
-                    - state.as_window_pre_autos
-                    - state.as_window_autos,
-                    base_rate,
-                    state.as_window_end,
-                )
-            )
-        return times
+        # The kit's attack-speed window (Ashe Q, Kennen E): one attack timer
+        # runs at the base rate, at the window's rate inside [as_window_start,
+        # as_window_end), then at the base rate again.
+        return list(state.as_window_impacts())
     buff = state.declared.charged_strikes.empowered_auto_buff
     empowered = state.empowered_autos if buff is not None else 0
     if empowered <= 0:
@@ -112,6 +85,7 @@ def _base_auto_attack_timestamps(state: FightState) -> list[float]:
                     attack_speed=state.attack_speed,
                     attack_speed_ratio=state.attack_speed_ratio,
                     duration_seconds=state.fight_duration_seconds,
+                    phase=phase,
                     uptime=state.auto_attack_uptime,
                     critical_chance=state.champion_stats["critical_strike_chance"]
                     / 100.0,
@@ -124,24 +98,32 @@ def _base_auto_attack_timestamps(state: FightState) -> list[float]:
                 # the priced fact, so the schedule follows the model that
                 # produced it rather than being dropped — an eventless
                 # fallback kept every swing-riding row coarse.
-                times = _swings_at_rate(state.num_auto_attacks, normal_rate)
+                times = attack_cadence.counted_impacts(
+                    state.num_auto_attacks, normal_rate, phase
+                )
         else:
-            times = _swings_at_rate(state.num_auto_attacks, normal_rate)
+            times = attack_cadence.counted_impacts(
+                state.num_auto_attacks, normal_rate, phase
+            )
         return times
 
-    buffed_rate = (
+    buffed_as = (
         state.attack_speed
         + state.attack_speed_ratio * buff.bonus_attack_speed_percent / 100.0
-    ) * state.auto_attack_uptime
-    if buffed_rate <= 0:
-        return _swings_at_rate(state.num_auto_attacks, normal_rate)
-    times = _swings_at_rate(empowered, buffed_rate)
-    times.extend(
-        _swings_at_rate(
-            state.num_auto_attacks - empowered, normal_rate, empowered / buffed_rate
-        )
     )
-    return times
+    buffed_rate = buffed_as * state.auto_attack_uptime
+    if buffed_rate <= 0:
+        return attack_cadence.counted_impacts(
+            state.num_auto_attacks, normal_rate, phase
+        )
+    return list(
+        attack_cadence.impact_times(
+            attack_cadence.opener_spans(
+                buffed_rate, empowered, normal_rate, state.fight_duration_seconds
+            ),
+            state.impact_phase(buffed_as),
+        )[: state.num_auto_attacks]
+    )
 
 
 def _install_swing_count(state: FightState, count: int) -> None:
@@ -194,10 +176,9 @@ def _prepare_support_attack_schedule(state: FightState) -> None:
             "Timed Whimsy with another temporary attack-speed schedule requires combined support"
         )
     base_rate = state.attack_speed
-    reset_at: tuple[float, ...] = ()
     if state.as_window_end > 0:
-        # The champion parser supplied this active window and its rate.
-        # Keep its phase boundaries while Whimsy adds its separate grant.
+        # The champion parser supplied this active window and its rate; it
+        # rides the same attack timer as Whimsy's separate grant.
         base_rate = state.as_window_base_rate
         if state.attack_speed_ratio <= 0:
             raise ValueError(
@@ -215,14 +196,13 @@ def _prepare_support_attack_schedule(state: FightState) -> None:
                 stack_group="champion_active",
             ),
         )
-        reset_at = (state.as_window_start, state.as_window_end)
     state.support_attack_times = attack_times_for_windows(
         windows,
         attack_speed=base_rate,
         ratio=state.attack_speed_ratio,
         duration=state.fight_duration_seconds,
         uptime=state.auto_attack_uptime,
-        reset_at=reset_at,
+        phase=state.impact_phase(base_rate),
     )
     if state.as_window_end > 0:
         state.as_window_pre_autos = sum(
@@ -319,7 +299,7 @@ def _hail_attack_schedule(
     times: list[float] = []
     active_indexes: list[int] = []
     hail = _HailStacks(effect)
-    current = 0.0
+    current = state.impact_phase(state.attack_speed) / base_rate
     duration = state.fight_duration_seconds
     base_interval = 1.0 / base_rate
     active_interval = 1.0 / active_rate
@@ -404,7 +384,7 @@ def _lethal_tempo_attack_schedule(
         last_attack = attack_time
 
     if generated:
-        current = 0.0
+        current = state.impact_phase(state.attack_speed) / base_rate
         while current < state.fight_duration_seconds - 1e-12:
             times.append(current)
             swing(current)

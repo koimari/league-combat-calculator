@@ -6,6 +6,8 @@ from types import MappingProxyType
 from typing import Any
 
 from .. import item_effects, rune_effects
+from .. import attack_cadence
+from ..attack_cadence import Windup
 from ..attack_windows import AttackSpeedWindow
 from ..combat_events import CombatEvent
 from ..interpreters import crit_profile
@@ -119,6 +121,9 @@ class FightState:
     # ── Attack timing ─────────────────────────────────────────────────────
     attack_speed: float
     attack_speed_ratio: float
+    # The attacker's windup (``FightConfig.windup``), read through
+    # ``impact_phase``.
+    windup: Windup | None
     num_auto_attacks: int
     empowered_autos: int
     # The kit's one attack-speed window [start, end), placed at the first
@@ -195,6 +200,27 @@ class FightState:
     # Set by calculate_fight_damage: receipts-only outputs (per-cast
     # resource rows) may be skipped when True.
     score_only: bool = False
+
+    def impact_phase(self, attack_speed: float) -> float:
+        """Where a stream's first impact lands in its cycle (``attack_cadence``)."""
+        return 0.0 if self.windup is None else self.windup.phase(attack_speed)
+
+    def as_window_impacts(self) -> tuple[float, ...]:
+        """The kit attack-speed window's stream: one attack timer at the base
+        rate, at the window's rate inside it, then at the base rate again."""
+        base_rate = self.as_window_base_rate * self.auto_attack_uptime
+        return attack_cadence.impact_times(
+            (
+                (0.0, self.as_window_start, base_rate),
+                (
+                    self.as_window_start,
+                    self.as_window_end,
+                    self.attack_speed * self.auto_attack_uptime,
+                ),
+                (self.as_window_end, self.fight_duration_seconds, base_rate),
+            ),
+            self.impact_phase(self.as_window_base_rate),
+        )
 
     @property
     def ledger_target_index(self) -> int:
