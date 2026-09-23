@@ -122,3 +122,11 @@ def test_no_other_config_selects_an_interpreter_version():
     for script in sorted((ROOT / "ci").glob("*.sh")):
         found = selectors.findall(script.read_text(encoding="utf-8"))
         assert found == [], (script.name, found)
+
+
+def test_the_lock_floor_is_the_pinned_version():
+    """``uv.lock`` is generated, and with no ``requires-python`` in
+    pyproject uv floors it at the interpreter it resolved, so a stale lock
+    is a reader that disagrees."""
+    lock = (ROOT / "uv.lock").read_text(encoding="utf-8")
+    assert f'\nrequires-python = ">={PYTHON_VERSION}"\n' in lock
