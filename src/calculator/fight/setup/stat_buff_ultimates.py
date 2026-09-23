@@ -136,17 +136,18 @@ def _rate_attack_speed_grant(
     (``FightState.as_window_impacts``).
     """
     base_as = state.attack_speed
+    if window_seconds is not None and state.as_window_slot:
+        raise ValueError(
+            f"{key} places a second attack-speed window; the fight holds "
+            f"one, already placed by {state.as_window_slot}"
+        )
+    # The granting cast is placed on the stream it has not yet re-rated.
+    cast_start = slot_cast_start(state, key) if window_seconds is not None else 0.0
     state.attack_speed = calculate_attack_speed(
         base_as, state.attack_speed_ratio, bonus_as_pct
     )
     active_window = None
     if window_seconds is not None:
-        if state.as_window_slot:
-            raise ValueError(
-                f"{key} places a second attack-speed window; the fight holds "
-                f"one, already placed by {state.as_window_slot}"
-            )
-        cast_start = slot_cast_start(state, key)
         state.as_window_slot = key
         state.as_window_start = cast_start
         state.as_window_end = cast_start + window_seconds
@@ -209,7 +210,7 @@ def _resolve_stat_ramp(state: FightState) -> None:
     if declared is None:
         return
     owner, rule = declared
-    swings = state.support_attack_times or _swings_at_uptime(state)
+    swings = state.support_attack_times or state.ambient_impacts()
     casts = _cast_schedule_times(state) if rule.stacks_from_ability_casts else ()
     level = stat_ramp.mean_stack_level(
         rule, swings, casts, state.fight_duration_seconds
@@ -223,15 +224,6 @@ def _resolve_stat_ramp(state: FightState) -> None:
             info["detail"] = (
                 f"{info.get('detail', owner)} (fight mean {level:.2f} stacks)"
             )
-
-
-def _swings_at_uptime(state: FightState) -> tuple[float, ...]:
-    """The fight's own stream at its own rate, for a stream nobody walked."""
-    return attack_cadence.stream_impacts(
-        state.attack_speed * state.auto_attack_uptime,
-        state.fight_duration_seconds,
-        state.impact_phase(state.attack_speed),
-    )
 
 
 def _cast_schedule_times(

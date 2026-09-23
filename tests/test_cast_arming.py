@@ -13,7 +13,6 @@ import pytest
 
 from src.calculator.champions.cast_arming import (
     CastArmingRule,
-    banking_swings,
     declared_rules,
     ready_at,
 )
@@ -71,21 +70,6 @@ class TestWhenTheCountStands:
         """A rule whose threshold IS its cap still arms; the eviction that
         makes room happens only past the cap."""
         assert ready_at(FOUR, (0.0, 0.1, 0.2, 0.3)) == pytest.approx(0.3)
-
-
-class TestTheBankingStream:
-    def test_the_swings_are_even_at_the_fight_rate(self):
-        assert banking_swings(1.0, 1.0, 3.5) == (0.0, 1.0, 2.0, 3.0)
-
-    def test_uptime_stretches_the_gap(self):
-        assert banking_swings(1.0, 0.5, 3.5) == (0.0, 2.0)
-
-    @pytest.mark.parametrize(
-        ("speed", "uptime", "duration"),
-        [(0.0, 1.0, 5.0), (1.0, 0.0, 5.0), (1.0, 1.0, 0.0)],
-    )
-    def test_a_fight_with_no_swings_banks_nothing(self, speed, uptime, duration):
-        assert banking_swings(speed, uptime, duration) == ()
 
 
 class TestTheDeclarationFailsClosed:

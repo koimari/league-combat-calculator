@@ -47,7 +47,10 @@ class Windup:
 
     def phase(self, attack_speed: float) -> float:
         """The windup as a share of one attack cycle at *attack_speed*."""
-        return self.seconds(attack_speed) * attack_speed
+        if self.modifier == 1.0:
+            return self.percent
+        base_share = self.percent * attack_speed / self.base_attack_speed
+        return self.modifier * self.percent + (1.0 - self.modifier) * base_share
 
 
 def _flat(stats: Mapping[str, Any], name: str) -> float:
@@ -99,6 +102,8 @@ def counted_impacts(
     count: int, rate: float, phase: float, start: float = 0.0
 ) -> list[float]:
     """:func:`impact_times` for the first *count* impacts of one rate."""
+    if math.isinf(rate):
+        return [start] * count
     return [start + (index + phase) / rate for index in range(count)]
 
 

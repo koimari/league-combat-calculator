@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from ..ability_atoms import ability_field, ability_payload
-from ..champions.cast_arming import banking_swings, declared_rules, ready_at
+from ..champions.cast_arming import declared_rules, ready_at
 from .results import RotationResult
 from .state import FightState
 
@@ -79,11 +79,7 @@ def _armed_at(state: FightState, key: str, base: str) -> float:
         return 0.0
     armed = ready_at(
         rule,
-        banking_swings(
-            state.attack_speed,
-            state.auto_attack_uptime,
-            state.fight_duration_seconds,
-        ),
+        state.ambient_impacts(),
     )
     return min(armed, state.fight_duration_seconds)
 

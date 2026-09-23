@@ -70,21 +70,6 @@ def declared_rules(
     return rules
 
 
-def banking_swings(
-    attack_speed: float, uptime: float, duration_seconds: float
-) -> tuple[float, ...]:
-    """Even swing times at a fight's own rate, for a counter the swings bank."""
-    rate = attack_speed * uptime
-    if rate <= 0.0 or duration_seconds <= 0.0:
-        return ()
-    times: list[float] = []
-    time = 0.0
-    while time < duration_seconds:
-        times.append(time)
-        time += 1.0 / rate
-    return tuple(times)
-
-
 def ready_at(rule: CastArmingRule, banking_times: Sequence[float]) -> float:
     """When the count first stands, or ``inf`` if this stream never fills it.
 

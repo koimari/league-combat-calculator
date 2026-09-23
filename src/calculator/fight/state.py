@@ -207,6 +207,14 @@ class FightState:
         """Where a stream's first impact lands in its cycle (``attack_cadence``)."""
         return 0.0 if self.windup is None else self.windup.phase(attack_speed)
 
+    def ambient_impacts(self) -> tuple[float, ...]:
+        """The fight's own stream at its own rate, before any window re-rates it."""
+        return attack_cadence.stream_impacts(
+            self.attack_speed * self.auto_attack_uptime,
+            self.fight_duration_seconds,
+            self.impact_phase(self.attack_speed),
+        )
+
     def as_window_impacts(self) -> tuple[float, ...]:
         """The kit attack-speed window's stream: one attack timer at the base
         rate, at the window's rate inside it, then at the base rate again."""

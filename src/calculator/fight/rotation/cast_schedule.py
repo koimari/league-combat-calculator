@@ -8,7 +8,7 @@ from ... import item_effects
 from ...ability_atoms import ability_field
 from ...stats import effective_cooldown
 from ...trigger_stream import is_immobilizing_event
-from ...champions.cast_arming import banking_swings, declared_rules, ready_at
+from ...champions.cast_arming import declared_rules, ready_at
 from ..cast_control_marker import _declared_cc_marker
 from ..cast_slots import _base_slot, _slot_is_cast, slot_cast_start
 from ..empower_declaration import _empower_cooldown_delay
@@ -504,11 +504,7 @@ def _schedule_shared_casts(
         if key in next_ready:
             armed = ready_at(
                 rule,
-                banking_swings(
-                    state.attack_speed,
-                    state.auto_attack_uptime,
-                    state.fight_duration_seconds,
-                ),
+                state.ambient_impacts(),
             )
             # Past the horizon rather than unreachable: the loop below reads
             # this as a time and an infinity is not one it can compare.
