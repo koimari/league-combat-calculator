@@ -1,6 +1,8 @@
 """The action records: every kind has one, and a record stores only its own fields."""
 
+import ast
 from collections import Counter
+from pathlib import Path
 
 import pytest
 
@@ -52,3 +54,22 @@ def test_a_reschedule_keeps_the_record_its_slot_and_its_event() -> None:
     assert type(moved) is DamageAction
     assert (moved.aidx, moved.time, moved.sort_key) == (7, 2.0, (2.0,))
     assert moved.event is event
+
+
+def test_every_literal_kind_a_producer_names_belongs_to_its_record() -> None:
+    """A record accepts any kind, so a producer naming another record's kind fails here."""
+    records = {family.__name__: family for family in FAMILIES}
+    named = []
+    for path in Path(__file__).parents[1].joinpath("src").rglob("*.py"):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if isinstance(node, ast.Call) and getattr(node.func, "id", "") in records:
+                named.extend(
+                    (node.func.id, ActionKind[keyword.value.attr])
+                    for keyword in node.keywords
+                    if keyword.arg == "kind"
+                    and isinstance(keyword.value, ast.Attribute)
+                )
+    assert named
+    assert [
+        (name, kind) for name, kind in named if kind not in records[name].kinds
+    ] == []
