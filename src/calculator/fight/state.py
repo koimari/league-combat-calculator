@@ -16,7 +16,7 @@ from .config import BASE_CRIT_MULTIPLIER
 from .declarations import BuildDeclarations
 from .empower_declaration import BurstSwingSchedule
 from .resists import Resists
-from .results import FerocityTimeline, StackTimeline
+from .results import FerocityTimeline, ShredDeclaration, StackTimeline
 
 
 @dataclass
@@ -150,6 +150,8 @@ class FightState:
     # the shared timeline walked it (fight/rotation/cast_resource_lockout.py).
     # Empty for a kit with no such bar, and for a fight with no clock.
     lockout_windows: tuple[tuple[float, float], ...] = ()
+    # Every resistance shred a row landed, for the resistance windows step.
+    shred_declarations: list[ShredDeclaration] = field(default_factory=list)
     # ``(slot, time)`` for every accepted cast, published once the rotation
     # resolved its plan. The autos step reads it to walk a kit's armed
     # empowered swings (champions/armed_procs.py).

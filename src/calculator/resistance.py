@@ -80,3 +80,8 @@ def apply_armor_penetration(
         effective = target_armor * (1.0 - percent_penetration)
     effective = effective - flat_penetration
     return max(0.0, effective)
+
+
+def rescale_mitigated(mitigated: float, met: float, meets: float) -> float:
+    """A packet mitigated at *met*, re-priced at *meets*; mitigation is linear."""
+    return mitigated * apply_resistance(1.0, meets) / apply_resistance(1.0, met)

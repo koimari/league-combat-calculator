@@ -9,7 +9,7 @@ from ...control_spec import ControlScope, cc_kind_reviewed
 from ..ledger.event_rows import _damage_type_fields
 from ..mitigation import _crit_scaled_raw, _mitigate_hits
 from ..resists import _resistance_met_fields
-from ..results import CastPricing
+from ..results import CastPricing, ShredDeclaration
 from ..setup.target_debuffs import _apply_target_shred, _debuff_coverage
 from ..state import FightState
 
@@ -400,6 +400,9 @@ def _apply_post_hit_proc(
 
     debuff = spec.get("target_debuff")
     if debuff:
+        state.shred_declarations.append(
+            ShredDeclaration(row_key, debuff, tuple(cast_times))
+        )
         coverage = (
             1.0
             if state.one_rotation

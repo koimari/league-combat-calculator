@@ -89,7 +89,7 @@ FIGHT_STEPS_WITHOUT_A_FRONT_DOOR = (
     "fight.after.empowered_swings",
     "fight.after.execute_display",
     "fight.after.fight_notes",
-    "fight.after.lethality_windows",
+    "fight.after.resistance_windows",
     "fight.after.shield_outcome",
     "fight.autos.copied_on_hit",
     "fight.autos.double_shot",

@@ -9,6 +9,15 @@ from typing import Any, NamedTuple
 CHAMPION_PRODUCER_PREFIX = "champion:"
 
 
+class ShredDeclaration(NamedTuple):
+    """A resistance shred a row lands on the target: the row whose hits apply
+    it, the ``target_debuff`` it states, and the times its applications open."""
+
+    source_key: str
+    debuff: Any
+    opening_times: tuple[float, ...]
+
+
 class SwingStream(NamedTuple):
     """The auto stream every strike step reads, resolved once per fight.
 

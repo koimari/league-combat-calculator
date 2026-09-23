@@ -100,7 +100,7 @@ def _author_energized_ability_proc(
         # roster total and the walk prices the declaration below.  This is
         # the one strike whose own window re-prices it — Firmament's extra
         # lethality applies to its own packet — so
-        # ``_apply_temporary_lethality_windows`` restates the resistance on
+        # ``_apply_resistance_windows`` restates the resistance on
         # this declaration afterwards, so the two stay in step.
         "pair_preview_of": mechanic,
         "declared": _strike_declaration(mechanic, ability_raw),

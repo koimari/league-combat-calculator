@@ -1,6 +1,6 @@
 """The target's resistances against this attacker's penetration, and what spends them."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from ..ability_spec import DamageClass
 from ..interpreters import resistance_shred
@@ -78,6 +78,20 @@ class Resists:
     # on-hits, item procs, burns) meets the debuff at full depth; the
     # rotation's own hits read their per-hit count through ``_ability_mr``.
     shred_stacks: int = 0
+    # The target's armour and MR before any slot debuff shreds them, where a
+    # packet's live resistance is re-derived from
+    # (``fight/after/resistance_windows.py``).
+    opening_armor: float = field(init=False)
+    opening_mr: float = field(init=False)
+    # ``(target_armor, base_mr)`` after each shred, in order: every target
+    # state a packet can have been priced against besides the opening one.
+    shredded_targets: list[tuple[float, float]] = field(
+        init=False, default_factory=list
+    )
+
+    def __post_init__(self) -> None:
+        self.opening_armor = self.target_armor
+        self.opening_mr = self.base_mr
 
     def mark_ult_cast(self) -> None:
         """Record the rotation's accepted R cast; Hatefog's zone is open."""
@@ -121,6 +135,12 @@ class Resists:
         if self.terminus_avg_pen <= 0:
             return stripped
         return 1.0 - (1.0 - stripped) * (1.0 - self.terminus_avg_pen)
+
+    def resolve(self) -> None:
+        """Re-derive every served figure from the target and the penetration."""
+        self.resolve_magic()
+        self._resolve_mr_from_target()
+        self.resolve_armor()
 
     def resolve_magic(self) -> None:
         """Recompute the served magic pen and effective MR."""
@@ -180,6 +200,7 @@ class Resists:
         self.target_armor = reduce_resistance(
             self.target_armor, reduction_percent, reduction_flat
         )
+        self.shredded_targets.append((self.target_armor, self.base_mr))
         self._resolve_armor_from_target()
 
     def shred_mr(
@@ -191,6 +212,7 @@ class Resists:
         self.base_mr = reduce_resistance(
             self.base_mr, reduction_percent, reduction_flat
         )
+        self.shredded_targets.append((self.target_armor, self.base_mr))
         self._resolve_mr_from_target()
 
 
