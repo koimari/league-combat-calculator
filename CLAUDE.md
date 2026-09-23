@@ -67,12 +67,13 @@ baseline with every diff explained in the commit.
 `[tool.ruff.lint] ignore` and `per-file-ignores`, `[tool.simply-elegant]`
 `comment-rules-off` and `comment-per-file-off`, and `[tool.sightline]` `excludes`
 and `rules-off`, each with its reason beside it. Run the tree gate with
-`python <plugin>/hooks/lint_gate.py --tree . --statistics`. Neither suite is at
+`python <plugin cache>/simply-elegant/1.8.1/hooks/lint_gate.py --tree . --statistics`;
+from 2.0.0 the hook has no tree mode and exits 0 silently. Neither suite is at
 zero, and both counts may only fall: a new finding in a file you touched is a
 regression. Ruff reports 126 findings, almost all in `tests/`, and
 `sightline gate . --full` reports 22 blocking above `.sightline-baseline`, under
 #27, #56, #37, #32, #14, #24 and #11. The baseline holds only what is deferred
-with a reason, today 59 entries under #27 (53), #14 (3) and #11 (3);
+with a reason, today 53 entries under #27 (48), #14 (2) and #11 (3);
 `sightline baseline .` regenerates it and merges as a union, and a sightline 0.2
 binary cannot read its format. The per-edit gate `sightline gate . --files`
 skips the oracle and repo-scope rules, so judge a branch by the hits in the files
