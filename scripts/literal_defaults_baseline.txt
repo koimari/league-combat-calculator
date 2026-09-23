@@ -316,7 +316,6 @@ AUTHORED_DECLARATION|item_coverage.py|_declared_families|dict.get|"type" 1
 AUTHORED_DECLARATION|item_coverage.py|review_issue_refs|dict.get|str(item_name) 1
 AUTHORED_DECLARATION|item_source.py|branch_inventory|or-default|'name' 1
 AUTHORED_DECLARATION|item_source.py|branches|or-default|"branches" 1
-AUTHORED_DECLARATION|item_source.py|item_source_audit|or-default|"name" 2
 AUTHORED_DECLARATION|item_source_merge.py|_effect_name|or-default|"name" 1
 AUTHORED_DECLARATION|item_source_merge.py|_merge_one_item|or-default|"name" 1
 AUTHORED_DECLARATION|program/compile.py|<module>|dict.get|"multiplier" 1
