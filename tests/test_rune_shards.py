@@ -36,9 +36,6 @@ def _grant(row: int, name: str, level: int = 9, **context) -> float:
         rune_effects.RuneStatContext(
             level=level,
             is_melee=context.get("is_melee", False),
-            bonus_attack_damage=context.get("bonus_attack_damage", 0.0),
-            ability_power=context.get("ability_power", 0.0),
-            adaptive_type="PHYSICAL_DAMAGE",
             options={},
         )
     )
@@ -447,15 +444,9 @@ class TestThePickerFillsThreeRowsAndTellsTheStatCard:
         page = rune_effects.validate_rune_page(
             card["keystone"], card["minor_runes"], card["stat_shards"]
         )
-        grants = rune_effects.compile_rune_page(page).grants(
-            level=9,
-            is_melee=False,
-            bonus_attack_damage=0.0,
-            ability_power=100.0,
-            adaptive_type="MAGIC_DAMAGE",
-        )
+        grants = rune_effects.rune_stat_grants(page, level=9, is_melee=False)
         # The shard's 9 plus Absolute Focus's own 15.71 at level 9, both
-        # adaptive and both resolving to ability power on an AP build.
-        assert grants.ability_power == pytest.approx(9.0 + 15.705882352941176)
+        # adaptive force the build's totals split later.
+        assert grants.adaptive_force == pytest.approx(9.0 + 15.705882352941176)
         assert grants.bonus_health == pytest.approx(65.0)
         assert grants.move_speed_percent == pytest.approx(2.5)

@@ -41,9 +41,6 @@ def _biscuits(consumed):
     return rune_effects.RuneStatContext(
         level=18,
         is_melee=True,
-        bonus_attack_damage=0.0,
-        ability_power=0.0,
-        adaptive_type="PHYSICAL_DAMAGE",
         options={"Biscuit Delivery": {"biscuits_consumed": consumed}},
     )
 
@@ -381,9 +378,6 @@ class TestCosmicInsightPricesItsItemHaste:
         context = rune_effects.RuneStatContext(
             level=18,
             is_melee=True,
-            bonus_attack_damage=0.0,
-            ability_power=0.0,
-            adaptive_type="PHYSICAL_DAMAGE",
             options={},
         )
         assert effect.amount(context) == pytest.approx(10.0)
@@ -560,9 +554,6 @@ def _stat_context(item_stat_types):
     return rune_effects.RuneStatContext(
         level=18,
         is_melee=False,
-        bonus_attack_damage=0.0,
-        ability_power=0.0,
-        adaptive_type="PHYSICAL_DAMAGE",
         options={},
         item_stat_types=item_stat_types,
     )

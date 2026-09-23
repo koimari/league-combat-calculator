@@ -362,9 +362,6 @@ def _stat_context(*, stacks=None):
     return rune_effects.RuneStatContext(
         level=18,
         is_melee=False,
-        bonus_attack_damage=0.0,
-        ability_power=0.0,
-        adaptive_type="PHYSICAL_DAMAGE",
         options=(
             {} if stacks is None else {"Ultimate Hunter": {"hunter_stacks": stacks}}
         ),
