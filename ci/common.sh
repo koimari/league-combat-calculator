@@ -4,9 +4,10 @@
 # Every ci/*.sh script sources this file. It provides:
 #   - repo_root plumbing and the build/ci artifact directory
 #   - pass/fail/skip bookkeeping with a summary printed on exit
-#   - require_* helpers that SKIP (do not fail) when an optional tool is
-#     missing, printing the exact command that installs it
-#   - the repo's own Python: .venv/bin/python, never a bare python3
+#   - require_* helpers that SKIP when an optional tool is missing,
+#     printing the exact command that installs it (a FAIL under
+#     LCC_CI_STRICT)
+#   - the pinned interpreter: LCC_CI_PYTHON, else the checkout's .venv
 #
 # Exit code contract: a script that sources this file and calls
 # `ci_summary` at the end exits 1 if any check failed, 0 if every check

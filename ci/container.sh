@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Local equivalent of tests.yml job: container
-#   docker build, the smoke the workflow ran against the image (health,
+#   docker build, the smoke against the running image (health,
 #   non-root user, one calculate, the metrics module present, the
 #   HEALTHCHECK reaching healthy), then trivy when it is installed. An
 #   absent trivy is the one skip that never fails: the workflow scans with

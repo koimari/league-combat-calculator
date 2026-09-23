@@ -1,7 +1,12 @@
 """Keep production hardening visible and regression-tested."""
 
+import os
 import re
+import shutil
+import subprocess
 from pathlib import Path
+
+import pytest
 
 
 def test_container_is_pinned_minimal_nonroot_and_health_checked():
@@ -72,3 +77,48 @@ def test_the_image_the_container_job_builds_is_the_one_trivy_scans():
     image = re.search(r'^IMAGE="(\S+)"', container, re.MULTILINE)
     assert image, "ci/container.sh names no image"
     assert f"image-ref: {image[1]}" in workflow
+
+
+BASH = shutil.which("bash")
+_SMOKE_STUBS = """
+NAME=probe; PORT=18000; IMAGE=img
+docker() {
+  case "$1" in
+    exec) echo 1000 ;;
+    inspect) [ "$2" = --format ] && echo healthy ;;
+  esac
+  return 0
+}
+curl() {
+  case "${*: -1}" in
+    */healthz) [ "$FAIL" != health ] ;;
+    */api/calculate) [ "$FAIL" != calculate ] && echo '{"total_damage": 1}' ;;
+    */api/metrics) echo '{"gate": 1}' ;;
+  esac
+}
+sleep() { :; }
+"""
+
+
+@pytest.mark.skipif(BASH is None, reason="needs bash")
+@pytest.mark.parametrize(("fail", "status"), [("", 0), ("health", 1), ("calculate", 1)])
+def test_the_container_smoke_returns_the_status_of_its_checks(fail, status):
+    """The smoke's own functions run against stubbed docker, curl and sleep:
+    a check that fails must fail the step, never pass it."""
+    container = Path("ci/container.sh").read_text(encoding="utf-8")
+    functions = re.findall(
+        r"^smoke(?:_checks)?\(\) \{.*?^\}", container, re.MULTILINE | re.DOTALL
+    )
+    assert (
+        len(functions) == 2
+    ), "ci/container.sh no longer defines smoke and smoke_checks"
+    script = "\n".join([_SMOKE_STUBS, *functions, "smoke"])
+
+    result = subprocess.run(
+        [BASH, "-c", script],
+        env={**os.environ, "FAIL": fail},
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == status
