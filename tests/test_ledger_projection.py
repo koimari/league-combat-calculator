@@ -224,7 +224,6 @@ def test_the_healing_registry_owns_every_declaring_champion():
     MATRIX,
     ids=[row[0] for row in MATRIX],
 )
-# comment-ok: width - a pylint pragma cannot wrap
 def test_the_fight_returns_the_projection_the_conditions_chose(
     label, champion, item_names, keystone, threshold_heal, fires, monkeypatch
 ):
