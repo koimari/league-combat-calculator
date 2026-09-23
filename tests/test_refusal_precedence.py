@@ -28,6 +28,7 @@ from src.calculator.survival import (
     build_states,
     run_survival_walk,
 )
+from src.calculator.survival.action_families import DamageAction, HealAction
 
 
 def _target() -> Combatant:
@@ -50,7 +51,7 @@ def _target() -> Combatant:
 
 def _host(event: dict) -> SurvivalAction:
     """The trigger packet, authored dead so the walk refuses it."""
-    return SurvivalAction(
+    return DamageAction(
         sort_key=(0.0, TransitionRank.DAMAGE, 0, 0, 0, "target", "host", "spell"),
         time=0.0,
         phase=TransitionRank.DAMAGE,
@@ -70,7 +71,7 @@ def _host(event: dict) -> SurvivalAction:
 
 def _rider(event: dict) -> SurvivalAction:
     """A recovery packet whose trigger is the host above."""
-    return SurvivalAction(
+    return HealAction(
         sort_key=(1.0, TransitionRank.RECOVERY, 1, 0, 0, "target", "rider", "vow"),
         time=1.0,
         phase=TransitionRank.RECOVERY,

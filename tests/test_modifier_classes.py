@@ -11,6 +11,7 @@ import pytest
 
 from src.calculator.ability_spec import AttackClass, DamageClass
 from src.calculator.program.compile import action_from_event
+from src.calculator.survival.action_families import DamageAction, ModifierAction
 from src.calculator.survival.classify import (
     attack_class_of,
     damage_class_of,
@@ -21,7 +22,7 @@ from src.calculator.survival.transitions import (
     _apply_damage_modifier,
     _modifier_applies,
 )
-from src.calculator.survival.typed_action import SurvivalAction
+from src.calculator.survival.typed_action import ACTION_FIELDS
 
 ALL_DAMAGE = frozenset(DamageClass)
 ALL_ATTACK = frozenset(AttackClass)
@@ -63,7 +64,12 @@ def _packet(**overrides):
     """
     fields = {"damage_type": "magic", "is_ability": True, "attacker": _OTHER}
     fields.update(overrides)
-    return SurvivalAction(**fields)
+    return DamageAction(**fields)
+
+
+def _arming(**fields):
+    """A damage-modifier action as the walk arms it, from a non-holder slot."""
+    return ModifierAction(attacker=_OTHER, **fields)
 
 
 class TestPacketClasses:
@@ -99,7 +105,7 @@ class TestPacketClasses:
         ],
     )
     def test_attack_class_of_names_the_delivery(self, fields, expected):
-        action = SurvivalAction(damage_type="magic", **fields)
+        action = DamageAction(damage_type="magic", **fields)
         assert attack_class_of(action) is expected
 
 
@@ -107,7 +113,7 @@ class TestTheDeclarationIsRequired:
     """Both axes, no default, empty banned — enforced where it arms."""
 
     def test_a_complete_declaration_is_returned_unchanged(self):
-        action = _packet(
+        action = _arming(
             damage_classes=frozenset({DamageClass.MAGIC}), attack_classes=ALL_ATTACK
         )
         assert declared_modifier_classes(action) == (
@@ -120,12 +126,12 @@ class TestTheDeclarationIsRequired:
         fields = {"damage_classes": ALL_DAMAGE, "attack_classes": ALL_ATTACK}
         fields[axis] = frozenset()
         with pytest.raises(ValueError, match="empty-means-all is banned"):
-            declared_modifier_classes(_packet(source="Synthetic — Modifier", **fields))
+            declared_modifier_classes(_arming(source="Synthetic — Modifier", **fields))
 
     def test_the_arming_transition_refuses_an_undeclared_modifier(self):
         """The raise precedes the availability gate, so a zero-duration
         packet cannot slip through undeclared either."""
-        action = _packet(source="Synthetic — Modifier", duration=0.0)
+        action = _arming(source="Synthetic — Modifier", duration=0.0)
         with pytest.raises(ValueError, match="Synthetic — Modifier"):
             _apply_damage_modifier(None, action, None)
 
@@ -153,7 +159,7 @@ class TestTheDeclarationIsRequired:
     def test_the_armed_modifier_carries_the_declaration(self):
         armed = []
         state = {"active_damage_modifiers": armed}
-        action = _packet(
+        action = _arming(
             source="Synthetic — Modifier",
             persistent=True,
             multiplier=1.5,
@@ -214,10 +220,9 @@ class TestTheHolderIsARosterSlot:
     """
 
     def test_the_action_carries_a_holder_slot_and_no_owner_string(self):
-        fields = SurvivalAction._fields
-        assert "holder" in fields
-        assert "owner" not in fields
-        assert SurvivalAction().holder == -1
+        assert "holder" in ACTION_FIELDS
+        assert "owner" not in ACTION_FIELDS
+        assert ModifierAction().holder == -1
 
     def test_a_packet_owner_resolves_to_its_roster_slot(self):
         """The packet declares a participant id; the kernel stores the index."""

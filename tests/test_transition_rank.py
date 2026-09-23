@@ -30,6 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import single_owner_lint
 
 from src.calculator.survival import classify, phases
+from src.calculator.survival.action_families import DamageAction
 from src.calculator.survival.actions import (
     action_key,
     compiled_damage_action,
@@ -451,7 +452,7 @@ def test_the_compiled_hot_path_arms_at_the_damage_rank() -> None:
         baseline_effective_mr=None,
     )
     assert action.phase is TransitionRank.DAMAGE
-    assert SurvivalAction().phase is TransitionRank.DAMAGE
+    assert DamageAction().phase is TransitionRank.DAMAGE
 
 
 def test_the_phase_slot_guard_sees_every_spelling(tmp_path: Path) -> None:
@@ -523,7 +524,7 @@ def test_the_action_carries_a_rank_and_not_a_float() -> None:
     """
     annotation = SurvivalAction.__annotations__["phase"]
     assert getattr(annotation, "__forward_arg__", annotation) == "TransitionRank"
-    assert isinstance(SurvivalAction().phase, TransitionRank)
+    assert isinstance(DamageAction().phase, TransitionRank)
 
 
 def test_the_inline_sort_tuples_fold_the_way_action_key_does() -> None:

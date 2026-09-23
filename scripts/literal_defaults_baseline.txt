@@ -166,6 +166,7 @@ root|stat_formulas.py
 root|stats.py
 root|support_context.py
 root|survival/__init__.py
+root|survival/action_families.py
 root|survival/accumulate.py
 root|survival/compile.py
 root|survival/defense_contracts.py

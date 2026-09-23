@@ -39,11 +39,11 @@ from src.calculator.interpreters import amp_magnitude, delta_amp
 from src.calculator.item_behavior import AmpChainSlot, FightFacts
 from src.calculator.item_behavior_catalog import ACKNOWLEDGED_READING_DIVERGENCES
 from src.calculator.stats import calculate_total_stats
+from src.calculator.survival.action_families import DamageAction, ModifierAction
 from src.calculator.survival.transitions import (
     _apply_cross_participant_modifiers,
     _apply_damage_modifier,
 )
-from src.calculator.survival.typed_action import SurvivalAction
 
 # The roster.  Syndra's E is the authored stun (the incident's own marker);
 # Pantheon holds nothing, so nothing but Command can move his total between
@@ -459,7 +459,7 @@ class TestTwoImmobilizesMergeIntoOneRefreshedWindow:
         for packet in packets:
             _apply_damage_modifier(
                 context,
-                SurvivalAction(
+                ModifierAction(
                     source=packet["source"],
                     holder=0,
                     attacker=-1,
@@ -499,7 +499,7 @@ class TestTwoImmobilizesMergeIntoOneRefreshedWindow:
         for packet in packets:
             _apply_damage_modifier(
                 context,
-                SurvivalAction(
+                ModifierAction(
                     source=packet["source"],
                     holder=0,
                     attacker=-1,
@@ -515,7 +515,7 @@ class TestTwoImmobilizesMergeIntoOneRefreshedWindow:
         fraction = _command_effect().amp_fraction
         priced = _apply_cross_participant_modifiers(
             _RecordingLedger(),
-            SurvivalAction(
+            DamageAction(
                 damage_type="magic",
                 is_ability=True,
                 time=(FIRST_TRIGGER + REFRESHED_EXPIRY) / 2.0,

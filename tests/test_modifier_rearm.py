@@ -26,11 +26,11 @@ second answer to it.
 import pytest
 
 from src.calculator.ability_spec import AttackClass, DamageClass
+from src.calculator.survival.action_families import DamageAction, ModifierAction
 from src.calculator.survival.transitions import (
     _apply_cross_participant_modifiers,
     _apply_damage_modifier,
 )
-from src.calculator.survival.typed_action import SurvivalAction
 
 ALL_DAMAGE = frozenset(DamageClass)
 ALL_ATTACK = frozenset(AttackClass)
@@ -81,14 +81,14 @@ def _arm(state, ctx, *, source, at, duration, holder, multiplier=1.08, **overrid
         "event": {},
     }
     fields.update(overrides)
-    action = SurvivalAction(**fields)
+    action = ModifierAction(**fields)
     _apply_damage_modifier(ctx, action, state)
     return action
 
 
 def _packet(*, at, attacker=_ALLY, damage_type="physical"):
     """A damage packet delivered by somebody who is not the holder."""
-    return SurvivalAction(
+    return DamageAction(
         time=at,
         attacker=attacker,
         damage_type=damage_type,

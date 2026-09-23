@@ -30,6 +30,7 @@ sys.path.insert(0, str(ROOT))
 from scripts.golden_snapshot import COUPLED_SCENARIOS
 from src.calculator.calculate import calculate_payload
 from src.calculator.program import walk as walk_module
+from src.calculator.survival.action_families import WideAction
 from src.calculator.survival.actions import compiled_damage_action
 from src.calculator.survival.typed_action import ActionKind, SurvivalAction
 
@@ -97,7 +98,7 @@ MEDIAN_COLUMN = {
 }
 
 _GOLDEN = {scenario.name: scenario.request for scenario in COUPLED_SCENARIOS}
-_DEFAULT = SurvivalAction()
+_DEFAULT = WideAction()
 _REAL_WALK = walk_module.run_survival_walk
 
 
@@ -172,8 +173,8 @@ def construction_row(
         "group": group,
         "scenario": scenario,
         "set fields": len(held),
-        "all-kw µs": per_call_us(SurvivalAction, (), action._asdict(), **timing),
-        "set-kw µs": per_call_us(SurvivalAction, (), held, **timing),
+        "all-kw µs": per_call_us(WideAction, (), action._asdict(), **timing),
+        "set-kw µs": per_call_us(WideAction, (), held, **timing),
         "narrow µs": per_call_us(narrow_type(held), (), held, **timing),
     }
 
@@ -190,12 +191,12 @@ def constructor_rows(
         p.name: getattr(action, p.name) for p in parameters if p.kind is p.KEYWORD_ONLY
     }
     every = {p.name: getattr(action, p.name) for p in parameters}
-    if compiled_damage_action(*positional, **keywords) != SurvivalAction(**every):
+    if compiled_damage_action(*positional, **keywords) != WideAction(**every):
         raise RuntimeError("compiled_damage_action no longer builds the keyword tuple")
     timing = {"repeats": repeats, "number": number}
     readings = (
         (compiled_damage_action, positional, keywords),
-        (SurvivalAction, (), every),
+        (WideAction, (), every),
         (narrow_type(every), (), every),
     )
     return [
@@ -253,7 +254,7 @@ def bench(
         "census": {
             "actions": len(held),
             "median set fields": statistics.median(map(len, held)),
-            "never set": len(set(SurvivalAction._fields).difference(*held)),
+            "never set": len(set(WideAction._fields).difference(*held)),
         },
     }
 
@@ -270,7 +271,7 @@ def markdown(report: Mapping[str, Any]) -> str:
     census = report["census"]
     lines = [
         f"CPython {sys.version.split()[0]} at {head or 'unknown'}; "
-        f"{len(SurvivalAction._fields)} fields, {census['actions']} walked actions, "
+        f"{len(WideAction._fields)} fields, {census['actions']} walked actions, "
         f"median {census['median set fields']} set, {census['never set']} never set",
     ]
     for table, columns in TABLES.items():

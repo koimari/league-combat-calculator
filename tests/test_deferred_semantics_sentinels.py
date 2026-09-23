@@ -37,13 +37,13 @@ from src.calculator.interpreters import amp_magnitude, delta_amp
 from src.calculator.item_behavior import AmpChainSlot, FightFacts
 from src.calculator.pipeline import run_fight
 from src.calculator.survival.accumulate import accumulate_support_values
+from src.calculator.survival.action_families import DamageAction, ModifierAction
 from src.calculator.survival.classify import attack_class_of
 from src.calculator.survival.transitions import (
     _apply_cross_participant_modifiers,
     _apply_damage_modifier,
     _modifier_applies,
 )
-from src.calculator.survival.typed_action import SurvivalAction
 from src.calculator.trigger_stream import is_immobilizing_event
 from tests.support_effect_fixtures import (
     declared_classes_by_producer,
@@ -581,13 +581,13 @@ class TestCommandExpiryBoundaryDiverges:
         packet = {"damage_type": "magic", "is_ability": True, "attacker": -1}
         amped = _apply_cross_participant_modifiers(
             _LedgerCtx(),
-            SurvivalAction(time=end - 0.001, **packet),
+            DamageAction(time=end - 0.001, **packet),
             inside,
             100.0,
         )
         boundary = _apply_cross_participant_modifiers(
             _LedgerCtx(),
-            SurvivalAction(time=end, **packet),
+            DamageAction(time=end, **packet),
             closing,
             100.0,
         )
@@ -637,7 +637,7 @@ class TestIsAttackOrSpellVersusFromAllSources:
 
     def test_other_class_damage_is_declared_but_not_priced(self):
         """The divergence itself, at the one predicate that decides it."""
-        proc = SurvivalAction(damage_type="magic", source_key="item_burn", attacker=-1)
+        proc = DamageAction(damage_type="magic", source_key="item_burn", attacker=-1)
         assert attack_class_of(proc) is AttackClass.OTHER
         unmake = {
             "source": "Abyssal Mask — Unmake",
@@ -766,7 +766,7 @@ class TestAbyssalAuraHasNoRangeOrDeathCondition:
         state = {"active_damage_modifiers": armed}
         _apply_damage_modifier(
             _LedgerCtx(),
-            SurvivalAction(
+            ModifierAction(
                 source="Abyssal Mask — Unmake",
                 holder=0,
                 persistent=True,
@@ -798,7 +798,7 @@ class TestAbyssalAuraHasNoRangeOrDeathCondition:
         }
         late = _apply_cross_participant_modifiers(
             _LedgerCtx(),
-            SurvivalAction(damage_type="magic", is_ability=True, time=1e6, attacker=-1),
+            DamageAction(damage_type="magic", is_ability=True, time=1e6, attacker=-1),
             state,
             100.0,
         )

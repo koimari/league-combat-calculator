@@ -19,6 +19,7 @@ import math
 from collections.abc import Mapping
 from typing import Any
 
+from .action_families import WideAction
 from .phases import TransitionRank, ordering_slot
 from .pricing import DeclaredPacket
 from .typed_action import ActionKind, LiveAmp, SurvivalAction
@@ -73,8 +74,8 @@ def participant_order(participant_id: object) -> tuple[int, str]:
 # sixteen damage fields by index builds the identical tuple in under half
 # that.  The indices derive from ``_fields`` at import time, so reordering
 # or extending the NamedTuple cannot desynchronize them.
-_ACTION_DEFAULT_ROW = list(SurvivalAction())
-_INDEX = SurvivalAction._fields.index
+_ACTION_DEFAULT_ROW = list(WideAction())
+_INDEX = WideAction._fields.index
 _I_SORT_KEY = _INDEX("sort_key")
 _I_TIME = _INDEX("time")
 _I_KIND = _INDEX("kind")
@@ -199,7 +200,7 @@ def compiled_damage_action(
     row[_I_DAMAGE_OVER_TIME] = damage_over_time
     row[_I_AREA_DAMAGE] = area_damage
     row[_I_ABILITY_INSTANCE] = ability_instance
-    return tuple.__new__(SurvivalAction, row)
+    return tuple.__new__(WideAction, row)
 
 
 #: The walk's total order for one action: time, ordering slot, sequence,

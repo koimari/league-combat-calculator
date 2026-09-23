@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 from enum import Enum
 from typing import Any, NamedTuple
 
@@ -56,19 +57,6 @@ class ActionKind(Enum):
     UTILITY = "utility"
 
 
-# Kinds a damage event may classify to; every one applies the shared damage
-# kernel (the kind only drives observation and the fast-branch marker).
-_DAMAGE_KINDS = frozenset(
-    {
-        ActionKind.PLAIN_DAMAGE,
-        ActionKind.DAMAGE,
-        ActionKind.EXECUTE,
-        ActionKind.DEFER,
-        ActionKind.REDIRECT,
-    }
-)
-
-
 class LiveProbe(Enum):
     """Which live pool a kernel-side amplifier reads, as a tag.
 
@@ -109,35 +97,42 @@ class LiveAmp(NamedTuple):
     mechanic: str
 
 
-class SurvivalAction(NamedTuple):
-    """One typed state transition in the coupled survival walk.
+class SurvivalAction:
+    """One typed state transition in the coupled survival walk, as the kernel reads it.
 
-    Both adapters consume exactly this interface.  ``event`` is the
-    receipt adapter's observation target (the event dict the public
-    timeline serializes); score-mode actions leave it ``None`` so the
+    Every field the walk reads is declared here at its neutral value, and
+    nothing else is: an action is an instance of one record in
+    :mod:`.action_families`, which stores the fields its kinds' transitions
+    read, so a field its family does not store reads the value below.
+    ``event`` is the receipt adapter's observation target (the event dict the
+    public timeline serializes); score-mode actions leave it ``None`` so the
     kernel never annotates what the optimizer does not read.
-
-    ``phase`` is a :class:`TransitionRank`, and it defaults to the damage
-    rank.  That default is not a formality: ``compiled_damage_action``
-    deliberately assigns no phase, so it is where every compiled damage
-    action in the hot path gets its phase from — the widest phase slot in
-    the tree, not the narrowest.
     """
 
-    # Ordering / routing
+    __slots__ = ()
+
+    # The core every family stores (``action_families.CORE``).  ``phase`` is
+    # a :class:`TransitionRank` and defaults to the damage rank, which is the
+    # rank every compiled damage action arms at.
     sort_key: tuple = ()
     time: float = 0.0
     phase: TransitionRank = TransitionRank.DAMAGE
     kind: ActionKind = ActionKind.DAMAGE
     subject: int = -1
     attacker: int = -1
-    # Ledger linkage
     aidx: int = -1
     trigger: int = -1
     # The four event references, as slots into EVENT_SLOTS (NO_SLOT for
     # "names none").  Slots rather than id strings, because every consumer
     # compares them for identity, which is what a slot is.
     trigger_slot: int = NO_SLOT
+    event: dict | None = None
+    event_slot: int = NO_SLOT
+    source_key: str = ""
+    source: str = ""
+    sequence: Any = None
+    amount: float = 0.0
+    redirected: bool = False
     # A rider whose trigger is "the holder's next ability hit", which only
     # the walk can resolve: ``trigger_slot`` names one carrier packet chosen
     # by ordinal before the walk knew which packets land, and this flag lets
@@ -146,9 +141,7 @@ class SurvivalAction(NamedTuple):
     # is what declares it; the Eclipse item's self-shield does not, and keeps
     # the one carrier it was authored on.
     rebinds_on_ability_hit: bool = False
-    event: dict | None = None
     # Damage fields
-    amount: float = 0.0
     damage_type: str = ""
     # The price this packet's family declared, for the walk to mitigate
     # itself (``transitions.apply_declared_price``).  ``None`` means "no
@@ -171,7 +164,6 @@ class SurvivalAction(NamedTuple):
     execute_source: str = ""
     deferred: bool = False
     deferred_batch_slot: int = NO_SLOT
-    redirected: bool = False
     redirect_holder_health_ratio: float = 0.0
     redirect_original_damage: float = 0.0
     redirect_cancelled: bool = False
@@ -179,10 +171,6 @@ class SurvivalAction(NamedTuple):
     is_ability: bool = False
     basic_attack: bool = False
     ability_instance: Any = None
-    source_key: str = ""
-    source: str = ""
-    event_slot: int = NO_SLOT
-    sequence: Any = None
     # The packet applied immobilizing crowd control: the trigger bus's answer
     # over the shared ``ability_spec.IMMOBILIZING_CC_KINDS`` vocabulary, or a
     # marker flag, never a set this module decides for itself.  Force of
@@ -218,9 +206,9 @@ class SurvivalAction(NamedTuple):
     # authors one packet per recipient; the group is the shared one-use
     # latch key so all recipients of one cast consume ONE use).
     cleanse_group: str = ""
-    # P3 package 3T: the compiled path pre-authors Maw's post-Lifeline
-    # omnivamp heals with this gate; the kernel applies them only after
-    # the threshold event armed the holder's omnivamp flag.
+    # The compiled path pre-authors Maw's post-Lifeline omnivamp heals with
+    # this gate; the kernel applies them only after the threshold event
+    # armed the holder's omnivamp flag.
     requires_maw_lifeline_omnivamp: bool = False
     shield_gate_subject: int = -1
     shield_gate_time: float | None = None
@@ -266,8 +254,7 @@ class SurvivalAction(NamedTuple):
     # Which roster slot armed this modifier — the field the owner skip reads
     # (``Authority.SPLIT``'s machine-checked handshake).  A roster *index*,
     # like ``subject`` and ``attacker``, so the kernel never compares
-    # participant id strings; ``-1`` is "this packet declares no holder", the
-    # integer spelling of the empty owner string it replaces.
+    # participant id strings; ``-1`` is "this packet declares no holder".
     holder: int = -1
     # The class restriction a damage-modifier packet declares.  Both
     # are required of such a packet and empty is banned, which is why the
@@ -285,18 +272,11 @@ class SurvivalAction(NamedTuple):
     # Utility fields
     # Which utility transition this packet is, when its kind classified as
     # ``ActionKind.UTILITY``.  The cleanse dispatch reads it (QSS/Mercurial
-    # ride ``cleanse``-kind utility packets), which is why the field exists
-    # again after the S-wave deleted it as unread.
+    # ride ``cleanse``-kind utility packets).
     utility_kind: str = ""
     gold_amount: float = 0.0
     ward_uses: float = 0.0
     duration_set: bool = False
-
-    @property
-    def event_id(self) -> str:
-        """This packet's id as text; ``""`` when it names none."""
-        return EVENT_SLOTS.text(self.event_slot)
-
     # Cleanse-activation fields (item actives that remove crowd control).
     # ``cleanse`` marks a packet as a cleanse activation (Mikael's Purify
     # rides its heal packet with the marker; QSS/Mercurial ride cleanse-kind
@@ -305,6 +285,15 @@ class SurvivalAction(NamedTuple):
     # labels.
     cleanse: bool = False
     cleanse_item: str = ""
+
+    @property
+    def event_id(self) -> str:
+        """This packet's id as text; ``""`` when it names none."""
+        return EVENT_SLOTS.text(self.event_slot)
+
+
+#: Every field the kernel reads, in declaration order: the core first.
+ACTION_FIELDS: tuple[str, ...] = tuple(inspect.get_annotations(SurvivalAction))
 
 
 class TriggerLinkage:

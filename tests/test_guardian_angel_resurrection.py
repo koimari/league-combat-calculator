@@ -723,11 +723,11 @@ def test_ordinary_stasis_stacked_beyond_the_revive_window_blocks_on_its_own_term
         EVENT_SLOTS,
         ActionKind,
         ReceiptLedger,
-        SurvivalAction,
         TransitionContext,
         TransitionRank,
         build_states,
     )
+    from src.calculator.survival.action_families import DamageAction, StateAction
 
     defenses = resolve_starting_defenses(
         "Ashe", 18, {"health": 100.0, "base_health": 200.0}, [_ga_item()]
@@ -757,7 +757,7 @@ def test_ordinary_stasis_stacked_beyond_the_revive_window_blocks_on_its_own_term
         return [holder, victim]
 
     def _lethal(time: float, seq: int) -> object:
-        return SurvivalAction(
+        return DamageAction(
             sort_key=(
                 time,
                 TransitionRank.DAMAGE,
@@ -783,7 +783,7 @@ def test_ordinary_stasis_stacked_beyond_the_revive_window_blocks_on_its_own_term
         )
 
     def _ordinary_stasis(time: float, duration: float, seq: int) -> object:
-        return SurvivalAction(
+        return StateAction(
             sort_key=(
                 time,
                 TransitionRank.STATE_GRANT,
@@ -811,7 +811,7 @@ def test_ordinary_stasis_stacked_beyond_the_revive_window_blocks_on_its_own_term
         # A packet the dead holder tries to author against the (alive)
         # victim: phase >= 0 so it runs the same attacker-side block-check
         # gate the engine applies to every ordinary authored packet.
-        return SurvivalAction(
+        return DamageAction(
             sort_key=(
                 time,
                 TransitionRank.DAMAGE,
@@ -927,11 +927,11 @@ def _rebirth_kernel_walk(second_lethal: float, *, receipt: bool) -> tuple[dict, 
         ActionKind,
         ReceiptLedger,
         ScoreLedger,
-        SurvivalAction,
         TransitionContext,
         TransitionRank,
         build_states,
     )
+    from src.calculator.survival.action_families import DamageAction, StateAction
 
     duration = second_lethal + 60.0
     defenses = resolve_starting_defenses(
@@ -948,7 +948,7 @@ def _rebirth_kernel_walk(second_lethal: float, *, receipt: bool) -> tuple[dict, 
     )
 
     def _lethal(time: float, seq: int) -> object:
-        return SurvivalAction(
+        return DamageAction(
             sort_key=(
                 time,
                 TransitionRank.DAMAGE,
@@ -974,7 +974,7 @@ def _rebirth_kernel_walk(second_lethal: float, *, receipt: bool) -> tuple[dict, 
         )
 
     def _revive_candidate(time: float, seq: int) -> object:
-        return SurvivalAction(
+        return StateAction(
             sort_key=(
                 time,
                 TransitionRank.DAMAGE,

@@ -87,13 +87,13 @@ from src.calculator.survival import (
     EVENT_SLOTS,
     ActionKind,
     ReceiptLedger,
-    SurvivalAction,
     TransitionContext,
     TransitionRank,
     build_states,
     run_survival_walk,
     transitions,
 )
+from src.calculator.survival.action_families import DamageAction, HealAction
 from src.calculator.survival.compile import thorns_return_damage
 from src.calculator.survival.pricing import (
     NO_RESISTANCE_PUBLISHED,
@@ -677,7 +677,6 @@ def test_receipt_and_score_adapters_share_one_kernel():
         ActionKind,
         ReceiptLedger,
         ScoreLedger,
-        SurvivalAction,
         TransitionContext,
         TransitionRank,
         build_states,
@@ -698,7 +697,7 @@ def test_receipt_and_score_adapters_share_one_kernel():
         ),
     )
     actions = [
-        SurvivalAction(
+        DamageAction(
             sort_key=(0.0, TransitionRank.DAMAGE, 0, 0, 0, "target", "hit", "auto"),
             time=0.0,
             phase=TransitionRank.DAMAGE,
@@ -713,7 +712,7 @@ def test_receipt_and_score_adapters_share_one_kernel():
             event_slot=EVENT_SLOTS.slot("hit"),
             sequence=0,
         ),
-        SurvivalAction(
+        HealAction(
             sort_key=(
                 1.0,
                 TransitionRank.DEBUFF_ARM,
@@ -1318,7 +1317,7 @@ def _walk_one_declared_packet(packet, *, baseline_mr=DECLARED_SUBJECT_MR):
     priced from the declaration.
     """
     event = {"_event_id": "declared", "time": 0.0, "damage": 0.0}
-    action = SurvivalAction(
+    action = DamageAction(
         sort_key=(0.0, TransitionRank.DAMAGE, 0, 0, 0, "target", "declared", "item"),
         time=0.0,
         phase=TransitionRank.DAMAGE,
@@ -1543,7 +1542,7 @@ class TestTheOptInSetIsExactlyTheFamiliesThatRetired:
 
     def test_the_default_action_declares_nothing(self):
         """The field's default is the inertness, so it is asserted too."""
-        assert SurvivalAction().declared is None
+        assert DamageAction().declared is None
 
     def test_the_inertness_scan_has_a_permanent_injection_seam(self):
         """A second composition site is a finding, on demand."""
@@ -2449,7 +2448,7 @@ def test_no_leaf_sums_a_pair_preview_and_the_walks_amped_number():
     # And the walk's side: a packet carrying no declaration pays the pair
     # engine's number and never the walk's, so the two contributions cannot
     # both exist for one packet by construction rather than by review.
-    assert SurvivalAction().declared is None
+    assert DamageAction().declared is None
     assert declared_packet_construction_sites() == ()
 
     # And the join that makes the two sides one property: every mechanic whose
@@ -4045,7 +4044,6 @@ def test_existing_shield_gate_uses_the_cast_time_snapshot_in_both_adapters():
         ActionKind,
         ReceiptLedger,
         ScoreLedger,
-        SurvivalAction,
         TransitionContext,
         TransitionRank,
         build_states,
@@ -4066,7 +4064,7 @@ def test_existing_shield_gate_uses_the_cast_time_snapshot_in_both_adapters():
         ),
     )
     actions = [
-        SurvivalAction(
+        DamageAction(
             sort_key=(0.0, TransitionRank.DAMAGE, 0, 0, 0, "target", "hit", "auto"),
             time=0.0,
             phase=TransitionRank.DAMAGE,
@@ -4081,7 +4079,7 @@ def test_existing_shield_gate_uses_the_cast_time_snapshot_in_both_adapters():
             event_slot=EVENT_SLOTS.slot("hit"),
             sequence=0,
         ),
-        SurvivalAction(
+        HealAction(
             sort_key=(
                 1.0,
                 TransitionRank.RECOVERY,
@@ -4221,7 +4219,7 @@ def test_a_cancelled_redirect_restores_the_whole_packet_in_both_lanes():
     children = {}
 
     def _parent(aidx, slot, name, amount, original, declaration):
-        return SurvivalAction(
+        return DamageAction(
             sort_key=(1.0, TransitionRank.DAMAGE, 0, 0, 0, "worthy", name, "src"),
             time=1.0,
             phase=TransitionRank.DAMAGE,
@@ -4242,7 +4240,7 @@ def test_a_cancelled_redirect_restores_the_whole_packet_in_both_lanes():
         )
 
     def _child(aidx, parent_aidx, slot, name, amount, declaration):
-        return SurvivalAction(
+        return DamageAction(
             sort_key=(1.0, TransitionRank.REACTIVE, 0, 1, 0, "holder", name, "src"),
             time=1.0,
             phase=TransitionRank.DAMAGE,
@@ -4263,7 +4261,7 @@ def test_a_cancelled_redirect_restores_the_whole_packet_in_both_lanes():
             sequence=0,
         )
 
-    opening = SurvivalAction(
+    opening = DamageAction(
         sort_key=(0.0, TransitionRank.DAMAGE, 0, 1, 0, "holder", "open", "src"),
         time=0.0,
         phase=TransitionRank.DAMAGE,

@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import pytest
 
+from src.calculator.survival.action_families import DamageAction
 from src.calculator.survival.phases import TransitionRank
 from src.calculator.survival.score_state import ScoreLedger
 from src.calculator.survival.typed_action import ActionKind, SurvivalAction
@@ -38,7 +39,7 @@ from src.calculator.survival.typed_action import ActionKind, SurvivalAction
 
 def action(aidx: int, *, trigger: int = -1) -> SurvivalAction:
     """One damage action at a named slot, optionally gated on another."""
-    return SurvivalAction(
+    return DamageAction(
         sort_key=(0.0, TransitionRank.DAMAGE, 0, 0, "", "target", "e", "s"),
         time=0.0,
         phase=TransitionRank.DAMAGE,

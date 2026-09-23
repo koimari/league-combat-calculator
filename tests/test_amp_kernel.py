@@ -50,9 +50,9 @@ from src.calculator.program.compile import (
 )
 from src.calculator.survival import (
     ActionKind,
-    SurvivalAction,
     support_transition_rank,
 )
+from src.calculator.survival.action_families import DamageAction
 from src.calculator.survival.compile import (
     UncompilableActionError,
     unrepresentable_modifier_receipt,
@@ -435,9 +435,9 @@ def test_a_compiled_damage_row_says_how_it_was_delivered():
     from src.calculator.ability_spec import AttackClass
     from src.calculator.survival.classify import attack_class_of
 
-    ability = SurvivalAction(is_ability=True, source_key="Q")
-    basic = SurvivalAction(basic_attack=True, source_key="on_hit_Nashors")
-    other = SurvivalAction(source_key="burn_Liandrys")
+    ability = DamageAction(is_ability=True, source_key="Q")
+    basic = DamageAction(basic_attack=True, source_key="on_hit_Nashors")
+    other = DamageAction(source_key="burn_Liandrys")
     assert attack_class_of(ability) is AttackClass.ABILITY
     assert attack_class_of(basic) is AttackClass.BASIC_ATTACK
     assert attack_class_of(other) is AttackClass.OTHER

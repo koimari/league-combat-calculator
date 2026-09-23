@@ -47,6 +47,7 @@ from src.calculator.survival import (
     finalize_states,
     run_survival_walk,
 )
+from src.calculator.survival.action_families import DamageAction
 from src.calculator.survival.typed_action import LiveAmp, LiveProbe
 
 CINDERBLOOM = LiveAmp(
@@ -85,7 +86,7 @@ def _hit(
 ) -> SurvivalAction:
     """One magic packet into the target, optionally carrying a rider."""
     event_id = f"hit:{aidx}"
-    return SurvivalAction(
+    return DamageAction(
         sort_key=(time, TransitionRank.DAMAGE, aidx, 0, 0, "target", event_id, "spell"),
         time=time,
         phase=TransitionRank.DAMAGE,

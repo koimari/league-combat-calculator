@@ -73,6 +73,7 @@ from ..resistance import (
     apply_magic_penetration,
     apply_resistance,
 )
+from ..survival.action_families import WideAction
 from ..survival.actions import (
     action_key,
     compiled_damage_action,
@@ -524,7 +525,7 @@ def action_from_event(
     baseline_armor = get("_baseline_effective_armor")
     baseline_mr = get("_baseline_effective_mr")
     cc_kind = str(get("cc_kind", ""))
-    return SurvivalAction(
+    return WideAction(
         sort_key=get("_sk")
         or action_key(
             time_value,
@@ -772,7 +773,7 @@ def revive_candidate_actions(
                 "target": actor.participant_id,
             }
             candidates.append(
-                SurvivalAction(
+                WideAction(
                     sort_key=action_key(
                         candidate_time,
                         TransitionRank.DAMAGE,
@@ -1411,7 +1412,7 @@ class WalkCompiler:
                 view.heals.append(enriched_heal)
                 continue
             actions_append(
-                SurvivalAction(
+                WideAction(
                     sort_key=heal_sort_key,
                     time=time_value,
                     phase=TransitionRank.RECOVERY,
@@ -1532,7 +1533,7 @@ class WalkCompiler:
             time_value = optional_field(template, "time", float) or 0.0
             category = optional_field(template, "healing_category", str) or ""
             self.actions.append(
-                SurvivalAction(
+                WideAction(
                     sort_key=action_key(time_value, priority, target_id, template),
                     time=time_value,
                     phase=priority,
@@ -1654,7 +1655,7 @@ class WalkCompiler:
         target_id = str(template["target"])
         time_value = optional_field(template, "time", float) or 0.0
         self.actions.append(
-            SurvivalAction(
+            WideAction(
                 sort_key=action_key(time_value, priority, target_id, template),
                 time=time_value,
                 phase=priority,
@@ -1768,7 +1769,7 @@ class WalkCompiler:
                     f"{profile.item_name} (Thorns)",
                 )
                 actions.append(
-                    SurvivalAction(
+                    WideAction(
                         sort_key=sort_key,
                         time=strike_time,
                         phase=TransitionRank.REACTIVE,
@@ -2030,7 +2031,7 @@ def stage_knights_vow_redirect_actions(
         )
         holder_resistance = holder_share.effective_resistance
         child_text = f"{EVENT_SLOTS.text(action.event_slot)}:redirect"
-        child = SurvivalAction(
+        child = WideAction(
             sort_key=action_key(
                 float(action.time),
                 TransitionRank.REACTIVE,
@@ -2127,7 +2128,7 @@ def stage_knights_vow_heals(
             continue
         heal_text = f"{EVENT_SLOTS.text(action.event_slot)}:kv_heal"
         appended.append(
-            SurvivalAction(
+            WideAction(
                 sort_key=action_key(
                     float(action.time),
                     TransitionRank.RECOVERY,
@@ -2170,7 +2171,7 @@ def grey_health_heal_action(
     else.
     """
     event_id = f"main:grey:{source}:{index}"
-    return SurvivalAction(
+    return WideAction(
         sort_key=action_key(
             float(heal_time),
             TransitionRank.RECOVERY,
@@ -2206,7 +2207,7 @@ def grey_health_shield_action(
     walks stage one press identically (Tahm Kench's Thick Skin active).
     """
     event_id = f"main:grey:{source}:shield:{index}"
-    return SurvivalAction(
+    return WideAction(
         sort_key=action_key(
             float(grant_time),
             TransitionRank.LATE_BARRIER,

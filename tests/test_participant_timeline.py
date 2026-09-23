@@ -43,11 +43,11 @@ from src.calculator.survival import (
     SUPPORT_RANK_KEY,
     ActionKind,
     ScoreLedger,
-    SurvivalAction,
     TransitionContext,
     TransitionRank,
     build_states,
 )
+from src.calculator.survival.action_families import HealAction
 from src.calculator.timeline.records import TimelineScene
 
 
@@ -5005,7 +5005,7 @@ def test_compiled_heal_overflow_matches_temporary_health_expiry():
             ),
         )
     ]
-    action = SurvivalAction(
+    action = HealAction(
         sort_key=(
             0.0,
             TransitionRank.DEBUFF_ARM,

@@ -14,14 +14,15 @@ import pytest
 from src.calculator import quantity
 from src.calculator.ability_spec import Disposition
 from src.calculator.survival import outcome_state, receipt_ledger
+from src.calculator.survival.action_families import DamageAction
 from src.calculator.survival.event_slots import NO_SLOT
-from src.calculator.survival.typed_action import ActionKind, SurvivalAction
+from src.calculator.survival.typed_action import ActionKind
 from tests import ability_math
 
 
 def action(slot: int, *, event_slot: int = NO_SLOT, trigger_slot: int = NO_SLOT):
     """One typed action addressed at ledger slot *slot*."""
-    return SurvivalAction(
+    return DamageAction(
         kind=ActionKind.DAMAGE,
         aidx=slot,
         event_slot=event_slot,
@@ -261,7 +262,7 @@ class TestAtMostOneAppliedContribution:
     @staticmethod
     def contribution(slot: int, *, source: str, subject: int, event: int):
         """One applied delivery, addressed by the criterion's own key."""
-        return SurvivalAction(
+        return DamageAction(
             kind=ActionKind.DAMAGE,
             aidx=slot,
             subject=subject,
@@ -347,7 +348,7 @@ class TestTheDiagnosticAnnotationsAreNotOutcomes:
     @staticmethod
     def packet():
         """One damage action addressed at a real ledger slot."""
-        return SurvivalAction(
+        return DamageAction(
             kind=ActionKind.DAMAGE, aidx=0, event_slot=3, source_key="q", subject=1
         )
 
@@ -451,7 +452,7 @@ class TestTheReceiptWalkRunsIt:
         ledger = receipt_ledger.ReceiptLedger(
             actions=[], index_of={}, compile_event=lambda *a, **k: None
         )
-        first = SurvivalAction(
+        first = DamageAction(
             kind=ActionKind.DAMAGE,
             aidx=0,
             event_slot=7,
@@ -459,7 +460,7 @@ class TestTheReceiptWalkRunsIt:
             subject=1,
             event={},
         )
-        second = SurvivalAction(
+        second = DamageAction(
             kind=ActionKind.DAMAGE,
             aidx=1,
             event_slot=7,
@@ -477,7 +478,7 @@ class TestTheReceiptWalkRunsIt:
         ledger = receipt_ledger.ReceiptLedger(
             actions=[], index_of={}, compile_event=lambda *a, **k: None
         )
-        packet = SurvivalAction(kind=ActionKind.DAMAGE, aidx=0, event={})
+        packet = DamageAction(kind=ActionKind.DAMAGE, aidx=0, event={})
         ledger.write(packet, overkill=1.0)
         with pytest.raises(quantity.StarvedSignal, match="already recorded overkill"):
             ledger.write(packet, overkill=2.0)

@@ -25,6 +25,7 @@ from src.calculator.survival import (
     TransitionRank,
     build_states,
 )
+from src.calculator.survival.action_families import DamageAction
 from src.calculator.survival.event_slots import EVENT_SLOTS
 from src.calculator.survival.typed_action import ActionKind
 
@@ -57,7 +58,7 @@ def one_participant_context() -> tuple[TransitionContext, ScoreLedger]:
 
 def damage_action(amount: float) -> SurvivalAction:
     """One plain damage packet at t=0 against the single subject."""
-    return SurvivalAction(
+    return DamageAction(
         sort_key=(0.0, TransitionRank.DAMAGE, 0, 0, "", "target", "e", "s"),
         time=0.0,
         phase=TransitionRank.DAMAGE,

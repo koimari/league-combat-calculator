@@ -20,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import single_owner_lint
 
 from src.calculator.program.compile import action_from_event
+from src.calculator.survival.action_families import DamageAction
 from src.calculator.survival.event_slots import EVENT_SLOTS, NO_SLOT, EventSlots
 from src.calculator.survival.phases import TransitionRank
 from src.calculator.survival.typed_action import SurvivalAction
@@ -94,7 +95,7 @@ class TestTheActionHoldsNoReferenceStrings:
     """Criterion 6: zero ``str | None`` reference fields on the kernel tuple."""
 
     def test_the_four_slot_fields_exist_and_default_to_no_slot(self) -> None:
-        action = SurvivalAction()
+        action = DamageAction()
         for field in SLOT_FIELDS:
             assert getattr(action, field) == NO_SLOT, field
 

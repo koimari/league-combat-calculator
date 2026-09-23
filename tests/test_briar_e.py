@@ -49,10 +49,10 @@ from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival import (
     ReceiptLedger,
-    SurvivalAction,
     TransitionContext,
     build_states,
 )
+from src.calculator.survival.action_families import DamageAction, ModifierAction
 from src.calculator.survival.classify import SUPPORT_RANK_KEY
 from src.calculator.survival.event_slots import EVENT_SLOTS
 from src.calculator.survival.phases import TransitionRank
@@ -206,7 +206,7 @@ def _run_modifier_window_walk():
     )
 
     def hit(time: float, amount: float, damage_type: str, aidx: int, event_id: str):
-        return SurvivalAction(
+        return DamageAction(
             sort_key=(
                 time,
                 TransitionRank.DAMAGE,
@@ -232,7 +232,7 @@ def _run_modifier_window_walk():
             event={},
         )
 
-    modifier = SurvivalAction(
+    modifier = ModifierAction(
         # ``-1.0`` on a damage modifier is C4's rank: an amplification in
         # force at its own timestamp prices the damage at that timestamp.
         sort_key=(0.0, TransitionRank.AURA_ARM, 0, 0, 0, "target", "mod", "mod"),

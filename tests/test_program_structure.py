@@ -29,6 +29,8 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from src.calculator.survival import action_families
+from src.calculator.survival.typed_action import SurvivalAction
 from tests.app_config import app_config
 
 SRC = ROOT / "src" / "calculator"
@@ -39,6 +41,15 @@ FINGERPRINTS = ROOT / "docs" / "receipts" / "campaign-fingerprints.json"
 # Where the one constructor lives, and the one expression allowed outside it.
 CONSTRUCTOR_HOME = "calculator/program/compile.py"
 DECLARED_SURVIVOR = "calculator/survival/actions.py"
+
+#: Every record an action is built as, read off the module declaring them.
+RECORDS = tuple(
+    name
+    for name, value in vars(action_families).items()
+    if isinstance(value, type)
+    and issubclass(value, SurvivalAction)
+    and value is not SurvivalAction
+)
 
 
 def _repo_path(path: Path) -> str:
@@ -61,15 +72,15 @@ def _called_name(node: ast.Call) -> str:
     return ""
 
 
-def _construction_sites(callee: str) -> dict[str, int]:
-    """Every call expression under ``src/calculator`` spelling *callee*."""
+def _construction_sites(*callees: str) -> dict[str, int]:
+    """Every call expression under ``src/calculator`` spelling one of *callees*."""
     tally: dict[str, int] = {}
     for path in sorted(SRC.rglob("*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         count = sum(
             1
             for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and _called_name(node) == callee
+            if isinstance(node, ast.Call) and _called_name(node) in callees
         )
         if count:
             tally[_repo_path(path)] = count
@@ -103,7 +114,7 @@ class TestOneConstructor:
 
     def test_every_construction_expression_is_in_the_one_home(self) -> None:
         """Expressions, not text: ``grep`` also matches the class and a docstring."""
-        sites = _construction_sites("SurvivalAction")
+        sites = _construction_sites(*RECORDS)
         outside = {
             path: count for path, count in sites.items() if path != CONSTRUCTOR_HOME
         }
@@ -111,7 +122,7 @@ class TestOneConstructor:
 
     def test_the_home_actually_constructs(self) -> None:
         """A home with no expressions in it would pass the test above vacuously."""
-        assert _construction_sites("SurvivalAction")[CONSTRUCTOR_HOME] > 1
+        assert _construction_sites(*RECORDS)[CONSTRUCTOR_HOME] > 1
 
 
 class TestOneDirection:

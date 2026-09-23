@@ -68,7 +68,7 @@ from calculator.item_behavior import (
 )
 from calculator.item_behavior_catalog import behavior_rules, rule_owners
 from calculator.program import events
-from calculator.survival import actions as survival_actions
+from calculator.survival.typed_action import ACTION_FIELDS
 
 RECEIPTS_DIR = REPO_ROOT / "docs" / "receipts"
 SCHEDULE_PATH = RECEIPTS_DIR / "receipt-walk-retirement-schedule.json"
@@ -547,17 +547,13 @@ def _cross_participant_halves(owners: Sequence[str]) -> dict[str, list[str]]:
 def _kernel_mechanisms() -> dict[str, frozenset[str]]:
     """Every mechanism a named delivery may land in, read from the kernel.
 
-    Two shapes: a rider family the kernel's own
-    :data:`~..program.events.RIDER_KINDS` declares, and a field of a
-    kernel state record.  Both are read off the declaring object rather than
-    listed here, so a mechanism that leaves the kernel stops resolving on the
-    commit that removes it instead of on the day somebody re-reads a receipt.
+    A rider family :data:`~..program.events.RIDER_KINDS` declares, or a field
+    of a kernel record, each read off its declaring object so a mechanism
+    that leaves the kernel stops resolving on the commit that removes it.
     """
     return {
         "program.events": frozenset(kind.__name__ for kind in events.RIDER_KINDS),
-        "survival.actions.SurvivalAction": frozenset(
-            survival_actions.SurvivalAction._fields  # pylint: disable=protected-access
-        ),
+        "survival.actions.SurvivalAction": frozenset(ACTION_FIELDS),
         "shield_ledger.ShieldPools": frozenset(
             field.name for field in dataclasses.fields(shield_ledger.ShieldPools)
         ),
