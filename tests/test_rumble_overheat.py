@@ -1,8 +1,6 @@
 """Rumble P (Junkyard Titan / Overheated) and W (Scrap Shield), plus the
 ``scaling.py`` unit-alias repair that closing W required.
 
-The roadmap slot session closes Rumble's last two ``out_of_scope`` rows.
-
 **P was mislabelled, not merely stale.** The packet called P
 ``no_damage``. Its third effect row carries a fully sourced on-hit
 formula: Overheated "empowers his basic attacks to deal 5 : 44.12 (based
@@ -13,16 +11,15 @@ level-20 extrapolation, a 0.25 AP coefficient, and
 ``OverheatPercBonusDamage`` 0.04), and ``TestOverheatIsBinaryCorroborated``
 re-derives all three from the binary rather than trusting the module.
 
-**The heat axis prices the rest of the same sentence.**
-``overheat_windows`` declares how many times the mech reaches the cached
-Heat ceiling, and that one number buys BOTH remaining rows together: the
+**The cast plan prices the rest of the same sentence.** The fight walks
+Heat over the casts it made (``fight/rotation/cast_resource_lockout.py``),
+and each window it derives buys BOTH remaining rows together: the
 50% : 142.54% bonus attack speed and the self-silence stated beside it
 ("disabling his abilities as his Heat decays back down to 0 over 4
 seconds"). ``TestHeatAxisReadsTheCache`` pins every constant to cached
 prose — the 150 ceiling, the 20 per cast, the 4-second window — and
-``TestOverheatWindowPricesBothHalves`` pins the pairing, because the
-upside arriving without its cost is the exact way to overstate this
-champion.
+``tests/test_rumble.py`` pins the pairing, because the upside arriving
+without its cost is the exact way to overstate this champion.
 
 **One sourced row is still deliberately withheld:** the "Bonus Damage"
 row (65 : 163.32 by level), which is not a damage source at all. Read in
@@ -31,11 +28,10 @@ monsters". ``TestBonusDamageRowIsAMonsterCap`` pins that reading off the
 cached description, because the attribute name alone reads exactly like a
 damage row and is the obvious way to get this champion wrong.
 
-**Overheat is not simulated, so the proc count is explicit state.** The
-``overheat_autos`` option defaults to 0. ``TestZeroAutosCostZero`` pins
-the same phantom-proc contract Rammus' W needed in this batch: because
-consumers read ONLY ``parts``, a ``count=max(autos, 1)`` floor would
-price one full empowered auto at the default.
+**The proc count is the plan's.** The slot prices one empowered swing
+and caps none (``test_the_slot_caps_no_swings_of_its_own``); the swings
+landing inside a derived window are the ones empowered, so a fight that
+never fills the bar prices none.
 
 **W required a genuine kernel repair.** Scrap Shield's third term is
 "4% of maximum health". That spelling was missing from
@@ -362,6 +358,16 @@ class TestHeatAxisReadsTheCache:
         broken["abilities"]["P"][0]["effects"][0]["description"] = "Innate: heat."
         with pytest.raises(ValueError, match="Overheat ceiling"):
             _heat_mechanics(_heat_ctx(broken))
+
+    def test_the_decay_is_read_from_the_innate_sentence(self):
+        assert _heat_decay(_heat_ctx()) == (10.0, 4.0, 2.0)
+        broken = copy.deepcopy(_RUMBLE)
+        effect = broken["abilities"]["P"][0]["effects"][0]
+        effect["description"] = effect["description"].replace(
+            "decays by 10 Heat per second", "cools"
+        )
+        with pytest.raises(ValueError, match="Heat decay"):
+            _heat_decay(_heat_ctx(broken))
 
     def test_a_cache_whose_slots_disagree_on_heat_per_cast_raises(self):
         broken = copy.deepcopy(_RUMBLE)
