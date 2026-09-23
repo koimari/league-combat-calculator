@@ -66,6 +66,7 @@ from ..survival.action_families import (
     FAMILY_OF,
     DamageAction,
     HealAction,
+    ModifierAction,
     WideAction,
 )
 from ..survival.actions import (
@@ -1676,7 +1677,7 @@ class WalkCompiler:
         target_id = str(template["target"])
         time_value = optional_field(template, "time", float) or 0.0
         self.actions.append(
-            WideAction(
+            ModifierAction(
                 sort_key=action_key(time_value, priority, target_id, template),
                 time=time_value,
                 phase=priority,
@@ -1725,7 +1726,6 @@ class WalkCompiler:
                     optional_field(template, "_event_id", str) or ""
                 ),
                 sequence=template.get("sequence"),
-                duration_set="duration" in template,
             )
         )
         # An armed modifier heals and shields nobody, and it is still support
