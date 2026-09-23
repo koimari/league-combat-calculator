@@ -30,6 +30,7 @@ import pytest
 from bs4 import BeautifulSoup
 
 import src.app as app_module
+from src.calculator.champion_loadout import ChampionLoadout
 
 APP_JS = Path("static/js/app.js").read_text(encoding="utf-8")
 TEMPLATE = Path("templates/index.html").read_text(encoding="utf-8")
@@ -483,6 +484,37 @@ def test_api_responses_expose_exactly_the_capability_declared_fields():
         "one_rotation_duration_seconds",
     } <= set(defaults)
     assert defaults["auto_attack_uptime_mode"] in {"calculated", "explicit"}
+
+
+class _RecordedReads(dict):
+    """A request that records every key a parser asks it for."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.read = set()
+
+    def get(self, key, default=None):
+        self.read.add(key)
+        return super().get(key, default)
+
+    def __getitem__(self, key):
+        self.read.add(key)
+        return super().__getitem__(key)
+
+    def __contains__(self, key):
+        self.read.add(key)
+        return super().__contains__(key)
+
+
+def test_every_supported_roster_field_is_a_key_the_roster_parser_reads():
+    """A roster control whose payload key no parser reads is dropped silently."""
+    card = _RecordedReads(champion="Garen", level=18)
+    ChampionLoadout.from_request(card, field="enemies[0]")
+    contract = _contract()
+    for kind in ("enemy", "ally"):
+        for field, descriptor in contract["participants"][kind]["fields"].items():
+            if descriptor["supported"]:
+                assert descriptor["payload_field"] in card.read, (kind, field)
 
 
 # ---------------------------------------------------------------------------

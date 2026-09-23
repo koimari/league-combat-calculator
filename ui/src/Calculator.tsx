@@ -1230,6 +1230,7 @@ function CalculatorSession({
   function payload(build: Build) {
     return {
       ...serializeParticipant(main, build),
+      include_boots: Boolean(build.boots),
       fight_mode: autosOnly ? "auto_only" : "time_based",
       fight_duration: duration,
       include_actives: includeActives,

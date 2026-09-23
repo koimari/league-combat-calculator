@@ -1130,7 +1130,6 @@ def test_roster_boots_are_labeled_serialized_and_applied_to_enemy_and_ally_stats
                     "level": 12,
                     "role": "mid",
                     "boots": "Sorcerer's Shoes",
-                    "include_boots": True,
                 }
             ],
             "allies": [
@@ -1139,7 +1138,6 @@ def test_roster_boots_are_labeled_serialized_and_applied_to_enemy_and_ally_stats
                     "level": 12,
                     "role": "support",
                     "boots": "Ionian Boots of Lucidity",
-                    "include_boots": True,
                 }
             ],
         },
@@ -1201,7 +1199,6 @@ def test_support_quest_transition_clears_stale_item_state_and_backend_gate_match
                     "role": "support",
                     "role_quest_complete": True,
                     "boots": "Ionian Boots of Lucidity",
-                    "include_boots": True,
                     "items": ["Bloodsong"],
                 }
             ],

@@ -236,6 +236,13 @@ class TestScenarioSet:
         scenario = bench.SCENARIOS["syndra_mandate_3champ"]
         assert scenario["locked_items"] == ["Imperial Mandate"]
 
+    def test_a_calculate_replay_holds_what_the_optimizer_locks(self, bench):
+        """The golden's exact capture replays each scenario through calculate,
+        which reads ``items`` and never ``locked_items``."""
+        for name, scenario in bench.SCENARIOS.items():
+            locked = set(scenario.get("locked_items", ()))
+            assert locked <= set(scenario.get("items", ())), name
+
     def test_which_scenario_mains_author_an_immobilize(self, bench):
         """Asserted against the champion modules, not against the name.
 

@@ -25,7 +25,7 @@ engine publishes — never a silent zero.
 """
 
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from functools import partial
 from types import MappingProxyType
@@ -2038,6 +2038,35 @@ def validate_keystone_options(value: object, rune_name: str) -> dict[str, int | 
             )
         parsed[option_name] = supplied
     return parsed
+
+
+def rune_page_from_request(
+    value: Mapping[str, Any],
+) -> tuple[RunePage, dict[str, int | float]]:
+    """One request's rune page and its keystone's validated state inputs.
+
+    ``keystone_options`` is the older spelling of the keystone's own entry in
+    ``rune_options``: validated against the page's keystone and folded into
+    the page, so every reader asks the page and both spellings answer alike.
+    """
+    page = validate_rune_page(
+        value.get("keystone"),
+        value.get("minor_runes"),
+        value.get("stat_shards"),
+        value.get("rune_options"),
+    )
+    requested = value.get("keystone_options")
+    keystone_options = validate_keystone_options(requested, page.keystone)
+    if not (isinstance(requested, Mapping) and requested):
+        return page, keystone_options
+    folded = {
+        **page.options.get(page.keystone, {}),
+        **{key: float(option) for key, option in keystone_options.items()},
+    }
+    return (
+        replace(page, options={**page.options, page.keystone: folded}),
+        keystone_options,
+    )
 
 
 def _rune_row(name: str) -> int:
