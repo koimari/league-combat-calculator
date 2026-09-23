@@ -226,16 +226,12 @@ def _resolve_stat_ramp(state: FightState) -> None:
 
 
 def _swings_at_uptime(state: FightState) -> tuple[float, ...]:
-    """Even swing times at the fight's own rate, for a stream nobody walked."""
-    rate = state.attack_speed * state.auto_attack_uptime
-    if rate <= 0.0 or state.fight_duration_seconds <= 0.0:
-        return ()
-    times: list[float] = []
-    time = 0.0
-    while time < state.fight_duration_seconds:
-        times.append(time)
-        time += 1.0 / rate
-    return tuple(times)
+    """The fight's own stream at its own rate, for a stream nobody walked."""
+    return attack_cadence.stream_impacts(
+        state.attack_speed * state.auto_attack_uptime,
+        state.fight_duration_seconds,
+        state.impact_phase(state.attack_speed),
+    )
 
 
 def _cast_schedule_times(

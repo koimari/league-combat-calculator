@@ -5,14 +5,15 @@ that stacks it, one swing at a time (``interpreters/rearmed_swings``). A
 ramp that grants attack damage or resistances has no such seam, because the
 stat sheet is resolved once and every cast is priced against it.
 
-What this module serves instead is the level's TIME-WEIGHTED MEAN over the
-fight: the stack count integrated across the fight's own duration and
-divided by it. That is the same approximation Terminus' penetration already
-makes (``item_effects.StackingPenEffect.average_pen``, whose mean is served
-to casts and swings alike), and it is stated as an approximation rather than
-discovered as one: a burst that lands at second one is priced at a level the
-fight only reaches later, and a fight that ends before the ramp fills is
-priced above what its first casts met.
+What this module serves instead is the MEAN LEVEL THE STACKING EVENTS MET:
+each counted swing or cast reads the stacks standing just before it, and the
+fight is priced at their average.  That is the same approximation Terminus'
+penetration already makes (``item_effects.StackingPenEffect.average_pen``,
+whose mean is served to casts and swings alike), and it is stated as an
+approximation rather than discovered as one: a burst that lands at second one
+is priced at a level the fight only reaches later.  Averaging over the events
+rather than over wall time keeps seconds in which nothing lands out of the
+price, so a longer fight never lowers what its earlier events met.
 
 The alternative is a stat sheet re-resolved per event, which is a different
 engine. Until there is one, an option that states the level outright remains
@@ -115,15 +116,12 @@ def mean_stack_level(
     ability_cast_times: Sequence[float],
     duration_seconds: float,
 ) -> float:
-    """The stack count's time-weighted mean across ``[0, duration)``.
+    """The mean stack count the counted events inside ``[0, duration)`` met.
 
-    Each counted event banks a stack that lives its declared seconds, the
-    cap drops the oldest, and the count is integrated over the span the
-    fight actually lasts. A fight with no duration to integrate over has no
-    mean, which is zero rather than a level nobody held.
+    Each event reads the stacks standing just before it, then banks its own
+    for the declared seconds; the cap drops the oldest.  A fight with no
+    counted event has no level, which is zero rather than one nobody held.
     """
-    if duration_seconds <= 0.0:
-        return 0.0
     events: list[float] = []
     if rule.stacks_from_swings:
         events += [float(time) for time in swing_times]
@@ -132,23 +130,8 @@ def mean_stack_level(
     events = sorted(time for time in events if 0.0 <= time < duration_seconds)
     if not events:
         return 0.0
-    # Every instant the count can change: a stack landing, or one expiring.
-    expiries: list[float] = []
-    live: list[float] = []
-    for time in events:
-        if len(live) >= rule.max_stacks:
-            live.pop(0)
-        live.append(time + rule.stack_duration)
-        expiries.append(time + rule.stack_duration)
-    marks = sorted(
-        {0.0, duration_seconds}
-        | {time for time in events if time < duration_seconds}
-        | {time for time in expiries if 0.0 < time < duration_seconds}
-    )
-    area = 0.0
-    for start, end in zip(marks, marks[1:]):
-        area += _held_at(rule, events, start) * (end - start)
-    return area / duration_seconds
+    met = [_held_at(rule, events[:index], time) for index, time in enumerate(events)]
+    return sum(met) / len(met)
 
 
 def _held_at(rule: StatRampRule, events: Sequence[float], instant: float) -> int:
