@@ -5,18 +5,18 @@ is a monster-only cap, and the ``% of maximum health`` spelling that fell to 0.
 Q (Flamespitter) prices "Maximum Magic Damage", the whole 3-second
 flamethrower, 15 ticks of "Magic Damage per Tick"; the Minimum, per-Second
 and per-Tick rows are views of the same damage.
+E (Electro Harpoon) carries one harpoon's cached MR shred as a target_debuff.
 R (The Equalizer) prices all 20 Burning ticks, 0.25s apart over 5 seconds.
 P (Junkyard Titan) carries the real on-hit formula, an Overheated per-level
 "Bonus Magic Damage" array with one AP and one target-max-health modifier.
 W (Scrap Shield) is a sourced self-shield with no damage row; shield-only, it
 cannot carry ``attach_self_shield``, so the scanner prices it at scope "self".
-Overheat is derived, not declared: the slot states the cached heat rule and
-the cast plan walks it, reading Heat per cast, the ceiling, the lockout and
-the decay from cached prose, so a reworked cache raises instead of pricing a
-stale constant.  It places each lockout because E is scheduled on its
-recharge, not the gap between banked harpoons, and rates the cached bonus
-attack speed by the windows' share of the fight.  Danger Zone is heat state:
-every slot prices its base row and the Enhanced rows go unread.
+Overheat is derived, not declared: the slot states the cached heat rule
+(Heat per cast, ceiling, lockout, decay) and the cast plan walks it, placing
+each lockout where it happens, with E on its recharge rather than the gap
+between banked harpoons, and rating the cached bonus attack speed by the
+windows' share of the fight.  Danger Zone is heat state: every slot prices
+its base row and the Enhanced rows go unread.
 """
 
 import math
@@ -27,7 +27,7 @@ from ..ability_prose import CachedSentence, extract_description_duration
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .charge_cadence import ChargeRule
-from .engine import ONHIT, SlotCtx
+from .engine import DAMAGE, ONHIT, SlotCtx, SlotParser
 from .module_helpers import ability_slot
 from .packet_module import build_packet_module
 from .slot_entries import on_hit_entry
@@ -292,6 +292,41 @@ def _junkyard_titan(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | N
 _junkyard_titan.phase = ONHIT
 
 
+# E's harpoon "inflicting them with magic resistance reduction for 4
+# seconds": each harpoon's window is the binary's ShredDuration.
+_E_SHRED_DURATION = data_value(spell_object("Rumble", "RumbleGrenade"), "ShredDuration")
+_E_SHRED_ROW = "Magic Resistance Reduction"
+
+
+def _with_harpoon_shred(compiled: SlotParser) -> SlotParser:
+    """E: the packet's harpoon hit, carrying one harpoon's cached MR shred.
+
+    The cache stacks the shred "up to 2 times"; the engine's percent shred
+    cannot stack, so this is the one-harpoon row, never "Total MR Reduction".
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = compiled(ctx)
+        ranked = ctx.ranked()
+        if entry is None or ranked is None:
+            return entry
+        ability, rank = ranked
+        shred = extract_value(ability, _E_SHRED_ROW, rank)
+        if shred <= 0:
+            raise ValueError(
+                f"Rumble E: the cached {_E_SHRED_ROW!r} row prices {shred} at "
+                f"rank {rank}"
+            )
+        entry["target_debuff"] = {
+            "mr_reduction_percent": shred,
+            "duration": _E_SHRED_DURATION,
+        }
+        return entry
+
+    parse.phase = getattr(compiled, "phase", DAMAGE)
+    return parse
+
+
 # Cached kit review.  E's harpoon deals magic damage while "inflicting them
 # with magic resistance reduction ... and slowing them for 2 seconds" — the
 # shred is a resistance effect, the slow is the control.  R's field marks
@@ -309,10 +344,9 @@ CHARGE_RULES = {
     "E": ChargeRule(
         why=(
             "E (Electro Harpoon) banks harpoons on its cached 6s "
-            "rechargeRate and its cached stock is 2. Pricing the 0.5s "
-            "inter-charge cooldown as the cadence is what put 16 basic "
-            "ability casts in a ten-second fight, and it is the stated "
-            "blocker for deriving Heat from the cast plan."
+            "rechargeRate and its cached stock is 2; the 0.5s cooldown is "
+            "only the gap between two banked harpoons, so the Heat walk "
+            "counts the harpoons the recharge allows."
         ),
     )
 }
@@ -333,6 +367,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # the event ledger.  R already authors its own twenty-tick timing.
     single_hit_slots=frozenset({"E"}),
     slot_parsers={"Q": _flamespitter_full_channel, "P": _junkyard_titan},
+    slot_wrappers={"E": _with_harpoon_shred},
     cc_kinds=MODULE_CC,
     charge_rules=CHARGE_RULES,
 )
@@ -351,50 +386,43 @@ ASSUMPTIONS = [
     "seconds.",
     "That is per-tick x20 == Maximum Magic Damage 600/1000/1400 + 175% AP.",
     "The initial rocket impact has no separate damage row in the cache.",
+    "E (Electro Harpoon) shreds MR by the cached one-harpoon Magic Resistance "
+    "Reduction row, 10 to 18% by rank.",
+    "The shred lasts the binary's ShredDuration, 4 seconds, and lands after E's own "
+    "damage.",
+    "It is weighted by the share of the fight its 4-second windows cover; one-rotation "
+    "mode applies it in full.",
+    "Two harpoons inside 4 seconds stack to the cached Total MR Reduction row; only one "
+    "stack is priced.",
+    "So the banked opening pair understates the shred, and E's second harpoon meets "
+    "none of the first's.",
+    "E is scheduled on its cached 6s rechargeRate with its cached stock of 2 harpoons.",
     "The Danger Zone half of the heat system is state outside the damage model.",
     "Q, E and R price their base rows and the Enhanced Danger Zone rows go unread.",
     "W's Danger Zone Bonus of +50% shield strength is not applied: the base Shield "
     "Strength row is priced.",
-    "Only the Overheated half of heat is priced, through the overheat_windows axis.",
+    "Only the Overheated half of heat is priced, walked over the fight's own cast "
+    "plan.",
     "P (Junkyard Titan) prices the Overheated on-hit bonus, not the monster-only cap: "
     "5 to 44.12 by level.",
     "It adds 25% AP and 4% of target maximum health, from cached P effect 3's Bonus "
     "Magic Damage row.",
     "The binary's RumbleHeatSystem TotalBaseDamage, 0.25 AP coefficient and 0.04 "
     "bonus corroborate it.",
-    "The engine does not simulate heat, so overheat_autos counts empowered autos (0 = "
-    "none, the default).",
     "The Bonus Damage row, 65 to 163.32 by level, is that cap and never binds against "
     "a champion.",
-    "P's heat axis: overheat_windows (default 0) declares how often the mech reaches "
-    "the 150 Heat ceiling.",
-    "Zero windows is the default; the per-cast gain is 20 Heat, stated identically by "
-    "Q, W and E.",
-    "Every number the axis prices is read from the cached prose, with no constant "
-    "here.",
+    "Every heat number is read from cached prose: 20 Heat per Q, W or E cast and a 150 "
+    "Heat ceiling.",
     "The window is 4 seconds, 'decays back down to 0 over 4 seconds', so 8 basic "
     "casts fill the bar.",
-    "It is a declared axis because the cast plan is not yet trustworthy for heat.",
-    "E is scheduled on its cached 0.5s inter-charge cooldown instead of its 6s "
-    "rechargeRate.",
-    "That puts 16 basic casts, 320 Heat, in a 10s fight where the kit generates about "
-    "140.",
-    "The window buys both remaining Overheated rows, never one alone.",
+    "Heat decays 10 per second once 4s pass without a basic ability and 2s without "
+    "The Equalizer.",
+    "Each window opens where the bar fills and silences every cast inside it.",
+    "Every swing inside a window carries the on-hit bonus; no swing outside one does.",
     "The 50% to 142.54% by level bonus attack speed is a stat_buff weighted by the "
     "windows' fight share.",
     "That weighting is exact for attack speed, which is linear in the bonus percent.",
-    "The self-silence in the same sentence applies as self_cast_lockout_seconds, "
-    "windows x 4 seconds.",
-    "Where the lockout sits inside the fight is not claimed: the model prices its "
-    "cost, not which casts.",
-    "An autos-only fight casts nothing, builds no Heat and Overheats zero times "
-    "whatever the axis says.",
-    "Neither axis is clamped into agreement: a clamp answers an impossible request "
-    "with a plausible number.",
-    "A windows x 4s lockout longer than the declared fight is refused, naming its "
-    "numbers.",
-    "overheat_autos with no declared window derives the one window that holds the "
-    "swings.",
+    "An autos-only fight casts nothing, builds no Heat and Overheats zero times.",
     "W (Scrap Shield) is a sourced self-shield with no damage row: 25/55/85/115/145 + "
     "30% AP + 4% health.",
     "It holds 1.5 seconds.",

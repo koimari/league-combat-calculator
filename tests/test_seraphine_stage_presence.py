@@ -269,9 +269,8 @@ class TestNoteCapIsSourced:
 class TestZeroNotesCostZero:
     """No Note must cost nothing - the Rammus-W phantom pin.
 
-    The default is the sourced cap rather than 0, and that is a different
-    claim from Rumble's ``overheat_autos``: every ability cast grants a
-    Note, so four Notes are what the fight's OWN default rotation
+    The default is the sourced cap rather than 0: every ability cast grants
+    a Note, so four Notes are what the fight's OWN default rotation
     (Q/W/E/R) produces, not caster state the engine never simulates.
     ``max_procs`` still holds it to the single empowered swing.
     """

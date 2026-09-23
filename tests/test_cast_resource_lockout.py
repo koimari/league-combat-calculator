@@ -149,7 +149,7 @@ class TestTheOneKitThatDeclaresIt:
         """The silence sits where it happens, so it removes real casts."""
         fast = self._fight(30.0, ["Malignance", "Cosmic Drive", "Horizon Focus"])
         times = sorted(event["time"] for event in fast["cast_timeline"])
-        for start in (7.772727, 22.681818):
+        for start in (7.772727, 22.931818):
             assert not [
                 time for time in times if start + 1e-3 < time < start + 4.0
             ], f"a cast landed inside the {start:.2f}s lockout"
