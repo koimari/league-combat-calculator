@@ -279,14 +279,6 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 - **`data/atoms/manifest.json` `source_ref` digests hash LF bytes.** A test hashing
   `path.read_bytes()` raw disagrees on this CRLF checkout and agrees on CI: hash
   with `\r\n` normalized, and regenerate `data/atoms` on Linux only.
-- **The simply-elegant hooks measure against the main checkout, not your
-  worktree.** Per-file `pyproject.toml` exemptions resolve there, so an edit under
-  `.claude/worktrees/<name>/` reports them as errors, and the file-length hook
-  reports growth on any edit to an over-cap file: judge growth with `wc -l` against
-  `git show HEAD:<file>`. Past 500 lines it blocks every addition, so put the new
-  thing in the small sibling that owns the idea, give lines back, or take the hit.
-  These hooks block but do not revert, so the write has landed. Confirm a hit with
-  `lint_gate.py --tree .` and add no marker.
 - **A Bash task that times out into the background re-runs its whole command on
   resume**, so a patch script left on disk clobbered `static/js/scoreboard.js` an
   hour later. Delete a one-shot script right after it runs.
@@ -295,36 +287,6 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   `_healing.x`) and a test's front-door import the architecture test counts.
   C414's `tuple(list(x))` to `tuple(x)` returns the same object for a tuple, and
   PLW0108's lambda removal hoists a forward reference into a `NameError`.
-- **Read `sightline explain <n>` before ceding a pylint or ruff check to a
-  sightline rule.** #23, complexity, only reports. #55 owns arity at repo scope,
-  so only `--full` runs it, and skips any signature with a `*`, so a wide one
-  takes its `*` early; pylint's R0917 skips `_ctx`, so the two count differently.
-- **Sightline rule #1 reports once per signature, at the `def` line**, and skips
-  dunders: moving
-  an `__init__(..., old: Any)` to a module-level factory surfaces a finding the
-  class never had. It counts a bare `Any` or `Sequence[Any]` and not
-  `Mapping[str, Any]`, so the concrete type clears it.
-- **Sightline counts move in both directions after a record or leaf extraction,
-  with no duplication added.** #14 counts typed signatures only, so extracting
-  `SlotCtx` typed a 13-function clump and moved the anchor; #2 reads the
-  parameter's annotation, so a guard copied from an `object`-taking sibling is a
-  finding. Dissolve them on the record.
-- **Sightline #11 normalizes names and literals and has a floor of five
-  statements**, the length of a uniform dispatch prologue, so a wrapper differing
-  only in its regex is still a clone, and no shared helper dissolves it. A record,
-  a `partial` binding, one function over a record table, or returning a
-  comprehension does. The plugin's ruff wants `x.get("k") or ()` (FURB110) where
-  the rule-5 lint reads an or-default: bind first, then iterate.
-- **A codemod that writes files with Python bypasses the per-edit hook entirely**,
-  and `sightline gate . --files` skips the repo-scope rules, so a cross-file #11
-  and a per-function #35 pass every edit gate. One added import can be the whole
-  finding under #27, so a new leaf goes into one its readers already import.
-  `sightline audit`'s per-file summary omits a finding the baseline holds, so the
-  one test of a baseline row is to delete it, run `--full`, and restore the file.
-- **Both tree lints resolve config and suppressions against what is on disk, so a
-  count quoted in a doc is not a base.** Run ruff and `sightline gate . --full` on
-  a `git archive <base>` copy of the WHOLE tree, a `src`-only copy raising three
-  extra `#56`, and diff the ROW LISTS, file plus rule, never the totals.
 - **Two prose gates, one per language.** `comment_lint.lint_prose` reads every
   changed `.md` whole, banning em dashes, task markers and history phrases outside
   fenced blocks and `prose-ok` lines, so one edit to a file carrying the debt

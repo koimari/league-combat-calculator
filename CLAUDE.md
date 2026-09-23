@@ -63,26 +63,6 @@ executable champion modules are named, reviewed source files.
 code changed: a pure refactor must show zero diffs, while a behavior fix re-captures the
 baseline with every diff explained in the commit.
 
-**Lint configuration has one machine home, `pyproject.toml`.** It carries
-`[tool.ruff.lint] ignore` and `per-file-ignores`, `[tool.simply-elegant]`
-`comment-rules-off` and `comment-per-file-off`, and `[tool.sightline]` `excludes`
-and `rules-off`, each with its reason beside it. Run the tree gate with
-`python ~/.claude/plugins/cache/claude-custom-plugins/simply-elegant/1.8.1/hooks/lint_gate.py --tree . --statistics`;
-from 2.0.0 the hook has no tree mode and exits 0 silently. The code carries no
-suppression comments: no `noqa`, `pylint: disable`, `type: ignore`,
-`sightline-ok`, `pragma: no cover` or `file-length-ok`. A finding is fixed,
-turned off in `pyproject.toml` with its reason, or left in the count, whatever a
-hook's message suggests. Neither suite is at zero, and both counts may only
-fall: a new finding in a file you touched is a regression. Ruff reports 149
-findings, and `sightline gate . --full` reports 42 blocking above
-`.sightline-baseline`, under #27 (9), #1 (8), #24 (7), #32 (6), #37 (4), #56 (3),
-#14 (2), #9, #35 and #11. The baseline holds only what is deferred
-with a reason, today 53 entries under #27 (48), #14 (2) and #11 (3);
-`sightline baseline .` regenerates it and merges as a union, and a sightline 0.2
-binary cannot read its format. The per-edit gate `sightline gate . --files`
-skips the oracle and repo-scope rules, so judge a branch by the hits in the files
-it changed and run `--full` before claiming a count.
-
 **Derived receipts are regenerated, never hand-merged.**
 `docs/cast-dependency-audit.json` (`scripts/cast_dependency_audit.py --output`),
 `docs/behavior-frontier.json` (`scripts/behavior_frontier.py --write`),
