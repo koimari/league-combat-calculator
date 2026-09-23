@@ -568,9 +568,11 @@ def test_the_thirteen_new_keystones_price_exactly_what_they_declare(
     """Each new keystone either adds its own row to the total, or nothing.
 
     A keystone that books damage adds at least its row — exactly its row
-    unless it also empowers the autos; one that books none leaves the total
-    bit-identical to the same fight without it. Either way the receipt
-    reaches the user through the notes.
+    unless it also speeds the autos, which adds a swing only where the time
+    it saves pulls the next impact inside the fight (Lethal Tempo's does
+    here, Hail of Blades' does not); one that books none
+    leaves the total bit-identical to the same fight without it. Either way
+    the receipt reaches the user through the notes.
     """
     fight = {
         "fight_mode": "time_based",
@@ -590,7 +592,7 @@ def test_the_thirteen_new_keystones_price_exactly_what_they_declare(
         assert row["total_damage"] > 0
         with_row = baseline["total_damage"] + row["total_damage"]
         if grants_attack_speed:
-            assert result["total_damage"] > with_row
+            assert result["total_damage"] >= with_row - 1e-6
         else:
             assert result["total_damage"] == pytest.approx(with_row, rel=1e-6)
     else:

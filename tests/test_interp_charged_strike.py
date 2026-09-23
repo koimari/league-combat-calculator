@@ -334,6 +334,7 @@ def test_the_ramp_accelerates_the_stream_after_stacks() -> None:
         attack_speed=1.0,
         attack_speed_ratio=1.0,
         duration_seconds=5.0,
+        phase=0.0,
     )
     assert times[0] == 0.0
     assert len(times) > 5
@@ -354,6 +355,7 @@ def test_the_ramp_does_not_accumulate_stale_stacks() -> None:
         attack_speed=0.2,
         attack_speed_ratio=1.0,
         duration_seconds=12.0,
+        phase=0.0,
     )
     assert times[-1] - times[-2] == pytest.approx(5.0)
 
@@ -365,9 +367,24 @@ def test_the_window_starts_after_the_first_attack() -> None:
         attack_speed=1.0,
         attack_speed_ratio=1.0,
         duration_seconds=3.0,
+        phase=0.0,
     )
     assert times[0] == 0.0
     assert times[1] == pytest.approx(1.0)
+    assert times[2] - times[1] < 1.0
+
+
+def test_a_windup_delays_the_first_attack_and_the_window_opens_from_it() -> None:
+    """Swing one lands a quarter of a bare cycle after the command."""
+    times = rearmed_swings.swing_times(
+        _schedule(WINDOW),
+        attack_speed=1.0,
+        attack_speed_ratio=1.0,
+        duration_seconds=3.0,
+        phase=0.25,
+    )
+    assert times[0] == pytest.approx(0.25)
+    assert times[1] == pytest.approx(1.25)
     assert times[2] - times[1] < 1.0
 
 
@@ -384,6 +401,7 @@ def test_the_window_reads_the_registrys_numbers_and_not_a_literal(
         attack_speed=1.0,
         attack_speed_ratio=1.0,
         duration_seconds=3.0,
+        phase=0.0,
     )
     assert times[2] - times[1] == pytest.approx(1.0 / 1.6)
 

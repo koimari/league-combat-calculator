@@ -11,10 +11,14 @@ the channel its own sentence names. Row 3's Coup de Grace is pinned in
 ``test_rune_paths.py`` beside the other exemplars.
 """
 
+import math
+
 import pytest
 
 from src.calculator import rune_effects
+from src.calculator.attack_cadence import champion_windup
 from src.calculator.calculate import calculate_payload
+from src.calculator.data_fetcher import get_champion
 from src.calculator.item_effects import DamageInputs
 from src.calculator.rune_paths import precision
 
@@ -354,9 +358,10 @@ def _heal_inputs(*, health, level=18):
 
 class TestTheGrantsReachTheRealPipeline:
     def test_alacrity_moves_attack_speed_and_the_autos_it_buys(self):
-        """1.3428 -> 1.3615 at no stacks is +3%, and buys a 31st auto.
+        """1.3428 -> 1.3615 at no stacks is +3%, too little to land a 32nd
+        impact inside the fight.
 
-        Ten stacks is 1.4553 (+18%) and 33 autos. The damage moves with the
+        Ten stacks is 1.4553 (+18%) and 34 autos. The damage moves with the
         auto count, so the rune is priced through the swing rate rather than
         through a row of its own.
         """
@@ -388,11 +393,18 @@ class TestTheGrantsReachTheRealPipeline:
             result["auto_attack_schedule"]["expected_autos_total"]
             for result in (bare, unstacked, stacked)
         ]
-        assert autos == [30, 31, 33]
+        # Impact k lands once the timer has run k + phase cycles.
+        seconds = _ATTACK_SPEED_PROBE["fight_duration"]
+        uptime = bare["auto_attack_policy"]["uptime"]
+        phase = champion_windup(get_champion("Jinx")).phase
+        assert autos == [
+            math.ceil(speed * uptime * seconds - phase(speed)) for speed in speeds
+        ]
+        assert autos == [31, 31, 34]
         # Re-captured at the landing instant (hp-scaled parts).
-        assert bare["total_damage"] == pytest.approx(2187.0, abs=0.05)
+        assert bare["total_damage"] == pytest.approx(2237.5, abs=0.05)
         assert unstacked["total_damage"] == pytest.approx(2237.5, abs=0.05)
-        assert stacked["total_damage"] == pytest.approx(2338.5, abs=0.05)
+        assert stacked["total_damage"] == pytest.approx(2389.0, abs=0.05)
 
     def test_bloodline_moves_health_only_at_its_maximum(self):
         """2327 health, and 2412 once the fifteenth stack lands."""
@@ -411,7 +423,7 @@ class TestTheGrantsReachTheRealPipeline:
         assert full["champion_stats"]["health"] == 2412
 
     def test_bloodline_s_life_steal_becomes_heal_packets_on_the_ledger(self):
-        """6.75% at fifteen stacks: 43.9 self-healing becomes 146.2.
+        """6.75% at fifteen stacks: 44.7 self-healing becomes 150.4.
 
         The rune grants into the life-steal channel and the fight's own
         life-steal walk turns it into timed packets off Jinx's physical
@@ -428,10 +440,10 @@ class TestTheGrantsReachTheRealPipeline:
         assert stacked["champion_stats"]["lifesteal_percent"] == pytest.approx(6.75)
         assert unstacked["self_healing"] == pytest.approx(bare["self_healing"])
         # Re-captured at the landing instant (hp-scaled parts).
-        assert bare["self_healing"] == pytest.approx(43.5, abs=0.05)
-        assert stacked["self_healing"] == pytest.approx(145.7, abs=0.05)
-        assert len(bare["self_healing_events"]) == 35
-        assert len(stacked["self_healing_events"]) == 65
+        assert bare["self_healing"] == pytest.approx(44.7, abs=0.05)
+        assert stacked["self_healing"] == pytest.approx(150.4, abs=0.05)
+        assert len(bare["self_healing_events"]) == 36
+        assert len(stacked["self_healing_events"]) == 67
 
     def test_a_withheld_rune_publishes_its_receipt_and_moves_no_number(self):
         bare = calculate_payload(dict(_HEALTH_PROBE))

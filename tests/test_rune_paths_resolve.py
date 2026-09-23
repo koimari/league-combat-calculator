@@ -195,7 +195,7 @@ class TestSecondWindRegeneratesOffAnIncomingHit:
         bare = self._fight()
         held = self._fight(runes=["Second Wind"])
         assert self._healing(bare) == pytest.approx(0.0)
-        assert self._healing(held) == pytest.approx(19.6, abs=0.1)
+        assert self._healing(held) == pytest.approx(19.8, abs=0.1)
 
     def test_with_no_enemy_attacking_the_window_is_never_armed(self):
         """The control: the rune answers an incoming hit and nothing else.
@@ -212,8 +212,8 @@ class TestSecondWindRegeneratesOffAnIncomingHit:
         """One holder, two declarations, two recoveries."""
         item_only = self._fight(items=["Doran's Shield"])
         both = self._fight(runes=["Second Wind"], items=["Doran's Shield"])
-        assert self._healing(item_only) == pytest.approx(79.7, abs=0.1)
-        assert self._healing(both) == pytest.approx(108.0, abs=0.1)
+        assert self._healing(item_only) == pytest.approx(118.0, abs=0.1)
+        assert self._healing(both) == pytest.approx(146.4, abs=0.1)
 
     def test_it_discloses_the_floor_and_the_cadence_it_chose(self):
         disclosures = " ".join(rune_effects.resolve_rune("Second Wind").disclosures)
@@ -285,8 +285,8 @@ class TestBonePlatingTakesItsFlatCutOffIncomingHits:
     def test_it_lowers_the_damage_the_holder_takes(self):
         bare = self._fight()["combat"]["breakdown"][0]
         plated = self._fight(runes=["Bone Plating"])["combat"]["breakdown"][0]
-        assert bare["health_damage"] == pytest.approx(731.2, abs=0.1)
-        assert plated["health_damage"] == pytest.approx(618.4, abs=0.1)
+        assert bare["health_damage"] == pytest.approx(656.9, abs=0.1)
+        assert plated["health_damage"] == pytest.approx(544.2, abs=0.1)
 
     def test_it_buys_time_in_a_fight_the_holder_loses(self):
         """The other reading of the same reduction: a later death."""
@@ -295,7 +295,7 @@ class TestBonePlatingTakesItsFlatCutOffIncomingHits:
             "breakdown"
         ][0]
         assert bare["death_time"] == pytest.approx(3.75, abs=0.01)
-        assert plated["death_time"] == pytest.approx(4.103, abs=0.01)
+        assert plated["death_time"] == pytest.approx(4.399, abs=0.01)
 
     def test_the_holder_s_own_damage_is_untouched(self):
         """The control: a defensive rune moves nothing the holder deals."""

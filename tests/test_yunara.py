@@ -7,18 +7,17 @@ both its base and Transcendent forms.
 """
 
 import math
-from functools import partial
 from itertools import pairwise
 
 import pytest
 
+from src.calculator.attack_cadence import champion_windup
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import yunara
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.fight.config import FightConfig
 from tests import cc_review
-from tests import champion_closure as closure
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _UNLEASH_WINDOW = 5.0
@@ -91,26 +90,32 @@ class TestCultivationOfSpiritRidesTheSwingStream:
         assert 0 < in_window < result["breakdown"]["auto_attacks"]["count"]
         assert active["damage_per_hit"] == pytest.approx(25.0)
 
-    def test_the_window_counts_the_autos_per_phase(self):
+    def test_the_window_counts_the_autos_on_one_timer(self):
+        """Impact k lands once the timer has run k + phase cycles, 5 s of
+        them at the Unleash rate and 5 s at the base rate."""
         unranked = _fight(ability_ranks=dict(_RANKS, Q=0))
         base_as = unranked["champion_stats"]["attack_speed"]
         ratio = unranked["champion_stats"]["attack_speed_ratio"]
         buffed_as = base_as + ratio * 0.60
+        phase = champion_windup(get_champion("Yunara")).phase(base_as)
 
-        expected = math.floor(buffed_as * _UNLEASH_WINDOW) + math.floor(
-            base_as * (_FIGHT_SECONDS - _UNLEASH_WINDOW)
+        cycles = buffed_as * _UNLEASH_WINDOW + base_as * (
+            _FIGHT_SECONDS - _UNLEASH_WINDOW
         )
-        assert _fight()["breakdown"]["auto_attacks"]["count"] == expected
+        assert _fight()["breakdown"]["auto_attacks"]["count"] == math.ceil(
+            cycles - phase
+        )
         assert "on_hit_ability_Q_passive" not in unranked["breakdown"]
 
     def test_transcendent_state_keeps_unleash_up_for_the_whole_fight(self):
         result = _fight(champion_options={"r_transcendent": True})
         unranked = _fight(ability_ranks=dict(_RANKS, Q=0))
         base_as = unranked["champion_stats"]["attack_speed"]
-        ratio = unranked["champion_stats"]["attack_speed_ratio"]
+        buffed_as = base_as + unranked["champion_stats"]["attack_speed_ratio"] * 0.60
+        phase = champion_windup(get_champion("Yunara")).phase(buffed_as)
 
-        assert result["breakdown"]["auto_attacks"]["count"] == math.floor(
-            (base_as + ratio * 0.60) * _FIGHT_SECONDS
+        assert result["breakdown"]["auto_attacks"]["count"] == math.ceil(
+            buffed_as * _FIGHT_SECONDS - phase
         )
         passive = result["breakdown"]["on_hit_ability_Q_passive"]
         assert passive["damage_per_hit"] == pytest.approx(50.0)  # combined row
