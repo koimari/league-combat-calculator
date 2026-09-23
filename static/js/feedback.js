@@ -1,5 +1,5 @@
 /*!
- * feedback.js — P7 validation-loop widget.
+ * feedback.js: the validation-loop widget.
  *
  * Self-contained module: renders a compact "Did this match your game?"
  * (Yes / No / Off by X%) control plus a combat-log paste importer into the

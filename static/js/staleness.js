@@ -1,4 +1,4 @@
-/* STALE badge — patch-day trust indicator (P3).
+/* STALE badge: the patch-day trust indicator.
 
  * Reads /api/staleness (the patch-regression report comparing the wiki cache
  * against the game files) and patches the DOM with visible "STALE · PATCH

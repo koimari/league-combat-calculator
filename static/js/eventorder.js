@@ -1,5 +1,5 @@
 /*!
- * eventorder.js — F2 optimal event-order panel.
+ * eventorder.js: the optimal event-order panel.
  *
  * Self-contained module: renders the fight's cast sequence as a chip rail
  * plus the combo rationale from the /api/calculate "rotation" receipt, so

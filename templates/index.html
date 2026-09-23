@@ -379,7 +379,7 @@
             </div>
             <div class="timeline" id="timeline"></div>
             <div class="ledger-table" id="ledgerTable"></div>
-            <!-- F2 event-order panel mount. eventorder.js renders the optimal
+            <!-- Event-order panel mount. eventorder.js renders the optimal
                  rotation (cast chips + combo rationale) into this hook from the
                  /api/calculate rotation receipt; it stays hidden when the
                  receipt is absent. -->
@@ -389,7 +389,7 @@
           </div>
         </details>
 
-        <!-- P7 feedback widget mount. feedback.js renders into this hook (or
+        <!-- Feedback widget mount. feedback.js renders into this hook (or
              .canvas without it) and reads the scenario through
              window.scryglass.getCurrentLoadout(): the exact /api/calculate
              payload behind the displayed result, published by app.js. -->
@@ -417,7 +417,7 @@
     <p class="share-status" id="shareStatus" role="status"></p>
   </div>
 
-  <!-- P1a first-run onboarding overlay.
+  <!-- First-run onboarding overlay.
        Shown once per browser (localStorage "scryglass_onboarded"), driven by
        the self-contained initOnboardingOverlay block in static/js/app.js.
        Markup stays static so the JS is purely additive: steps, progress,
