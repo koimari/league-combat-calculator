@@ -232,15 +232,16 @@ class TestDetermination:
         )
 
     def test_the_procs_reach_the_fight_total(self):
-        """7 autos (E's window inside) plus W's two stacks are 9: three procs."""
+        """9 autos (E's window inside) plus W's two stacks are 11: three whole
+        procs, and each stack carries its third of one."""
         result = rider_probe.fight("Xin Zhao")
         row = result["breakdown"][rider_probe.RIDER_ROW]
         assert row["name"] == "Determination"
         assert row["unit"] == "procs"
         assert row["count"] == 3
-        assert result["breakdown"]["auto_attacks"]["count"] == 7
+        assert result["breakdown"]["auto_attacks"]["count"] == 9
         assert result["breakdown"]["W"]["casts"] == 1
-        assert row["total_damage"] == pytest.approx(102.6, abs=0.05)
+        assert row["total_damage"] == pytest.approx(125.4, abs=0.05)
         assert row["total_damage"] < result["total_damage"]
 
     def test_the_heal_rides_the_same_events_as_the_damage(self):

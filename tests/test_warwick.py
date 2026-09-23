@@ -79,12 +79,12 @@ class TestEternalHunger:
         assert on_hit["damage_per_hit"] == pytest.approx(55 + 15 + 20)
 
     def test_the_rider_reaches_the_fight_total(self):
-        """9 autos carry 27.5 post-mitigation magic each — 247.5."""
+        """10 autos carry 27.5 post-mitigation magic each — 275.0."""
         result = rider_probe.fight("Warwick")
         row = result["breakdown"][rider_probe.RIDER_ROW]
         assert row["name"] == "Eternal Hunger (on-hit)"
-        assert row["count"] == result["breakdown"]["auto_attacks"]["count"] == 9
-        assert row["total_damage"] == pytest.approx(247.5, abs=0.05)
+        assert row["count"] == result["breakdown"]["auto_attacks"]["count"] == 10
+        assert row["total_damage"] == pytest.approx(275.0, abs=0.05)
         assert row["total_damage"] < result["total_damage"]
 
     def test_a_healthy_warwick_heals_nothing_from_it(self):
@@ -134,13 +134,13 @@ class TestBloodHunt:
         assert entry["stat_buff"] == {"bonus_attack_speed": 220.0}
 
     def test_the_steroid_buys_autos_in_the_fight(self):
-        """9 autos at the base tier, 14 at the doubled one."""
+        """10 autos at the base tier, 15 at the doubled one."""
         base = rider_probe.fight("Warwick")
         doubled = rider_probe.fight(
             "Warwick", champion_options={"target_missing_hp_pct": 80}
         )
-        assert base["breakdown"]["auto_attacks"]["count"] == 9
-        assert doubled["breakdown"]["auto_attacks"]["count"] == 14
+        assert base["breakdown"]["auto_attacks"]["count"] == 10
+        assert doubled["breakdown"]["auto_attacks"]["count"] == 15
         assert doubled["total_damage"] > base["total_damage"]
 
 

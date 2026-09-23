@@ -9,8 +9,8 @@ than in place of it.
 
 The end-to-end readings here are taken with Rageblade held, so the declared
 and the derived reading are walked by the SAME exact walker: a declared
-stack level with no item ramp is priced through the per-phase floor
-instead, and comparing across the two paths measures the floor rather than
+stack level with no item ramp is priced through the flat one-rate count
+instead, and comparing across the two paths measures that count rather than
 the ramp.
 """
 
@@ -101,9 +101,23 @@ class TestTheWalkerMergesTwoRamps:
     SCHEDULE = rs.SwingSchedule(ramp=None, window=None, schedules_single_rotation=False)
     RATE = {"attack_speed": 0.625, "attack_speed_ratio": 0.668}
 
-    def _times(self, **kwargs) -> tuple[float, ...]:
+    def _times(self, phase: float = 0.0, **kwargs) -> tuple[float, ...]:
         return rs.swing_times(
-            self.SCHEDULE, duration_seconds=8.0, **self.RATE, **kwargs
+            self.SCHEDULE, duration_seconds=8.0, phase=phase, **self.RATE, **kwargs
+        )
+
+    def test_the_windup_delays_the_first_swing_and_the_ramp_follows_it(self):
+        """The first impact lands a phase of a bare cycle after the command;
+        every stack clock runs from the swings, so the walk shifts whole."""
+        kit = rs.DecayingStackRamp(
+            per_stack=0.075, max_stacks=3, stack_duration=2.5, first_stack=0.15
+        )
+        at_command = self._times(kit_ramp=kit)
+        at_windup = self._times(phase=0.25, kit_ramp=kit)
+        shift = 0.25 / self.RATE["attack_speed"]
+        assert at_windup[0] == pytest.approx(shift)
+        assert [t - shift for t in at_windup] == pytest.approx(
+            at_command[: len(at_windup)]
         )
 
     def test_a_kit_ramp_shortens_the_gap_between_successive_swings(self):
@@ -133,9 +147,13 @@ class TestTheWalkerMergesTwoRamps:
         )
         both = rs.SwingSchedule(ramp=item, window=None, schedules_single_rotation=False)
         kit_only = len(self._times(kit_ramp=kit))
-        item_only = len(rs.swing_times(both, duration_seconds=8.0, **self.RATE))
+        item_only = len(
+            rs.swing_times(both, duration_seconds=8.0, phase=0.0, **self.RATE)
+        )
         merged = len(
-            rs.swing_times(both, duration_seconds=8.0, kit_ramp=kit, **self.RATE)
+            rs.swing_times(
+                both, duration_seconds=8.0, phase=0.0, kit_ramp=kit, **self.RATE
+            )
         )
         assert merged > kit_only
         assert merged > item_only
@@ -150,7 +168,7 @@ class TestAnAbilityStackedRamp:
 
     def _times(self, **kwargs) -> tuple[float, ...]:
         return rs.swing_times(
-            self.SCHEDULE, duration_seconds=10.0, **self.RATE, **kwargs
+            self.SCHEDULE, duration_seconds=10.0, phase=0.0, **self.RATE, **kwargs
         )
 
     def test_with_no_ability_stream_it_never_stacks(self):

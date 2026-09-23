@@ -97,11 +97,13 @@ AMBIGUITY NOTES for the coordinator:
 """
 
 import json
+import math
 from pathlib import Path
 
 import pytest
 
 from src import app as app_module
+from src.calculator.attack_cadence import champion_windup
 from src.calculator.atomizer import hash_domain_file
 from src.calculator.champions import get_champion_options_meta, parse_champion_abilities
 from src.calculator.champions.gnar import (
@@ -484,12 +486,16 @@ class TestAttackSpeedLoss:
         )
 
     def test_loss_changes_the_auto_count(self) -> None:
-        # 5 s at 100% uptime, level 18: Mini 8 autos (1.6375 x 5) vs
-        # Mega 3 (0.678125 x 5); per-auto mitigated 57.0 vs 79.55.
+        # 5 s at 100% uptime, level 18, impact k landing at k + phase
+        # cycles: Mini 9 autos (1.6375 x 5 = 8.19 cycles) vs Mega 4
+        # (0.678125 x 5 = 3.39); per-auto mitigated 57.0 vs 79.55.
+        phase = champion_windup(_GNAR_DATA).phase
+        assert math.ceil(1.6375 * 5 - phase(1.6375)) == 9
+        assert math.ceil(0.678125 * 5 - phase(0.678125)) == 4
         mini = _timed(18, False)["breakdown"]["auto_attacks"]
         mega = _timed(18, True)["breakdown"]["auto_attacks"]
-        assert mini["total_damage"] == pytest.approx(8 * 57.0)
-        assert mega["total_damage"] == pytest.approx(3 * 79.55)
+        assert mini["total_damage"] == pytest.approx(9 * 57.0)
+        assert mega["total_damage"] == pytest.approx(4 * 79.55)
 
 
 # ---------------------------------------------------------------------------

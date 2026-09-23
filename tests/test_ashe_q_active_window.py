@@ -44,10 +44,11 @@ explained.  Genuinely-absent mechanics are ``pytest.mark.xfail``
 the markers.
 
 Scheduling convention pinned by this matrix (documented for the
-coordinator): the swing TIMES follow the engine's existing
-empowered-window precedent (``_base_auto_attack_timestamps``) — the
-buffed cadence runs ``k / buffed_as`` for the in-window block, then the
-timer continues at the base cadence from the first post-window tick;
+coordinator): the swing TIMES ride one attack timer
+(``attack_cadence``) — impact ``k`` lands once the timer has run ``k``
+cycles (these engine-direct fights carry no windup), at the buffed rate
+inside the window and the base rate outside it, so the first
+post-window impact completes the cycle the window left open;
 the PRICING is per-swing by time: any swing at time t with
 ``cast <= t < cast + 6`` is flurry-priced (the brief's "per swing"
 seam), any swing at ``t < cast`` or ``t >= cast + 6`` is priced at the
@@ -70,6 +71,7 @@ import hashlib
 import importlib
 import itertools
 import json
+import math
 from pathlib import Path
 
 import pytest
@@ -295,6 +297,25 @@ def _normal_damage(stats: dict, abilities: dict, armor: float = 50.0) -> float:
     return stats["attack_damage"] * 1.0 / (1.0 + armor / 100.0)
 
 
+def _buffed_as(stats: dict, abilities: dict) -> float:
+    """The attack speed inside the Q window."""
+    return stats["attack_speed"] + stats["attack_speed_ratio"] * (
+        abilities["Q"]["stat_buff"]["bonus_attack_speed"] / 100.0
+    )
+
+
+def _first_post_window_swing(stats: dict, abilities: dict, cast: float) -> float:
+    """The window's end plus the rest of the cycle it left open, at base rate."""
+    cycles = cast * stats["attack_speed"] + WINDOW_SECONDS * _buffed_as(
+        stats, abilities
+    )
+    return cast + WINDOW_SECONDS + (math.ceil(cycles) - cycles) / stats["attack_speed"]
+
+
+def _first_swing_from(damages: dict[float, float], moment: float) -> float:
+    return min(t for t in damages if t >= moment)
+
+
 # ---------------------------------------------------------------------------
 # S1 — Source evidence + typed values (the window's inputs)
 # ---------------------------------------------------------------------------
@@ -422,10 +443,10 @@ class TestPreWindowSwings:
         assert _q_cast_times(result) == [0.0]
 
     def test_windowed_pricing_under_the_legacy_override(self):
-        # P1-11: with Q active, the windowed pricing applies — the
-        # first swing lands AT the cast (the floor count drops the
-        # pre-cast 0.0 swing) and is flurry-priced; the post-window
-        # swings revert.
+        # P1-11: with Q active, the windowed pricing applies.  One attack
+        # timer runs through the cast: the 0.25s before it bank 0.2 cycles
+        # at the base 0.8/s, so the first in-window swing lands the rest
+        # of a buffed cycle after the cast and is flurry-priced.
         result = _fight(
             {}, duration=10.0, cast_order=["W", "Q", "R"], auto_attack_uptime=1.0
         )
@@ -433,7 +454,12 @@ class TestPreWindowSwings:
         damages = _swing_damages(result)
         cast = _q_cast_times(result)[0]
         assert cast == pytest.approx(0.25)
-        assert damages[0.25] == pytest.approx(_flurry_damage(stats, abilities))
+        first = _first_swing_from(damages, cast)
+        banked = cast * stats["attack_speed"]
+        assert first == pytest.approx(
+            cast + (1.0 - banked) / _buffed_as(stats, abilities)
+        )
+        assert damages[first] == pytest.approx(_flurry_damage(stats, abilities))
 
     def test_swings_before_the_cast_use_the_normal_ratio(self):
         # Contract: any swing at t < cast is priced at the normal 1.0
@@ -444,13 +470,14 @@ class TestPreWindowSwings:
         stats, abilities = _parse({})
         cast = _q_cast_times(result)[0]
         damages = _swing_damages(result)
-        # The floor count convention drops the pre-cast segment (the
-        # 0.25s pre-cast window cannot complete a swing at 0.8/s), so no
-        # pre-cast swing exists; the first swing lands AT the cast and
-        # is flurry-priced (the start-inclusive boundary).
+        # The first impact lands at the attack command (no windup here),
+        # before the Q cast at 0.25s: it is the one pre-cast swing and is
+        # normal-priced; the next is the first in-window swing.
         pre = {t: d for t, d in damages.items() if t < cast}
-        assert pre == {}
-        assert damages[cast] == pytest.approx(_flurry_damage(stats, abilities))
+        assert pre == pytest.approx({0.0: _normal_damage(stats, abilities)})
+        assert damages[_first_swing_from(damages, cast)] == pytest.approx(
+            _flurry_damage(stats, abilities)
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -501,17 +528,18 @@ class TestStartBoundary:
 
 class TestInWindowSwings:
     def test_post_window_swing_is_flurry_today(self):
-        # The permanent-window pin: the swing at 6.80851s (a post-window
-        # time under the 6s convention) is flurry-priced today and the
-        # cadence never drops to the base rate.
+        # The first post-window swing is normal-priced and the cadence
+        # drops to the base rate: the 10s fight lands 11 swings (8
+        # in-window at the buffed cadence + 3 post-window at the base).
         result = _fight({}, duration=10.0, auto_attack_uptime=1.0)
         stats, abilities = _parse({})
         damages = _swing_damages(result)
-        # The post-window swing at 6.0 is normal-priced; the 10s fight
-        # lands 10 swings (7 in-window at the buffed cadence + 3
-        # post-window at the base cadence).
-        assert damages[6.0] == pytest.approx(_normal_damage(stats, abilities))
-        assert len(_swing_events(result)) == 10
+        first_post = _first_swing_from(damages, WINDOW_SECONDS)
+        assert first_post == pytest.approx(
+            _first_post_window_swing(stats, abilities, cast=0.0)
+        )
+        assert damages[first_post] == pytest.approx(_normal_damage(stats, abilities))
+        assert len(_swing_events(result)) == 11
         buffed_interval = 1.0 / (0.8 + 0.625 * 0.6)
         in_events = sorted(e["time"] for e in _swing_events(result) if e["time"] < 6.0)
         for index, t in enumerate(in_events):
@@ -519,19 +547,16 @@ class TestInWindowSwings:
 
     def test_in_window_swings_use_flurry_ratio_and_buffed_cadence(self):
         # Every swing at t in [cast, cast+6) is flurry-priced and the
-        # in-window cadence is the buffed attack speed.  The 10s
-        # reference fight has 7 in-window swings at k/1.175 (k = 0..6,
-        # the last at 5.106 < 6 — the engine's floor-count convention
-        # drops the 8th tick exactly as at the fight end).
+        # in-window cadence is the buffed attack speed.  The window runs
+        # 6 x 1.175 = 7.05 cycles, so the 10s reference fight lands 8
+        # in-window swings at k/1.175 (k = 0..7, the last at 5.957 < 6).
         result = _fight({}, duration=10.0, auto_attack_uptime=1.0)
         stats, abilities = _parse({})
         cast = _q_cast_times(result)[0]
-        buffed_as = stats["attack_speed"] + stats["attack_speed_ratio"] * (
-            abilities["Q"]["stat_buff"]["bonus_attack_speed"] / 100.0
-        )
+        buffed_as = _buffed_as(stats, abilities)
         damages = _swing_damages(result)
         in_window = {t: d for t, d in damages.items() if cast <= t < cast + 6.0}
-        assert len(in_window) == 7
+        assert len(in_window) == math.ceil(WINDOW_SECONDS * buffed_as) == 8
         for k, t in enumerate(sorted(in_window)):
             assert t == pytest.approx(cast + k / buffed_as)
             assert in_window[t] == pytest.approx(_flurry_damage(stats, abilities))
@@ -611,29 +636,27 @@ class TestPostWindowSwings:
         assert len(post) == 3
         for t in post:
             assert damages[t] == pytest.approx(_normal_damage(stats, abilities))
-        # The timer continues from the last in-window tick at the base
-        # cadence (the engine's empowered-block convention).
-        # The normal phase starts AT the window end (the end-exclusive
-        # boundary — a swing landing exactly at cast+6 is normal).
-        first_post = post[0]
-        assert first_post == pytest.approx(cast + 6.0)
+        # The one timer carries the window's open cycle: the 7.05 cycles
+        # it ran leave 0.95 to complete at 0.8/s, so the first post-window
+        # swing lands at 7.1875s, then every 1.25s.
+        assert post[0] == pytest.approx(
+            _first_post_window_swing(stats, abilities, cast=cast)
+        )
         for a, b in itertools.pairwise(post):
             assert b - a == pytest.approx(1.0 / stats["attack_speed"])
 
     def test_total_swing_count_unchanged_at_ten_seconds(self):
-        # The 10s fight lands 10 swings under the window (7 in-window at
-        # the buffed cadence + 3 post-window at the base cadence) — the
-        # floor-count convention per phase (the engine's 11 whole-fight
-        # swings become 7 + 3).
+        # The 10s fight lands 11 swings under the window: the timer runs
+        # 7.05 cycles inside it and 3.2 after, 10.25 in all.
         result = _fight({}, duration=10.0, auto_attack_uptime=1.0)
-        assert len(_swing_events(result)) == 10
+        assert len(_swing_events(result)) == 11
 
     def test_fight_total_matches_the_windowed_pricing(self):
-        # Contract: the auto total = 7 flurry swings + 3 normal swings
-        # (per-swing pricing; the engine's floor-count convention).
+        # Contract: the auto total = 8 flurry swings + 3 normal swings
+        # (per-swing pricing).
         result = _fight({}, duration=10.0, auto_attack_uptime=1.0)
         stats, abilities = _parse({})
-        expected = 7 * _flurry_damage(stats, abilities) + 3 * _normal_damage(
+        expected = 8 * _flurry_damage(stats, abilities) + 3 * _normal_damage(
             stats, abilities
         )
         assert result["breakdown"]["auto_attacks"]["total_damage"] == pytest.approx(
@@ -858,12 +881,16 @@ class TestFocusConsumeAndGainsResume:
 
 class TestAttacksAfterExpiry:
     def test_first_post_window_swing_is_flurry_today(self):
-        # P1-11: the first post-window swing (6.0 — the window end,
-        # end-exclusive) is normal-priced.
+        # P1-11: the first post-window swing (the cycle the window left
+        # open, completed at the base rate) is normal-priced.
         result = _fight({}, duration=10.0, auto_attack_uptime=1.0)
         stats, abilities = _parse({})
         damages = _swing_damages(result)
-        assert damages[6.0] == pytest.approx(_normal_damage(stats, abilities))
+        first_post = _first_swing_from(damages, WINDOW_SECONDS)
+        assert first_post == pytest.approx(
+            _first_post_window_swing(stats, abilities, cast=0.0)
+        )
+        assert damages[first_post] == pytest.approx(_normal_damage(stats, abilities))
 
     def test_post_window_swings_deal_normal_damage_and_gain_focus(self):
         # Contract: after expiry the autos deal the normal-ratio damage
@@ -878,12 +905,15 @@ class TestAttacksAfterExpiry:
         assert post_times
         for t in post_times:
             assert damages[t] == pytest.approx(_normal_damage(stats, abilities))
-        gain_times = {
+        gain_times = [
             r["time"]
             for r in account["receipts"]
             if r["operation"] == "gain" and r["accepted"]
-        }
-        assert any(t in gain_times for t in post_times)
+        ]
+        # Receipts publish their time to the millisecond.
+        assert any(
+            t == pytest.approx(g, abs=5e-4) for t in post_times for g in gain_times
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -924,10 +954,12 @@ class TestNoNewOption:
         result = _fight({}, duration=10.0, auto_attack_uptime=1.0)
         stats, abilities = _parse({})
         damages = _swing_damages(result)
-        # The post-window swings (6.0, 7.25, 8.5) revert to the normal
-        # ratio; the in-window swings keep the flurry price.
-        assert damages[6.0] == pytest.approx(_normal_damage(stats, abilities))
-        assert damages[8.5] == pytest.approx(_normal_damage(stats, abilities))
+        # The post-window swings (7.1875, 8.4375, 9.6875) revert to the
+        # normal ratio; the in-window swings keep the flurry price.
+        post = [t for t in damages if t >= WINDOW_SECONDS]
+        assert post == pytest.approx([7.1875, 8.4375, 9.6875])
+        for t in post:
+            assert damages[t] == pytest.approx(_normal_damage(stats, abilities))
         assert damages[0.0] == pytest.approx(_flurry_damage(stats, abilities))
 
 

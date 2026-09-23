@@ -29,6 +29,7 @@ import pytest
 
 from src import app as app_module
 from src.calculator.ability_atoms import _ability_atoms
+from src.calculator.attack_cadence import champion_windup
 from src.calculator.champions import twitch
 from src.calculator.champions.slot_entries import STEROID_ZERO
 from src.calculator.data_fetcher import get_champion
@@ -285,23 +286,22 @@ class TestTheWindowSplitsTheLiveAutoCount:
         )
 
     def test_the_auto_count_matches_the_windowed_arithmetic(self):
-        """floor(in-window) + floor(post-window), not one blended floor."""
+        """One attack timer through the window: impact k lands once it has
+        run k + phase cycles, 6 s of them at the buffed rate."""
         base_fight = _fight()
         base_as = base_fight["champion_stats"]["attack_speed"]
         buffed_as = base_as + base_fight["champion_stats"]["attack_speed_ratio"] * 0.60
         uptime = 0.8  # the engine's default auto-attack uptime
         window, duration = 6.0, 10.0
+        phase = champion_windup(get_champion("Twitch")).phase(base_as)
 
-        expected = math.floor(buffed_as * window * uptime) + math.floor(
-            base_as * (duration - window) * uptime
-        )
+        cycles = (buffed_as * window + base_as * (duration - window)) * uptime
 
-        assert (
-            _fight(q_ambush_break=True)["breakdown"]["auto_attacks"]["count"]
-            == expected
-        )
-        assert base_fight["breakdown"]["auto_attacks"]["count"] == math.floor(
-            base_as * duration * uptime
+        assert _fight(q_ambush_break=True)["breakdown"]["auto_attacks"][
+            "count"
+        ] == math.ceil(cycles - phase)
+        assert base_fight["breakdown"]["auto_attacks"]["count"] == math.ceil(
+            base_as * duration * uptime - phase
         )
 
     def test_the_window_raises_the_count_without_changing_per_hit_damage(self):

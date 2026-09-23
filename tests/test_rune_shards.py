@@ -16,6 +16,7 @@ engine publishes:
 """
 
 import json
+import math
 import shutil
 import subprocess
 from pathlib import Path
@@ -25,7 +26,9 @@ import pytest
 import src.app as app_module
 from src.calculator import rune_effects
 from src.calculator.ability_spec import Disposition
+from src.calculator.attack_cadence import champion_windup
 from src.calculator.calculate import calculate_payload
+from src.calculator.data_fetcher import get_champion
 from src.calculator.rune_paths import shards
 
 
@@ -223,13 +226,17 @@ class TestTheShardsMoveTheFightTheyAreOn:
         assert stats["ability_power"] == ability_power
 
     def test_the_attack_speed_shard_buys_a_swing(self):
-        """+10% bonus AS through Caitlyn's AS ratio is a ninth auto in 10s."""
+        """+10% bonus AS through Caitlyn's AS ratio is a ninth auto in 9s.
+
+        Impact k lands once the timer has run k + phase cycles; the shard
+        takes 9s from 7.65 cycles to 8.21, past the ninth impact's 8.18.
+        """
         base = {
             "champion": "Caitlyn",
             "level": 9,
             "items": [],
             "fight_mode": "timed",
-            "fight_duration": 10.0,
+            "fight_duration": 9.0,
             "include_auto_attacks": True,
             "auto_attack_uptime": 1.0,
         }
@@ -237,8 +244,11 @@ class TestTheShardsMoveTheFightTheyAreOn:
         page = calculate_payload(dict(base, stat_shards=["Attack Speed"]))
         assert bare["champion_stats"]["attack_speed"] == pytest.approx(0.8495)
         assert page["champion_stats"]["attack_speed"] == pytest.approx(0.912)
-        assert bare["auto_attack_schedule"]["expected_autos_total"] == 8
-        assert page["auto_attack_schedule"]["expected_autos_total"] == 9
+        phase = champion_windup(get_champion("Caitlyn")).phase
+        for result, autos in ((bare, 8), (page, 9)):
+            speed = result["champion_stats"]["attack_speed"]
+            assert math.ceil(speed * base["fight_duration"] - phase(speed)) == autos
+            assert result["auto_attack_schedule"]["expected_autos_total"] == autos
         assert bare["auto_attack_damage"] == pytest.approx(352.0)
         assert page["auto_attack_damage"] == pytest.approx(396.0)
 

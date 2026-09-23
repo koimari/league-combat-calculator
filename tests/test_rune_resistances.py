@@ -126,7 +126,7 @@ class TestWhatTheResistancesBuyAndWhatTheyDoNot:
 
     @pytest.mark.parametrize(
         ("champion", "expected"),
-        [("Malphite", 11.4), ("Rammus", 9.6), ("K'Sante", 6.5)],
+        [("Malphite", 11.4), ("Rammus", 10.7), ("K'Sante", 6.6)],
     )
     def test_an_armor_scaling_kit_prices_more_damage(self, champion, expected):
         before = _fight(champion, 0)["total_damage"]
@@ -249,7 +249,7 @@ class TestRevitalizeReachesEveryRecovery:
         assert held["champion_stats"]["heal_and_shield_power_percent"] == 5.0
         assert held["self_healing"] > bare["self_healing"]
         assert held["self_healing"] - bare["self_healing"] == pytest.approx(
-            307.9, abs=0.1
+            327.3, abs=0.1
         )
 
     def test_the_conditional_half_is_disclosed_not_folded_in(self):
