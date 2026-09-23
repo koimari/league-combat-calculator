@@ -74,8 +74,9 @@ ignore = [
   # sightline #23 prices complexity; one owner per fact.
   "C901", "PLR0911", "PLR0912", "PLR0915",
   # Arity's one owner is sightline #55, which `sightline gate . --full` blocks on above
-  # .sightline-baseline; it counts positional width, as a keyword-only parameter is
-  # named at every call. Pylint's two arity checks are off below for the same reason.
+  # .sightline-baseline. It counts positional width on a signature with no `*` marker,
+  # as a keyword-only parameter is named at every call; positionals before a `*` go
+  # unseen. Pylint's two arity checks are off below for the same reason.
   "PLR0913", "PLR0917",
   # Contract-shaped signatures (champion modules, readers, stubs); sightline #32 flags
   # a never-read parameter where it is not a contract.

@@ -78,8 +78,8 @@ def test_the_declared_default_lives_at_exactly_one_layer() -> None:
 def test_the_declared_default_is_keyword_only_at_both_builders() -> None:
     """A trailing positional would let an extra argument bind into it.
 
-    ``damage_entry`` takes six positional parameters and is called with
-    them positionally across the champion tree; a seventh positional slot
+    ``damage_entry`` takes five positional parameters and is called with
+    them positionally across the champion tree; a sixth positional slot
     named ``zero_policy`` turns any miscounted call into a policy silently
     replaced by a float — the indistinguishable-default shape one layer up
     from the one the rule removes.

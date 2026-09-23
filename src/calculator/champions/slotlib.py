@@ -30,6 +30,7 @@ from .slot_extract import (
 
 
 def simple_damage(
+    *,
     attr: str | None = None,
     dmg_type: str = "auto",
     casts: int | str = 1,
@@ -39,7 +40,6 @@ def simple_damage(
     ranks: str = "rank",
     dot_duration: float | None = None,
     cc_kind: str | None = None,
-    *,
     zero_policy: ZeroPolicy = MODULE_FORMULA_ZERO,
     event_order_certified: str | None = None,
     crit_effectiveness: float = 0.0,
@@ -161,7 +161,7 @@ def simple_damage(
             cd_value,
             total,
             resolved_type,
-            cc_kind,
+            cc_kind=cc_kind,
             zero_policy=zero_policy,
             event_order_certified=event_order_certified,
             crit_effectiveness=crit_effectiveness,

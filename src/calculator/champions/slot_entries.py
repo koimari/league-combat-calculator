@@ -60,8 +60,8 @@ def damage_entry(
     cooldown: float,
     total: float,
     dmg_type: str,
-    cc_kind: str | None = None,
     *,
+    cc_kind: str | None = None,
     zero_policy: ZeroPolicy = MODULE_FORMULA_ZERO,
     event_order_certified: str | None = None,
     crit_effectiveness: float = 0.0,
@@ -84,7 +84,7 @@ def damage_entry(
     ``zero_policy`` says what a zero total *means*.  It defaults to
     :data:`MODULE_FORMULA_ZERO`, the one declared default in the champion tree,
     and a slot whose zero is a declaration rather than a computation passes its
-    own.  It is **keyword-only**: a trailing positional would let a seventh
+    own.  It is **keyword-only**: a trailing positional would let a sixth
     positional argument at any of the hundreds of call sites bind a
     non-``ZeroPolicy`` value into it silently.
 
