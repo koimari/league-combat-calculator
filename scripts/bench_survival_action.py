@@ -19,10 +19,9 @@ import subprocess
 import sys
 import time
 import timeit
-from collections import namedtuple
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -93,8 +92,8 @@ TABLES = {
 #: Which column of which table ``--compare`` reads, by row name.
 MEDIAN_COLUMN = {
     **{group: ("construction", 3) for group, _ in CONSTRUCTION_INPUTS},
-    **{name: ("constructor", 2) for name in CONSTRUCTORS},
-    **{name: ("walk", 2) for name in WALK_SCENARIOS},
+    **dict.fromkeys(CONSTRUCTORS, ("constructor", 2)),
+    **dict.fromkeys(WALK_SCENARIOS, ("walk", 2)),
 }
 
 _GOLDEN = {scenario.name: scenario.request for scenario in COUPLED_SCENARIOS}
@@ -126,7 +125,7 @@ def set_fields(action: SurvivalAction) -> dict[str, Any]:
     """The fields this action holds away from the class default."""
     return {
         name: value
-        for name, value, default in zip(action._fields, action, _DEFAULT)
+        for name, value, default in zip(action._fields, action, _DEFAULT, strict=True)
         if value is not default and value != default
     }
 
@@ -141,16 +140,14 @@ def representative(actions: Sequence[SurvivalAction], group: str) -> SurvivalAct
 
 
 def narrow_type(fields: Mapping[str, Any]) -> type:
-    """A NamedTuple over only these fields, each defaulting as the wide one does."""
-    names = tuple(fields)
-    defaults = [_DEFAULT[SurvivalAction._fields.index(name)] for name in names]
-    return namedtuple("NarrowAction", names, defaults=defaults)
+    """A NamedTuple over only these fields."""
+    return NamedTuple("NarrowAction", [(name, Any) for name in fields])
 
 
 def per_call_us(
-    call: Callable[..., Any],
-    args: Sequence[Any],
-    kwargs: Mapping[str, Any],
+    call: Callable[..., object],
+    args: Sequence[object],
+    kwargs: Mapping[str, object],
     *,
     repeats: int,
     number: int,
@@ -207,7 +204,7 @@ def constructor_rows(
             "fields": len(every),
             "µs": per_call_us(call, args, kwargs, **timing),
         }
-        for name, (call, args, kwargs) in zip(CONSTRUCTORS, readings)
+        for name, (call, args, kwargs) in zip(CONSTRUCTORS, readings, strict=True)
     ]
 
 

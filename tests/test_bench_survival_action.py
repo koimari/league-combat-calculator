@@ -11,8 +11,16 @@ import bench_survival_action as bench
 def test_a_tiny_run_prints_every_row_compare_reads(capsys):
     scenario = bench.WALK_SCENARIOS[-1]
     bench.main(
-        ["--scenario", scenario, "--repeats", "2", "--number", "5"]
-        + ["--walk-repeats", "2"]
+        [
+            "--scenario",
+            scenario,
+            "--repeats",
+            "2",
+            "--number",
+            "5",
+            "--walk-repeats",
+            "2",
+        ]
     )
     printed = capsys.readouterr().out
     headers = {"| " + " | ".join(columns) + " |" for columns in bench.TABLES.values()}
