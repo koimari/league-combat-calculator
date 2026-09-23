@@ -30,7 +30,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import single_owner_lint
 
 from src.calculator.survival import classify, phases
-from src.calculator.survival.action_families import DamageAction
+from src.calculator.survival.action_families import FAMILIES, DamageAction
 from src.calculator.survival.actions import (
     action_key,
     event_timestamp,
@@ -63,10 +63,10 @@ def _population() -> tuple[Path, ...]:
     """Every file a phase can be written in.
 
     Three trees, not one: the kernel that consumes a rank, the timeline that
-    composes a walk, and ``program/`` — which is where the one
-    ``SurvivalAction`` constructor lives, so a float written into a phase
-    slot would land there and nowhere else.  Scanning only the kernel would
-    leave the guard pointed at a file the construction has left.
+    composes a walk, and ``program/``, which is where every action record is
+    built, so a float written into a phase slot would land there and nowhere
+    else.  Scanning only the kernel would leave the guard pointed at a file
+    the construction has left.
     """
     return (*sorted(SURVIVAL.glob("*.py")), *sorted(PROGRAM.rglob("*.py")), *TIMELINE)
 
@@ -186,7 +186,11 @@ def test_the_sort_key_carries_the_slot_and_not_the_rank() -> None:
 # ``_slot_rules`` therefore derives the index of a ``phase`` parameter and of
 # a ``sort_key`` parameter from every ``def`` and every NamedTuple field
 # list in the population, so a positional call is a slot whether or not
-# anybody remembered the callee's name.
+# anybody remembered the callee's name.  The action records have no field
+# list in the source, since ``namedtuple()`` builds them at import, so
+# ``_population_rules`` reads theirs off every ``SurvivalAction`` subclass.
+# ``R._make((a, b))`` reads as ``R(a, b)``, and a ``_make`` on a receiver no
+# rule names takes the position every record shares.
 #
 # A slot filled by a bare name is resolved through one level of assignment,
 # because ``priority = -1.0 if ... else 1.0`` followed by ``phase=priority``
@@ -252,6 +256,22 @@ def _callee_name(node: ast.expr) -> str:
     return ""
 
 
+def _positional_args(call: ast.Call, rules: _SlotRules) -> tuple[str, list[ast.expr]]:
+    """A call's callee and the positional arguments before any starred one."""
+    callee, args = _callee_name(call.func), call.args
+    if (
+        isinstance(call.func, ast.Attribute)
+        and callee == "_make"
+        and args
+        and isinstance(args[0], ast.Tuple)
+    ):
+        receiver = _callee_name(call.func.value)
+        callee = receiver if receiver in rules.phase_arg else callee
+        args = args[0].elts
+    starred = [i for i, arg in enumerate(args) if isinstance(arg, ast.Starred)]
+    return callee, args[: starred[0]] if starred else args
+
+
 def _holds_number(node: ast.AST) -> bool:
     """Whether an expression carries a numeric literal as a *value*.
 
@@ -294,9 +314,10 @@ def _sort_key_tuples(tree: ast.AST, rules: _SlotRules) -> list[tuple[ast.Tuple, 
                     and isinstance(keyword.value.body, ast.Tuple)
                 ):
                     found.append((keyword.value.body, "sort_key[1]"))
-            index = rules.sort_key_arg.get(_callee_name(node.func), -1)
-            if 0 <= index < len(node.args) and isinstance(node.args[index], ast.Tuple):
-                found.append((node.args[index], "sort_key[1] (positional)"))
+            callee, args = _positional_args(node, rules)
+            index = rules.sort_key_arg.get(callee, -1)
+            if 0 <= index < len(args) and isinstance(args[index], ast.Tuple):
+                found.append((args[index], "sort_key[1] (positional)"))
         elif isinstance(node, ast.Assign):
             found.extend(
                 (node.value, "sort_key[1]")
@@ -332,17 +353,15 @@ def phase_literals(
     offenders: list[tuple[str, int, str]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
-            callee = _callee_name(node.func)
+            callee, args = _positional_args(node, rules)
             offenders.extend(
                 (path.name, keyword.value.lineno, "phase=")
                 for keyword in node.keywords
                 if keyword.arg == "phase" and _slot_offends(keyword.value, bound)
             )
             index = rules.phase_arg.get(callee, -1)
-            if 0 <= index < len(node.args) and _slot_offends(node.args[index], bound):
-                offenders.append(
-                    (path.name, node.args[index].lineno, f"{callee}(,{index})")
-                )
+            if 0 <= index < len(args) and _slot_offends(args[index], bound):
+                offenders.append((path.name, args[index].lineno, f"{callee}(,{index})"))
         elif isinstance(node, ast.Compare):
             operands = [node.left, *node.comparators]
             if any(_is_phase_operand(side) for side in operands) and any(
@@ -373,8 +392,20 @@ def _folds_to_slot(node: ast.expr, bound: Mapping[str, list[ast.expr]]) -> bool:
 
 
 def _population_rules(paths: Iterable[Path]) -> _SlotRules:
-    """The slot positions and name bindings the whole population declares."""
-    return _slot_rules([ast.parse(path.read_text(encoding="utf-8")) for path in paths])
+    """The slot positions and name bindings the population declares, records included."""
+    rules = _slot_rules([ast.parse(path.read_text(encoding="utf-8")) for path in paths])
+    records = [
+        cls for cls in SurvivalAction.__subclasses__() if hasattr(cls, "_fields")
+    ]
+    positions = []
+    for slot, declared in (
+        ("phase", rules.phase_arg),
+        ("sort_key", rules.sort_key_arg),
+    ):
+        by_record = {cls.__name__: cls._fields.index(slot) for cls in records}
+        (shared,) = set(by_record.values())
+        positions.append({**declared, **by_record, "_make": shared})
+    return _SlotRules(*positions, rules.bound)
 
 
 def test_the_positional_phase_slots_are_read_from_the_definitions() -> None:
@@ -385,14 +416,15 @@ def test_the_positional_phase_slots_are_read_from_the_definitions() -> None:
     here, so it can never be scanned by a rule that has not heard of it.
     """
     rules = _population_rules(_population())
+    records = {family.__name__ for family in FAMILIES} | {"SurvivalAction", "_make"}
     assert dict(rules.phase_arg) == {
-        "SurvivalAction": 2,
+        **dict.fromkeys(records, 2),
         "action_from_event": 1,
         "action_key": 1,
         "classify_event_kind": 1,
         "classify_prefetched": 1,
     }
-    assert dict(rules.sort_key_arg) == {"SurvivalAction": 0}
+    assert dict(rules.sort_key_arg) == dict.fromkeys(records, 0)
 
 
 def test_no_float_literal_reaches_a_phase_slot() -> None:
@@ -457,6 +489,30 @@ def test_the_phase_slot_guard_sees_every_spelling(tmp_path: Path) -> None:
         "sort_key[1] (positional)",
     ]
     assert slots.count("phase=") == 2  # the literal and the aliased ladder
+
+
+def test_the_guard_sees_a_record_built_by_position(tmp_path: Path) -> None:
+    """``namedtuple()`` builds the records at import, so no source line lists their fields.
+
+    A record called positionally, or handed one tuple through ``_make`` as
+    ``action_from_event`` does, fills the same phase and sort-key slots.
+    """
+    sample = tmp_path / "records.py"
+    sample.write_text(
+        "DamageAction((t, 0.5, s), 1.0, 0.5)\n"
+        "DamageAction._make(((t, 0.5, s), 1.0, 0.5))\n"
+        "family._make(((t, 0.5, s), 1.0, 0.5, *rest))\n",
+        encoding="utf-8",
+    )
+    found = phase_literals(sample, _population_rules(_population()))
+    assert [(line, slot) for _, line, slot in found] == [
+        (1, "DamageAction(,2)"),
+        (1, "sort_key[1] (positional)"),
+        (2, "DamageAction(,2)"),
+        (2, "sort_key[1] (positional)"),
+        (3, "_make(,2)"),
+        (3, "sort_key[1] (positional)"),
+    ]
 
 
 # --- The support ladder: a rank, never an open float ------------------------
