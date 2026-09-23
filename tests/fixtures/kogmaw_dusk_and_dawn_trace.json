@@ -2,7 +2,7 @@
   "request": {
     "auto_attack_uptime": 1.0,
     "champion": "Kog'Maw",
-    "fight_duration_seconds": 8.0,
+    "fight_duration": 8.0,
     "fight_mode": "timed",
     "include_auto_attacks": true,
     "items": [
