@@ -60,6 +60,14 @@ CORPUS_BUILDS = (
     ("Ahri", ("Lich Bane", "Fated Ashes", "Eclipse", "Hextech Alternator")),
 )
 
+#: One build per item whose ``informational`` row restates a share of
+#: damage other rows already priced, beside that row's key.
+RESTATING_BUILDS = (
+    ("Ahri", ("Hexoptics C44", "Yun Tal Wildarrows"), "basic_amp_Hexoptics C44"),
+    ("Garen", ("Sundered Sky", "Infinity Edge"), "sundered_sky"),
+    ("Leona", ("Actualizer", "Zeke's Convergence"), "ability_amp_Actualizer"),
+)
+
 
 def traced(champion: str, items: tuple[str, ...]) -> dict:
     """One build's trace block, through the same boundary the API serves."""
@@ -262,6 +270,22 @@ class TestTheLinesSumToTheFight:
     def test_a_corpus_build_accounts_for_its_whole_total(self, champion, items):
         result = recorded(champion, items)
         lines = fight_trace(result).lines
+        assert round(sum(line.mitigated for line in lines), 4) == round(
+            result["total_damage"], 4
+        )
+
+    @pytest.mark.parametrize(
+        ("champion", "items", "row"),
+        RESTATING_BUILDS,
+        ids=[build[1][0] for build in RESTATING_BUILDS],
+    )
+    def test_an_informational_row_is_no_line(self, champion, items, row):
+        """Its total is a share of packets already on their own lines."""
+        result = recorded(champion, items)
+        assert result["breakdown"][row]["informational"]
+        assert result["breakdown"][row]["total_damage"] > 0
+        lines = fight_trace(result).lines
+        assert row not in {line.source for line in lines}
         assert round(sum(line.mitigated for line in lines), 4) == round(
             result["total_damage"], 4
         )
