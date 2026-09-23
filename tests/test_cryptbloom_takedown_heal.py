@@ -359,12 +359,12 @@ def test_takedown_scan_predicates_keep_dict_rows():
 
 
 def test_kill_fight_emits_exactly_one_heal_packet_per_recipient_at_kill_time():
-    """A fight where the main kills the enemy (level-1 Aatrox dies at t=0)
-    produces exactly ONE Life From Death heal packet per recipient —
-    attacker + every teammate — at the kill time, never a packet targeting
-    the dead enemy.  The kill time is the LAST outgoing damage event time
-    in the window (R lands at t=0; the final auto at 6.328 is the receipt
-    time)."""
+    """A fight where the main kills the enemy (level-1 Aatrox dies on the
+    opening swing, one windup after t=0) produces exactly ONE Life From
+    Death heal packet per recipient — attacker + every teammate — at the
+    kill time, never a packet targeting the dead enemy.  The kill time is
+    the LAST outgoing damage event time in the window (R lands at t=0; the
+    final auto at 7.791 is the receipt time)."""
     timeline = _timeline()
     heals = _timeline_heals(timeline)
     assert len(heals) == 2
@@ -376,14 +376,18 @@ def test_kill_fight_emits_exactly_one_heal_packet_per_recipient_at_kill_time():
         for row in timeline["participants"]
         if row["participant_id"] == "enemy:Aatrox"
     )
-    assert enemy_death["survival"]["death_time"] == pytest.approx(0.0)
-
     main_events = [
         event["time"]
         for event in timeline["events"]
         if event["attacker"] == "main" and event["target"] == "enemy:Aatrox"
     ]
     assert main_events
+    opening_swing = min(
+        event["time"]
+        for event in timeline["events"]
+        if event["attacker"] == "main" and event["source"] == "auto_attacks"
+    )
+    assert enemy_death["survival"]["death_time"] == pytest.approx(opening_swing)
     kill_time = max(main_events)
     for event in heals:
         assert event["time"] == pytest.approx(kill_time, abs=0.001)

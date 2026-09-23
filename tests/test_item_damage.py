@@ -2521,7 +2521,7 @@ class TestExperimentalHexplate(_FightHarness):
         assert autos_with > autos_without
 
     def test_hexplate_auto_count_5s_fight(self) -> None:
-        """With buffed AS=1.3125 (from stats), 5s => 6 autos."""
+        """With buffed AS=1.3125 (from stats), 5s => 7 autos."""
         stats = self._make_stats(
             health=0.0,
             max_mana=0.0,
@@ -2560,11 +2560,11 @@ class TestExperimentalHexplate(_FightHarness):
             ),
         )
         # AS already includes Hexplate 50% bonus from stats.py
-        # floor(1.3125 * 5 * 1.0) = 6
-        assert fight["breakdown"]["auto_attacks"]["count"] == 6
+        # ceil(1.3125 * 5 * 1.0) = 7
+        assert fight["breakdown"]["auto_attacks"]["count"] == 7
 
     def test_hexplate_full_fight_duration(self) -> None:
-        """With buffed AS=1.3125 for full 15s fight: floor(1.3125 * 15) = 19."""
+        """With buffed AS=1.3125 for full 15s fight: ceil(1.3125 * 15) = 20."""
         stats = self._make_stats(
             health=0.0,
             max_mana=0.0,
@@ -2603,8 +2603,8 @@ class TestExperimentalHexplate(_FightHarness):
             ),
         )
         # AS includes Hexplate bonus from stats.py, applied for full duration
-        # floor(1.3125 * 15 * 1.0) = 19
-        assert fight["breakdown"]["auto_attacks"]["count"] == 19
+        # ceil(1.3125 * 15 * 1.0) = 20
+        assert fight["breakdown"]["auto_attacks"]["count"] == 20
 
     def test_hexplate_note_in_result(self) -> None:
         """Fight result should include a note about R assumption."""
@@ -2755,8 +2755,8 @@ class TestFiendhunterBolts(_FightHarness):
         empowered_phys = 160.0 * 3
         # buffed_as = 1.0 + 0.625 * 0.50 = 1.3125
         # 3 / (1.3125 * 1.0) = 2.2857s; remaining = 2.7143s
-        # normal_autos = floor(1.0 * 2.7143) = 2
-        normal_phys = 100.0 * 2
+        # normal_autos = ceil(1.0 * 2.7143) = 3, the first at 2.2857s
+        normal_phys = 100.0 * 3
         assert abs(autos["total_damage"] - (empowered_phys + normal_phys)) < 1
         assert "fiendhunter_true_damage" not in fight["breakdown"]
 
@@ -2804,8 +2804,8 @@ class TestFiendhunterBolts(_FightHarness):
             ),
         )
         autos = fight["breakdown"]["auto_attacks"]
-        # 3 empowered at full crit = 200 each, 2 normal crits = 200 each
-        assert autos["num_crits"] == 5  # all autos crit at 100%
+        # 3 empowered at full crit = 200 each, 3 normal crits = 200 each
+        assert autos["num_crits"] == 6  # all autos crit at 100%
         fh_true = fight["breakdown"]["fiendhunter_true_damage"]
         # True damage: 200 * 0.15 = 30 per hit, 3 empowered hits = 90
         assert abs(fh_true["total_damage"] - 90.0) < 0.01
@@ -2828,7 +2828,8 @@ class TestFiendhunterBolts(_FightHarness):
         Fiendhunter's 15% true damage and a roll over it takes 80% of the
         crit and no true damage: 83.2 mitigated three times is 250, and
         each crit adds 52.  ``deterministic`` cannot express a crit count,
-        it blends the outcomes, so the roll sequence is the axis here.
+        it blends the outcomes, so the roll sequence is the axis here.  The
+        2s fight ends before the first ordinary impact at 3 / 1.3125 = 2.29s.
         """
         stats = self._make_stats(
             health=0.0,
@@ -2855,7 +2856,7 @@ class TestFiendhunterBolts(_FightHarness):
                     target_health=1000,
                     target_armor=100,
                     target_magic_resistance=100,
-                    fight_duration_seconds=3.0,
+                    fight_duration_seconds=2.0,
                     auto_attack_uptime=1.0,
                     one_rotation=True,
                 ),
@@ -2911,10 +2912,10 @@ class TestFiendhunterBolts(_FightHarness):
         # buffed_as = 1.0 + 0.625 * 0.50 = 1.3125
         # 3 empowered autos take 3 / (1.3125 * 1.0) = 2.2857s
         # remaining = 10.0 - 2.2857 = 7.7143s
-        # normal autos = floor(1.0 * 7.7143) = 7
-        # total = 3 + 7 = 10
+        # normal autos = ceil(1.0 * 7.7143) = 8, the first at 2.2857s
+        # total = 3 + 8 = 11
         assert autos["empowered_count"] == 3
-        assert autos["count"] == 10
+        assert autos["count"] == 11
 
     def test_fiendhunter_note_in_result(self) -> None:
         """Fight result should include a note about R assumption."""

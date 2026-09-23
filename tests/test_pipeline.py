@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from src.calculator.attack_cadence import champion_windup
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.fight.rotation.cast_schedule import _cooldown_ready_at
 from src.calculator.fight_params import FightParams
@@ -396,7 +397,8 @@ def test_cull_on_hit_healing_survives_score_only_and_coupled_ledger(ahri_data):
 
 
 def test_sundered_sky_first_attack_heal_is_materialized(ahri_data):
-    """Sundered Sky's fixed base-AD receipt reaches the public ledger."""
+    """Sundered Sky's fixed base-AD receipt reaches the public ledger at
+    the first attack's impact, one windup after t=0."""
     params = FightParams.from_request(
         {
             "fight_mode": "timed",
@@ -420,7 +422,10 @@ def test_sundered_sky_first_attack_heal_is_materialized(ahri_data):
         if event["source"] == "Sundered Sky (Lightshield Strike)"
     ]
     assert len(item_events) == 1
-    assert item_events[0]["time"] == pytest.approx(0.0)
+    windup = champion_windup(ahri_data).seconds(
+        result["champion_stats"]["attack_speed"]
+    )
+    assert item_events[0]["time"] == pytest.approx(windup)
     # Ahri is ranged: Lightshield Strike heals 50% base AD (pass 17).
     assert item_events[0]["amount"] == pytest.approx(52.0)
 

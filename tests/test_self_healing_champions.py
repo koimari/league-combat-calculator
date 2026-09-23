@@ -308,10 +308,12 @@ def test_maokai_sap_magic_requires_a_basic_attack():
 
 
 def test_maokai_sap_magic_second_proc_in_a_longer_fight():
-    """The cooldown restarts after a proc; a 20 s fight pays two heals."""
+    """The cooldown restarts after a proc; a 20 s fight pays two heals, and
+    a third proc, on the 19.4 s swing, finds Maokai above 95% health."""
     data = _fight("Maokai", duration=20)
     heals = _main_heals(data, "Sap Magic")
-    assert len(heals) == 2
+    assert len(heals) == 3
+    assert heals[2]["raw_amount"] == pytest.approx(0.0, abs=0.05)
     first_time, first_amount = _maokai_sap_magic_expected(data)
     assert heals[0]["time"] == pytest.approx(first_time, abs=0.01)
     assert heals[0]["raw_amount"] == pytest.approx(first_amount, abs=0.15)

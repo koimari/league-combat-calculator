@@ -671,7 +671,7 @@ class TestP4JTransitionContract:
     def test_p4j_casts_at_and_after_T_use_flipped_packets(self):
         """The mid-fight split is NOT representable (the receipt): a
         flip key is rejected by name, and the Hammer packets only appear
-        in a hammer_stance fight.  The bounding pair — Cannon 4994.0 vs
+        in a hammer_stance fight.  The bounding pair — Cannon 5244.0 vs
         Hammer 5280.0 at the reference build — is the receipt's
         two-one-stance-fight model; the cross-combo (672+512.5 Q /
         825+440 W in ONE fight) is the documented gap."""
@@ -695,15 +695,17 @@ class TestP4JTransitionContract:
 
     def test_p4j_reference_fight_total(self):
         """The reference fight at the declared T=4.0 flip totals the Cannon
-        half of the bounding pair, 4994.0."""
+        half of the bounding pair, 5244.0: Q 1344 + W 1650 + R's swing 250 +
+        8 autos x 250 (ceil(10 - 1.998) = 9 ordinary swings beside the six
+        Hyper Charge ones, one of them R's)."""
         result = _fight({OPTION_KEY: 4.0})
-        assert result["total_damage"] == pytest.approx(4994.0)
+        assert result["total_damage"] == pytest.approx(5244.0)
 
     def test_p4j_w_restore_continues_across_the_flip(self):
         """The per-auto mana restore (25 at W rank 6) rides the modeled
         auto stream in BOTH stances (the §4.58 interpretation) — the
-        Cannon fight's 12 rows (9 ordinary + 3 Hyper Charge swing rows,
-        auto_index 1..12) and the Hammer fight's ordinary rows — there
+        Cannon fight's 14 rows (8 ordinary + 6 Hyper Charge swing rows,
+        auto_index 1..14) and the Hammer fight's ordinary rows — there
         is no flip to reset the stream."""
         result = _pipeline_fight(None)
         restores = [
@@ -712,26 +714,26 @@ class TestP4JTransitionContract:
             if r["operation"] == "gain"
             and r["source"] == "Jayce W passive (Mana Restored)"
         ]
-        assert len(restores) == 13
+        assert len(restores) == 14
         assert all(r["amount"] == pytest.approx(25.0) for r in restores)
         kinds = [r["detail"]["kind"] for r in restores]
-        assert kinds.count("ordinary") == 7
+        assert kinds.count("ordinary") == 8
         assert kinds.count("swing") == 6
-        # auto_index numbering: ordinary 1..7 then swing 8..13 (the §4.58
+        # auto_index numbering: ordinary 1..8 then swing 9..14 (the §4.58
         # convention); the receipt ORDER is the timeline order (the swing
-        # rows land at 0.333/0.666/0.999 between the ordinary rows).
+        # rows land at 0.144/0.477/0.810 among the ordinary rows).
         indexes = [r["detail"]["auto_index"] for r in restores]
-        assert sorted(indexes) == list(range(1, 14))
+        assert sorted(indexes) == list(range(1, 15))
         assert [
             r["detail"]["auto_index"]
             for r in restores
             if r["detail"]["kind"] == "ordinary"
-        ] == list(range(1, 8))
+        ] == list(range(1, 9))
         assert [
             r["detail"]["auto_index"]
             for r in restores
             if r["detail"]["kind"] == "swing"
-        ] == list(range(8, 14))
+        ] == list(range(9, 15))
         hammer = _pipeline_fight({"hammer_stance": True})
         hammer_restores = [
             r
@@ -790,8 +792,8 @@ class TestP4JCooldownBoundaries:
         ordinary stream, Cannon's ordinary + Hyper Charge swing streams —
         and the amounts never change."""
         for options, expected_ordinary, expected_swings in (
-            (None, 7, 6),
-            ({"hammer_stance": True}, 9, 0),
+            (None, 8, 6),
+            ({"hammer_stance": True}, 10, 0),
         ):
             result = _pipeline_fight(options)
             restores = [
