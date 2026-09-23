@@ -18,6 +18,9 @@ from src.calculator.calculate import calculate_payload
 _ZILEAN_FUSE = 3.0
 _KLED_PULL = 1.75
 _NOTE = "Damage timed past the fight's end is not counted"
+_MAXED = {"level": 18, "ranks": {"Q": 5, "W": 5, "E": 5, "R": 3}}
+#: Half a unit of the one decimal a row's total is published at.
+_ROUNDING = 0.05 + 1e-9
 
 
 def _fight(
@@ -29,7 +32,9 @@ def _fight(
     level: int = 6,
     items: tuple[str, ...] = (),
     ranks: dict[str, int] | None = None,
+    uptime: float | None = None,
 ) -> dict:
+    """*uptime* turns the auto stream on at that uptime."""
     return calculate_payload(
         {
             "champion": champion,
@@ -38,18 +43,30 @@ def _fight(
             "ability_ranks": ranks or {"Q": 1, "W": 1, "E": 1, "R": 1},
             "fight_mode": mode,
             "fight_duration": duration,
-            "include_auto_attacks": False,
+            "include_auto_attacks": uptime is not None,
+            **({} if uptime is None else {"auto_attack_uptime": uptime}),
             "count_damage_after_fight_end": count,
             "target_health": 1000,
             "target_armor": 100,
             "target_mr": 100,
         },
         deterministic=True,
+        trace=True,
     )
 
 
 def _events(payload: dict, source: str) -> list[dict]:
     return [event for event in payload["damage_events"] if event["source"] == source]
+
+
+def _landed(payload: dict, source: str, duration: float) -> list[dict]:
+    """*source*'s traced packets, asserted inside the window and summing to its row."""
+    lines = [line for line in payload["trace"]["lines"] if line["source"] == source]
+    assert all(float(line["time"]) <= duration + 1e-9 for line in lines)
+    assert payload["breakdown"][source]["total_damage"] == pytest.approx(
+        sum(float(line["mitigated"]) for line in lines), abs=_ROUNDING
+    )
+    return lines
 
 
 class TestTheDefaultCountsWhatTheWindowLit:
@@ -125,9 +142,8 @@ class TestClippingToTheWindow:
 
     def test_a_dot_tick_train_stops_at_the_fight_end(self) -> None:
         """Malefic Visions ticks past a 2 s window by default, not when clipped."""
-        kwargs = {"level": 18, "ranks": {"Q": 5, "W": 5, "E": 5, "R": 3}}
-        counted = _fight("Malzahar", 2.0, count=True, **kwargs)
-        clipped = _fight("Malzahar", 2.0, count=False, **kwargs)
+        counted = _fight("Malzahar", 2.0, count=True, **_MAXED)
+        clipped = _fight("Malzahar", 2.0, count=False, **_MAXED)
         late = [event for event in _events(counted, "E") if event["time"] > 2.0]
         assert late, "the default keeps ticks past the end"
         assert all(event["time"] <= 2.0 + 1e-9 for event in _events(clipped, "E"))
@@ -137,18 +153,13 @@ class TestClippingToTheWindow:
         )
 
     def test_a_stacking_dot_stops_at_the_fight_end(self) -> None:
-        kwargs = {"level": 18, "ranks": {"Q": 5, "W": 5, "E": 5, "R": 3}}
-        counted = _fight("Briar", 3.0, count=True, **kwargs)
-        clipped = _fight("Briar", 3.0, count=False, **kwargs)
+        counted = _fight("Briar", 3.0, count=True, **_MAXED)
+        clipped = _fight("Briar", 3.0, count=False, **_MAXED)
         assert clipped["total_damage"] < counted["total_damage"]
         assert all(event["time"] <= 3.0 + 1e-9 for event in clipped["damage_events"])
 
     def test_an_item_burn_stops_at_the_fight_end(self) -> None:
-        kwargs = {
-            "level": 18,
-            "ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
-            "items": ("Blackfire Torch",),
-        }
+        kwargs = {**_MAXED, "items": ("Blackfire Torch",)}
         counted = _fight("Cassiopeia", 3.0, count=True, **kwargs)
         clipped = _fight("Cassiopeia", 3.0, count=False, **kwargs)
         burn = next(key for key in counted["breakdown"] if "Blackfire" in key)
@@ -161,3 +172,69 @@ class TestClippingToTheWindow:
             for event in clipped["damage_events"]
             if event["source"] == burn
         )
+
+    @pytest.mark.parametrize(
+        ("items", "rows"),
+        [
+            (("Essence Reaver",), ("spellblade_Essence Reaver",)),
+            (("Iceborn Gauntlet",), ("spellblade_Iceborn Gauntlet",)),
+            (("Trinity Force",), ("spellblade_Trinity Force",)),
+            (
+                ("Dusk and Dawn", "Wit's End"),
+                ("spellblade_Dusk and Dawn", "double_on_hit_Dusk and Dawn"),
+            ),
+        ],
+        ids=["essence-reaver", "iceborn", "trinity-force", "dusk-and-dawn-on-hit"],
+    )
+    def test_a_spellblade_proc_past_the_end_drops_with_its_count(
+        self, items: tuple[str, ...], rows: tuple[str, ...]
+    ) -> None:
+        """Briar spends her last charge after an 8 s fight ends, and every row
+        riding that proc drops it."""
+        build = {**_MAXED, "items": items, "uptime": 1.0}
+        counted = _fight("Briar", 8.0, count=True, **build)
+        clipped = _fight("Briar", 8.0, count=False, **build)
+        for row in rows:
+            late = [event for event in _events(counted, row) if event["time"] > 8.0]
+            assert late, "the default spends the charge after the end"
+            landed = _landed(clipped, row, 8.0)
+            assert (
+                clipped["breakdown"][row]["count"]
+                == len(landed)
+                == counted["breakdown"][row]["count"] - len(late)
+            )
+
+    def test_a_walked_proc_past_the_end_drops_with_its_count(self) -> None:
+        """Vi's third Denting Blows stack rides a Vault Breaker hit that lands
+        after an 8.5 s fight ends."""
+        counted = _fight("Vi", 8.5, count=True, uptime=1.0, **_MAXED)
+        clipped = _fight("Vi", 8.5, count=False, uptime=1.0, **_MAXED)
+        late = [event for event in _events(counted, "W") if event["time"] > 8.5]
+        assert late, "the default keeps the proc past the end"
+        landed = _landed(clipped, "W", 8.5)
+        assert (
+            clipped["breakdown"]["W"]["count"]
+            == len(landed)
+            == counted["breakdown"]["W"]["count"] - len(late)
+        )
+
+    def test_a_blaze_ticks_only_until_the_fight_end(self) -> None:
+        """Brand's Blaze, lit inside a 3 s fight, keeps its one application."""
+        counted = _fight("Brand", 3.0, count=True, **_MAXED)
+        clipped = _fight("Brand", 3.0, count=False, **_MAXED)
+        assert any(event["time"] > 3.0 for event in _events(counted, "passive"))
+        _landed(clipped, "passive", 3.0)
+        assert clipped["breakdown"]["passive"]["count"] == 1
+        assert (
+            clipped["breakdown"]["passive"]["total_damage"]
+            < counted["breakdown"]["passive"]["total_damage"]
+        )
+
+    def test_stored_damage_released_after_the_end_deals_nothing(self) -> None:
+        """Yone's Soul Unbound returns to his body 5 s after a cast at 0.85 s."""
+        counted = _fight("Yone", 3.0, count=True, **_MAXED)
+        clipped = _fight("Yone", 3.0, count=False, **_MAXED)
+        assert [event["time"] for event in _events(counted, "E")] == [5.85]
+        assert _events(clipped, "E") == []
+        assert clipped["breakdown"]["E"]["total_damage"] == 0.0
+        assert clipped["breakdown"]["E"]["casts"] == counted["breakdown"]["E"]["casts"]

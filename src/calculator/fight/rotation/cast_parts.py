@@ -13,10 +13,6 @@ from ..results import CastPricing, ShredDeclaration
 from ..setup.target_debuffs import _apply_target_shred, _debuff_coverage
 from ..state import FightState
 
-# A landing instant this close to the fight end still lands: float sums of
-# cast times and offsets reach the boundary a few ulps late.
-_LANDING_EPSILON = 1e-9
-
 
 class PricedParts(NamedTuple):
     """What one ability's typed parts priced over its casts.
@@ -238,10 +234,8 @@ def _evaluate_cast_parts(
                 ) + part.time_offset
             mitigated = 0.0
             for hit_index in range(hits):
-                if (
-                    landing_base is not None
-                    and landing_base + hit_index * (part.hit_interval or 0.0)
-                    > state.fight_duration_seconds + _LANDING_EPSILON
+                if landing_base is not None and not state.lands_in_window(
+                    landing_base + hit_index * (part.hit_interval or 0.0)
                 ):
                     continue
                 if repeat_damage is not None and (
