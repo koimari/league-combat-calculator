@@ -51860,7 +51860,7 @@
           "auto_attacks",
           "on_hit_ability_W"
         ],
-        "total_damage": 872.67
+        "total_damage": 838.53
       },
       "ziggs_12s": {
         "breakdown_keys": [
@@ -54214,14 +54214,14 @@
       "numeric_leaves": 47007,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "d80edacb56c8e52f7b842383ab2752b61613548d",
+    "git_head": "5f36004da2c7ca189225d3eceee7448dc8a8048f",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "aa669393adc88ec16ac47110d435c602f9ad4ef1"
+    "src_tree_sha": "c627dcca20d8666e300cf1f04b26670024924437"
   },
   "registered_champion_fights": {
     "Aatrox": {
