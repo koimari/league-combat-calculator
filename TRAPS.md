@@ -229,6 +229,26 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   21 `ActionKind`s and no UTILITY one, so a per-kind field census needs the
   survival suites too. To time the walk, patch `program.walk.run_survival_walk`,
   the name `walk()` reads.
+- **A value averaged over the fight's wall time breaks "a longer fight never
+  deals less".** A slot shred weighted by its share of the fight, or a stack
+  ramp's time-weighted mean, falls as empty seconds are added, so every packet
+  inside the window loses value. `fight/after/resistance_windows.py` prices a timed
+  packet at the shred live when it lands, and `stat_ramp.mean_stack_level` averages
+  over the events that stack. `scripts/property_sweep.py`'s `duration_monotone`
+  catches a new one.
+- **Swing count and swing times come from one rule, `attack_cadence`.** A count
+  of `floor(AS x T)` with swings from t=0 left one to two idle cycles after the
+  last swing. A module that mirrors the stream calls `attack_cadence.stream_impacts`
+  with the champion's `Windup.phase`, never `index / rate`.
+- **`Resists.resolve_magic()` keeps the stored `reduced_mr`.** A copy whose
+  `base_mr` changed still serves the old reduced MR once an R is accepted. Call
+  `Resists.resolve()`, which re-derives every served figure.
+- **A packet re-priced after the fact may have met a resistance of its own.**
+  Rebuilding it from the fight's final `Resists` overwrites an ability's own
+  penetration and applies a mid-fight penetration change to earlier packets.
+  `_LiveResistance.met_served_pipeline` re-prices only a packet whose
+  `resistance_met` is the served pipeline at a target state the fight passed
+  through.
 
 ## Platform and tooling
 
@@ -380,6 +400,13 @@ champion it bit.
 
 ### Cached data and sources
 
+- **The scraper writes `attackCastTime` 0.3 and `attackTotalTime` 1.6 when the
+  wiki states neither**, so `attack_cadence.champion_windup` reads that pair as the
+  original `0.3 + attackDelayOffset` method. Skarner's real pair is the same, so he
+  reads 30% where the wiki states 18.75%. The windup modifier lives only in the
+  binary's `basicAttack` record, because the scraper drops the wiki's
+  `windup_modifier`. The binary's own cast/total ratio disagrees with the wiki for
+  about 60 champions (Corki 11.6% against 27%), so the cache owns the percent.
 - **Known-degraded wiki parses, stable across patches.** The modifier parser
   half-parses gimmick scalings: values survive with empty `units`, so the scaling
   resolver cannot attribute them. Aurelion Sol Q, Bard P, Heimerdinger W and E,

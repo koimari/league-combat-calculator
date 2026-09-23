@@ -39,21 +39,21 @@ Every family below is labeled accordingly.
 
 ### 1.1 Renewal theory for cast + auto timing schedules
 
-**Model.** A basic-attack stream is a deterministic periodic renewal process:
-swings land at `0, Δ, 2Δ, …` with `Δ = 1/(AS · u)` where `AS` is total attack
-speed and `u` is the auto-attack uptime fraction. The engine computes the swing
-count as
+**Model.** T=0 is the attack command. A basic-attack stream is a deterministic
+renewal process whose timer starts with the command: with `Δ = 1/(AS · u)` and
+`φ` the windup's share of one attack cycle (`attack_cadence.Windup.phase`), impact
+`k` lands at `t_k = (k + φ)·Δ`, so the count inside the window is
 
 ```
-N(T) = ⌊AS · u · T⌋                  (damage.py: num_auto_attacks = floor(...))
+N(T) = ⌈AS · u · T − φ⌉                (attack_cadence.impact_count)
 ```
 
-with swing timestamps `t_i = i·Δ, i = 0..N(T)−1` (the last swing is strictly
-inside the window). This is the **counting function of a renewal process with
-deterministic interarrival time Δ**: `N(t) = max{n ≥ 0 : S_n ≤ t}`, `S_n = nΔ`.
-The schedule is exact for the model's own convention, a swing whose impact
-would land *exactly* at the window boundary is excluded, a measure-zero
-boundary choice.
+This is the renewal counting function `N(t) = #{k ≥ 0 : t_k < t}` of a process
+whose first arrival is the windup, not a full cycle. Where the rate changes (an
+attack-speed window, a ramp, a keystone), impact `k` lands where the timer's
+cycle count reaches `k + φ` (`attack_cadence.impact_times`), so one timer runs
+through every rate change. A swing whose impact lands exactly at `T` is outside
+the window.
 
 Ability recasts are scheduled on **one shared timeline** (the champion has one
 set of hands): each cast occupies its sourced cast time, an ability recasts
@@ -70,7 +70,7 @@ count `1 + T/c` is not the model here: it overcounts short-cooldown abilities
 `X_i` and i.i.d. rewards `R_i` attached to each cycle, the long-run average
 reward rate is `E[R]/E[X]` (the elementary renewal theorem / renewal-reward
 theorem). The engine's totals are the *finite-horizon* version of this:
-`Σ_{i<N(T)} R_i` with `N(T) = ⌊T/Δ⌋`. The expected-damage-per-second of a
+`Σ_{k<N(T)} R_k` with `N(T) = ⌈T/Δ − φ⌉`. The expected-damage-per-second of a
 rotation is the reward rate `E[cycle damage]/E[cycle time]`; every sustained
 fight number in the engine is this finite-horizon renewal-reward functional.
 
@@ -470,7 +470,8 @@ name, the verdict, and the edge case the identity alone does not settle.
 | Stat growth (`stat_formulas.growth_stat`) | the level-growth formula `CLAUDE.md` states | **EXACT** | The level cap is a seasonal rule and top lane only; `MAX_LEVEL` is its single source of truth, so the number is not written here |
 | Attack speed (`stat_formulas.calculate_attack_speed`) | the attack-speed formula `CLAUDE.md` states | **EXACT** | Total AS cap 3.003 deliberately NOT clamped fight-wide (Jayce reads it) |
 | Ability haste (`stat_formulas.effective_cooldown`) | the ability-haste identity `CLAUDE.md` states; casts/unit time affine in AH | **EXACT** | R recasts on its hasted cooldown only for modules certifying `ULTIMATE_RECASTS`; every other kit casts R exactly once per timed fight (model constraint, documented) |
-| Auto DPS / auto count (`fight/autos/swing_schedule.py`, `FightState.num_auto_attacks`) | renewal counting `N(T)=⌊AS·u·T⌋`; periodic schedule `t_i=i/rate` | **EXACT*** | *uptime-as-rate-scale approximation; swing exactly at T excluded (measure-zero boundary) |
+| Auto DPS / auto count (`attack_cadence.py`, `FightState.num_auto_attacks`) | renewal counting `N(T)=⌈AS·u·T−φ⌉`; impacts `t_k=(k+φ)/rate` from the attack command | **EXACT*** | *uptime-as-rate-scale approximation; swing exactly at T excluded (measure-zero boundary); Skarner's cached windup reads the scraper placeholder (TRAPS.md) |
+| Timed resistance shreds (`fight/after/resistance_windows.py`) | each timed packet meets the shred live at its time; windows open at the row's own hits | **EXACT*** | *a row with no timed packets keeps the fight-share average |
 | Crit expectation (`fight/autos/simulation.py`, `fight/rotation/cast_parts.py`) | `E[swing] = (1−p)·1 + p·CM = 1+p·(CM−1)`; mitigation commutes with expectation (linear in raw) | **EXACT** | Deterministic path evaluates `f(E[H])` for health-dependent terms; exact for affine f (Kraken), Jensen-biased for convex f (Veigar R ramp) |
 | Ability rotation casts (`fight/rotation/cast_schedule.py`, `fight/rotation/ability_rotation.py`) | shared-timeline renewal schedule; cast starts within window | **EXACT** | GCD/0.5s inter-cast estimate used only in one-rotation burn spread (see burn row); R single-cast |
 | DoT totals (`_periodic_damage_events`) | uniform partition / Riemann sum; conservation `Σ ticks = total`; remainder < interval paid at window end | **EXACT** | First tick at +interval (no immediate tick); interval > duration → single remainder tick at duration |

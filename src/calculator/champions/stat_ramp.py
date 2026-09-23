@@ -5,15 +5,13 @@ that stacks it, one swing at a time (``interpreters/rearmed_swings``). A
 ramp that grants attack damage or resistances has no such seam, because the
 stat sheet is resolved once and every cast is priced against it.
 
-What this module serves instead is the MEAN LEVEL THE STACKING EVENTS MET:
-each counted swing or cast reads the stacks standing just before it, and the
-fight is priced at their average.  That is the same approximation Terminus'
-penetration already makes (``item_effects.StackingPenEffect.average_pen``,
-whose mean is served to casts and swings alike), and it is stated as an
-approximation rather than discovered as one: a burst that lands at second one
-is priced at a level the fight only reaches later.  Averaging over the events
-rather than over wall time keeps seconds in which nothing lands out of the
-price, so a longer fight never lowers what its earlier events met.
+This module serves the MEAN LEVEL THE STACKING EVENTS MET: each counted swing
+or cast reads the stacks standing just before it.  Terminus' penetration makes
+the same approximation (``item_effects.StackingPenEffect.average_pen``), and it
+is stated rather than discovered: a burst at second one is priced at a level
+the fight only reaches later.  Averaging over events, not wall time, keeps
+empty seconds out of the price, so a longer fight never lowers what its
+earlier events met.
 
 The alternative is a stat sheet re-resolved per event, which is a different
 engine. Until there is one, an option that states the level outright remains
