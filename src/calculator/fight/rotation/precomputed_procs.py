@@ -394,4 +394,24 @@ def _add_precomputed_proc_damage(
             for event in row_events:
                 for field_name, value in met.items():
                     event.setdefault(field_name, value)
+        if isinstance(row_events, list) and state.clip_to_window:
+            proc_total = _clip_row_to_window(state, state.breakdown[key], proc_count)
         state.total_damage += proc_total
+
+
+def _clip_row_to_window(state: FightState, row: dict[str, Any], procs: int) -> float:
+    """Drop *row*'s events past the fight's end; the row keeps what they carry.
+
+    An event per proc drops its proc from the count; a proc authored as
+    several events (Brand's Blaze ticks) keeps its count while any lands.
+    """
+    events = row["damage_events"]
+    kept = [event for event in events if state.lands_in_window(float(event["time"]))]
+    if len(kept) < len(events):
+        if len(events) == procs:
+            row["count"] = len(kept)
+        elif not kept:
+            row["count"] = 0
+        row["damage_events"] = kept
+        row["total_damage"] = sum(float(event["damage"]) for event in kept)
+    return float(row["total_damage"])

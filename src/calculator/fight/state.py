@@ -18,6 +18,10 @@ from .empower_declaration import BurstSwingSchedule
 from .resists import Resists
 from .results import FerocityTimeline, ShredDeclaration, StackTimeline
 
+# A landing instant this close to the fight end still lands: float sums of
+# cast times and offsets reach the boundary a few ulps late.
+_LANDING_EPSILON = 1e-9
+
 
 @dataclass
 class FightState:
@@ -222,6 +226,13 @@ class FightState:
                 (self.as_window_end, self.fight_duration_seconds, base_rate),
             ),
             self.impact_phase(self.as_window_base_rate),
+        )
+
+    def lands_in_window(self, time: float) -> bool:
+        """False for a landing timed past the fight's end when the request clips."""
+        return (
+            not self.clip_to_window
+            or time <= self.fight_duration_seconds + _LANDING_EPSILON
         )
 
     @property

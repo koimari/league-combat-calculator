@@ -23,6 +23,7 @@ import pytest
 
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions.yone import MODULE_CC
+from src.calculator.fight.state import FightState
 
 _ENEMY = {"kind": "champion", "champion": "Garen", "level": 18, "role": "top"}
 
@@ -40,6 +41,9 @@ class _StubState:
     cast_order: tuple = ("Q", "E")
     ledger_target_index: int | None = None
     total_damage: float = 0.0
+    clip_to_window: bool = False
+    fight_duration_seconds: float = 0.0
+    lands_in_window = FightState.lands_in_window
 
 
 @dataclasses.dataclass

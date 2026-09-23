@@ -510,6 +510,11 @@ champion it bit.
   inside the fight resolves in full, `count_damage_after_fight_end` being the one
   switch over that, so a `min(..., fight_duration)` on resolved damage is the
   failure shape, and the golden sweep holds no burn items to catch it.
+- **A step that times its own packets must ask `state.lands_in_window` of each.**
+  Spellblade arms each charge when the last proc's cooldown ends, so an 8 s
+  fight can time its third proc at 9.9 s. Every golden runs with
+  `count_damage_after_fight_end` on, so no golden can see a late packet; only
+  `scripts/property_sweep.py`'s trace property does.
 - **A silent zero comes from a missing key.** A champion module never
   `.get(..., default)`s a stats key: Akshan E read a `bonus_attack_speed_percent`
   key nothing writes and priced its term at 0. A wiki unit absent from
