@@ -459,7 +459,7 @@ def _text(key: str) -> _Reader:
 
 def _label(key: str) -> _Reader:
     """The event's *key* as text; absent or ``None`` is ``""``."""
-    return lambda event, _index_of: str(event.get(key, "") or "")
+    return lambda event, _index_of: str(event.get(key) or "")
 
 
 def _number(key: str) -> _Reader:
