@@ -189,8 +189,9 @@ class TestConcussiveBlows:
         assert "passive" not in _parse(braum_data, 18)
 
     def test_one_cycle_at_level_1(self, braum_data):
-        """1 AS, 5s: Q+3 autos proc at t=2 (trigger 26), then the 8s
-        immunity window covers the last 2 autos (10.4 bonus each)."""
+        """1 AS, 5s: autos land at 0.23 + k (Braum's windup), so Q+3 autos
+        proc at t=2.23 (trigger 26), then the 8s immunity window covers the
+        last 2 autos (10.4 bonus each)."""
         abilities = _parse(braum_data, 1, options=dict(self.TIMED))
         passive = abilities["passive"]
         assert passive["damage_type"] == "magic"
@@ -209,14 +210,14 @@ class TestConcussiveBlows:
         assert bonus_part.amount == pytest.approx(86.4)
 
     def test_trigger_196_and_bonus_78_4_at_level_18(self, braum_data):
-        """Level 18: proc at t=2, 4s window -> 2 empowered autos."""
+        """Level 18: proc at t=2.23, 4s window -> 2 empowered autos."""
         abilities = _parse(braum_data, 18, options=dict(self.TIMED))
         passive = abilities["passive"]
         assert passive["total_raw"] == pytest.approx(196.0 + 2 * 78.4)
 
     def test_stacking_restarts_when_window_expires(self, braum_data):
-        """Level 12, 1 AS, 8s: proc at t=2, 4s window (3 empowered
-        autos), then the t=6 Q and autos stack again."""
+        """Level 12, 1 AS, 8s: proc at t=2.23, 4s window (3 empowered
+        autos), then the autos from t=6.23 stack again."""
         abilities = _parse(
             braum_data,
             12,
@@ -226,14 +227,16 @@ class TestConcussiveBlows:
         assert passive["total_raw"] == pytest.approx(136.0 + 3 * 54.4)
 
     def test_two_full_cycles(self, braum_data):
-        """Level 12, 12s: second buildup (t=6 Q + autos) procs at t=8."""
+        """Level 12, 12s: the t=6 Q lands inside the first window (to 6.23),
+        so the second buildup is four autos from 6.23, proccing at 9.23 and
+        empowering the 10.23 and 11.23 autos."""
         abilities = _parse(
             braum_data,
             12,
             options={"fight_duration_seconds": 12.0, "auto_attack_uptime": 1.0},
         )
         passive = abilities["passive"]
-        assert passive["total_raw"] == pytest.approx(2 * 136.0 + 6 * 54.4)
+        assert passive["total_raw"] == pytest.approx(2 * 136.0 + 5 * 54.4)
 
     def test_q_only_stacks_expire_so_no_procs(self, braum_data):
         """No autos: Q every 8s can never hold 4 stacks (4s duration)."""
@@ -247,11 +250,12 @@ class TestConcussiveBlows:
     def test_autos_only_window_drops_the_q_applications(self, braum_data):
         """`auto_attacks_only` casts nothing, so only autos stack.
 
-        Level 12, 1 AS, 12s: autos at t=0..11 alone. Stacks at 0/1/2 and
-        the 4th at t=3 procs (136), immunity to t=7 empowers 4/5/6; the
-        t=7 auto restarts and t=10 procs again, empowering t=11 —
-        2 procs + 4 empowered autos, versus the merged stream's
-        2 + 6 (``test_two_full_cycles``) when Q also applies stacks.
+        Level 12, 1 AS, 12s: autos at t=0.23..11.23 alone. Stacks at
+        0.23/1.23/2.23 and the 4th at 3.23 procs (136), immunity to 7.23
+        empowers 4.23/5.23/6.23; the 7.23 auto restarts and 10.23 procs
+        again, empowering 11.23 — 2 procs + 4 empowered autos, versus the
+        merged stream's 2 + 5 (``test_two_full_cycles``) when Q also applies
+        stacks.
         """
         options = {
             "fight_duration_seconds": 12.0,

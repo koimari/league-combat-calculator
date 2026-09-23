@@ -18,7 +18,6 @@ one-rotation and R's in timed.  R's sourced shield stays an assumption
 because the shield ledger rides damage events and R deals none.
 """
 
-import math
 from collections.abc import Iterable
 from typing import Any
 
@@ -222,23 +221,18 @@ def _w_timed_base_cooldown(base_cooldown: float, w_evolved: bool) -> float:
 
 
 def _plasma_application_stream(
-    ctx: SlotCtx, duration: float, uptime: float, w_evolved: bool
+    ctx: SlotCtx, duration: float, w_evolved: bool
 ) -> list[tuple[float, int]]:
     """Every Plasma stack application in the fight window, in hit order.
 
-    Mirrors the engine's timed cadence: basic attacks land at ``i / rate``
-    with ``rate = attack_speed x uptime`` (the parse-context attack speed
-    already carries Supercharge's window-weighted grant), and Void Seeker
+    Mirrors the engine's timed cadence: basic attacks are its ambient stream
+    (``SlotCtx.ambient_swings``; the parse-context attack speed already
+    carries Supercharge's window-weighted grant), and Void Seeker
     is cast at t=0 then on its effective cooldown (haste, plus the evolved
     75% on-hit refund), each hit applying its 2-3 stacks at the travel-
     delayed impact time.
     """
-    events: list[tuple[float, int]] = []
-
-    rate = ctx.stat("attack_speed") * uptime
-    if rate > 0:
-        count = math.floor(ctx.stat("attack_speed") * duration * uptime)
-        events.extend((index / rate, _AUTO_HIT) for index in range(count))
+    events = [(time, _AUTO_HIT) for time in ctx.ambient_swings(duration)]
 
     w_ability = ctx.ability("W")
     w_rank = ctx.rank_for("W")
@@ -300,9 +294,7 @@ def _walk_plasma_stacks(
     return parts, ruptures
 
 
-def _timed_plasma_proc(
-    ctx: SlotCtx, duration: float, uptime: float
-) -> dict[str, Any] | None:
+def _timed_plasma_proc(ctx: SlotCtx, duration: float) -> dict[str, Any] | None:
     """The fight-wide Plasma ledger over the merged auto + Void Seeker stream."""
     w_evolved, evolution_note = _evolution_state(
         ctx,
@@ -310,7 +302,7 @@ def _timed_plasma_proc(
         "evolution_ability_power",
         "item AP",
     )
-    applications = _plasma_application_stream(ctx, duration, uptime, w_evolved)
+    applications = _plasma_application_stream(ctx, duration, w_evolved)
     parts, ruptures = _walk_plasma_stacks(ctx, applications)
     if not parts:
         return None
@@ -532,7 +524,7 @@ def _killer_instinct(ctx: SlotCtx) -> dict[str, Any] | None:
     timed = _timed_ranked(ctx)
     if timed is None:
         return None
-    window, (ability, rank) = timed
+    (duration, _), (ability, rank) = timed
 
     entry = damage_entry(
         ability_name(ability),
@@ -541,7 +533,7 @@ def _killer_instinct(ctx: SlotCtx) -> dict[str, Any] | None:
         0.0,
         "magic",
     )
-    proc = _timed_plasma_proc(ctx, *window)
+    proc = _timed_plasma_proc(ctx, duration)
     if proc is not None:
         entry["post_hit_proc"] = proc
         entry["target_max_health_sensitive"] = True

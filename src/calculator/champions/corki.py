@@ -224,9 +224,7 @@ def _missile_count(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> tuple[in
 
     haste = ctx.stat("ability_haste")
     recharge = effective_cooldown(extract_recharge(ability, rank), haste)
-    autos = math.floor(
-        ctx.stat("attack_speed") * float(ctx.option("auto_attack_uptime")) * duration
-    )
+    autos = len(ctx.ambient_swings(duration))
     crit_chance = min(ctx.stat("critical_strike_chance") / 100.0, 1.0)
     per_auto = _R_AUTO_RECHARGE_MIN + crit_chance * (
         _R_AUTO_RECHARGE_MAX - _R_AUTO_RECHARGE_MIN

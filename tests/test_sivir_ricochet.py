@@ -24,6 +24,7 @@ import math
 import pytest
 
 from src.calculator.ability_atoms import required_ranked_attribute_atom
+from src.calculator.attack_cadence import champion_windup
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.sivir import ASSUMPTIONS
 from src.calculator.data_fetcher import get_champion
@@ -145,14 +146,16 @@ class TestPerBounceStructure:
         (part,) = _parse()[1]["W"]["parts"]
         assert part.count == 1
 
-    @pytest.mark.parametrize(("uptime", "expected"), [(0.0, 1), (0.5, 2), (1.0, 4)])
+    @pytest.mark.parametrize(("uptime", "expected"), [(0.0, 1), (0.5, 2), (1.0, 5)])
     def test_count_is_the_windows_own_cadence(self, uptime, expected):
-        """(0.795 + the window's +40%) attacks/s x uptime x 4s, floored at 1."""
+        """(0.795 + the window's +40%) attacks/s x uptime x 4s: the impacts
+        a timer reset at the cast lands, each after Sivir's windup, at least 1."""
         stats, abilities = _parse(
             options={"fight_duration_seconds": 10.0, "auto_attack_uptime": uptime}
         )
         buffed = stats["attack_speed"] + stats["attack_speed_ratio"] * 0.40
-        assert max(1, math.floor(buffed * uptime * 4.0)) == expected
+        phase = champion_windup(_SIVIR).phase(buffed)
+        assert max(1, math.ceil(buffed * uptime * 4.0 - phase)) == expected
         (part,) = abilities["W"]["parts"]
         assert part.count == expected
         assert abilities["W"]["total_raw"] == pytest.approx(51.0 * expected)
@@ -201,15 +204,15 @@ class TestThroughTheRequestBoundary:
         assert row["total_damage"] == pytest.approx(25.5)
 
     def test_a_ten_second_fight_prices_the_swing_stream(self):
-        """Four bounces per cast: the window's own +40% earns one more swing
+        """Five bounces per cast: the window's own +40% earns one more swing
         than the base cadence did."""
         row = _fight("time_based")["breakdown"]["W"]
-        assert "4 bounce(s)" in row["detail"]
+        assert "5 bounce(s)" in row["detail"]
         # TWO casts of a 12s ability inside a 10s fight, which only On the
         # Hunt's refund can buy: every attack inside the hunt takes 0.5s off
-        # W's live cooldown, so the recast lands at 7.35s instead of never.
+        # W's live cooldown, so the recast lands at 8.25s instead of never.
         assert row["casts"] == 2
-        assert row["total_damage"] == pytest.approx(204.0)
+        assert row["total_damage"] == pytest.approx(255.0)
 
     def test_without_the_hunt_the_twelve_second_recast_never_lands(self):
         """The refund's own control: R unranked buys no hunt, so W casts once.
@@ -221,4 +224,4 @@ class TestThroughTheRequestBoundary:
             "W"
         ]
         assert row["casts"] == 1
-        assert row["total_damage"] == pytest.approx(102.0)
+        assert row["total_damage"] == pytest.approx(127.5)

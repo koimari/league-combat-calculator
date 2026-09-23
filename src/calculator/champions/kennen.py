@@ -8,7 +8,6 @@ Option keys consumed by the shared parser: "w_empowered", "r_bolts",
 "mark_stacks".
 """
 
-import math
 import re
 from typing import Any
 
@@ -156,14 +155,8 @@ def _mark_stream(ctx: SlotCtx, duration: float, storm_cap: int) -> list[float]:
         times.extend(
             time + _BOLT_OFFSET + _BOLT_INTERVAL * index for index in range(bolts)
         )
-    rate = ctx.stat("attack_speed") * float(ctx.option("auto_attack_uptime"))
-    if rate > 0 and bool(ctx.option("w_empowered")):
-        period = _surge_stack_cap(ctx) + 1
-        times.extend(
-            index / rate
-            for index in range(math.floor(rate * duration))
-            if index % period == 0
-        )
+    if bool(ctx.option("w_empowered")):
+        times.extend(ctx.ambient_swings(duration)[:: _surge_stack_cap(ctx) + 1])
     return sorted(time for time in times if time <= duration)
 
 
