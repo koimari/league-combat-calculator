@@ -1780,7 +1780,7 @@ def api_receipts() -> Response | tuple[Response, int]:
     calculate_data = dict(loadout)
     calculate_data["champion"] = champion
     try:
-        predicted_payload = calculate_payload(calculate_data)
+        predicted_payload = calculate_payload(calculate_data, deterministic=True)
     except LookupError as exc:
         return jsonify({"error": str(exc)}), 404
     except ValueError as exc:

@@ -31,7 +31,7 @@ from .practice_dummy import (
 )
 from .request_parsing import request_bool, request_index_map, short_string
 from .role_quests import require_level_within_cap, validate_role
-from .rune_effects import RunePage, validate_rune_page
+from .rune_effects import RunePage, rune_page_from_request
 from .starting_defenses import StartingDefenses
 from .stats import MAX_LEVEL, resolve_pre_combat_stats
 
@@ -124,18 +124,22 @@ def _requested_rune_page(
 ) -> RunePage | None:
     """Validate one loadout's rune page, or ``None`` when it selects nothing.
 
-    The same four request fields the fight boundary reads, validated by the
-    same rules — a loadout's stat card and the fight it feeds must not
-    disagree about what the page is. A page that names nothing resolves to
-    ``None``: the stat matrix then takes the no-rune path exactly as it did
-    before the page existed.
+    The fight boundary's own reader, so a loadout's stat card and the fight
+    it feeds cannot disagree about what the page is. A page that names
+    nothing resolves to ``None``: the stat matrix then takes the no-rune path.
     """
-    keys = ("keystone", "minor_runes", "stat_shards", "rune_options")
+    keys = (
+        "keystone",
+        "minor_runes",
+        "stat_shards",
+        "rune_options",
+        "keystone_options",
+    )
     if is_practice_dummy:
         if any(value.get(key) for key in keys):
             raise ValueError(f"{field} practice dummies have no runes")
         return None
-    page = validate_rune_page(*(value.get(key) for key in keys))
+    page, _ = rune_page_from_request(value)
     if not page.keystone and not page.minor_runes and not any(page.stat_shards):
         return None
     return page

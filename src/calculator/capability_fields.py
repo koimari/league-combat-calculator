@@ -89,8 +89,10 @@ def _participant_fields(kind: str) -> dict[str, dict[str, Any]]:
             ),
             frontend_token='data-picker="item"',
         ),
+        # A roster card's toggle reaches the backend as a blank ``boots``; only
+        # the main loadout sends its own key, which /api/optimize reads.
         "include_boots": _field(
-            payload_field="include_boots",
+            payload_field="include_boots" if is_main else "boots",
             state_path=(
                 "attacker.includeBoots{side}"
                 if is_main

@@ -8,9 +8,11 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 - **A request key no parser reads is dropped silently, so a test pinned on it
   pins the default.** `deterministic` is a `calculate_payload` keyword, never a
   body key, and the body spells the window `fight_duration`, not the `FightConfig`
-  field `fight_duration_seconds`. A roster entry drops `include_boots` and
-  `keystone_options`. To find such keys, wrap the request in a `dict` subclass
-  that records `get`, `[]` and `in`, run the real parse, and list what it never read.
+  field `fight_duration_seconds`. The calculate path reads `items`, never the
+  optimizer's `locked_items`, so a bench scenario replayed there holds only what
+  `items` names. To find such keys, wrap the request in a `dict` subclass that
+  records `get`, `[]` and `in`, run the real parse, and list what it never read;
+  `tests/test_frontend_capability_contract.py` does so for every roster capability.
 - **Four concurrent full `pytest -n auto` runs take this machine out of memory.**
   One integrator runs it once per wave on the merged tree; a worker runs only its
   files, one pytest at a time, and pylint with `--jobs=4`.

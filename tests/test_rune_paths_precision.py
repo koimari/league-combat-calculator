@@ -267,13 +267,13 @@ class TestTheRowThatPaysOnATakedown:
                     ],
                     "fight_duration": duration,
                     "fight_mode": "time_based",
-                    "deterministic": True,
                     "include_auto_attacks": True,
                     "auto_attack_uptime": 1.0,
                     "keystone": "Press the Attack",
                     "minor_runes": list(runes),
                     "stat_shards": [],
-                }
+                },
+                deterministic=True,
             )
 
         killed = fight(runes=["Absorb Life"])

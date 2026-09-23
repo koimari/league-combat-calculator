@@ -2042,7 +2042,6 @@ function engineTarget(target) {
     level: target.level,
     items: itemIds.map((id) => itemName(id)).filter(Boolean),
     boots: target.includeBoots && selectedBoot ? itemName(selectedBoot) : "",
-    include_boots: Boolean(target.includeBoots),
     item_options: engineItemOptions(itemIds, target.itemStacks, target.itemOptions),
     role: target.role || "",
     role_quest_complete: Boolean(target.roleQuestComplete),
