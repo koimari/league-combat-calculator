@@ -178,7 +178,9 @@ def _residue_lines(
     under it, which is the one arithmetic this module does and the one it
     cannot avoid: without it a row the ledger under-states leaves the trace
     quietly short of the fight.  Its damage class is read off those packets,
-    the way an amplifier's is, and never off the row.
+    the way an amplifier's is, and never off the row.  An ``informational``
+    row gets none: its total restates a share of packets other rows priced,
+    and the fight's total holds none of it.
     """
     accounted: dict[str, float] = {}
     latest: dict[str, float] = {}
@@ -189,7 +191,9 @@ def _residue_lines(
         classes.setdefault(line.source, set()).add(line.damage_class)
     residues: list[TraceLine] = []
     for source, row in breakdown.items():
-        stated = row.get("total_damage") if isinstance(row, Mapping) else None
+        if not isinstance(row, Mapping) or row.get("informational"):
+            continue
+        stated = row.get("total_damage")
         residue = 0.0 if stated is None else float(stated) - accounted.get(source, 0.0)
         if round(residue, 6) == 0.0:
             continue

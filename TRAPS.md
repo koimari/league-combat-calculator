@@ -195,6 +195,11 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   point can move no damage. A test pinning the damage delta of a small stat
   change pins a rounding crossing. Give it a change that clears a whole point, as
   the Swiftmarch movement-speed tests do on Ahri, where force is 1:1 AP.
+- **A reader summing `breakdown` rows skips `informational` ones first.** Their
+  `total_damage` restates a share other rows priced (`basic_amp_*`,
+  `ability_amp_*`, `sundered_sky`), and `source_total_damage` returns it
+  anyway. The trace's residue line booked all three, so it overshot the total
+  1-13% on every Hexoptics C44, Actualizer and Sundered Sky build.
 - **`return factor * sum_modifiers(...)` reads `factor` before the call**, so a
   `nonlocal` the callee's closure sets is invisible. Akshan E's attack-speed
   factor priced 1.0 that way. Bind the call to a name, then multiply.
