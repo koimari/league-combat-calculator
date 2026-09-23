@@ -61,7 +61,13 @@ from ..resistance import (
     apply_magic_penetration,
     apply_resistance,
 )
-from ..survival.action_families import CORE, FAMILY_OF, DamageAction, WideAction
+from ..survival.action_families import (
+    CORE,
+    FAMILY_OF,
+    DamageAction,
+    HealAction,
+    WideAction,
+)
 from ..survival.actions import (
     action_key,
     event_sequence,
@@ -1427,7 +1433,7 @@ class WalkCompiler:
                 view.heals.append(enriched_heal)
                 continue
             actions_append(
-                WideAction(
+                HealAction(
                     sort_key=heal_sort_key,
                     time=time_value,
                     phase=TransitionRank.RECOVERY,
@@ -2143,7 +2149,7 @@ def stage_knights_vow_heals(
             continue
         heal_text = f"{EVENT_SLOTS.text(action.event_slot)}:kv_heal"
         appended.append(
-            WideAction(
+            HealAction(
                 sort_key=action_key(
                     float(action.time),
                     TransitionRank.RECOVERY,
@@ -2186,7 +2192,7 @@ def grey_health_heal_action(
     else.
     """
     event_id = f"main:grey:{source}:{index}"
-    return WideAction(
+    return HealAction(
         sort_key=action_key(
             float(heal_time),
             TransitionRank.RECOVERY,
