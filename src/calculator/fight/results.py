@@ -11,11 +11,16 @@ CHAMPION_PRODUCER_PREFIX = "champion:"
 
 class ShredDeclaration(NamedTuple):
     """A resistance shred a row lands on the target: the row whose hits apply
-    it, the ``target_debuff`` it states, and the times its applications open."""
+    it, the ``target_debuff`` it states, and the times its applications open.
+
+    ``after_its_trigger`` is a post-hit proc's shred, which lands after the hit
+    that fired it, so no packet at that instant meets it; a slot's shred is
+    met at that instant by the slots cast after it."""
 
     source_key: str
     debuff: Any
     opening_times: tuple[float, ...]
+    after_its_trigger: bool = False
 
 
 class SwingStream(NamedTuple):

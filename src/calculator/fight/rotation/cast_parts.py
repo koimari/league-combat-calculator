@@ -395,7 +395,7 @@ def _apply_post_hit_proc(
     debuff = spec.get("target_debuff")
     if debuff:
         state.shred_declarations.append(
-            ShredDeclaration(row_key, debuff, tuple(cast_times))
+            ShredDeclaration(row_key, debuff, tuple(cast_times), after_its_trigger=True)
         )
         coverage = (
             1.0

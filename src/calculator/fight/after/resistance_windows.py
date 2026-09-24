@@ -44,21 +44,31 @@ class _Shred(NamedTuple):
     source_key: str
     debuff: Mapping[str, Any]
     windows: tuple[_ShredWindow, ...]
+    # Where a packet at a window's opening instant stands: the shredding
+    # slot's cast-order rank, or None when nothing at that instant meets it.
+    tie_rank: float | None
 
-    def fraction_at(self, source_key: str, time: float) -> float:
-        """The share of the reduction live for one packet: the hit that applies
-        a window meets the target before it, any other packet at that instant
-        after it."""
+    def fraction_at(self, source_key: str, time: float, rank: float) -> float:
+        """The share of the reduction live for one packet of cast-order *rank*.
+
+        A packet at a window's opening instant meets it only when it is priced
+        after the hit that applies it: a slot cast later, or a row the rotation
+        does not order (a swing, an item).
+        """
+        tied = (
+            self.tie_rank is not None
+            and source_key != self.source_key
+            and rank > self.tie_rank
+        )
         return max(
             (
                 window.fraction
                 for window in self.windows
-                if (
-                    window.start < time
-                    if source_key == self.source_key
-                    else window.start <= time + _TIME_EPSILON
+                if time <= window.end + _TIME_EPSILON
+                and (
+                    window.start < time - _TIME_EPSILON
+                    or (tied and abs(time - window.start) <= _TIME_EPSILON)
                 )
-                and time <= window.end + _TIME_EPSILON
             ),
             default=0.0,
         )
@@ -114,14 +124,25 @@ def _windows_of(
     return tuple(windows)
 
 
+def _cast_rank(state: FightState) -> dict[str, float]:
+    """Each cast slot's place in the rotation's order."""
+    return {slot: float(index) for index, slot in enumerate(state.cast_order)}
+
+
 def _shred_windows(state: FightState) -> list[_Shred]:
     """Every declared shred with the windows its row's hits opened."""
+    rank = _cast_rank(state)
     shreds = {
         declaration.source_key: _Shred(
             declaration.source_key,
             declaration.debuff,
             _windows_of(
                 declaration, _hit_times(state.breakdown.get(declaration.source_key))
+            ),
+            (
+                None
+                if declaration.after_its_trigger
+                else rank.get(declaration.source_key, math.inf)
             ),
         )
         for declaration in state.shred_declarations
@@ -285,10 +306,12 @@ class _Pricing:
 
     def __init__(
         self,
-        resists: Resists,
+        state: FightState,
         shreds: list[_Shred],
         lethality: list[dict[str, Any]],
     ) -> None:
+        resists = state.resists
+        self.rank = _cast_rank(state)
         self.shreds = shreds
         self.lethality = lethality
         self.live = _LiveResistance(resists)
@@ -324,7 +347,12 @@ class _Pricing:
         active = tuple(
             (index, self.shreds[index].debuff, fraction)
             for index in shredding
-            if (fraction := self.shreds[index].fraction_at(source_key, time)) > 0.0
+            if (
+                fraction := self.shreds[index].fraction_at(
+                    source_key, time, self.rank.get(source_key, math.inf)
+                )
+            )
+            > 0.0
         )
         meets = self.live.at(damage_class, active, extra)
         repriced = rescale_mitigated(damage, met, meets)
@@ -365,7 +393,7 @@ def _apply_resistance_windows(state: FightState) -> None:
     lethality = _lethality_windows(state)
     if not shreds and not lethality:
         return
-    pricing = _Pricing(state.resists, shreds, lethality)
+    pricing = _Pricing(state, shreds, lethality)
     for source_key, row in state.breakdown.items():
         if isinstance(row, dict) and isinstance(row.get("damage_events"), list):
             state.total_damage += _reprice_row(pricing, str(source_key), row)
