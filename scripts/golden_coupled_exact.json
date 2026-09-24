@@ -60,10 +60,10 @@
     },
     "cleave_copied_on_hit_bruiser_roster": {
       "combat/0:main/incoming": "2986.6",
-      "combat/0:main/outgoing": "6259.2",
+      "combat/0:main/outgoing": "6775.5",
       "combat/1:ally:Lulu/incoming": "2129.0",
       "combat/1:ally:Lulu/outgoing": "1526.1",
-      "combat/2:enemy:Aatrox/incoming": "5109.0",
+      "combat/2:enemy:Aatrox/incoming": "5625.3",
       "combat/2:enemy:Aatrox/outgoing": "4654.7",
       "combat/3:enemy:Malphite/incoming": "2676.3",
       "combat/3:enemy:Malphite/outgoing": "460.8",
@@ -130,10 +130,10 @@
     },
     "immolate_active_bruiser_roster": {
       "combat/0:main/incoming": "2326.4",
-      "combat/0:main/outgoing": "4805.8",
+      "combat/0:main/outgoing": "5362.8",
       "combat/1:ally:Lulu/incoming": "2129.0",
       "combat/1:ally:Lulu/outgoing": "1037.4",
-      "combat/2:enemy:Aatrox/incoming": "5843.3",
+      "combat/2:enemy:Aatrox/incoming": "6400.3",
       "combat/2:enemy:Aatrox/outgoing": "4740.0",
       "fights/0:Aatrox": "5702.8"
     },
@@ -267,10 +267,10 @@
     },
     "titanic_cone_bruiser_roster": {
       "combat/0:main/incoming": "3238.1",
-      "combat/0:main/outgoing": "6140.1",
+      "combat/0:main/outgoing": "6627.3",
       "combat/1:ally:Lulu/incoming": "2129.0",
       "combat/1:ally:Lulu/outgoing": "1526.1",
-      "combat/2:enemy:Aatrox/incoming": "4989.9",
+      "combat/2:enemy:Aatrox/incoming": "5477.1",
       "combat/2:enemy:Aatrox/outgoing": "4906.2",
       "combat/3:enemy:Malphite/incoming": "2676.3",
       "combat/3:enemy:Malphite/outgoing": "460.8",
@@ -294,11 +294,11 @@
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "9c15a16719f9fc1667ff5df1d352fff1d984b815",
+    "git_head": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 30,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "65b851bccf9a05e638817b3e465911356b648d26"
+    "src_tree_sha": "80556ba0edcdbe6aa01d0c0987bece8b54e5f403"
   }
 }

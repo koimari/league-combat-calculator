@@ -127,7 +127,7 @@
   {
    "id": "e9-e1-aatrox-umbral-dash-heal",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "E1",
    "setup": {
     "champion": "Aatrox",
@@ -195,7 +195,7 @@
   {
    "id": "e9-e2-malzahar-malefic-visions",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "E2",
    "setup": {
     "champion": "Malzahar",
@@ -234,7 +234,7 @@
   {
    "id": "e9-e3-varus-blight-detonation",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "E3",
    "setup": {
     "champion": "Varus",
@@ -277,7 +277,7 @@
   {
    "id": "e9-e3-nasus-siphoning-stacks",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "E3",
    "setup": {
     "champion": "Nasus",
@@ -319,7 +319,7 @@
   {
    "id": "e9-e4-zyra-plant-attacks",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "E4",
    "setup": {
     "champion": "Zyra",
@@ -357,7 +357,7 @@
   {
    "id": "e9-e4-yorick-mist-walkers",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "E4",
    "setup": {
     "champion": "Yorick",
@@ -402,7 +402,7 @@
   {
    "id": "e9-e5-zed-death-mark",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "E5",
    "setup": {
     "champion": "Zed",
@@ -438,7 +438,7 @@
   {
    "id": "e9-e5-veigar-primordial-burst",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "E5",
    "setup": {
     "champion": "Veigar",
@@ -477,7 +477,7 @@
   {
    "id": "e9-e5-sion-decimating-smash",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "E5",
    "setup": {
     "champion": "Sion",
@@ -516,7 +516,7 @@
   {
    "id": "e9-e8-rengar-battle-roar-grey",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "E8",
    "setup": {
     "champion": "Rengar",
@@ -564,7 +564,7 @@
   {
    "id": "e9-e8-annie-molten-shield",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "E8",
    "setup": {
     "champion": "Annie",
@@ -603,7 +603,7 @@
   {
    "id": "e9-e8-anivia-rebirth",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "E8",
    "setup": {
     "champion": "Anivia",
@@ -643,7 +643,7 @@
   {
    "id": "e9-e8-morellonomicon-grievous",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "E8",
    "setup": {
     "champion": "Aatrox",
@@ -734,7 +734,7 @@
   {
    "id": "e9-e8-serpents-fang-shield-cut",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "E8",
    "setup": {
     "champion": "Annie",
@@ -783,7 +783,7 @@
   {
    "id": "e9-item-serpents-fang-venom",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "item",
    "setup": {
     "champion": "Katarina",
@@ -832,7 +832,7 @@
   {
    "id": "e9-item-fimbulwinter-everlasting",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "item",
    "setup": {
     "champion": "Ahri",
@@ -871,7 +871,7 @@
   {
    "id": "e9-item-steraks-lifeline",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "item",
    "setup": {
     "champion": "Darius",
@@ -915,15 +915,15 @@
     "bonus_health": 400,
     "max_health": 2990.0,
     "triggered": true,
-    "death_time": 9.702,
-    "formula": "Sterak's Lifeline: 60% of 400 bonus health = 240 shield, triggered when damage would leave Darius below 30% max HP; fully absorbed before death at 9.702. A hostile control is staged at TransitionRank.DEBUFF_ARM (participant_timeline._pair_packet), so it takes effect AFTER everything that landed at its own timestamp: Apprehend's airborne at t=0 does not erase the enemies' opening volley (8 packets, 826.0 post-mitigation), whose casts were already in flight at the landing instant, and the lock runs from there. Which of the two the engine schedules first at t=0 is a rotation-layout artifact rather than a sourced fact, so it must not delete a volley. Death moved in from 11.858 because the lock now suppresses only what is really inside it: Aatrox's Q used to be one event at 0.25s and lost all three strikes to the airborne, and W one event at 0.85s. Split, only the first Q strike (0.25s) and the chain hit (0.85s) fall inside; the strikes at 1.25 / 2.25 (245.7 / 294.8) and the tether hit at 2.35 (67.2) land after it and now reach Darius."
+    "death_time": 10.992,
+    "formula": "Sterak's Lifeline: 60% of 400 bonus health = 240 shield, triggered when damage would leave Darius below 30% max HP; fully absorbed before death at 10.992. A hostile control is staged at TransitionRank.DEBUFF_ARM (participant_timeline._pair_packet), so it takes effect AFTER everything that landed at its own timestamp: Apprehend's airborne at t=0 does not erase the enemies' opening volley (4 packets, 453.2 post-mitigation), whose casts were already in flight at the landing instant, and the lock runs from there. Which of the two the engine schedules first at t=0 is a rotation-layout artifact rather than a sourced fact, so it must not delete a volley. Inside the lock fall Aatrox's first swing at his 0.213s windup, his first Q strike (0.25s) and the chain hit (0.85s); the strikes at 1.25 / 2.25 (245.7 / 294.8) and the tether hit at 2.35 (67.2) land after it and reach Darius."
    },
    "practice_tool_steps": "Practice Tool: Darius buys Sterak's Gage (400 bonus HP). Take heavy burst from 3 enemies; when HP crosses below 30%, the Lifeline shield of 240 appears (combat log) and absorbs 240 damage."
   },
   {
    "id": "e9-item-bloodthirster-lifesteal",
    "tier": "local",
-   "sha": "852f587df33ffcae4392baebf79491b14fb4c643",
+   "sha": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
    "workstream": "item",
    "setup": {
     "champion": "Ashe",
