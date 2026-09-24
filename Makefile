@@ -12,6 +12,7 @@
 #   make ci-test             # tests.yml: test (pytest, goldens, matrices)
 #   make ci-static           # tests.yml: static (black, pylint, pip-audit, bandit)
 #   make ci-coverage-census  # tests.yml: coverage-census (LCC_CI_CENSUS_SHARD=K/N for one cut)
+#   make ci-property-sweep   # tests.yml: property-sweep (LCC_CI_SWEEP_SHARD=K/N for one cut)
 #   make ci-container        # tests.yml: container (docker build, smoke, trivy)
 #   make hooks               # install the pre-push hook that runs ci-fast
 #
@@ -19,7 +20,7 @@
 # PASS/FAIL/SKIP line per check and a summary; they exit non-zero on any
 # real failure and exit 0 when everything passed or was cleanly skipped.
 
-.PHONY: ci-fast ci-full ci-shared-ui ci-test ci-static ci-coverage-census ci-container hooks
+.PHONY: ci-fast ci-full ci-shared-ui ci-test ci-static ci-coverage-census ci-property-sweep ci-container hooks
 
 ci-fast:
 	bash ci/fast.sh
@@ -28,7 +29,7 @@ ci-fast:
 # on the targets would stop at the first failure and hide the rest.
 ci-full:
 	@failed=""; \
-	for job in shared_ui static test coverage_census container; do \
+	for job in shared_ui static test coverage_census property_sweep container; do \
 	  echo ""; echo "########## ci-$$job ##########"; \
 	  bash ci/$$job.sh || failed="$$failed $$job"; \
 	done; \
@@ -50,6 +51,9 @@ ci-static:
 
 ci-coverage-census:
 	bash ci/coverage_census.sh
+
+ci-property-sweep:
+	bash ci/property_sweep.sh
 
 ci-container:
 	bash ci/container.sh

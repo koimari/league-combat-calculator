@@ -26,6 +26,7 @@ JOB_SCRIPTS = {
     "test": "ci/test.sh",
     "static": "ci/static.sh",
     "coverage-census": "ci/coverage_census.sh",
+    "property-sweep": "ci/property_sweep.sh",
     "container": "ci/container.sh",
 }
 

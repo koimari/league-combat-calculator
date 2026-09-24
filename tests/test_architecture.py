@@ -133,7 +133,6 @@ FIGHT_STEPS_WITHOUT_A_FRONT_DOOR = (
     "fight.stacks.ksante",
     "fight.stacks.rengar",
     "fight.stacks.senna",
-    "fight.state",
 )
 
 
