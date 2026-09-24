@@ -82,8 +82,8 @@ class TestBonePlatingIsPaidOnTheWalkRatherThanTheItemChannel:
         mitigated = _fight(enemies=[{**_ENEMY, "items": ["Guardian's Horn"]}])[
             "total_damage"
         ]
-        assert bare == pytest.approx(2276.8, abs=0.1)
-        assert mitigated == pytest.approx(1826.8, abs=0.1)
+        assert bare == pytest.approx(2239.9, abs=0.1)
+        assert mitigated == pytest.approx(1796.1, abs=0.1)
         held = _fight(items=["Guardian's Horn"])["combat"]["breakdown"][0]
         assert (
             held["health_damage"] >= _fight()["combat"]["breakdown"][0]["health_damage"]

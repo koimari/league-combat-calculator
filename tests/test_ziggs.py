@@ -218,6 +218,7 @@ class TestZiggsFightIntegration:
                 "damage_type": "magic",
                 "damage": pytest.approx(205.0),
                 "event_precision": "exact",
+                "resistance_met": 100.0,
             }
         ]
 

@@ -206,12 +206,12 @@ class TestClippingToTheWindow:
 
     def test_a_walked_proc_past_the_end_drops_with_its_count(self) -> None:
         """Vi's third Denting Blows stack rides a Vault Breaker hit that lands
-        after an 8.5 s fight ends."""
-        counted = _fight("Vi", 8.5, count=True, uptime=1.0, **_MAXED)
-        clipped = _fight("Vi", 8.5, count=False, uptime=1.0, **_MAXED)
-        late = [event for event in _events(counted, "W") if event["time"] > 8.5]
+        at 8.97 s, after an 8.25 s fight ends."""
+        counted = _fight("Vi", 8.25, count=True, uptime=1.0, **_MAXED)
+        clipped = _fight("Vi", 8.25, count=False, uptime=1.0, **_MAXED)
+        late = [event for event in _events(counted, "W") if event["time"] > 8.25]
         assert late, "the default keeps the proc past the end"
-        landed = _landed(clipped, "W", 8.5)
+        landed = _landed(clipped, "W", 8.25)
         assert (
             clipped["breakdown"]["W"]["count"]
             == len(landed)

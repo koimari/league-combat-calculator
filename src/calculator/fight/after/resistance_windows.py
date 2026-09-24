@@ -293,12 +293,14 @@ class _LiveResistance:
         return self._served(damage_class, self.targets[0], shreds, extra_lethality)
 
 
-def _met_resistance(event: Mapping[str, Any]) -> float | None:
-    """The resistance an event states it met, off the event or its declaration."""
+def _met_resistance(event: Mapping[str, Any], published: float) -> float:
+    """The resistance an event states it met, off the event or its declaration;
+    one that states none met the fight's *published* figure (the declaration
+    contract in ``survival/pricing.py``)."""
     met = _finite_numeric_receipt(event.get("resistance_met"))
     if met is None and event.get("declared") is not None:
         met = AuthoredDeclaration(*event["declared"]).effective_resistance
-    return None if met is None else float(met)
+    return published if met is None else float(met)
 
 
 class _Pricing:
@@ -340,8 +342,15 @@ class _Pricing:
         )
         if not shredding and extra <= 0.0:
             return 0.0
-        met = _met_resistance(event)
-        if met is None or not self.live.met_served_pipeline(damage_class, met):
+        met = _met_resistance(
+            event,
+            (
+                self.live.final.effective_armor
+                if damage_class == "physical"
+                else self.live.final.effective_mr
+            ),
+        )
+        if not self.live.met_served_pipeline(damage_class, met):
             self.kept += 1
             return 0.0
         active = tuple(

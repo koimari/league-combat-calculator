@@ -526,12 +526,14 @@ class TestSpellbladeRider:
         rider = breakdown["spellblade_Trinity Force_bonus_true"]
         assert rider["damage_type"] == "true"
         assert rider["count"] == proc["count"]
-        # The proc is physical (mitigated by the post-E-shred armor); the
-        # rider is 20% of the PRE-mitigation proc and takes no mitigation.
-        unmitigate = (100.0 + result["effective_armor"]) / 100.0
-        assert rider["damage_per_hit"] == pytest.approx(
-            proc["damage_per_hit"] * unmitigate * 0.20
+        # The proc is physical, each packet mitigated by the armour it met
+        # inside or outside E's shred; the rider is 20% of the PRE-mitigation
+        # proc and takes no mitigation.
+        raw = sum(
+            event["damage"] * (100.0 + event["resistance_met"]) / 100.0
+            for event in proc["damage_events"]
         )
+        assert rider["total_damage"] == pytest.approx(raw * 0.20)
 
     def test_no_spellblade_item_means_no_rider(self, corki_data) -> None:
         result = self._fight(corki_data, [])

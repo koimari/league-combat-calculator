@@ -84,4 +84,4 @@ def apply_armor_penetration(
 
 def rescale_mitigated(mitigated: float, met: float, meets: float) -> float:
     """A packet mitigated at *met*, re-priced at *meets*; mitigation is linear."""
-    return mitigated * apply_resistance(1.0, meets) / apply_resistance(1.0, met)
+    return mitigated * (apply_resistance(1.0, meets) / apply_resistance(1.0, met))

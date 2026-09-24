@@ -285,8 +285,9 @@ class TestBonePlatingTakesItsFlatCutOffIncomingHits:
     def test_it_lowers_the_damage_the_holder_takes(self):
         bare = self._fight()["combat"]["breakdown"][0]
         plated = self._fight(runes=["Bone Plating"])["combat"]["breakdown"][0]
-        assert bare["health_damage"] == pytest.approx(656.9, abs=0.1)
-        assert plated["health_damage"] == pytest.approx(544.2, abs=0.1)
+        # The cut is the three reduced hits, 112.7, whatever the base.
+        assert bare["health_damage"] == pytest.approx(754.2, abs=0.1)
+        assert plated["health_damage"] == pytest.approx(641.5, abs=0.1)
 
     def test_it_buys_time_in_a_fight_the_holder_loses(self):
         """The other reading of the same reduction: a later death."""
