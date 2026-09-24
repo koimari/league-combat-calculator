@@ -914,14 +914,12 @@ def test_p112_hail_of_blades_per_swing_restore_timing():
 
     # The public ``auto_attacks`` row is one event SHORT of the modeled
     # basic-attack stream, and that is not a restore-walk defect: Jayce's
-    # R (Transform Mercury Hammer) declares ``empowers_next_auto``, so one
-    # swing is accounted for on the R row instead ("incl. basic attack").
-    # The restore walk correctly rides all 13 basic attacks; the auto row
-    # is the 12-swing prefix of them.
+    # R (Transform Mercury Hammer) declares ``empowers_next_auto``, so the
+    # swing at its cast, swing 0, is accounted for on the R row instead
+    # ("incl. basic attack").  The restore walk correctly rides all 13 basic
+    # attacks; the auto row is the other 12.
     auto_row = result["breakdown"]["auto_attacks"]
     auto_times = [event["time"] for event in auto_row["damage_events"]]
     assert auto_row["count"] == len(auto_times) == len(expected_swings) - 1
-    assert auto_times == [
-        pytest.approx(t, abs=1e-6) for t in expected_swings[: len(auto_times)]
-    ]
+    assert auto_times == [pytest.approx(t, abs=1e-6) for t in expected_swings[1:]]
     assert "incl. basic attack" in result["breakdown"]["R"]["detail"]

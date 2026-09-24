@@ -99,20 +99,22 @@ class TestTheWindowOpensAtTheGrantingSlotsCast:
             _rate_attack_speed_grant(state, "W", 40.0, 5.0)
 
     @pytest.mark.parametrize(
-        ("champion", "slot", "duration", "granted"),
+        ("champion", "slot", "duration", "granted", "claimed"),
         [
-            ("Kennen", "E", 4.0, 80.0),
-            ("Xin Zhao", "E", 5.0, 70.0),
-            ("Samira", "E", 5.0, 40.0),
-            ("Wukong", "E", 5.0, 60.0),
-            ("Xayah", "W", 4.0, 55.0),
-            ("Nidalee", "E", 7.0, 70.0),
-            ("Yuumi", "E", 3.0, 35.0),
-            ("Sivir", "W", 4.0, 40.0),
+            ("Kennen", "E", 4.0, 80.0, 0),
+            ("Xin Zhao", "E", 5.0, 70.0, 0),
+            ("Samira", "E", 5.0, 40.0, 0),
+            # Crushing Blow (Q) claims the stream's first swing, inside E's
+            # window, and carries it on Q's row.
+            ("Wukong", "E", 5.0, 60.0, 1),
+            ("Xayah", "W", 4.0, 55.0, 0),
+            ("Nidalee", "E", 7.0, 70.0, 0),
+            ("Yuumi", "E", 3.0, 35.0, 0),
+            ("Sivir", "W", 4.0, 40.0, 0),
         ],
     )
     def test_the_non_q_window_rates_the_swings_inside_it(
-        self, champion, slot, duration, granted
+        self, champion, slot, duration, granted, claimed
     ):
         result = _fight(champion)
         unbuffed = _fight(champion, ability_ranks=dict(_RANKS, **{slot: 0}))
@@ -133,12 +135,17 @@ class TestTheWindowOpensAtTheGrantingSlotsCast:
         phase = champion_windup(get_champion(champion)).phase(base_as)
         banked = start * base_as
         first = math.ceil(banked - phase)
-        assert len(inside) == math.ceil(banked + buffed_as * duration - phase) - first
+        assert (
+            len(inside)
+            == math.ceil(banked + buffed_as * duration - phase) - first - claimed
+        )
         assert inside[0] == pytest.approx(
-            start + (first + phase - banked) / buffed_as, abs=1e-3
+            start + (first + claimed + phase - banked) / buffed_as, abs=1e-3
         )
         if len(after) > 1:  # published times are rounded to the millisecond
-            assert after[1] - after[0] == pytest.approx(1.0 / base_as, abs=2e-3)
+            # A later empowered cast may claim a swing, leaving a two-cycle gap.
+            gaps = [later - earlier for earlier, later in zip(after, after[1:])]
+            assert min(gaps) == pytest.approx(1.0 / base_as, abs=2e-3)
 
 
 class TestTwistedFate:

@@ -194,7 +194,7 @@ Inside `fight/autos/` a strike is filed by what fires it: `on_hit_layering.py` p
 
 `count_damage_after_fight_end` (a request field, default true) is the one switch over what the fight's end does to damage. On, the fight is the window the champions act in and a hit lit inside it still lands after it: a fused Time Bomb, Requiem's payload, a DoT's remaining ticks, a burn's tail. Off, `FightState.clip_to_window` drops every landing timed past `fight_duration_seconds` in the cast plan, the cast pricing loop, the stacking-DoT integral, the ability tick events, the burn tail, spellblade procs, fixed-count proc rows and stored damage, and the result carries a note saying so. `FightState.lands_in_window` is the one landing test, and a dropped landing takes its share of the row's total and count. One-rotation fights never clip. `tests/test_fight_window.py` pins both readings, and no module picks one silently.
 
-`ability_rotation` binds an ability's resistance before that ability's own shred applies: it reads `ability_mr` once per ability row, so every cast of the shredding ability meets the unshredded MR while every later packet meets the shredded one. That is the modelled behaviour, and the trace shows it.
+A shredding hit meets the target before its own shred, and each later timed packet meets the shred live when it lands (`fight/after/resistance_windows.py`); the trace shows both.
 
 Terminus' Juxtaposition pen is a champion stat, so the fight serves ONE pen to casts and swings alike. The `Resists` docstring in `fight/resists.py` owns what `effective_*_pen_percent` resolves to and why a cast pays the ramp's mean wherever it lands.
 

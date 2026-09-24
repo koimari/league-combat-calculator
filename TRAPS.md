@@ -8,8 +8,7 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 - **A request key no parser reads is dropped silently, so a test pinned on it
   pins the default.** `deterministic` is a `calculate_payload` keyword, never a
   body key, and the body spells the window `fight_duration`, not the `FightConfig`
-  field `fight_duration_seconds`. The calculate path reads `items`, never
-  `locked_items`. To find such keys, wrap the request in a `dict` subclass that
+  field `fight_duration_seconds`. To find such keys, wrap the request in a `dict` subclass that
   records `get`, `[]` and `in`, run the real parse, and list what it never read;
   `tests/test_frontend_capability_contract.py` does so for every roster capability.
 - **Four concurrent full `pytest -n auto` runs take this machine out of memory.**
@@ -199,8 +198,7 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 - **A reader summing `breakdown` rows skips `informational` ones first.** Their
   `total_damage` restates a share other rows priced (`basic_amp_*`,
   `ability_amp_*`, `sundered_sky`), and `source_total_damage` returns it
-  anyway. The trace's residue line booked all three, so it overshot the total
-  1-13% on every Hexoptics C44, Actualizer and Sundered Sky build.
+  anyway.
 - **`return factor * sum_modifiers(...)` reads `factor` before the call**, so a
   `nonlocal` the callee's closure sets is invisible. Akshan E's attack-speed
   factor priced 1.0 that way. Bind the call to a name, then multiply.
@@ -243,13 +241,12 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 - **`attack_cadence` owns swing count and swing times.** `floor(AS x T)` with
   swings from t=0 left one to two idle cycles. A module mirroring the stream calls
   `attack_cadence.stream_impacts`, never `index / rate`.
-- **`Resists.resolve_magic()` keeps the stored `reduced_mr`.** A copy whose
-  `base_mr` changed still serves the old reduced MR once an R is accepted. Call
-  `Resists.resolve()`, which re-derives every served figure.
-- **A packet re-priced after the fact may have met a resistance of its own**,
-  such as an ability's own penetration. `_LiveResistance.met_served_pipeline`
-  re-prices only a packet whose `resistance_met` the fight served at a target
-  state it passed through.
+- **`Resists.resolve_magic()` keeps the stored `reduced_mr`.** A copy with a new
+  `base_mr` serves the old reduced MR after an accepted R; `Resists.resolve()`
+  re-derives every figure.
+- **A packet re-priced after the fact may have met its own resistance** (an
+  ability's own penetration). `_LiveResistance.met_served_pipeline` re-prices
+  only a packet whose `resistance_met` the fight served.
 
 ## Platform and tooling
 
@@ -550,9 +547,8 @@ champion it bit.
   failure shape, and the golden sweep holds no burn items to catch it.
 - **A step that times its own packets must ask `state.lands_in_window` of each.**
   Spellblade arms each charge when the last proc's cooldown ends, so an 8 s
-  fight can time its third proc at 9.9 s. Every golden runs with
-  `count_damage_after_fight_end` on, so no golden can see a late packet; only
-  `scripts/property_sweep.py`'s trace property does.
+  fight can time a proc at 9.9 s. No golden clips; only
+  `scripts/property_sweep.py` sees a late packet.
 - **A silent zero comes from a missing key.** A champion module never
   `.get(..., default)`s a stats key: Akshan E read a `bonus_attack_speed_percent`
   key nothing writes and priced its term at 0. A wiki unit absent from

@@ -124,10 +124,13 @@ def _assert_soul_eater_heals(combat, *, level, ratio):
         and float(event.get("damage", 0.0)) > 0.0
     ]
     assert physical, "no physical hit for Soul Eater to ride"
+    # A swing skipped because Nasus is already dead publishes its sourced
+    # receipt at the plain auto's size and applies nothing, so a heal rides
+    # either a hit that landed or that plain auto.
     for heal in heals:
         assert any(
             heal["amount"] == pytest.approx(ratio * damage, abs=0.06)
-            for damage in physical
+            for damage in [*physical, per_auto]
         ), heal
     # The plain auto's share is the one the level breakpoint names.
     assert any(
