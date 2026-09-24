@@ -43,18 +43,25 @@ class _Shred(NamedTuple):
     source_key: str
     debuff: Mapping[str, Any]
     windows: tuple[_ShredWindow, ...]
+    # The stream swings a rider's shred is delivered by (Jayce's Cannon
+    # Transform), each an applying hit though the auto row holds it.
+    carriers: tuple[float, ...]
 
     def fraction_at(self, source_key: str, time: float) -> float:
         """The share of the reduction live for one packet: the hit that applies
         a window meets the target before it, any other packet at that instant
         after it."""
+        applies = source_key == self.source_key or (
+            source_key == "auto_attacks"
+            and any(abs(time - carrier) <= _TIME_EPSILON for carrier in self.carriers)
+        )
         return max(
             (
                 window.fraction
                 for window in self.windows
                 if (
                     window.start < time
-                    if source_key == self.source_key
+                    if applies
                     else window.start <= time + _TIME_EPSILON
                 )
                 and time <= window.end + _TIME_EPSILON
@@ -112,7 +119,10 @@ def _shred_windows(state: FightState) -> list[_Shred]:
             else:
                 windows.append(_ShredWindow(cast_hits[0], cast_hits[0] + span, 1.0))
         shreds[declaration.source_key] = _Shred(
-            declaration.source_key, debuff, tuple(windows)
+            declaration.source_key,
+            debuff,
+            tuple(windows),
+            state.empowered_ride_times.get(declaration.source_key, ()),
         )
     return [shred for shred in shreds.values() if shred.windows]
 

@@ -84,14 +84,13 @@ def _apply_empowered_burst_autos(state: "FightState", plan: "CastPlan") -> None:
 def _resolve_scheduled_auto_rides(state: "FightState", plan: "CastPlan") -> None:
     """Claim the stream swing each ``rides_scheduled_auto`` cast is delivered by.
 
-    An empower is timed at its cast by default, which is where a kit that
-    resets its attack timer (Darius W, Jax W, Fiora E) genuinely swings, and
-    a burst that sets its own rate re-times the stream and declares its own
-    impacts (``BurstSwingSchedule``).  A rider does neither: the cache gives
-    it no reset, so it is carried by a swing already on the stream — the
-    first at or after its cast that an earlier rider has not taken.
-    Resolving that here, once, is what lets the ability's damage and its
-    ``target_debuff`` window both open at the swing rather than at the cast.
+    A burst that sets its own rate re-times the stream and declares its own
+    impacts (``BurstSwingSchedule``); any other empower's swing is claimed
+    once the ledger exists (``fight/after/empowered_swings.py``), while its
+    ``target_debuff`` window opens at the cast.  A rider is carried by a
+    swing already on the stream, the first at or after its cast that an
+    earlier rider has not taken.  Resolving that here, before the rotation,
+    is what lets its ``target_debuff`` window open at the swing too.
 
     Casts left without a swing keep nothing: the stream ran out, and the
     engine already caps such casts by the autos that consume them.

@@ -46,11 +46,16 @@ def _coverage(champion: str, items: list[str], **extra):
 
 
 def _auto_row(champion: str, items: list[str], *, deterministic: bool = False):
-    """The engine's own ``auto_attacks`` row for that same timed fight.
+    """The engine's own ``auto_attacks`` row for that same timed fight."""
+    return _engine_rows(champion, items, deterministic=deterministic)["auto_attacks"]
+
+
+def _engine_rows(champion: str, items: list[str], *, deterministic: bool = False):
+    """The engine's own breakdown for that same timed fight.
 
     ``calculate_payload`` rounds its published ledger for display, and the
     invariant below is about the numbers the engine authored, so this runs
-    the identically resolved scenario and reads the row itself.
+    the identically resolved scenario and reads the rows themselves.
     """
     payload = {
         "champion": champion,
@@ -69,7 +74,7 @@ def _auto_row(champion: str, items: list[str], *, deterministic: bool = False):
         list(resolved.items),
         resolved.fight_params,
     )
-    return result["breakdown"]["auto_attacks"]
+    return result["breakdown"]
 
 
 class TestSwingScheduleUnderAttackSpeedKits:
@@ -113,6 +118,9 @@ UNEQUAL_SWING_PAIRS = [
     ("Fiora", "Sundered Sky"),
     ("Jayce", "Fiendhunter Bolts"),
 ]
+
+# The slots whose casts claim those champions' swings.
+_EMPOWERING_SLOTS = {"Fiora": ("E",), "Jayce": ("W", "R")}
 
 # Enough fights that a stream with no critical strike at all is not a
 # credible explanation for a green run.
@@ -173,12 +181,19 @@ class TestEmpoweredSwingReattributionPricesItsOwnLedger:
 
     @pytest.mark.parametrize(("champion", "item"), UNEQUAL_SWING_PAIRS)
     def test_unequal_swings_reconcile_without_a_roll(self, champion, item):
-        row = _auto_row(champion, [item], deterministic=True)
-        events = row["damage_events"]
-        assert len({round(event["damage"], 6) for event in events}) > 1
-        assert sum(event["damage"] for event in events) == pytest.approx(
-            row["total_damage"], rel=1e-9, abs=1e-6
-        )
+        """The unequal swings split between the auto row and the rows whose
+        casts claimed them, and each of those rows is its own ledger."""
+        breakdown = _engine_rows(champion, [item], deterministic=True)
+        rows = [breakdown["auto_attacks"]]
+        rows += [breakdown[slot] for slot in _EMPOWERING_SLOTS[champion]]
+        dealt = {
+            round(event["damage"], 6) for row in rows for event in row["damage_events"]
+        }
+        assert len(dealt) > 1
+        for row in rows:
+            assert sum(event["damage"] for event in row["damage_events"]) == (
+                pytest.approx(row["total_damage"], rel=1e-9, abs=1e-6)
+            )
 
 
 class TestAbilityAttackOnHitRows:
@@ -721,27 +736,32 @@ class TestEmpoweredRowsAuthorTheSwingsTheyConsumed:
         )
 
     @pytest.mark.parametrize(("champion", "slot"), EMPOWERED_ROWS)
-    def test_events_land_on_the_casts_that_forced_them(self, champion, slot):
-        """Each consumed swing is timed at the cast that consumed it.
+    def test_events_land_on_the_swings_the_casts_claimed(self, champion, slot):
+        """Each cast's damage lands on the first stream swing after it.
 
-        All four of these empowers reset the attack timer, so the swing
-        lands with the cast — the instant the reconstruction has always
-        placed this damage at, which is why authoring it moves no number.
-        The row's damage came from the stream's trailing swings (the
-        prices the move there), and those sit at the far end of a long
-        fight: timing the events from them would post a cast's damage
-        seconds before or after the cast that forced it.
+        The move takes the swings the casts claimed off the auto row, so
+        the row's events sit at those swings' impacts, never at the cast
+        and never on a swing the auto row kept.
         """
         result = _breakdown(champion, ["Fimbulwinter"])
-        row = result["breakdown"][slot]
-        moved = sorted({round(float(e["time"]), 3) for e in row["damage_events"]})
-        casts = sorted(
-            round(float(event["time"]), 3)
+        moved = {float(e["time"]) for e in result["breakdown"][slot]["damage_events"]}
+        kept = {
+            float(e["time"])
+            for e in result["breakdown"]["auto_attacks"]["damage_events"]
+        }
+        stream = sorted(moved | kept)
+        casts = [
+            float(event["time"])
             for event in result["cast_timeline"]
             if event["slot"] == slot
-        )
-        assert moved
-        assert moved == casts[: len(moved)]
+        ]
+        assert casts
+        assert not moved & kept
+        for cast in casts:
+            later = [time for time in stream if time > cast]
+            # Casts are capped by the stream's count, not its times, so one
+            # with no swing left after it takes the latest free one instead.
+            assert not later or later[0] in moved
 
     def test_a_self_rated_burst_uses_its_own_declared_impacts(self):
         """Jayce's Hyper Charge does not swing at its cast boundary.
