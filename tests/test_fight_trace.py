@@ -300,19 +300,28 @@ class TestTheLinesSumToTheFight:
         )
 
     def test_a_row_the_ledger_under_states_keeps_its_residue(self):
-        """Darius W prices 1107.6923 and reconstructs two events worth 415.3846."""
+        """A row its packets do not reach keeps the difference on one line.
+
+        Darius W's claimed swings now ride W's own events, so no corpus row
+        under-states its ledger; the check makes one do so.
+        """
         champion, items = next(
             build for build in CORPUS_BUILDS if build[1][0] == "Titanic Hydra"
         )
         result = recorded(champion, items)
-        assert round(result["breakdown"]["W"]["total_damage"], 4) == 1107.6923
+        assert not [
+            line
+            for line in fight_trace(result).lines
+            if UNACCOUNTED_ROW_TOTAL in line.refusals
+        ]
+        result["breakdown"]["W"]["total_damage"] += 100.0
         residues = [
             line
             for line in fight_trace(result).lines
             if UNACCOUNTED_ROW_TOTAL in line.refusals
         ]
         assert [line.source for line in residues] == ["W"]
-        assert round(residues[0].mitigated, 4) == 692.3077
+        assert round(residues[0].mitigated, 4) == 100.0
         assert residues[0].raw is None
         assert (
             residues[0].step

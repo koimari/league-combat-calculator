@@ -14,7 +14,7 @@ from ..ledger.breakdown import (
     source_hit_count,
     source_total_damage,
 )
-from ..ledger.event_rows import _ledger_total, _row_damage_parts
+from ..ledger.event_rows import _ledger_total, _row_damage_parts, _row_time
 from ..state import FightState
 
 # A swing at a declared impact is that impact, give or take float order.
@@ -127,13 +127,18 @@ def _author_empowered_swing_events(
     Each swing lands at :attr:`_EmpoweredSwings.times`, which the
     reattribution sets to the claimed swings' own impacts.
 
-    A row that already authors its own ledger is left alone.  Its events
-    are its parts', and appending the swings to them adds damage the fight
-    ledger has never carried (Vayne Q's and Camille Q's moved swings are
-    missing from it today) — a re-pricing, not this plumbing.
+    A row that already authors its own ledger (Darius W, Wukong Q) keeps its
+    parts' events, and the swings its casts claimed land beside them, so the
+    fight ledger carries every swing the reattribution moved onto the row.
     """
     row = consumer.row
-    if isinstance(row.get("damage_events"), list) or not swing_events:
+    if not swing_events:
+        return
+    authored = row.get("damage_events")
+    if isinstance(authored, list):
+        marker = _declared_cc_marker(consumer.info)
+        authored.extend({**swing, **marker} for swing in swing_events)
+        authored.sort(key=_row_time)
         return
     if len(consumer.times) != len(swing_events):
         # No time for every swing (a cast the timeline never published):
