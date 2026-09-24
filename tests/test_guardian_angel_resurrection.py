@@ -442,6 +442,27 @@ def test_lethal_death_records_window_and_revive_at_death_plus_four():
     ]
 
 
+def test_the_death_interval_spans_the_published_death_and_revive_exactly():
+    """The interval's edges and the times they span go through one precision
+    owner (``program/precision.py``), so a reader can compare them as equal."""
+    result = _holder_fight(
+        ALIGNED_FIGHT,
+        stats={
+            "health": 100.0,
+            "base_health": 200.0,
+            "bonus_health": 0.0,
+            "armor": 0.0,
+            "magic_resistance": 0.0,
+        },
+    )
+    survival = _holder_survival(result)
+    (interval,) = survival["action_downtime_intervals"]
+    assert (interval["start"], interval["end"]) == (
+        survival["first_death_time"],
+        survival["revive_time"],
+    )
+
+
 def test_revive_restores_exactly_half_of_base_health_not_max():
     """The restored amount is 50% of BASE health — not current health, not
     bonus-inclusive max.  The holder has max_health 1000 (bonus_health 800

@@ -276,7 +276,14 @@ def survival_leaves(
         leaf.structure(
             "action_downtime_intervals",
             [
-                {"recipient": participant_id, **event}
+                {
+                    "recipient": participant_id,
+                    **event,
+                    "start": round_field(
+                        "action_downtime_intervals.start", event["start"]
+                    ),
+                    "end": round_field("action_downtime_intervals.end", event["end"]),
+                }
                 for event in state["action_downtime_intervals"]
             ],
         )
