@@ -44442,6 +44442,7 @@
               "cc_kind": "slow",
               "damage": 258.1,
               "damage_type": "physical",
+              "event_precision": "exact",
               "phase": "ability",
               "source": "W",
               "time": 1.66
@@ -44528,6 +44529,7 @@
               "cc_kind": "slow",
               "damage": 258.1,
               "damage_type": "physical",
+              "event_precision": "exact",
               "phase": "ability",
               "source": "W",
               "time": 7.13
@@ -45260,6 +45262,7 @@
               "cc_kind": "slow",
               "damage": 254.6,
               "damage_type": "physical",
+              "event_precision": "exact",
               "phase": "ability",
               "source": "W",
               "time": 1.66
@@ -45381,6 +45384,7 @@
               "cc_kind": "slow",
               "damage": 254.6,
               "damage_type": "physical",
+              "event_precision": "exact",
               "phase": "ability",
               "source": "W",
               "time": 7.13
@@ -122119,6 +122123,7 @@
               "cc_kind": "slow",
               "damage": 278.5,
               "damage_type": "physical",
+              "event_precision": "exact",
               "phase": "ability",
               "source": "W",
               "time": 2.53
@@ -122232,6 +122237,7 @@
               "cc_kind": "slow",
               "damage": 278.5,
               "damage_type": "physical",
+              "event_precision": "exact",
               "phase": "ability",
               "source": "W",
               "time": 7.03
@@ -196076,6 +196082,7 @@
               "cc_kind": "slow",
               "damage": 243.6,
               "damage_type": "physical",
+              "event_precision": "exact",
               "phase": "ability",
               "source": "W",
               "time": 1.66
@@ -196174,6 +196181,7 @@
               "cc_kind": "slow",
               "damage": 243.6,
               "damage_type": "physical",
+              "event_precision": "exact",
               "phase": "ability",
               "source": "W",
               "time": 7.13
@@ -196867,6 +196875,7 @@
               "cc_kind": "slow",
               "damage": 240.3,
               "damage_type": "physical",
+              "event_precision": "exact",
               "phase": "ability",
               "source": "W",
               "time": 1.66
@@ -196993,6 +197002,7 @@
               "cc_kind": "slow",
               "damage": 240.3,
               "damage_type": "physical",
+              "event_precision": "exact",
               "phase": "ability",
               "source": "W",
               "time": 7.13
@@ -203248,15 +203258,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 26,
-      "leaves": 129888,
+      "leaves": 129898,
       "numeric_leaves": 41932,
       "sections": "coupled_scenarios"
     },
-    "git_head": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
+    "git_head": "8e84b077028b06ec25b542bddfc6ec68ae99a991",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 26,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "80556ba0edcdbe6aa01d0c0987bece8b54e5f403"
+    "src_tree_sha": "4f17ca097220d239d62276481b54c39fb2dc22ec"
   }
 }

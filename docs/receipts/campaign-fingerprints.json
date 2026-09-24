@@ -59,9 +59,9 @@
  "coupled_golden": {
   "sections": "coupled_scenarios",
   "entries": 26,
-  "leaves": 129888,
+  "leaves": 129898,
   "numeric_leaves": 41932,
-  "src_tree_sha": "80556ba0edcdbe6aa01d0c0987bece8b54e5f403"
+  "src_tree_sha": "4f17ca097220d239d62276481b54c39fb2dc22ec"
  },
  "coupled_golden_exact": {
   "sections": "coupled_scenarios",
