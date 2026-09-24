@@ -234,10 +234,8 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   survival suites too. To time the walk, patch `program.walk.run_survival_walk`,
   the name `walk()` reads.
 - **An average over the fight's wall time breaks "a longer fight never deals
-  less".** Empty seconds pull a time-weighted shred or stack ramp down for every
-  packet. `fight/after/resistance_windows.py` prices a timed packet at the shred
-  live when it lands, and `stat_ramp.mean_stack_level` averages over the events
-  that stack.
+  less"**: empty seconds pull every packet's shred or stack level down. Price at
+  the packet's time (`fight/after/resistance_windows.py`) or average over events.
 - **`attack_cadence` owns swing count and swing times.** `floor(AS x T)` with
   swings from t=0 left one to two idle cycles. A module mirroring the stream calls
   `attack_cadence.stream_impacts`, never `index / rate`.
@@ -365,6 +363,9 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 
 ## Frontend and vision
 
+- **A `ui/src` edit ships only with its rebuilt bundle.** `static/calculator/`
+  is committed, and only the shared-ui job's `node build.mjs --check` compares it
+  to source. Run `cd ui && npm ci && npm run build` first.
 - **Two V8 deoptimizations live in `fingerprint`'s pixel loop.** An expando
   property on a typed array (`vec.contrast = rms`) deoptimizes every function
   touching it, about 10x, so return the number. `Math.min` and `Math.max` type
@@ -400,10 +401,8 @@ champion it bit.
 
 - **The scraper writes `attackCastTime` 0.3 and `attackTotalTime` 1.6 when the
   wiki states neither**, so `champion_windup` reads that pair as
-  `0.3 + attackDelayOffset`. Skarner's real pair is the same: he reads 30% where
-  the wiki states 18.75%. The windup modifier lives only in the binary's
-  `basicAttack` record. The binary's cast/total ratio disagrees with the wiki for
-  about 60 champions, so the cache owns the percent.
+  `0.3 + attackDelayOffset`; Skarner's real pair is the same (30% against
+  18.75%). The windup modifier lives only in the binary's `basicAttack` record.
 - **Known-degraded wiki parses, stable across patches.** The modifier parser
   half-parses gimmick scalings: values survive with empty `units`, so the scaling
   resolver cannot attribute them. Aurelion Sol Q, Bard P, Heimerdinger W and E,
