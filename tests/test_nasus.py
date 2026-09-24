@@ -41,13 +41,12 @@ class TestReviewedCrowdControl:
 def test_p_is_modeled_through_the_soul_eater_lifesteal() -> None:
     """P emits a row with no enemy damage; the heal rule prices the slot.
 
-    A level-18 itemless timed fight with autos pays Soul Eater 104.4 — the
-    receipt behind P's ``modeled`` label.  Seven physical hits at the
-    level-18 24% share: five Siphoning Strikes on the 1.75-second cadence
-    (14.4 each) and the two ordinary autos left beside them (16.2 each).
-    The Siphoning Strike payments are the ones a rule reading only the
-    ``auto_attacks`` row misses — Q rides a basic attack rather than
-    replacing one, so the engine attributes that swing to the Q row —
+    A level-18 itemless timed fight with autos pays Soul Eater 185.4 — the
+    receipt behind P's ``modeled`` label, at the level-18 24% share.  Each of
+    the five Siphoning Strikes on the 1.75-second cadence pays on its Q bonus
+    (14.4) and on the swing it rides (16.2), and the two ordinary autos beside
+    them pay 16.2 each: 5 x (14.4 + 16.2) + 2 x 16.2.  Q rides a basic attack
+    rather than replacing one, so the engine files that swing on the Q row,
     which is why ``derive_self_healing`` reads both rows.  W is a cast
     slot emitting the pinned packet's sourced zero-damage row, so it is
     ``no_damage`` rather than a gap; only its slow/cripple magnitude stays
@@ -76,7 +75,7 @@ def test_p_is_modeled_through_the_soul_eater_lifesteal() -> None:
         for event in payload["self_healing_events"]
         if event["source"] == "Soul Eater"
     )
-    assert paid == pytest.approx(104.4, abs=0.1)
+    assert paid == pytest.approx(185.4, abs=0.1)
 
 
 # Level 18, ranks Q5/W5/E5/R3, no items, six seconds of autos at full uptime

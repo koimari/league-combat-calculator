@@ -137,7 +137,9 @@ def _author_empowered_swing_events(
     authored = row.get("damage_events")
     if isinstance(authored, list):
         marker = _declared_cc_marker(consumer.info)
-        authored.extend({**swing, **marker} for swing in swing_events)
+        authored.extend(
+            {**swing, **marker, "event_precision": "exact"} for swing in swing_events
+        )
         authored.sort(key=_row_time)
         return
     if len(consumer.times) != len(swing_events):

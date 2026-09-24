@@ -354,9 +354,10 @@ class TestViBlastShield:
     def test_a_holder_blocked_through_every_candidate_keeps_the_denial(self):
         """Nothing to re-bind to is a receipt, not a silent zero.
 
-        In a 3 s window Vi's only ability packets are the Q and W at 1.721,
-        both ``attacker_state_blocked`` by the charm, so no carrier ever
-        lands and the rider is refused for real.  The named denial says the
+        In a 3 s window Vi's only ability packets are the Q at 1.721 and
+        E's claimed swing and the W it procs at 1.774, all
+        ``attacker_state_blocked`` by the charm, so no carrier ever lands and
+        the rider is refused for real.  The named denial says the
         amount was withheld, which carrier was authored and which candidate
         the rider gave up on.
         """
@@ -381,8 +382,8 @@ class TestViBlastShield:
             "event_id": "main:enemy:Ahri:1:shield",
             "carrier_event_id": "main:enemy:Ahri:1",
             "carrier_skipped_reason": "attacker_state_blocked",
-            # W at 1.721, the last in-window ability packet Vi authored.
-            "last_candidate_event_id": "main:enemy:Ahri:2",
+            # W at 1.774, the last in-window ability packet Vi authored.
+            "last_candidate_event_id": "main:enemy:Ahri:3",
             "last_candidate_skipped_reason": "attacker_state_blocked",
             "withheld_amount": pytest.approx(292.8),
         }
