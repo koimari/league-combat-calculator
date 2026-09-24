@@ -345,8 +345,9 @@ class TestFightEngineIntegration:
     def test_near_flag_raises_auto_count_and_damage(
         self, jarvan_iv_data, attacker_stats
     ) -> None:
-        """E's doubled AS buff: 1.0 + 0.625*0.6 = 1.375 AS -> 13 autos in
-        10s, vs 1.1875 AS -> 11 autos with near_flag off."""
+        """E's doubled AS buff: 1.0 + 0.625*0.6 = 1.375 AS vs 1.1875 AS with
+        near_flag off.  A config with no windup lands impact k at k/AS, so
+        10s holds ceil(13.75) = 14 autos against ceil(11.875) = 12."""
         stats_near = attacker_stats(level=9)
         abilities_near = _parse_for_fight(
             jarvan_iv_data, stats_near, 9, {"Q": 0, "W": 0, "E": 5, "R": 0}
@@ -367,15 +368,20 @@ class TestFightEngineIntegration:
             stats_away, abilities_away, [], _fight_config()
         )
 
-        assert result_near["breakdown"]["auto_attacks"]["count"] == 13
-        assert result_away["breakdown"]["auto_attacks"]["count"] == 11
+        assert result_near["breakdown"]["auto_attacks"]["count"] == 14
+        assert result_away["breakdown"]["auto_attacks"]["count"] == 12
         assert result_near["total_damage"] > result_away["total_damage"]
 
-    def test_q_shred_applies_to_post_q_damage(
+    def test_q_shred_applies_to_autos_inside_its_window(
         self, jarvan_iv_data, attacker_stats
     ) -> None:
-        """Q rank 5 shreds 26% of 20 armor -> 14.8: autos mitigate at
-        100/(100+14.8) = 87.11 per hit (vs 83.33 unshredded)."""
+        """Q rank 5 shreds 26% of 20 armor -> 14.8 for 3s from its hit at t=0.
+
+        At AS 1.0 with no windup the ten autos land at t=0..9.  The swing at
+        t=0 is no cast, so it meets the shred opening at that instant; the
+        swings at 0..3 meet 14.8 (100/114.8 = 87.11 each), the six after
+        meet 20 (83.33 each).
+        """
         stats = attacker_stats(level=9)
         abilities = _parse_for_fight(
             jarvan_iv_data, stats, 9, {"Q": 5, "W": 0, "E": 0, "R": 0}
@@ -384,7 +390,14 @@ class TestFightEngineIntegration:
             stats, abilities, [], _fight_config(target_armor=20.0)
         )
         autos = result["breakdown"]["auto_attacks"]
-        assert autos["damage_per_hit"] == pytest.approx(100.0 * 100 / 114.8, abs=0.05)
+        events = autos["damage_events"]
+        assert [event["time"] for event in events] == [float(t) for t in range(10)]
+        assert [event["resistance_met"] for event in events] == pytest.approx(
+            [14.8] * 4 + [20.0] * 6
+        )
+        assert autos["damage_per_hit"] == pytest.approx(
+            (4 * 100.0 * 100 / 114.8 + 6 * 100.0 * 100 / 120) / 10
+        )
 
         abilities_off = _parse_for_fight(
             jarvan_iv_data,

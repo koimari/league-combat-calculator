@@ -370,7 +370,10 @@ class TestPassiveEventCertification:
         assert {event["event_precision"] for event in events} == {"exact"}
         times = [event["time"] for event in events]
         assert times == sorted(times)
-        assert times[0] == pytest.approx(0.0)  # proc 1 rides the first swing
+        # Proc 1 rides the first swing, which lands one windup after t=0.
+        swings = result["breakdown"]["auto_attacks"]["damage_events"]
+        assert times[0] == pytest.approx(swings[0]["time"])
+        assert times[0] > 0.0
         assert sum(event["damage"] for event in events) == pytest.approx(
             passive["total_damage"]
         )

@@ -90,11 +90,12 @@ class TestLoveTap:
         row = result["breakdown"][rider_probe.RIDER_ROW]
         assert row["name"] == "Love Tap (on-hit)"
         assert row["count"] == 1
-        # Eight swings, not ten: the shared probe's legacy window is 8s at
-        # 0.8 uptime (6.4 effective seconds) and Strut's +100% puts Miss
-        # Fortune's fight attack speed at 1.319.  The tap itself is what
-        # this row is about, and it is unchanged.
-        assert result["breakdown"]["auto_attacks"]["count"] == 8
+        # Nine swings: the shared probe's legacy window is 8s at 0.8 uptime
+        # (6.4 effective seconds) and Strut's +100% puts Miss Fortune's
+        # fight attack speed at 1.319, 8.44 attack cycles, of which the
+        # 0.148-cycle windup lands ceil(8.44 - 0.148) = 9 impacts.  The tap
+        # itself is what this row is about, and it is unchanged.
+        assert result["breakdown"]["auto_attacks"]["count"] == 9
         assert row["total_damage"] == pytest.approx(48.0, abs=0.05)
 
     def test_tagging_more_targets_prices_more_taps(self):
@@ -253,8 +254,8 @@ class TestLoveTapLadderInTheFight:
         # max_procs caps the row at the selected tap count regardless of
         # how many autos land — a sustained fight must not multiply Love
         # Tap's one-time mark.
-        short = rider_probe.rider_row("Miss Fortune", fight_duration_seconds=3.0)
-        long_fight = rider_probe.rider_row("Miss Fortune", fight_duration_seconds=15.0)
+        short = rider_probe.rider_row("Miss Fortune", fight_duration=3.0)
+        long_fight = rider_probe.rider_row("Miss Fortune", fight_duration=15.0)
         assert short["count"] == 1
         assert long_fight["count"] == 1
         assert long_fight["total_damage"] == pytest.approx(

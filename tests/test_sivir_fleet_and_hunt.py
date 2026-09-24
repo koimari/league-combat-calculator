@@ -152,7 +152,6 @@ def _fight_result(
         "target_health": 2500.0,
         "target_armor": 100.0,
         "target_mr": 50.0,
-        "deterministic": True,
     }
     response = app_module.app.test_client().post("/api/calculate", json=payload)
     assert response.status_code == 200, response.get_json()

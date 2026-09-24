@@ -23,6 +23,7 @@ import pytest
 
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions.yone import MODULE_CC
+from src.calculator.fight.state import FightState
 
 _ENEMY = {"kind": "champion", "champion": "Garen", "level": 18, "role": "top"}
 
@@ -40,6 +41,9 @@ class _StubState:
     cast_order: tuple = ("Q", "E")
     ledger_target_index: int | None = None
     total_damage: float = 0.0
+    clip_to_window: bool = False
+    fight_duration_seconds: float = 0.0
+    lands_in_window = FightState.lands_in_window
 
 
 @dataclasses.dataclass
@@ -60,10 +64,10 @@ def _fight(*, items: list[str], mode: str = "time_based", autos: bool = True) ->
             "enemies": [_ENEMY],
             "fight_duration": 10,
             "fight_mode": mode,
-            "deterministic": True,
             "include_auto_attacks": autos,
             "auto_attack_uptime": 1.0,
-        }
+        },
+        deterministic=True,
     )
 
 

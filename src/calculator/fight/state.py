@@ -6,6 +6,8 @@ from types import MappingProxyType
 from typing import Any
 
 from .. import item_effects, rune_effects
+from .. import attack_cadence
+from ..attack_cadence import Windup
 from ..attack_windows import AttackSpeedWindow
 from ..combat_events import CombatEvent
 from ..interpreters import crit_profile
@@ -14,7 +16,11 @@ from .config import BASE_CRIT_MULTIPLIER
 from .declarations import BuildDeclarations
 from .empower_declaration import BurstSwingSchedule
 from .resists import Resists
-from .results import FerocityTimeline, StackTimeline
+from .results import FerocityTimeline, ShredDeclaration, StackTimeline
+
+# A landing instant this close to the fight end still lands: float sums of
+# cast times and offsets reach the boundary a few ulps late.
+_LANDING_EPSILON = 1e-9
 
 
 @dataclass
@@ -119,6 +125,9 @@ class FightState:
     # ── Attack timing ─────────────────────────────────────────────────────
     attack_speed: float
     attack_speed_ratio: float
+    # The attacker's windup (``FightConfig.windup``), read through
+    # ``impact_phase``.
+    windup: Windup | None
     num_auto_attacks: int
     empowered_autos: int
     # The kit's one attack-speed window [start, end), placed at the first
@@ -145,6 +154,8 @@ class FightState:
     # the shared timeline walked it (fight/rotation/cast_resource_lockout.py).
     # Empty for a kit with no such bar, and for a fight with no clock.
     lockout_windows: tuple[tuple[float, float], ...] = ()
+    # Every resistance shred a row landed, for the resistance windows step.
+    shred_declarations: list[ShredDeclaration] = field(default_factory=list)
     # ``(slot, time)`` for every accepted cast, published once the rotation
     # resolved its plan. The autos step reads it to walk a kit's armed
     # empowered swings (champions/armed_procs.py).
@@ -195,6 +206,40 @@ class FightState:
     # Set by calculate_fight_damage: receipts-only outputs (per-cast
     # resource rows) may be skipped when True.
     score_only: bool = False
+
+    def impact_phase(self, attack_speed: float) -> float:
+        """Where a stream's first impact lands in its cycle (``attack_cadence``)."""
+        return 0.0 if self.windup is None else self.windup.phase(attack_speed)
+
+    def ambient_impacts(self) -> tuple[float, ...]:
+        """The fight's own stream at its own rate, before any window re-rates it."""
+        return attack_cadence.stream_impacts(
+            self.attack_speed * self.auto_attack_uptime,
+            self.fight_duration_seconds,
+            self.impact_phase(self.attack_speed),
+        )
+
+    def as_window_impacts(self) -> tuple[float, ...]:
+        """The kit attack-speed window's stream: one attack timer at the base
+        rate, at the window's rate inside it, then at the base rate again."""
+        base_rate = self.as_window_base_rate * self.auto_attack_uptime
+        end = self.fight_duration_seconds
+        opens, closes = min(self.as_window_start, end), min(self.as_window_end, end)
+        return attack_cadence.impact_times(
+            (
+                (0.0, opens, base_rate),
+                (opens, closes, self.attack_speed * self.auto_attack_uptime),
+                (closes, end, base_rate),
+            ),
+            self.impact_phase(self.as_window_base_rate),
+        )
+
+    def lands_in_window(self, time: float) -> bool:
+        """False for a landing timed past the fight's end when the request clips."""
+        return (
+            not self.clip_to_window
+            or time <= self.fight_duration_seconds + _LANDING_EPSILON
+        )
 
     @property
     def ledger_target_index(self) -> int:

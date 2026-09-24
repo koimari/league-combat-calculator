@@ -142,6 +142,26 @@ def test_receipt_prediction_matches_calculate_output(sqlite_database):
     assert set(body["predicted"]["sources"]) >= {"Q", "W", "E", "R"}
 
 
+def test_receipt_predicts_the_crit_build_total_calculate_shows(sqlite_database):
+    """A crit build's prediction is the deterministic total, never a roll."""
+    client = _client()
+    payload = _payload(
+        champion="Caitlyn",
+        boots="Berserker's Greaves",
+        items=["Infinity Edge", "Rapid Firecannon", "Phantom Dancer"],
+        role="bottom",
+        ability_ranks={"Q": 5, "W": 3, "E": 3, "R": 2},
+        target_health=5000,
+    )
+    predicted = _predict(client, payload)
+    for _ in range(3):
+        receipt = client.post(
+            "/api/receipts", json={"champion": "Caitlyn", "loadout": payload}
+        )
+        assert receipt.status_code == 201, receipt.get_json()
+        assert receipt.get_json()["predicted"]["tdd"] == predicted
+
+
 def _ui_payload():
     """The same shape at the level cap, against a roster that fights back."""
     enemy = {
@@ -150,7 +170,6 @@ def _ui_payload():
         "level": 18,
         "items": ["Sunfire Aegis"],
         "boots": "Plated Steelcaps",
-        "include_boots": True,
         "item_options": {},
         "role": "",
         "role_quest_complete": False,

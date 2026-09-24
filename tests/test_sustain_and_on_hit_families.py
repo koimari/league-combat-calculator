@@ -211,7 +211,9 @@ def test_calculate_botrk_bloodthirster_heals_sourced_lifesteal_per_auto():
 
 
 def test_calculate_participant_timeline_sustain_receipts_include_lifesteal():
-    """The roster timeline's healing_received counts the item lifesteal."""
+    """The roster timeline's healing_received counts the item lifesteal it
+    applied.  The opening swing's lifesteal lands before Aatrox's first
+    impact, at full health, so it restores nothing."""
     data = _calculate(
         ["Blade of the Ruined King", "Bloodthirster"],
         enemies=[{"champion": "Aatrox", "level": 18}],
@@ -226,9 +228,10 @@ def test_calculate_participant_timeline_sustain_receipts_include_lifesteal():
         if event["attacker"] == "main" and "Life steal" in event.get("source", "")
     ]
     assert vamp
-    vamp_total = sum(event["amount"] for event in vamp)
-    assert main["survival"]["healing_received"] >= vamp_total
-    assert vamp_total > 0
+    applied = sum(event["applied_amount"] for event in vamp)
+    # Each public amount is rounded to 0.1.
+    assert main["survival"]["healing_received"] >= applied - 0.05 * len(vamp)
+    assert applied > 0
 
 
 # ---------------------------------------------------------------------------

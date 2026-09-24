@@ -117,7 +117,6 @@ export function serializeParticipant(
     role_quest_complete: participant.questComplete,
     items: build.items.filter((item): item is string => Boolean(item)),
     boots: build.boots,
-    include_boots: Boolean(build.boots),
     ability_ranks: { ...participant.ranks },
     champion_options: participant.championOptions,
     keystone: build.keystone,

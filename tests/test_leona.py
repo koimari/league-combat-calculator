@@ -55,21 +55,23 @@ class TestReviewedCrowdControl:
         assert part.cc_kind == "slow"
 
     def test_shield_of_daybreak_stuns_through_the_swing_it_forces(self):
-        """Q's row is an on-hit payload, so the engine builds its carrier.
+        """Q's one part is the bonus its empowered swing carries.
 
-        The cast deals nothing itself: its bonus rides the on-hit stream and
-        the row's own damage is the swing the fight engine reattributes to
-        it.  ``engine._apply_module_cc`` gives that declaration a
-        zero-damage part to live on, which is what the swing events read
-        their marker from.
+        The fight engine lands that part on the swing it reattributes to
+        the row, and the swing events read their marker from it.
         """
         data = cc_review.kit("Leona")
         assert "stun the target for 1 second" in cc_review.slot_text(data, "Q")
         entry = parse_champion_abilities(data, 18, 100.0, _RANKS)["Q"]
         assert entry["empowers_next_auto"] is True
-        (marker,) = entry["parts"]
-        assert (marker.amount, marker.count, marker.cc_kind) == (0.0, 1, "stun")
-        assert entry["on_hit"]["name"] == "Shield of Daybreak"
+        assert "on_hit" not in entry
+        (rider,) = entry["parts"]
+        assert (rider.amount, rider.count, rider.cc_kind) == (
+            entry["total_raw"],
+            1,
+            "stun",
+        )
+        assert rider.amount > 0.0
 
     def test_the_whole_kit_is_reviewed_and_the_fight_certifies(self):
         assert cc_review.unreviewed_ability_slots("Leona") == []

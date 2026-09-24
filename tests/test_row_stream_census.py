@@ -87,7 +87,7 @@ BASELINE = Path("scripts/golden_coupled_baseline.json")
 #: a field; that test prints the table it expected.
 CENSUS: dict[str, tuple[int, tuple[str, ...]]] = {
     "combat/events": (
-        1706,
+        1826,
         (
             "attacker",
             "damage",
@@ -104,7 +104,7 @@ CENSUS: dict[str, tuple[int, tuple[str, ...]]] = {
         ),
     ),
     "combat/healing_events": (
-        909,
+        976,
         (
             "amount",
             "applied_amount",
@@ -164,7 +164,7 @@ CENSUS: dict[str, tuple[int, tuple[str, ...]]] = {
         ),
     ),
     "combat/support_events": (
-        70,
+        71,
         (
             "amount",
             "applied_amount",
@@ -198,8 +198,8 @@ CENSUS: dict[str, tuple[int, tuple[str, ...]]] = {
             "time",
         ),
     ),
-    "fights/damage_events": (752, ("damage", "damage_type", "phase", "source", "time")),
-    "fights/self_healing_events": (252, ("amount", "kind", "source", "time")),
+    "fights/damage_events": (774, ("damage", "damage_type", "phase", "source", "time")),
+    "fights/self_healing_events": (259, ("amount", "kind", "source", "time")),
 }
 
 

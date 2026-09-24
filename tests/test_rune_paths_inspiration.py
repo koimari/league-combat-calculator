@@ -131,12 +131,11 @@ class TestMagicalFootwearPricesItsBootsGrant:
             ],
             "fight_duration": 10,
             "fight_mode": "time_based",
-            "deterministic": True,
             "include_auto_attacks": True,
             "auto_attack_uptime": 1.0,
         }
         request.update(runes)
-        return calculate_payload(request)
+        return calculate_payload(request, deterministic=True)
 
     def test_the_grant_moves_movement_speed_and_swiftmarch_damage(self):
         bare = self._swiftmarch(
@@ -174,12 +173,11 @@ class TestMagicalFootwearPricesItsBootsGrant:
                 ],
                 "fight_duration": 10,
                 "fight_mode": "time_based",
-                "deterministic": True,
                 "include_auto_attacks": True,
                 "auto_attack_uptime": 1.0,
             }
             request.update(overrides)
-            return calculate_payload(request)
+            return calculate_payload(request, deterministic=True)
 
         bare = fight(keystone="Grasp of the Undying", minor_runes=[], stat_shards=[])
         held = fight(
@@ -221,7 +219,6 @@ class TestBiscuitDeliveryPricesTheHealthItKeeps:
             ],
             "fight_duration": 10,
             "fight_mode": "time_based",
-            "deterministic": True,
             "include_auto_attacks": True,
             "auto_attack_uptime": 1.0,
             "keystone": "Arcane Comet",
@@ -233,7 +230,7 @@ class TestBiscuitDeliveryPricesTheHealthItKeeps:
             payload["rune_options"] = {
                 "Biscuit Delivery": {"biscuits_consumed": consumed}
             }
-        return calculate_payload(payload)
+        return calculate_payload(payload, deterministic=True)
 
     def test_the_parser_reads_the_grant_and_the_number_of_biscuits(self):
         effects, _ = parse_rune_effects(
@@ -400,17 +397,19 @@ class TestCosmicInsightPricesItsItemHaste:
                 - bare["breakdown"]["active_Titanic Hydra"]["total_damage"]
             )
             assert row_delta == pytest.approx(45.8, abs=0.2)
+            # All four numbers are published to 0.1, so the two deltas may
+            # part by two rounding steps.
             assert held["total_damage"] - bare["total_damage"] == pytest.approx(
-                row_delta
+                row_delta, abs=0.2
             )
 
     def test_on_a_coarse_swing_grid_the_haste_buys_nothing(self):
-        """The honest boundary: Garen's own swings land no swing inside the
-        shortened window's extra ninth second, so the count holds at two and
-        the rune prices nothing. Haste buys procs a window holds, not procs
-        in the abstract."""
-        bare = self._fight(20, [], ["Titanic Hydra"])
-        held = self._fight(20, ["Cosmic Insight"], ["Titanic Hydra"])
+        """The honest boundary: the shortened window reopens inside a 19.5s
+        fight, but Garen's next swing lands past its end, so the count holds
+        at two and the rune prices nothing. Haste buys procs a window holds,
+        not procs in the abstract."""
+        bare = self._fight(19.5, [], ["Titanic Hydra"])
+        held = self._fight(19.5, ["Cosmic Insight"], ["Titanic Hydra"])
         assert held["champion_stats"]["item_haste"] == pytest.approx(10.0)
         assert held["breakdown"]["active_Titanic Hydra"]["count"] == 2
         assert held["total_damage"] == pytest.approx(bare["total_damage"])

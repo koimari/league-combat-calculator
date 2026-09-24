@@ -3759,18 +3759,27 @@ class TestTheCopiedRowsMagnitudesBelongToTheOnHitFamily:
     ):
         """The magnitude is the source family's, and the router declares none.
 
-        At the first application the secondary subject is still at the fight's
-        own target health, so the source declaration is exactly what the
-        `on_hit_strike` family's own interpreter states there.  Routed whole —
-        the router re-delivers on-hit packets rather than sharing them — and
-        priced at the fight's armour, it reproduces the number the pair engine
-        put on the row's first event.
+        The first swing lands at its windup, after the opening casts at t=0,
+        so at the first application the secondary subject stands at the health
+        the ledger holds before that swing.  The source declaration is exactly
+        what the `on_hit_strike` family's own interpreter states there.  Routed
+        whole — the router re-delivers on-hit packets rather than sharing
+        them — and priced at the fight's armour, it reproduces the number the
+        pair engine put on the row's first event.
         """
         result, _ = _swing_seed_reading("inert")
         row = result["breakdown"][COPIED_ROW]
         _, _, effectiveness, strikes, target_health, level, is_melee, stats = (
             _routing_slot()
         )
+        first_swing = float(row["damage_events"][0]["time"])
+        subject_health = target_health - sum(
+            float(event["damage"])
+            for other in result["breakdown"].values()
+            for event in other.get("damage_events") or ()
+            if event.get("time") is not None and float(event["time"]) < first_swing
+        )
+        assert 0.0 < subject_health < target_health
         declared = sum(
             strike.source.raw_damage(
                 DamageInputs(
@@ -3778,7 +3787,7 @@ class TestTheCopiedRowsMagnitudesBelongToTheOnHitFamily:
                     level=level,
                     is_melee=is_melee,
                     target_max_health=target_health,
-                    target_current_health=target_health,
+                    target_current_health=subject_health,
                 )
             )
             * effectiveness

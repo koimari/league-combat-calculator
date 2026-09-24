@@ -138,14 +138,14 @@ class TestSecondWindRegeneratesOffAnIncomingHit:
                 ],
                 "fight_duration": duration,
                 "fight_mode": "time_based",
-                "deterministic": True,
                 "include_auto_attacks": True,
                 "auto_attack_uptime": 1.0,
                 "enemies_attack": enemies_attack,
                 "keystone": "Grasp of the Undying",
                 "minor_runes": list(runes),
                 "stat_shards": [],
-            }
+            },
+            deterministic=True,
         )
 
     @staticmethod
@@ -191,11 +191,15 @@ class TestSecondWindRegeneratesOffAnIncomingHit:
             )
 
     def test_the_holder_regenerates_only_once_it_has_been_hit(self):
-        """The trigger, measured from both sides of it."""
+        """The trigger, measured from both sides of it.
+
+        The bare fight heals nothing: Darius kills Garen at 3.75 s, before his
+        own Grasp proc; the rune regenerates once Darius has hit him.
+        """
         bare = self._fight()
         held = self._fight(runes=["Second Wind"])
         assert self._healing(bare) == pytest.approx(0.0)
-        assert self._healing(held) == pytest.approx(19.6, abs=0.1)
+        assert self._healing(held) - self._healing(bare) == pytest.approx(19.8, abs=0.1)
 
     def test_with_no_enemy_attacking_the_window_is_never_armed(self):
         """The control: the rune answers an incoming hit and nothing else.
@@ -212,8 +216,8 @@ class TestSecondWindRegeneratesOffAnIncomingHit:
         """One holder, two declarations, two recoveries."""
         item_only = self._fight(items=["Doran's Shield"])
         both = self._fight(runes=["Second Wind"], items=["Doran's Shield"])
-        assert self._healing(item_only) == pytest.approx(79.7, abs=0.1)
-        assert self._healing(both) == pytest.approx(108.0, abs=0.1)
+        assert self._healing(item_only) == pytest.approx(114.8, abs=0.1)
+        assert self._healing(both) == pytest.approx(143.3, abs=0.1)
 
     def test_it_discloses_the_floor_and_the_cadence_it_chose(self):
         disclosures = " ".join(rune_effects.resolve_rune("Second Wind").disclosures)
@@ -250,14 +254,14 @@ class TestBonePlatingTakesItsFlatCutOffIncomingHits:
                 ],
                 "fight_duration": duration,
                 "fight_mode": "time_based",
-                "deterministic": True,
                 "include_auto_attacks": True,
                 "auto_attack_uptime": 1.0,
                 "enemies_attack": True,
                 "keystone": "Grasp of the Undying",
                 "minor_runes": list(runes),
                 "stat_shards": [],
-            }
+            },
+            deterministic=True,
         )
 
     def test_the_parser_reads_the_count_and_the_activation(self):
@@ -285,8 +289,9 @@ class TestBonePlatingTakesItsFlatCutOffIncomingHits:
     def test_it_lowers_the_damage_the_holder_takes(self):
         bare = self._fight()["combat"]["breakdown"][0]
         plated = self._fight(runes=["Bone Plating"])["combat"]["breakdown"][0]
-        assert bare["health_damage"] == pytest.approx(731.2, abs=0.1)
-        assert plated["health_damage"] == pytest.approx(618.4, abs=0.1)
+        # The cut is the three reduced hits, 112.7, whatever the base.
+        assert bare["health_damage"] == pytest.approx(754.2, abs=0.1)
+        assert plated["health_damage"] == pytest.approx(641.5, abs=0.1)
 
     def test_it_buys_time_in_a_fight_the_holder_loses(self):
         """The other reading of the same reduction: a later death."""
@@ -295,7 +300,7 @@ class TestBonePlatingTakesItsFlatCutOffIncomingHits:
             "breakdown"
         ][0]
         assert bare["death_time"] == pytest.approx(3.75, abs=0.01)
-        assert plated["death_time"] == pytest.approx(4.103, abs=0.01)
+        assert plated["death_time"] == pytest.approx(4.399, abs=0.01)
 
     def test_the_holder_s_own_damage_is_untouched(self):
         """The control: a defensive rune moves nothing the holder deals."""

@@ -1,11 +1,10 @@
 """An ability's stat grant, and everything re-resolved from a buffed stat."""
 
-import math
 from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import partial
 
-from ... import item_effects
+from ... import attack_cadence, item_effects
 from ...ability_atoms import (
     ability_field,
     ability_sub_payload,
@@ -133,21 +132,22 @@ def _rate_attack_speed_grant(
     second windowed grant on the same kit raises rather than overwriting
     the first.  The build's own ramp (Rageblade's stacks) keeps walking
     through either grant: its swings are authored here for the autos step
-    to read.  A flat stream is counted per phase, the floor convention the
-    fight end uses.
+    to read.  A flat stream runs one attack timer through the window
+    (``FightState.as_window_impacts``).
     """
     base_as = state.attack_speed
+    if window_seconds is not None and state.as_window_slot:
+        raise ValueError(
+            f"{key} places a second attack-speed window; the fight holds "
+            f"one, already placed by {state.as_window_slot}"
+        )
+    # The granting cast is placed on the stream it has not yet re-rated.
+    cast_start = slot_cast_start(state, key) if window_seconds is not None else 0.0
     state.attack_speed = calculate_attack_speed(
         base_as, state.attack_speed_ratio, bonus_as_pct
     )
     active_window = None
     if window_seconds is not None:
-        if state.as_window_slot:
-            raise ValueError(
-                f"{key} places a second attack-speed window; the fight holds "
-                f"one, already placed by {state.as_window_slot}"
-            )
-        cast_start = slot_cast_start(state, key)
         state.as_window_slot = key
         state.as_window_start = cast_start
         state.as_window_end = cast_start + window_seconds
@@ -159,11 +159,13 @@ def _rate_attack_speed_grant(
     if ramp is not None and (
         kit_ramp is not None or ramp.schedules(one_rotation=state.one_rotation)
     ):
+        opening_as = base_as if active_window is not None else state.attack_speed
         times = rearmed_swings.swing_times(
             ramp,
-            attack_speed=base_as if active_window is not None else state.attack_speed,
+            attack_speed=opening_as,
             attack_speed_ratio=state.attack_speed_ratio,
             duration_seconds=state.fight_duration_seconds,
+            phase=state.impact_phase(opening_as),
             uptime=state.auto_attack_uptime,
             critical_chance=state.champion_stats["critical_strike_chance"] / 100.0,
             active_window=active_window,
@@ -183,23 +185,19 @@ def _rate_attack_speed_grant(
                 active_window.start <= t < active_window.end for t in times
             )
         return
-    uptime = state.auto_attack_uptime
     if active_window is None:
-        state.num_auto_attacks = math.floor(
-            state.attack_speed * state.fight_duration_seconds * uptime
+        state.num_auto_attacks = attack_cadence.impact_count(
+            state.attack_speed * state.auto_attack_uptime,
+            state.fight_duration_seconds,
+            state.impact_phase(state.attack_speed),
         )
         return
-    in_window = min(
-        window_seconds, max(0.0, state.fight_duration_seconds - active_window.start)
+    times = state.as_window_impacts()
+    state.as_window_pre_autos = sum(t < active_window.start for t in times)
+    state.as_window_autos = sum(
+        active_window.start <= t < active_window.end for t in times
     )
-    state.as_window_pre_autos = math.floor(active_window.start * base_as * uptime)
-    state.as_window_autos = math.floor(state.attack_speed * in_window * uptime)
-    post_autos = math.floor(
-        base_as * max(0.0, state.fight_duration_seconds - active_window.end) * uptime
-    )
-    state.num_auto_attacks = (
-        state.as_window_pre_autos + state.as_window_autos + post_autos
-    )
+    state.num_auto_attacks = len(times)
 
 
 def _resolve_stat_ramp(state: FightState) -> None:
@@ -212,7 +210,7 @@ def _resolve_stat_ramp(state: FightState) -> None:
     if declared is None:
         return
     owner, rule = declared
-    swings = state.support_attack_times or _swings_at_uptime(state)
+    swings = state.support_attack_times or state.ambient_impacts()
     casts = _cast_schedule_times(state) if rule.stacks_from_ability_casts else ()
     level = stat_ramp.mean_stack_level(
         rule, swings, casts, state.fight_duration_seconds
@@ -226,19 +224,6 @@ def _resolve_stat_ramp(state: FightState) -> None:
             info["detail"] = (
                 f"{info.get('detail', owner)} (fight mean {level:.2f} stacks)"
             )
-
-
-def _swings_at_uptime(state: FightState) -> tuple[float, ...]:
-    """Even swing times at the fight's own rate, for a stream nobody walked."""
-    rate = state.attack_speed * state.auto_attack_uptime
-    if rate <= 0.0 or state.fight_duration_seconds <= 0.0:
-        return ()
-    times: list[float] = []
-    time = 0.0
-    while time < state.fight_duration_seconds:
-        times.append(time)
-        time += 1.0 / rate
-    return tuple(times)
 
 
 def _cast_schedule_times(
@@ -384,10 +369,10 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
         if "total_attack_speed_percent" in stat_buff:
             state.attack_speed *= 1.0 + stat_buff["total_attack_speed_percent"] / 100.0
             stats["attack_speed"] = state.attack_speed
-            state.num_auto_attacks = math.floor(
-                state.attack_speed
-                * state.fight_duration_seconds
-                * state.auto_attack_uptime
+            state.num_auto_attacks = attack_cadence.impact_count(
+                state.attack_speed * state.auto_attack_uptime,
+                state.fight_duration_seconds,
+                state.impact_phase(state.attack_speed),
             )
 
     # A kit ramp re-rates the swing stream with no flat grant behind it, so

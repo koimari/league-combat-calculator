@@ -181,19 +181,19 @@ def test_timed_auto_stream_certifies_q_with_an_authored_swing_ledger(shen_data):
 
     q_row = result["breakdown"]["Q"]
     q_events = q_row["damage_events"]
-    assert len(q_events) == 3 * q_row["casts"]
+    bonus = [event for event in q_events if event["damage_type"] == "magic"]
+    swings = [event for event in q_events if event["damage_type"] == "physical"]
+    assert len(bonus) == len(swings) == 3 * q_row["casts"]
     assert {event["event_precision"] for event in q_events} == {"exact"}
-    assert sorted(event["time"] for event in q_events) == pytest.approx(
+    assert sorted(event["time"] for event in bonus) == pytest.approx(
         [0.5, 0.5 + 2.0 / 3.0, 0.5 + 4.0 / 3.0]
     )
-    # Authored events are the magic bonus; the row total additionally
-    # carries the consumed swings at the auto row's per-hit damage.
-    auto_row = result["breakdown"]["auto_attacks"]
-    swings = 3 * q_row["casts"]
+    # The row's events are its magic bonus hits and the stream swings its
+    # cast claimed, so they sum to the row.
     assert sum(event["damage"] for event in q_events) == pytest.approx(
-        q_row["total_damage"] - swings * auto_row["damage_per_hit"]
+        q_row["total_damage"]
     )
-    assert sum(event["damage"] for event in q_events) == pytest.approx(
+    assert sum(event["damage"] for event in bonus) == pytest.approx(
         q_row["casts"] * abilities["Q"]["total_raw"]
     )
 

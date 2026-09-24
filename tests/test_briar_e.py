@@ -154,8 +154,8 @@ def _briar_against_corki(*, champion_options: dict | None, duration: float = 5.0
     """Corki (physical autos + 20% true rider + magic Q) into Briar.
 
     Corki's Hextech Munitions rider makes one timed fight cover all three
-    damage types; Briar's E charge starts at t=0, so t=0 packets land
-    exactly at charge start and t>=1 packets land after the sourced window.
+    damage types; Briar's E charge starts at t=0, so packets before t=1 land
+    inside the sourced window and t>=1 packets land after it.
     """
     return _calculate(
         {
@@ -547,15 +547,16 @@ class TestReductionWindow:
         in_window = {
             event["source"]: event
             for event in with_window["events"]
-            if event.get("target") == "enemy:Briar" and event.get("time") == 0.0
+            if event.get("target") == "enemy:Briar" and event.get("time") < 1.0
         }
         base = {
             event["source"]: event
             for event in baseline["events"]
-            if event.get("target") == "enemy:Briar" and event.get("time") == 0.0
+            if event.get("target") == "enemy:Briar" and event.get("time") < 1.0
         }
         # Physical (auto), magic (Corki Q), and true (Hextech Munitions
-        # rider) all land at charge start and all carry the receipt.
+        # rider) all land inside the window (Q at charge start, the opening
+        # auto one windup later) and all carry the receipt.
         assert {"auto_attacks", "Q", "auto_attacks_true_damage"} <= set(in_window)
         for source in ("auto_attacks", "Q", "auto_attacks_true_damage"):
             event = in_window[source]

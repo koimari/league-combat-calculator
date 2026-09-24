@@ -62,19 +62,21 @@ REFUSALS_PER_SOURCE = {
     "double_on_hit_Dusk and Dawn": [],
 }
 
-#: The resistance each source's packets met.  Kog'Maw Q is priced against the
-#: MR it goes on to shred, so its casts meet 100 in a fight whose published
-#: effective MR is 75.3333: two numbers for one fight, each stated by the site
-#: that applied it rather than back-computed from a mitigated amount.
-RESISTANCE_PER_SOURCE = {
-    "Q": 100.0,
-    "E": 75.33333333333334,
-    "R": 75.33333333333334,
-    "auto_attacks": 75.33333333333334,
-    "on_hit_ability_W": 75.33333333333334,
-    "spellblade_Dusk and Dawn": 75.33333333333334,
-    "double_on_hit_Dusk and Dawn": 75.33333333333334,
-}
+#: The target's armour and MR, and what Kog'Maw Q's rank-5 32% shred leaves
+#: of them for the 4 seconds after each Q hit.
+OPENING_RESISTANCE = 100.0
+SHREDDED_RESISTANCE = OPENING_RESISTANCE * (1 - 0.32)
+Q_SHRED_SECONDS = 4.0
+
+
+def resistance_expected(line: dict, q_hits: list[float]) -> float:
+    """What one packet meets: Q's own hits meet the 100 they shred, and any
+    other packet inside a window, E at Q's instant included because it is
+    cast after Q, meets 68."""
+    inside = line["source"] != "Q" and any(
+        hit <= line["time"] <= hit + Q_SHRED_SECONDS for hit in q_hits
+    )
+    return SHREDDED_RESISTANCE if inside else OPENING_RESISTANCE
 
 
 @pytest.fixture(name="fixture", scope="module")
@@ -102,7 +104,11 @@ def test_every_packet_of_the_fight_is_one_line(trace):
         counted[line["source"]] = counted.get(line["source"], 0) + 1
     assert counted == LINES_PER_SOURCE
     assert len(trace["lines"]) == sum(LINES_PER_SOURCE.values())
-    assert round(sum(line["mitigated"] for line in trace["lines"]), 4) == 1934.3695
+    # Q's two casts at 100: 2 * 314 / 2.  At 68: E 269, R 260.5478, seven
+    # swings of 114 with their 69 on-hits, two spellblades of 91.5 with their
+    # 69 doubled on-hits, 2131.5478 / 1.68.  At 100: three swings, three
+    # on-hits, one spellblade and one doubled on-hit, 709.5 / 2.
+    assert round(sum(line["mitigated"] for line in trace["lines"]), 4) == 1937.5285
 
 
 def test_every_line_names_the_step_that_wrote_it(trace):
@@ -124,18 +130,27 @@ def test_every_line_states_its_facts_or_names_the_refusal(trace):
 
 
 def test_every_line_states_the_resistance_it_met(trace):
-    """Read off the mitigation site, so a shred window is visible as one.
+    """Read off the packet at its own time, so a shred window is visible as one.
 
-    The fight publishes 75.3333 effective MR, which is what every packet
-    after Kog'Maw Q's shred met; Q's own casts met the 100 they shredded.
+    Q hits at 0 and 5.8333, so packets in [0, 4] and [5.8333, 9.8333] meet
+    68 and the rest 100.  The fight publishes 75.3333, the windows' share of
+    the fight: [0, 4] and [5.8333, 8] of 8 seconds, and no packet meets it.
     """
+    q_hits = [line["time"] for line in trace["lines"] if line["source"] == "Q"]
+    assert q_hits == pytest.approx([0.0, 5.8333], abs=1e-4)
     for line in trace["lines"]:
-        assert line["resistance_met"] == RESISTANCE_PER_SOURCE[line["source"]], line[
-            "source"
-        ]
-    assert RESISTANCE_PER_SOURCE["E"] == trace["effective_mr"]
-    assert RESISTANCE_PER_SOURCE["auto_attacks"] == trace["effective_armor"]
-    assert RESISTANCE_PER_SOURCE["Q"] > trace["effective_mr"]
+        assert line["resistance_met"] == pytest.approx(
+            resistance_expected(line, q_hits)
+        ), line
+    covered = (Q_SHRED_SECONDS + 8.0 - q_hits[1]) / 8.0
+    assert (
+        trace["effective_mr"]
+        == trace["effective_armor"]
+        == pytest.approx(OPENING_RESISTANCE * (1 - 0.32 * covered))
+    )
+    assert trace["effective_mr"] not in {
+        line["resistance_met"] for line in trace["lines"]
+    }
 
 
 def test_every_stated_raw_prices_its_own_mitigated_amount(trace):

@@ -1283,7 +1283,7 @@ COUPLED_SCENARIOS = (
     #
     # An assassin, arming the lethality window: Voltaic Cyclosword's
     # Firmament grants its flat lethality *after* its own energized packet,
-    # so `damage._apply_temporary_lethality_windows` rescales the later
+    # so `fight.after.resistance_windows` rescales the later
     # timestamped physical packets once the complete ledger exists.  The
     # roster attacks at full uptime because the charge is spent by an attack,
     # and Eclipse is beside it because its proc is one of the packets the

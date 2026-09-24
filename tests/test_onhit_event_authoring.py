@@ -12,19 +12,21 @@ import sys
 
 import pytest
 
+from src.calculator.attack_cadence import champion_windup
 from src.calculator.calculate import calculate_payload
+from src.calculator.data_fetcher import get_champion
 from src.calculator.fight.autos import swing_schedule
 from src.calculator.pipeline import run_fight
 from src.calculator.scenario import parse_scenario_request, resolve_scenario
+from src.calculator.stats import ATTACK_SPEED_CAP
 
 # Options a pair needs before it can measure what it was written to measure.
 #
 # Nasus: ``r_q_cooldown_halved`` defaults on, so at R rank Siphoning Strike
 # comes up six times in the eight-second window and
-# ``_reattribute_empowered_swings`` correctly consumes *every* swing — the
-# auto row comes back empty (count 0, no events), and a crit-roll assertion
-# over an empty ledger can only ever be vacuous.  Turning the halving off
-# leaves three ordinary swings for the roll to land on.
+# ``_reattribute_empowered_swings`` consumes six of the seven swings, which
+# leaves a crit-roll assertion one swing to land on.  Turning the halving off
+# leaves four ordinary swings.
 _PAIR_OPTIONS: dict[str, dict[str, object]] = {
     "Nasus": {"r_q_cooldown_halved": False},
 }
@@ -46,11 +48,16 @@ def _coverage(champion: str, items: list[str], **extra):
 
 
 def _auto_row(champion: str, items: list[str], *, deterministic: bool = False):
-    """The engine's own ``auto_attacks`` row for that same timed fight.
+    """The engine's own ``auto_attacks`` row for that same timed fight."""
+    return _engine_rows(champion, items, deterministic=deterministic)["auto_attacks"]
+
+
+def _engine_rows(champion: str, items: list[str], *, deterministic: bool = False):
+    """The engine's own breakdown for that same timed fight.
 
     ``calculate_payload`` rounds its published ledger for display, and the
     invariant below is about the numbers the engine authored, so this runs
-    the identically resolved scenario and reads the row itself.
+    the identically resolved scenario and reads the rows themselves.
     """
     payload = {
         "champion": champion,
@@ -69,7 +76,7 @@ def _auto_row(champion: str, items: list[str], *, deterministic: bool = False):
         list(resolved.items),
         resolved.fight_params,
     )
-    return result["breakdown"]["auto_attacks"]
+    return result["breakdown"]
 
 
 class TestSwingScheduleUnderAttackSpeedKits:
@@ -113,6 +120,9 @@ UNEQUAL_SWING_PAIRS = [
     ("Fiora", "Sundered Sky"),
     ("Jayce", "Fiendhunter Bolts"),
 ]
+
+# The slots whose casts claim those champions' swings.
+_EMPOWERING_SLOTS = {"Fiora": ("E",), "Jayce": ("W", "R")}
 
 # Enough fights that a stream with no critical strike at all is not a
 # credible explanation for a green run.
@@ -173,12 +183,19 @@ class TestEmpoweredSwingReattributionPricesItsOwnLedger:
 
     @pytest.mark.parametrize(("champion", "item"), UNEQUAL_SWING_PAIRS)
     def test_unequal_swings_reconcile_without_a_roll(self, champion, item):
-        row = _auto_row(champion, [item], deterministic=True)
-        events = row["damage_events"]
-        assert len({round(event["damage"], 6) for event in events}) > 1
-        assert sum(event["damage"] for event in events) == pytest.approx(
-            row["total_damage"], rel=1e-9, abs=1e-6
-        )
+        """The unequal swings split between the auto row and the rows whose
+        casts claimed them, and each of those rows is its own ledger."""
+        breakdown = _engine_rows(champion, [item], deterministic=True)
+        rows = [breakdown["auto_attacks"]]
+        rows += [breakdown[slot] for slot in _EMPOWERING_SLOTS[champion]]
+        dealt = {
+            round(event["damage"], 6) for row in rows for event in row["damage_events"]
+        }
+        assert len(dealt) > 1
+        for row in rows:
+            assert sum(event["damage"] for event in row["damage_events"]) == (
+                pytest.approx(row["total_damage"], rel=1e-9, abs=1e-6)
+            )
 
 
 class TestAbilityAttackOnHitRows:
@@ -403,7 +420,7 @@ ECLIPSE_STACK_WINDOW = 2.0
 #: Every fight length the cadence is measured over, with the proc count a
 #: representative sparse-cast champion (Ziggs) reaches in each.  The coarse
 #: fallback priced ``1 + duration // cooldown`` — 1, 2, 2, 4, 6.
-ZIGGS_CADENCE = [(5.0, 1), (8.0, 1), (10.0, 2), (20.0, 3), (30.0, 4)]
+ZIGGS_CADENCE = [(5.0, 1), (8.0, 2), (10.0, 2), (20.0, 3), (30.0, 4)]
 
 
 class TestEclipseStackPairingCadence:
@@ -488,11 +505,14 @@ class TestEclipseStackPairingCadence:
         Counting per packet would pair the cast with itself and proc at
         ``t = 0`` twice over; the sourced clause is one stack per cast
         instance, so an 8 s fight whose only other trigger inside the
-        window is the opening swing procs exactly once.
+        window is the opening swing procs exactly once, when that swing
+        lands at the end of its windup (0.345 s at 1.0875 attack speed).
         """
         row = _eclipse_row("Skarner", 8.0)
         assert row["count"] == 1
-        assert [event["time"] for event in row["damage_events"]] == [0.0]
+        assert [event["time"] for event in row["damage_events"]] == [
+            pytest.approx(0.3448, abs=1e-4)
+        ]
 
 
 #: Champions whose Eclipse row was coarse before the walk was completed —
@@ -525,6 +545,12 @@ class TestEclipseTimedCoverage:
 #: kit declaring an ``empowers_next_auto`` burst rate (Hyper Charge's three
 #: attacks at the attack-speed cap), so he is the whole affected population.
 BURST_DURATIONS = [5.0, 8.0, 10.0, 20.0, 30.0]
+
+
+def _hyper_charge_windup() -> float:
+    """How long after its cast Hyper Charge's first attack lands: Jayce's
+    windup at the attack-speed cap its attacks fire at."""
+    return champion_windup(get_champion("Jayce")).seconds(ATTACK_SPEED_CAP)
 
 
 def _swing_schedule(
@@ -594,7 +620,8 @@ class TestEmpoweredBurstSwingSchedule:
 
     @pytest.mark.parametrize("duration", BURST_DURATIONS)
     def test_the_burst_hits_land_on_their_own_cast(self, monkeypatch, duration):
-        """Each Hyper Charge's attacks start at the cast that forced them."""
+        """Each Hyper Charge's first attack lands one windup after its cast;
+        a cast whose windup outlasts the fight lands none."""
         payload = calculate_payload(
             {
                 "champion": "Jayce",
@@ -611,9 +638,11 @@ class TestEmpoweredBurstSwingSchedule:
             if event["slot"] == "W"
         ]
         times = _swing_schedule(monkeypatch, "Jayce", ["Eclipse"], duration)
-        assert casts
-        for cast in casts:
-            assert any(abs(time - cast) <= 1e-3 for time in times)
+        windup = _hyper_charge_windup()
+        first_impacts = [cast + windup for cast in casts if cast + windup < duration]
+        assert first_impacts
+        for impact in first_impacts:
+            assert any(abs(time - impact) <= 1e-3 for time in times)
 
     @pytest.mark.parametrize("duration", BURST_DURATIONS)
     def test_every_eclipse_proc_lands_inside_the_fight(self, duration):
@@ -622,12 +651,12 @@ class TestEmpoweredBurstSwingSchedule:
         assert max(float(e["time"]) for e in row["damage_events"]) <= duration + 1e-9
 
     def test_a_burst_cast_only_buys_the_attacks_the_window_holds(self, monkeypatch):
-        """A Hyper Charge starting at 29.995 s lands one attack, not three.
+        """A Hyper Charge starting at 29.995 s lands none of its three.
 
         The count is a time budget, so charging the fight for three attacks
         it has no room for is the same overcount spent on swings instead of
-        clock: the sixth cast lands 1 of its 3, and the stream holds 35
-        swings rather than the 37 the old arithmetic bought.
+        clock: the sixth cast's first attack would land a windup (0.144 s)
+        past the fight's end, and the stream holds 35 swings.
         """
         thirty = _swing_schedule(monkeypatch, "Jayce", [], 30.0)
         assert len(thirty) == 35
@@ -658,13 +687,14 @@ def _breakdown(champion: str, items: list[str], **extra):
 
 # Every one of these is a lethality/armor-penetration build on a champion
 # whose empowering ability consumes the whole auto stream, which is what
-# leaves the ``auto_attacks`` row with no swings at all.
+# leaves the ``auto_attacks`` row with no swings at all.  Shen's two Q casts
+# empower six swings, so his fight is the 7 s one that lands six.
 GAVE_AWAY_EVERY_SWING = [
-    ("Vayne", "Edge of Night"),
-    ("Vayne", "The Brutalizer"),
-    ("Shen", "The Collector"),
-    ("Shen", "Umbral Glaive"),
-    ("Shen", "Serylda's Grudge"),
+    ("Vayne", "Edge of Night", 8.0),
+    ("Vayne", "The Brutalizer", 8.0),
+    ("Shen", "The Collector", 7.0),
+    ("Shen", "Umbral Glaive", 7.0),
+    ("Shen", "Serylda's Grudge", 7.0),
 ]
 
 
@@ -680,13 +710,16 @@ class TestAnEmptyAutoRowIsWorthExactlyZero:
     that same number from itself.
     """
 
-    @pytest.mark.parametrize(("champion", "item"), GAVE_AWAY_EVERY_SWING)
-    def test_the_row_is_exactly_zero_and_the_fight_certifies(self, champion, item):
-        row = _breakdown(champion, [item])["breakdown"]["auto_attacks"]
+    @pytest.mark.parametrize(("champion", "item", "duration"), GAVE_AWAY_EVERY_SWING)
+    def test_the_row_is_exactly_zero_and_the_fight_certifies(
+        self, champion, item, duration
+    ):
+        fight = {"fight_duration": duration}
+        row = _breakdown(champion, [item], **fight)["breakdown"]["auto_attacks"]
         assert row["count"] == 0
         assert row["damage_events"] == []
         assert row["total_damage"] == 0.0
-        coverage = _coverage(champion, [item])
+        coverage = _coverage(champion, [item], **fight)
         assert coverage["coarse_sources"] == []
         assert coverage["complete"] is True
 
@@ -721,35 +754,40 @@ class TestEmpoweredRowsAuthorTheSwingsTheyConsumed:
         )
 
     @pytest.mark.parametrize(("champion", "slot"), EMPOWERED_ROWS)
-    def test_events_land_on_the_casts_that_forced_them(self, champion, slot):
-        """Each consumed swing is timed at the cast that consumed it.
+    def test_events_land_on_the_swings_the_casts_claimed(self, champion, slot):
+        """Each cast's damage lands on the first stream swing after it.
 
-        All four of these empowers reset the attack timer, so the swing
-        lands with the cast — the instant the reconstruction has always
-        placed this damage at, which is why authoring it moves no number.
-        The row's damage came from the stream's trailing swings (the
-        prices the move there), and those sit at the far end of a long
-        fight: timing the events from them would post a cast's damage
-        seconds before or after the cast that forced it.
+        The move takes the swings the casts claimed off the auto row, so
+        the row's events sit at those swings' impacts, never at the cast
+        and never on a swing the auto row kept.
         """
         result = _breakdown(champion, ["Fimbulwinter"])
-        row = result["breakdown"][slot]
-        moved = sorted({round(float(e["time"]), 3) for e in row["damage_events"]})
-        casts = sorted(
-            round(float(event["time"]), 3)
+        moved = {float(e["time"]) for e in result["breakdown"][slot]["damage_events"]}
+        kept = {
+            float(e["time"])
+            for e in result["breakdown"]["auto_attacks"]["damage_events"]
+        }
+        stream = sorted(moved | kept)
+        casts = [
+            float(event["time"])
             for event in result["cast_timeline"]
             if event["slot"] == slot
-        )
-        assert moved
-        assert moved == casts[: len(moved)]
+        ]
+        assert casts
+        assert not moved & kept
+        for cast in casts:
+            later = [time for time in stream if time > cast]
+            # Casts are capped by the stream's count, not its times, so one
+            # with no swing left after it takes the latest free one instead.
+            assert not later or later[0] in moved
 
     def test_a_self_rated_burst_uses_its_own_declared_impacts(self):
         """Jayce's Hyper Charge does not swing at its cast boundary.
 
-        Its three attacks fire at the burst's own rate, and the burst wave
-        already resolved where they land (``BurstSwingSchedule.by_ability``).
-        The row reads that schedule rather than repeating the cast time
-        once per hit.
+        Its three attacks fire at the burst's own rate, the first one windup
+        after the cast, and the burst wave already resolved where they land
+        (``BurstSwingSchedule.by_ability``).  The row reads that schedule
+        rather than repeating the cast time once per hit.
         """
         result = _breakdown("Jayce", ["Fimbulwinter"], fight_duration=10.0)
         times = sorted(
@@ -764,7 +802,9 @@ class TestEmpoweredRowsAuthorTheSwingsTheyConsumed:
             if event["slot"] == "W"
         )
         assert len(times) > len(casts)
-        assert set(casts) <= set(times)
+        windup = _hyper_charge_windup()
+        for cast in casts:
+            assert any(abs(time - cast - windup) <= 1e-3 for time in times)
         interval = times[1] - times[0]
         assert interval > 0
         assert times[2] - times[1] == pytest.approx(interval, rel=1e-6)

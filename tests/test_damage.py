@@ -2462,8 +2462,9 @@ class TestStackingDot:
     def test_reapplication_refreshes_shared_duration(
         self, attacker_stats, fight
     ) -> None:
-        """Autos at t=0 and t=4 (0.25 AS): the second hit refreshes before
-        expiry -> 4s at 1 stack (80) + committed 5s at 2 stacks (125)."""
+        """Autos at t=0, 4 and 8 (0.25 AS, ceil(9 x 0.25) = 3): each hit
+        refreshes before expiry -> 4s at 1 stack (80) + 4s at 2 (100) +
+        committed 5s at 3 stacks (150)."""
         result = fight(
             attacker_stats(attack_speed=0.25),
             {"passive": _stacking_dot_passive()},
@@ -2473,7 +2474,7 @@ class TestStackingDot:
             auto_attack_uptime=1.0,
         )
         row = result["breakdown"]["stacking_dot_passive"]
-        assert row["total_damage"] == pytest.approx(205.0)
+        assert row["total_damage"] == pytest.approx(330.0)
 
     def test_stacks_expire_after_duration_gap(self, attacker_stats, fight) -> None:
         """Autos at t=0 and t=6 (gap > 5s): the first stack runs its full

@@ -14,8 +14,11 @@ from ..ledger.breakdown import (
     source_hit_count,
     source_total_damage,
 )
-from ..ledger.event_rows import _ledger_total, _row_damage_parts
+from ..ledger.event_rows import _ledger_total, _row_damage_parts, _row_time
 from ..state import FightState
+
+# A swing at a declared impact is that impact, give or take float order.
+_TIME_EPSILON = 1e-9
 
 
 class _EmpoweredSwings(NamedTuple):
@@ -24,15 +27,14 @@ class _EmpoweredSwings(NamedTuple):
     info: dict[str, Any]
     row: dict[str, Any]
     count: int
-    # When those swings land. A kit that rates its own burst declares the
-    # impacts (``BurstSwingSchedule.by_ability``); one that declares
-    # ``rides_scheduled_auto`` lands on the stream swings it claimed
-    # (``FightState.empowered_ride_times``); every other empower is timed
-    # at the cast that forced it — where a timer-resetting one (Darius W,
-    # Jax W, Fiora E) genuinely swings.  A multi-hit empower that resets
-    # nothing (Cho'Gath E's three spiked attacks) therefore stacks its
-    # hits on the cast until its kit declares a rate or a ride.
+    # Where those swings are claimed. A kit that rates its own burst declares
+    # the impacts (``BurstSwingSchedule.by_ability``) and one that declares
+    # ``rides_scheduled_auto`` the stream swings it rides
+    # (``FightState.empowered_ride_times``); every other empower names the
+    # casts that forced it, each claiming the stream swings that follow it.
     times: tuple[float, ...]
+    # Whether ``times`` are the swings' own impacts rather than casts.
+    declared: bool
 
 
 def _empowered_swing_consumers(
@@ -72,9 +74,40 @@ def _empowered_swing_consumers(
             if cast_slot(event) == ability_key
             for _ in range(hits)
         )
-        consumers.append(_EmpoweredSwings(info, row, swings, times[:swings]))
+        consumers.append(
+            _EmpoweredSwings(info, row, swings, times[:swings], bool(declared))
+        )
         available -= swings
     return consumers
+
+
+def _claim_swings(
+    ledger: list[dict[str, Any]], consumers: Sequence[_EmpoweredSwings]
+) -> tuple[list[list[dict[str, Any]]], list[dict[str, Any]]]:
+    """The swings each consumer took, and the ones the auto row keeps.
+
+    Declared impacts name their own swings, so they claim first; a cast then
+    takes the first free swing at or after it.  Casts are capped by the
+    stream's count, not its times, so a cast with no free swing after it, or
+    one no timeline published, takes the latest free swing.
+    """
+    swing_times = [float(event["time"]) for event in ledger]
+    free = sorted(range(len(ledger)), key=swing_times.__getitem__)
+    claims: list[list[dict[str, Any]]] = [[] for _ in consumers]
+    for index in sorted(range(len(consumers)), key=lambda i: not consumers[i].declared):
+        consumer = consumers[index]
+        for hit in range(consumer.count):
+            at = consumer.times[hit] if hit < len(consumer.times) else math.inf
+            position = next(
+                (
+                    position
+                    for position, swing in enumerate(free)
+                    if swing_times[swing] >= at - _TIME_EPSILON
+                ),
+                len(free) - 1,
+            )
+            claims[index].append(ledger[free.pop(position)])
+    return claims, [ledger[swing] for swing in sorted(free)]
 
 
 def _author_empowered_swing_events(
@@ -91,19 +124,23 @@ def _author_empowered_swing_events(
     event to ride — which is what keeps Leona Q, Cho'Gath E, Fiora E and
     Jax W coarse for a control-armed holder shield.
 
-    A swing is priced from the ledger rows the reattribution removes and
-    timed from :attr:`_EmpoweredSwings.times`.  Those name
-    the same attack in a stream whose swings are alike; where they are
-    not, taking a different swing's damage would re-price the row and the
-    auto row's crit split with it, which this wave may not do.
+    Each swing lands at :attr:`_EmpoweredSwings.times`, which the
+    reattribution sets to the claimed swings' own impacts.
 
-    A row that already authors its own ledger is left alone.  Its events
-    are its parts', and appending the swings to them adds damage the fight
-    ledger has never carried (Vayne Q's and Camille Q's moved swings are
-    missing from it today) — a re-pricing, not this plumbing.
+    A row that already authors its own ledger (Darius W, Wukong Q) keeps its
+    parts' events, and the swings its casts claimed land beside them, so the
+    fight ledger carries every swing the reattribution moved onto the row.
     """
     row = consumer.row
-    if isinstance(row.get("damage_events"), list) or not swing_events:
+    if not swing_events:
+        return
+    authored = row.get("damage_events")
+    if isinstance(authored, list):
+        marker = _declared_cc_marker(consumer.info)
+        authored.extend(
+            {**swing, **marker, "event_precision": "exact"} for swing in swing_events
+        )
+        authored.sort(key=_row_time)
         return
     if len(consumer.times) != len(swing_events):
         # No time for every swing (a cast the timeline never published):
@@ -161,15 +198,10 @@ def _reattribute_empowered_swings(
     is every on-hit row, which the empowered attack genuinely still
     triggers.
 
-    **The move is priced at the swings it removes.** Which swings a cast
-    consumed is not tracked, so the ledger names them: it keeps its
-    leading block and the consumed ones are its trailing swings, at the
-    damage those swings actually dealt.  Pricing the move at the row's
-    blended per-hit average instead made the row's total and its own
-    ledger describe different things whenever the stream's swings differ
-    from each other — which a rolled critical strike does at random, so
-    one request certified and the next went coarse.  The kept swings'
-    crit split is recounted from those swings for the same reason.
+    **The move is the swings the consumers claimed** (:func:`_claim_swings`),
+    at the time they landed and the damage they dealt, so a swing a shred
+    window or a crit roll set apart keeps its own price and its own place.
+    The kept swings' crit split is recounted from those swings.
     """
     auto_row = state.breakdown.get("auto_attacks")
     if not auto_row:
@@ -190,12 +222,20 @@ def _reattribute_empowered_swings(
     if not isinstance(ledger, list) or len(ledger) != original_count:
         ledger = None
 
-    cursor = remaining
-    for consumer in consumers:
-        count = consumer.count
-        swings = ledger[cursor : cursor + count] if ledger is not None else ()
-        moved = _ledger_total(swings) if ledger is not None else count * per_hit
-        cursor += count
+    claims, kept = (
+        _claim_swings(ledger, consumers) if ledger is not None else (None, None)
+    )
+    for index, consumer in enumerate(consumers):
+        if claims is None:
+            swings: list[dict[str, Any]] = []
+            moved = consumer.count * per_hit
+        else:
+            swings = claims[index]
+            moved = _ledger_total(swings)
+            if len(consumer.times) == consumer.count:
+                consumer = consumer._replace(
+                    times=tuple(float(swing["time"]) for swing in swings)
+                )
         _author_empowered_swing_events(consumer, swings)
         row = consumer.row
         row["total_damage"] += moved
@@ -209,19 +249,19 @@ def _reattribute_empowered_swings(
         row["detail"] = f"{base}, incl. basic attack"
 
     auto_row["count"] = remaining
-    if ledger is not None:
-        auto_row["damage_events"] = ledger[:remaining]
+    if kept is not None:
+        auto_row["damage_events"] = kept
         auto_row["damage_per_hit"] = (
             auto_row["total_damage"] / remaining if remaining else 0.0
         )
     elif isinstance(auto_row.get("damage_events"), list):
         auto_row["damage_events"] = auto_row["damage_events"][:remaining]
-    _recount_kept_crit_split(auto_row, ledger, remaining, original_count)
+    _recount_kept_crit_split(auto_row, kept, remaining, original_count)
 
 
 def _recount_kept_crit_split(
     auto_row: dict[str, Any],
-    ledger: list[dict[str, Any]] | None,
+    kept: list[dict[str, Any]] | None,
     remaining: int,
     original_count: int,
 ) -> None:
@@ -229,14 +269,14 @@ def _recount_kept_crit_split(
 
     Counted off those swings' own rolls, not rescaled by their share of
     the stream: a row could otherwise publish one critical strike while
-    every crit sat in the moved tail.  Only a row with no per-swing ledger
+    every crit sat in the moved swings.  Only a row with no per-swing ledger
     falls back to the proportion.
     """
     if auto_row.get("num_crits") is None:
         return
     crits = (
-        sum(1 for event in ledger[:remaining] if event.get("critical_strike"))
-        if ledger is not None
+        sum(1 for event in kept if event.get("critical_strike"))
+        if kept is not None
         else round(auto_row["num_crits"] * remaining / original_count)
     )
     auto_row["num_crits"] = crits

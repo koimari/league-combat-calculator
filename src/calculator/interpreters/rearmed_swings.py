@@ -148,6 +148,7 @@ def swing_times(
     attack_speed: float,
     attack_speed_ratio: float,
     duration_seconds: float,
+    phase: float,
     uptime: float = 1.0,
     critical_chance: float = 0.0,
     active_window: ActiveWindow | None = None,
@@ -157,7 +158,9 @@ def swing_times(
 ) -> tuple[float, ...]:
     """Walk *schedule*, one swing at a time, and return when each lands.
 
-    The first attack lands at ``t=0``.  A ramp gains one stack per completed
+    The first attack lands *phase* of a cycle after the attack command
+    (``attack_cadence``), and each later one a cycle after the one before it
+    at the rate that one was rated at.  A ramp gains one stack per completed
     attack, holds it for its declared duration and re-rates every later swing;
     a re-armed window is live from the second attack until its duration runs
     out, and every attack after the first pays down the cooldown that reopens
@@ -182,7 +185,20 @@ def swing_times(
     if duration_seconds <= 0.0 or uptime <= 0.0 or attack_speed <= 0.0:
         return ()
     ramp, window = schedule.ramp, schedule.window
-    times: list[float] = [0.0]
+    opening_rate = (
+        calculate_attack_speed(
+            attack_speed,
+            attack_speed_ratio,
+            0.0 if active_window is None else active_window.bonus_at(0.0),
+        )
+        * uptime
+    )
+    if opening_rate <= 0.0:
+        return ()
+    current = phase / opening_rate
+    if current >= duration_seconds - _SWING_EPSILON:
+        return ()
+    times: list[float] = [current]
     # Every ramp opens EMPTY. "Basic attacks grant 8% bonus attack speed"
     # is the attack granting it, so the attack that lands a stack cannot be
     # rated by it: its own rate was decided before it landed. Each swing is
@@ -193,8 +209,7 @@ def swing_times(
     kit_stack_times: list[float] = []
     pending_ability_stacks = sorted(float(time) for time in kit_ability_stack_times)
     admitted = 0
-    current = 0.0
-    active_until = 0.0 if window is None else window.duration
+    active_until = 0.0 if window is None else current + window.duration
     cooldown = 0.0 if window is None else window.cooldown
     refund = 0.0 if window is None else window.refund(critical_chance)
     first_attack = True

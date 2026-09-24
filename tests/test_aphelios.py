@@ -63,7 +63,7 @@ def _fight(weapon, **options):
             "level": 18,
             "items": ["Infinity Edge", "Kraken Slayer"],
             "fight_mode": "timed",
-            "fight_duration_seconds": 10.0,
+            "fight_duration": 10.0,
             "include_auto_attacks": True,
             "champion_options": {"aphelios_main_weapon": weapon, **options},
         },

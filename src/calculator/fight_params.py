@@ -2,7 +2,7 @@
 request becomes."""
 
 from collections.abc import Mapping
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import Any
 
 from .auto_attack_policy import (
@@ -36,7 +36,7 @@ from .item_effects import validate_item_input_options
 from .rank_allocation import validate_manual_ranks
 from .request_parsing import request_bool, request_index_map, request_int
 from .role_quests import max_champion_level, validate_role
-from .rune_effects import validate_keystone_options, validate_rune_page
+from .rune_effects import rune_page_from_request
 from .stats import resolve_pre_combat_stats
 
 
@@ -159,40 +159,7 @@ class FightParams(FightConfig):
             field="support_target_selections",
             maximum_index=MAX_ALLIES - 1,
         )
-        # One page validates the whole rune selection — keystone, minors,
-        # shards and every rune's options — so a keystone-only validator is
-        # not a second home for the same question.
-        rune_page = validate_rune_page(
-            data.get("keystone"),
-            data.get("minor_runes"),
-            data.get("stat_shards"),
-            data.get("rune_options"),
-        )
-        # ``keystone_options`` is the older spelling of the keystone's own
-        # entry in ``rune_options``.  It is validated against the page's
-        # keystone and folded into the page, so every reader downstream asks
-        # the page and a request may use either spelling without two homes
-        # answering differently.
-        requested_keystone_options = data.get("keystone_options")
-        keystone_options = validate_keystone_options(
-            requested_keystone_options, rune_page.keystone
-        )
-        if (
-            isinstance(requested_keystone_options, Mapping)
-            and requested_keystone_options
-        ):
-            rune_page = replace(
-                rune_page,
-                options={
-                    **rune_page.options,
-                    rune_page.keystone: {
-                        **rune_page.options.get(rune_page.keystone, {}),
-                        **{
-                            key: float(value) for key, value in keystone_options.items()
-                        },
-                    },
-                },
-            )
+        rune_page, keystone_options = rune_page_from_request(data)
         role = validate_role(data.get("role", ""))
         role_quest_complete = request_bool(data, "role_quest_complete", False)
         if role_quest_complete and not role:

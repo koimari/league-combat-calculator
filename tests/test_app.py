@@ -1130,7 +1130,6 @@ def test_roster_boots_are_labeled_serialized_and_applied_to_enemy_and_ally_stats
                     "level": 12,
                     "role": "mid",
                     "boots": "Sorcerer's Shoes",
-                    "include_boots": True,
                 }
             ],
             "allies": [
@@ -1139,7 +1138,6 @@ def test_roster_boots_are_labeled_serialized_and_applied_to_enemy_and_ally_stats
                     "level": 12,
                     "role": "support",
                     "boots": "Ionian Boots of Lucidity",
-                    "include_boots": True,
                 }
             ],
         },
@@ -1201,7 +1199,6 @@ def test_support_quest_transition_clears_stale_item_state_and_backend_gate_match
                     "role": "support",
                     "role_quest_complete": True,
                     "boots": "Ionian Boots of Lucidity",
-                    "include_boots": True,
                     "items": ["Bloodsong"],
                 }
             ],
@@ -1466,13 +1463,13 @@ def test_calculated_auto_uptime_repeats_for_timed_rotation_windows():
     assert data["auto_attack_damage"] > 0
     # Jinx holds no item ramp here, so this counts her KIT ramp alone: Rev'd
     # up opens the fight empty, because the attack that grants a stack cannot
-    # be rated by it, and the window buys four autos per rotation rather than
-    # the five a ramp seeded with a live stack claimed.
+    # be rated by it, and its first swing lands at her windup rather than at
+    # t=0, so the ramp's ten seconds hold seven autos.
     assert data["auto_attack_schedule"] == {
         "status": "known",
         "rotation_count": 2,
-        "expected_autos_per_rotation": 4.0,
-        "expected_autos_total": 8,
+        "expected_autos_per_rotation": 3.5,
+        "expected_autos_total": 7,
         "window_seconds": 10.0,
         "semantics": "sequential timed window; cooldowns, resources, cast lockouts, and item events follow the engine ledger",
     }

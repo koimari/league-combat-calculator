@@ -47,6 +47,7 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator.ability_atoms import required_ranked_attribute_atom
+from src.calculator.attack_cadence import champion_windup
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
@@ -104,26 +105,39 @@ def _burst_attack_speed(result):
     return min(burst, 3.003)
 
 
+def _phase(attack_speed):
+    """Jayce's windup as a share of one attack cycle at *attack_speed*."""
+    return champion_windup(get_champion("Jayce")).phase(attack_speed)
+
+
+def _ordinary_times(rate, seconds):
+    """Ordinary autos over *seconds*: ceil(rate x seconds - phase) of them,
+    impact i at (i + phase) / rate."""
+    phase = _phase(rate)
+    count = math.ceil(rate * seconds - phase)
+    return [(index + phase) / rate for index in range(count)]
+
+
 def _expected_cannon_restore_times(result, duration):
     """The walk's modeled restore schedule for a Cannon (burst) fight.
 
     Independent derivation mirroring ``_auto_restore_schedule`` +
-    ``_auto_restore_decl`` consumption: ordinary autos at i/rate over the
-    leftover fight time (burst time subtracted for EVERY planned W cast,
-    accepted or not), plus each Hyper Charge swing at cast_time + (k+1)/
-    burst_as that lands inside the fight window.
+    ``_auto_restore_decl`` consumption: ordinary autos over the leftover
+    fight time (burst time subtracted for EVERY planned W cast, accepted or
+    not), plus each Hyper Charge swing at cast_time + (k + phase)/burst_as
+    that lands inside the fight window.
     """
     rate = result["champion_stats"]["attack_speed"] * 1.0
     burst_as = _burst_attack_speed(result)
+    burst_phase = _phase(burst_as)
     w_casts = [c["time"] for c in result["cast_timeline"] if c["slot"] == "W"]
     burst_seconds = 3.0 * len(w_casts) / burst_as
-    ordinary = math.floor(rate * max(0.0, duration - burst_seconds))
-    times = [index / rate for index in range(ordinary)]
+    times = _ordinary_times(rate, max(0.0, duration - burst_seconds))
     for cast_time in w_casts:
         times.extend(
-            cast_time + (k + 1) / burst_as
+            cast_time + (k + burst_phase) / burst_as
             for k in range(3)
-            if cast_time + (k + 1) / burst_as <= duration + _EPS
+            if cast_time + (k + burst_phase) / burst_as <= duration + _EPS
         )
     times.sort()
     return times
@@ -260,7 +274,7 @@ def test_p112_both_stances_fire_restore():
 
 def test_p112_ordinary_autos_restore_at_swing_times():
     """Rule 5: Hammer (no burst): every ordinary auto restores the amount
-    AT its own swing time — one gain row per modeled swing, i/rate."""
+    AT its own swing time — one gain row per modeled swing, (i + phase)/rate."""
     champ = get_champion("Jayce")
     result = run_fight(
         champ,
@@ -270,9 +284,8 @@ def test_p112_ordinary_autos_restore_at_swing_times():
     )
     restores = _jayce_restores(result["resource_ledger"]["receipts"])
     rate = result["champion_stats"]["attack_speed"]
-    expected_count = math.floor(rate * 12.0)
-    expected_times = [index / rate for index in range(expected_count)]
-    assert expected_count == len(restores)
+    expected_times = _ordinary_times(rate, 12.0)
+    assert len(expected_times) == len(restores)
     assert [r["time"] for r in restores] == [
         pytest.approx(t, abs=1e-6) for t in expected_times
     ]
@@ -310,7 +323,7 @@ def test_p112_hyper_charge_burst_swings_restore():
     swings = [r for r in restores if r["detail"]["kind"] == "swing"]
     ordinary = [r for r in restores if r["detail"]["kind"] == "ordinary"]
     # Two W casts land their 3 swings inside 12s; the third cast's swings
-    # (12.33+) are gated out.
+    # (12.14+) are gated out.
     assert len(swings) == 6
     assert len(ordinary) == len(restores) - 6
     burst_as = _burst_attack_speed(result)
@@ -322,7 +335,7 @@ def test_p112_hyper_charge_burst_swings_restore():
         assert detail["swing_index"] in (1, 2, 3)
         assert swing["amount"] == pytest.approx(25.0)
         expected = w_casts[detail["arming_ordinal"] - 1] + (
-            detail["swing_index"] / burst_as
+            (detail["swing_index"] - 1 + _phase(burst_as)) / burst_as
         )
         assert swing["time"] == pytest.approx(expected, abs=1e-6)
     # Every restore lands on the restore tier, before a simultaneous cast.
@@ -357,11 +370,12 @@ def test_p112_repeated_casts_restore_across_fight():
         pytest.approx(11.998, abs=1e-3),
     ]
     restores = _jayce_restores(ledger["receipts"])
-    # Restore rows cover the fight from t=0 (first auto) through the last
-    # in-window swing; the count equals the modeled auto stream.
+    # Restore rows cover the fight from the first impact (one windup after
+    # t=0) through the last in-window swing; the count equals the modeled
+    # auto stream.
     expected_times = _expected_cannon_restore_times(result, 12.0)
     assert len(restores) == len(expected_times)
-    assert restores[0]["time"] == pytest.approx(0.0)
+    assert restores[0]["time"] == pytest.approx(expected_times[0], abs=1e-6)
     assert restores[-1]["time"] == pytest.approx(expected_times[-1], abs=1e-6)
     # No restore row is duplicated or shares a (time, source) key.
     keys = [(r["time"], r["source"], r["detail"]["auto_index"]) for r in restores]
@@ -375,9 +389,9 @@ def test_p112_repeated_casts_restore_across_fight():
 
 def test_p112_cap_behavior_restore_vs_max_mana():
     """Rule 8: over-restoration is receipted CAPPED with current pinned at
-    maximum; accepted restores never exceed it.  The t=0 auto (restore
-    tier) lands before the t=0 spends on a full opening pool, so the first
-    restore of the fight is always CAPPED."""
+    maximum; accepted restores never exceed it.  The opening auto lands one
+    windup after the t=0 spends, so the first restore of the fight is
+    accepted into the spent pool."""
     champ = get_champion("Jayce")
     result = run_fight(
         champ,
@@ -387,9 +401,10 @@ def test_p112_cap_behavior_restore_vs_max_mana():
     )
     restores = _jayce_restores(result["resource_ledger"]["receipts"])
     assert restores
-    assert restores[0]["time"] == pytest.approx(0.0)
-    assert restores[0]["reason"] == "CAPPED"
-    assert restores[0]["current_before"] == pytest.approx(restores[0]["maximum_before"])
+    rate = result["champion_stats"]["attack_speed"]
+    assert restores[0]["time"] == pytest.approx(_phase(rate) / rate, abs=1e-6)
+    assert restores[0]["reason"] == "accepted"
+    assert restores[0]["current_before"] < restores[0]["maximum_before"]
     capped = [r for r in restores if r["reason"] == "CAPPED"]
     assert capped  # regen refills the pool mid-fight, so later restores cap again
     for r in restores:
@@ -474,28 +489,35 @@ def test_p112_denied_burst_cast_never_mints_mana():
         r["operation"] == "spend" and r["reason"] == "insufficient_resource"
         for r in denied
     )
-    # The denied cast's three swings are receipted as denials, not gains.
+    # Both casts are denied, and every swing of theirs inside the 6s fight
+    # is receipted as a denial, not a gain: the first cast's three and the
+    # 5.999s cast's first.  This engine call carries no champion windup, so
+    # swing k of a burst lands at cast + k / burst_as.
     denials = ledger["auto_restore"]["denials"]
-    assert len(denials) == 3
+    assert [(d["arming_ordinal"], d["swing_index"]) for d in denials] == [
+        (1, 1),
+        (1, 2),
+        (1, 3),
+        (2, 1),
+    ]
     for denial in denials:
         assert denial["reason"] == "arming_cast_denied"
         assert denial["accepted"] is False
         assert denial["arming_slot"] == "W"
-        assert denial["arming_ordinal"] == 1
         assert denial["source"] == JAYCE_RESTORE_SOURCE
-        assert denial["swing_index"] in (1, 2, 3)
     assert [d["time"] for d in denials] == [
+        pytest.approx(0.0, abs=1e-6),
         pytest.approx(0.333000333, abs=1e-6),
         pytest.approx(0.666000666, abs=1e-6),
-        pytest.approx(0.999000999, abs=1e-6),
+        pytest.approx(5.999000999, abs=1e-6),
     ]
     restores = _jayce_restores(ledger["receipts"])
     assert restores
     assert all(r["detail"]["kind"] == "ordinary" for r in restores)
     # P1-12 (R1): a DENIED burst cast never fires its swings, so its
     # burst time returns to the ordinary budget — the uninterrupted
-    # stream restores all 4 autos (0/1.25/2.5/3.75).
-    assert len(restores) == 4
+    # stream restores all ceil(0.8 x 6) = 5 autos (0/1.25/2.5/3.75/5).
+    assert len(restores) == 5
 
 
 def test_p112_multi_declaration_fails_closed():
@@ -856,9 +878,10 @@ def test_p112_hail_of_blades_per_swing_restore_timing():
     assert active_interval < base_interval
 
     # --- closed-form Hail swing schedule over the 12s window ------------
-    # Window 1 opens on swing 0 (2 stacks, 3s). Swings 0 and 1 consume
-    # them, so the only ACTIVE-rate gap is 0 -> 1.
-    swing_0 = 0.0
+    # Window 1 opens on swing 0 (2 stacks, 3s), which lands one windup at
+    # the base rate after the attack command. Swings 0 and 1 consume them,
+    # so the only ACTIVE-rate gap is 0 -> 1.
+    swing_0 = _phase(base_rate) / base_rate
     swing_1 = swing_0 + active_interval
     # Stacks are gone after swing 1, so the cooldown starts there and the
     # stream reverts to the base rate for swings 2..11.
@@ -891,14 +914,12 @@ def test_p112_hail_of_blades_per_swing_restore_timing():
 
     # The public ``auto_attacks`` row is one event SHORT of the modeled
     # basic-attack stream, and that is not a restore-walk defect: Jayce's
-    # R (Transform Mercury Hammer) declares ``empowers_next_auto``, so one
-    # swing is accounted for on the R row instead ("incl. basic attack").
-    # The restore walk correctly rides all 13 basic attacks; the auto row
-    # is the 12-swing prefix of them.
+    # R (Transform Mercury Hammer) declares ``empowers_next_auto``, so the
+    # swing at its cast, swing 0, is accounted for on the R row instead
+    # ("incl. basic attack").  The restore walk correctly rides all 13 basic
+    # attacks; the auto row is the other 12.
     auto_row = result["breakdown"]["auto_attacks"]
     auto_times = [event["time"] for event in auto_row["damage_events"]]
     assert auto_row["count"] == len(auto_times) == len(expected_swings) - 1
-    assert auto_times == [
-        pytest.approx(t, abs=1e-6) for t in expected_swings[: len(auto_times)]
-    ]
+    assert auto_times == [pytest.approx(t, abs=1e-6) for t in expected_swings[1:]]
     assert "incl. basic attack" in result["breakdown"]["R"]["detail"]

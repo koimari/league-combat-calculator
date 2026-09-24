@@ -156,11 +156,15 @@ def _conversion(**kwargs) -> dict:
 def _fight(
     *,
     procs: int,
-    duration: float = 1.0,
+    duration: float = 0.5,
     armor: float = 100.0,
     magic_resistance: float = 0.0,
 ):
-    """Autos-only deterministic fight — isolates the swing accounting."""
+    """Autos-only deterministic fight — isolates the swing accounting.
+
+    This engine call carries no windup, so at 1.029 attack speed *duration*
+    holds ceil(1.029 x duration) swings, the first at t=0: one by default.
+    """
     champion_stats, abilities = _parse(
         procs=procs,
         ranks={"Q": 0, "W": 0, "E": 0, "R": 0},
@@ -287,18 +291,18 @@ class TestConversionNotBonusRow:
         """One stack spent converts ONE swing; the rest stay physical."""
         result = _fight(procs=1, duration=3.0)
         assert _converted_damage(result) == pytest.approx(205.60, abs=0.01)
-        # Two further ordinary autos at 56.00 each.
+        # Three further ordinary autos at 56.00 each (4 swings in 3s).
         assert result["breakdown"]["auto_attacks"]["total_damage"] == pytest.approx(
-            112.0, abs=0.01
+            168.0, abs=0.01
         )
 
     def test_conversion_is_bounded_by_the_number_of_swings(self):
         """Three stacks in a one-auto fight cannot convert three swings."""
-        one_auto = _converted_damage(_fight(procs=3, duration=1.0))
+        one_auto = _converted_damage(_fight(procs=3))
         assert one_auto == pytest.approx(205.60, abs=0.01)
 
     def test_converted_damage_scales_with_stacks_spent(self):
-        """Over a three-auto fight, each extra stack converts one more swing."""
+        """Over a four-auto fight, each extra stack converts one more swing."""
         totals = [
             _converted_damage(_fight(procs=n, duration=3.0)) for n in (0, 1, 2, 3)
         ]
@@ -444,7 +448,7 @@ class TestUnshackledStackAccounting:
                 target_health=3000.0,
                 target_armor=100.0,
                 target_magic_resistance=0.0,
-                fight_duration_seconds=1.0,
+                fight_duration_seconds=0.5,
                 auto_attack_uptime=1.0,
                 auto_attacks_only=True,
                 deterministic=True,

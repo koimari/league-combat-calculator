@@ -71,18 +71,23 @@ _SWINGS = StatRampRule(
 
 
 class TestTheMean:
-    """The level a fight held on average, integrated rather than counted."""
+    """The level the stacking events met on average, each before its own."""
 
     def test_one_event_a_second_fills_and_then_holds_the_cap(self):
         """Ten swings a second apart, five held for six seconds each: the
-        count climbs one a second to the cap and stays, so the mean is the
-        area 1+2+3+4+5+5+5+5+5+5 over ten seconds."""
+        swings meet 0+1+2+3+4+5+5+5+5+5 stacks, a mean of 3.5."""
         swings = [float(second) for second in range(10)]
-        assert mean_stack_level(_SWINGS, swings, (), 10.0) == pytest.approx(4.0)
+        assert mean_stack_level(_SWINGS, swings, (), 10.0) == pytest.approx(3.5)
 
     def test_a_fight_that_ends_before_the_ramp_fills_is_priced_lower(self):
         swings = [float(second) for second in range(10)]
-        assert mean_stack_level(_SWINGS, swings, (), 3.0) == pytest.approx(2.0)
+        assert mean_stack_level(_SWINGS, swings, (), 3.0) == pytest.approx(1.0)
+
+    def test_seconds_in_which_nothing_lands_do_not_move_the_level(self):
+        swings = [0.0, 1.0, 2.0]
+        assert mean_stack_level(_SWINGS, swings, (), 3.0) == mean_stack_level(
+            _SWINGS, swings, (), 20.0
+        )
 
     def test_a_stream_the_rule_does_not_count_stacks_nothing(self):
         """The swing rule ignores casts, so a cast-only fight holds no level."""
@@ -92,10 +97,11 @@ class TestTheMean:
         assert mean_stack_level(_SWINGS, (0.0, 1.0), (), 0.0) == 0.0
 
     def test_a_stack_lapses_on_its_own_clock(self):
-        """Two swings, then nothing: the level is live for six seconds and
-        zero for the rest, so the mean is well under two."""
-        mean = mean_stack_level(_SWINGS, (0.0, 0.5), (), 20.0)
-        assert 0.0 < mean < 1.0
+        """A swing seven seconds after the last meets none of its six-second
+        stacks."""
+        assert mean_stack_level(_SWINGS, (0.0, 0.5, 7.5), (), 20.0) == pytest.approx(
+            1.0 / 3.0
+        )
 
 
 class TestTheGrant:

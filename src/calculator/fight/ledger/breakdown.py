@@ -34,10 +34,12 @@ def _is_auto_stream_key(key: str) -> bool:
 
 
 def source_total_damage(row: Mapping[str, Any]) -> float | None:
-    """The mitigated damage this source dealt; ``None`` from an informational
-    row.  A stamp that is not a number is refused by name rather than
-    coerced: ``float(True)`` is ``1.0``, which would price a broken row at a
-    point of damage, and ``float("x")`` raises naming neither row nor key."""
+    """The mitigated total this row states; ``None`` from a row that stamped
+    none.  An ``informational`` row's total restates a share other rows
+    priced, so a reader summing the fight skips that row first.  A stamp
+    that is not a number is refused by name rather than coerced:
+    ``float(True)`` is ``1.0``, which would price a broken row at a point of
+    damage, and ``float("x")`` raises naming neither row nor key."""
     if source_total_damage_is_malformed(row):
         raise ValueError(
             f"a breakdown row stamped total_damage={row['total_damage']!r}; "

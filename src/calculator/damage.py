@@ -21,7 +21,7 @@ from .fight.after.amplifiers import _add_expose_weakness, _apply_damage_amplifie
 from .fight.after.empowered_swings import _reattribute_empowered_swings
 from .fight.after.execute_display import _add_execute_display
 from .fight.after.fight_notes import _collect_fight_notes
-from .fight.after.lethality_windows import _apply_temporary_lethality_windows
+from .fight.after.resistance_windows import _apply_resistance_windows
 from .fight.after.reprice import _add_shadowflame_cinderbloom
 from .fight.after.shield_outcome import _resolve_starting_shield_outcome
 from .fight.after.stored_damage import _add_stored_damage
@@ -330,13 +330,15 @@ def calculate_fight_damage(
     # ── Fight-wide damage amplifiers ────────────────────────────────────
     _apply_damage_amplifiers(state, rotation)
 
+    # ── Resistance windows: timed shreds and temporary lethality ───────
+    # After every source and amplifier has authored its events, and before
+    # the empowered swings move: a swing is re-priced while it is still a
+    # timed event, so the move carries the price it met.
+    _apply_resistance_windows(state)
+
     # ── Empowered-auto swings shown on the ability that forced them ─────
     _reattribute_empowered_swings(state, rotation.cast_events)
 
-    # ── Temporary penetration windows (Voltaic Firmament) ──────────────
-    # Resolve after every source and amplifier has authored its events, but
-    # before reconstructing the shared ledger consumed by shields/healing.
-    _apply_temporary_lethality_windows(state)
     _add_stored_damage(state, rotation)
 
     # ── Execute threshold display (The Collector) ───────────────────────

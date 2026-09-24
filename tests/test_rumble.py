@@ -1,10 +1,17 @@
 """Tests for the Rumble champion module."""
 
+import copy
+
 import pytest
 
 from src.calculator.calculate import calculate_payload
-from src.calculator.champions import get_champion_module_contract, rumble
-from src.calculator.champions.slot_extract import extract_named
+from src.calculator.champion_loadout import load_public_champion
+from src.calculator.champions import (
+    get_champion_module_contract,
+    parse_champion_abilities,
+    rumble,
+)
+from src.calculator.champions.slot_extract import extract_named, extract_value
 from tests import cc_review, coverage_truth, row_review
 
 
@@ -76,6 +83,94 @@ class TestPricedRows:
         per_tick = row_review.cached_row("Rumble", "Q", "Magic Damage per Tick")
         assert maximum == pytest.approx(15 * per_tick, rel=1e-3)
         assert row_review.priced("Rumble", "Q") == pytest.approx(maximum)
+
+
+_TARGET_MR = 100.0
+
+
+def _traced(fight_mode: str) -> dict:
+    """The 8-second level-18 fight, traced, under *fight_mode*."""
+    return calculate_payload(
+        {
+            "champion": "Rumble",
+            "level": 18,
+            "items": [],
+            "fight_mode": fight_mode,
+            "fight_duration": 8.0,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+            "target_mr": _TARGET_MR,
+        },
+        deterministic=True,
+        trace=True,
+    )
+
+
+class TestHarpoonShred:
+    """E (Electro Harpoon): one harpoon's cached MR shred, as a target_debuff.
+
+    The cache stacks the shred "up to 2 times"; a percent target_debuff
+    cannot stack, so the one-harpoon row is priced and never the two-harpoon
+    "Total MR Reduction" row.
+    """
+
+    def test_the_debuff_is_the_one_harpoon_row_over_the_cached_window(self):
+        data = cc_review.kit("Rumble")
+        text = cc_review.slot_text(data, "E")
+        assert "magic resistance reduction for 4 seconds" in text
+        assert "stacking up to 2 times" in text
+        ability = data["abilities"]["E"][0]
+        one = extract_value(ability, "Magic Resistance Reduction", 5)
+        assert (one, extract_value(ability, "Total MR Reduction", 5)) == (18, 36)
+        assert row_review.entry("Rumble", "E")["target_debuff"] == {
+            "mr_reduction_percent": one,
+            "duration": 4.0,
+        }
+
+    def test_magic_inside_a_harpoon_window_meets_the_shred(self):
+        payload = _traced("timed")
+        harpoons = [e["time"] for e in payload["cast_timeline"] if e["slot"] == "E"]
+        assert harpoons == [0.0, 0.5, 6.25]
+        # The published MR is the fight share: windows [0, 4.5] and [6.25, 8]
+        # cover 6.25 of the 8 seconds.
+        assert payload["trace"]["effective_mr"] == pytest.approx(
+            _TARGET_MR * (1 - 0.18 * 6.25 / 8.0)
+        )
+        # Each packet meets 100 * (1 - 0.18) = 82 after a harpoon opens its
+        # 4s window, up to its end, and 100 elsewhere: a harpoon's own hit
+        # at 0 or 6.25 meets 100, the one at 0.5 lands in the first window,
+        # and R's ticks from 4.75 on land after the second closes at 4.5.
+        magic = [
+            line
+            for line in payload["trace"]["lines"]
+            if line["damage_class"] == "magic"
+        ]
+        assert {line["source"] for line in magic} == {"E", "Q", "R"}
+        for line in magic:
+            inside = any(start < line["time"] <= start + 4.0 for start in harpoons)
+            expected = _TARGET_MR * (1 - 0.18) if inside else _TARGET_MR
+            assert line["resistance_met"] == pytest.approx(expected), line
+
+    def test_an_autos_only_fight_shreds_nothing(self):
+        payload = _traced("auto_only")
+        assert not payload["cast_timeline"]
+        assert payload["trace"]["effective_mr"] == pytest.approx(_TARGET_MR)
+
+    def test_a_cache_without_the_row_raises(self):
+        data = copy.deepcopy(load_public_champion("Rumble"))
+        for effect in data["abilities"]["E"][0]["effects"]:
+            for row in effect["leveling"]:
+                if row["attribute"] == "Magic Resistance Reduction":
+                    row["attribute"] = "Renamed"
+        with pytest.raises(ValueError, match="Magic Resistance Reduction"):
+            parse_champion_abilities(
+                data,
+                18,
+                row_review.STATS["ability_power"],
+                dict(row_review.RANKS),
+                champion_stats=dict(row_review.STATS),
+                target_stats=dict(row_review.TARGET),
+            )
 
 
 #: Rumble's own bonus attack speed at level 18 with no items and no
@@ -189,9 +284,9 @@ class TestOverheatedOnHit:
             }
         )
         times = sorted(event["time"] for event in payload["cast_timeline"])
-        # The bar fills at 7.77 and again at 22.68; each buys four seconds
+        # The bar fills at 7.77 and again at 22.93; each buys four seconds
         # in which nothing casts at all.
-        for start in (7.772727, 22.681818):
+        for start in (7.772727, 22.931818):
             assert not [
                 time for time in times if start + 1e-3 < time < start + 4.0
             ], f"a cast landed inside the {start:.2f}s lockout"

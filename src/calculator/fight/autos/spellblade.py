@@ -227,6 +227,14 @@ def _add_spellblade_damage(
             1 + int(state.fight_duration_seconds / effective_sb_cd),
             attack_limit,
         )
+        # Weave-timed events: authored only when the accepted casts
+        # reproduce the priced proc count.  A timed proc past the fight's
+        # end is dropped here, so every row and reader below counts only
+        # the procs that land.
+        timed = _spellblade_proc_times(rotation, effect, result.procs)
+        proc_times = [time for time in timed if state.lands_in_window(time)]
+        if timed:
+            result.procs = len(proc_times)
 
         # True-damage conversion (Camille Q2): an entry flagged
         # ``spellblade_true_ratio`` converts the proc its empowered
@@ -250,12 +258,6 @@ def _add_spellblade_damage(
 
         plain = result.procs - converted
         sb_total = result.damage_per_proc * plain + converted_per_proc * converted
-
-        # Weave-timed events: authored only when the accepted casts
-        # reproduce the priced proc count, and only for unconverted
-        # builds (the true-conversion split's proc-to-cast assignment
-        # is an assumption, not a certified order).
-        proc_times = _spellblade_proc_times(rotation, effect, result.procs)
 
         if plain > 0 or converted == 0:  # unconverted builds keep the row as-is
             plain_row: dict[str, Any] = {

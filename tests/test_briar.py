@@ -332,9 +332,13 @@ class TestFightIntegration:
         assert row["name"] == "Snack Attack"
         assert row["total_damage"] == pytest.approx(bonus + ad)
 
-    def test_q_shred_helps_later_casts_but_not_q_itself(self, briar_data):
-        """Kog'Maw rule: the shred lands after Q's own damage, so only
-        abilities cast after Q see reduced resistances."""
+    def test_q_shred_helps_packets_in_its_window_but_not_q_itself(self, briar_data):
+        """Q's hit at t=0 opens a 5s window of its rank-5 20% shred: 100 -> 80.
+
+        One rotation starts every cast at t=0, so Q's own hit meets 100 in
+        either order; E's release at 1.0s lands inside the window whatever
+        the order; R's hit at t=0 meets it only when R is cast after Q.
+        """
         params = {"target_armor": 100.0, "target_magic_resistance": 100.0}
         q_first = run_fight(
             briar_data,
@@ -348,14 +352,22 @@ class TestFightIntegration:
             [],
             _fight_params(cast_order=["E", "W", "R", "Q"], **params),
         )
-        # Q's own damage is identical whether it casts first or last.
-        assert q_first["breakdown"]["Q"]["total_damage"] == pytest.approx(
-            q_last["breakdown"]["Q"]["total_damage"]
-        )
-        # E (magic) benefits from the 20% MR shred only after Q.
-        assert (
-            q_first["breakdown"]["E"]["total_damage"]
-            > q_last["breakdown"]["E"]["total_damage"]
+
+        def met(result, slot):
+            events = result["breakdown"][slot]["damage_events"]
+            return [(event["time"], event["resistance_met"]) for event in events]
+
+        assert met(q_first, "Q") == met(q_last, "Q") == [(0.0, 100.0)]
+        assert met(q_first, "E") == met(q_last, "E") == [(1.0, 80.0)]
+        assert met(q_first, "R") == [(0.0, 80.0)]
+        assert met(q_last, "R") == [(0.0, 100.0)]
+        for slot in ("Q", "E"):
+            assert q_first["breakdown"][slot]["total_damage"] == pytest.approx(
+                q_last["breakdown"][slot]["total_damage"]
+            )
+        # The same R raw at 80 MR against 100: (100 + 100) / (100 + 80).
+        assert q_first["breakdown"]["R"]["total_damage"] == pytest.approx(
+            q_last["breakdown"]["R"]["total_damage"] * 200.0 / 180.0
         )
 
     def test_r_stat_buffs_reach_the_stats_panel(self, briar_data):

@@ -19,7 +19,6 @@ Q pins the primary "Physical Damage"; its "Reduced Damage" secondary-target row
 must never reach a single-target model.  E pins "Magic Damage".
 """
 
-import math
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -115,8 +114,7 @@ def _headshot_counts(ctx: SlotCtx, trap_grants: int) -> tuple[int, int, int, int
     pre_stacks = min(max(int(ctx.option("p_pre_stacks")), 0), 5)
     duration = ctx.options.get("fight_duration_seconds")
     if duration is not None:
-        uptime = float(ctx.option("auto_attack_uptime"))
-        num_autos = math.floor(ctx.stat("attack_speed") * uptime * duration)
+        num_autos = len(ctx.ambient_swings(float(duration)))
         if num_autos > 0:
             remaining = num_autos
             trap_used = min(trap_grants, remaining)

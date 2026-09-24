@@ -5,6 +5,12 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 
 ## Tests and CI
 
+- **A request key no parser reads is dropped silently, so a test pinned on it
+  pins the default.** `deterministic` is a `calculate_payload` keyword, never a
+  body key, and the body spells the window `fight_duration`, not the `FightConfig`
+  field `fight_duration_seconds`. To find such keys, wrap the request in a `dict` subclass that
+  records `get`, `[]` and `in`, run the real parse, and list what it never read;
+  `tests/test_frontend_capability_contract.py` does so for every roster capability.
 - **Four concurrent full `pytest -n auto` runs take this machine out of memory.**
   One integrator runs it once per wave on the merged tree; a worker runs only its
   files, one pytest at a time, and pylint with `--jobs=4`.
@@ -189,6 +195,10 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   point can move no damage. A test pinning the damage delta of a small stat
   change pins a rounding crossing. Give it a change that clears a whole point, as
   the Swiftmarch movement-speed tests do on Ahri, where force is 1:1 AP.
+- **A reader summing `breakdown` rows skips `informational` ones first.** Their
+  `total_damage` restates a share other rows priced (`basic_amp_*`,
+  `ability_amp_*`, `sundered_sky`), and `source_total_damage` returns it
+  anyway.
 - **`return factor * sum_modifiers(...)` reads `factor` before the call**, so a
   `nonlocal` the callee's closure sets is invisible. Akshan E's attack-speed
   factor priced 1.0 that way. Bind the call to a name, then multiply.
@@ -223,6 +233,18 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   21 `ActionKind`s and no UTILITY one, so a per-kind field census needs the
   survival suites too. To time the walk, patch `program.walk.run_survival_walk`,
   the name `walk()` reads.
+- **An average over the fight's wall time breaks "a longer fight never deals
+  less"**: empty seconds pull every packet's shred or stack level down. Price at
+  the packet's time (`fight/after/resistance_windows.py`) or average over events.
+- **`attack_cadence` owns swing count and swing times.** `floor(AS x T)` with
+  swings from t=0 left one to two idle cycles. A module mirroring the stream calls
+  `attack_cadence.stream_impacts`, never `index / rate`.
+- **`Resists.resolve_magic()` keeps the stored `reduced_mr`.** A copy with a new
+  `base_mr` serves the old reduced MR after an accepted R; `Resists.resolve()`
+  re-derives every figure.
+- **A packet re-priced after the fact may have met its own resistance** (an
+  ability's own penetration). `_LiveResistance.met_served_pipeline` re-prices
+  only a packet whose `resistance_met` the fight served.
 
 ## Platform and tooling
 
@@ -341,6 +363,9 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 
 ## Frontend and vision
 
+- **A `ui/src` edit ships only with its rebuilt bundle.** `static/calculator/`
+  is committed, and only the shared-ui job's `node build.mjs --check` compares it
+  to source. Run `cd ui && npm ci && npm run build` first.
 - **Two V8 deoptimizations live in `fingerprint`'s pixel loop.** An expando
   property on a typed array (`vec.contrast = rms`) deoptimizes every function
   touching it, about 10x, so return the number. `Math.min` and `Math.max` type
@@ -374,6 +399,10 @@ champion it bit.
 
 ### Cached data and sources
 
+- **The scraper writes `attackCastTime` 0.3 and `attackTotalTime` 1.6 when the
+  wiki states neither**, so `champion_windup` reads that pair as
+  `0.3 + attackDelayOffset`; Skarner's real pair is the same (30% against
+  18.75%). The windup modifier lives only in the binary's `basicAttack` record.
 - **Known-degraded wiki parses, stable across patches.** The modifier parser
   half-parses gimmick scalings: values survive with empty `units`, so the scaling
   resolver cannot attribute them. Aurelion Sol Q, Bard P, Heimerdinger W and E,
@@ -456,6 +485,11 @@ champion it bit.
   count, since `_schedule_shared_casts` puts every `R` in `single_cast` (Corki R).
 - **"Empowers next basic attack" is once per cast; "basic attacks deal bonus
   damage" is every auto** (Alistar E).
+- **A next-attack rider is `empowered_auto_entry`'s rider part, never an
+  ability `on_hit`, and it carries no `time_offset`.** An `on_hit` rider pays
+  every swing of a timed fight and none in one-rotation (Jax W paid 9 in 8 s
+  for 3 casts). A timed part makes the row author its own events, so the
+  empowered-swing move leaves its swings out of the fight ledger.
 - **A granted or forced basic attack still swings when there is no auto stream.**
   One-rotation mode and zero uptime both give `num_auto_attacks == 0` and the cast
   still forces its attack, so the ability's row carries the expected-crit base
@@ -510,6 +544,10 @@ champion it bit.
   inside the fight resolves in full, `count_damage_after_fight_end` being the one
   switch over that, so a `min(..., fight_duration)` on resolved damage is the
   failure shape, and the golden sweep holds no burn items to catch it.
+- **A step that times its own packets must ask `state.lands_in_window` of each.**
+  Spellblade arms each charge when the last proc's cooldown ends, so an 8 s
+  fight can time a proc at 9.9 s. No golden clips; only
+  `scripts/property_sweep.py` sees a late packet.
 - **A silent zero comes from a missing key.** A champion module never
   `.get(..., default)`s a stats key: Akshan E read a `bonus_attack_speed_percent`
   key nothing writes and priced its term at 0. A wiki unit absent from

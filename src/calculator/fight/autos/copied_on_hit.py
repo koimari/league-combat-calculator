@@ -51,7 +51,7 @@ def _bolt_declaration(
 
     The resistance is the armour **this** packet met, transported because a
     bolt is a physical event on the ordinary ledger and
-    :func:`_apply_temporary_lethality_windows` can re-price one."""
+    :func:`_apply_resistance_windows` can re-price one."""
     plating = float(state.target_basic_damage_multiplier)
     deterministic = bool(state.deterministic)
     crit_raw = (

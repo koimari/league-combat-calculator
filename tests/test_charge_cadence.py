@@ -121,14 +121,14 @@ class TestTheScheduleSpendsTheStockThenRecharges:
                 "champion": champion,
                 "level": 18,
                 "items": [],
-                "runes": {},
-                "target": {"champion": "Malphite", "level": 18},
+                "enemies": [{"champion": "Malphite", "level": 18}],
                 "fight_mode": "time_based",
                 "fight_duration": seconds,
-                "deterministic": True,
                 "auto_attack_uptime": 1.0,
-            }
+            },
+            deterministic=True,
         )
+        assert [row["target"]["champion"] for row in payload["targets"]] == ["Malphite"]
         return int(payload["breakdown"][slot]["casts"])
 
     def test_a_ten_second_fight_spends_two_banked_harpoons_and_one_recharge(

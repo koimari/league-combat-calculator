@@ -5,6 +5,7 @@ import pytest
 from src.calculator.calculate import calculate_payload
 from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight_params import FightParams
 from src.calculator.scenario import parse_roster
 
 
@@ -347,6 +348,40 @@ def test_roster_rejects_unknown_champion_options():
         )
 
 
+_CONQUEROR_CARD = {
+    "champion": "Garen",
+    "level": 18,
+    "keystone": "Conqueror",
+    "keystone_options": {"starting_stacks": 6},
+}
+
+
+def test_a_roster_card_folds_its_keystone_options_into_its_page():
+    """The card's page is the one the main path builds from the same fields."""
+    loadout = ChampionLoadout.from_request(_CONQUEROR_CARD, field="enemies[0]")
+
+    assert loadout.rune_page.options["Conqueror"] == {"starting_stacks": 6.0}
+    assert loadout.rune_page == FightParams.from_request(_CONQUEROR_CARD).rune_page
+
+
+@pytest.mark.parametrize(
+    ("keystone_options", "message"),
+    [
+        ({"starting_stacks": 99}, "must be between"),
+        ({"starting_charges": 1}, "Unknown option for Conqueror"),
+        ([], "keystone_options must be an object"),
+    ],
+)
+def test_a_roster_card_refuses_the_keystone_options_the_main_path_refuses(
+    keystone_options, message
+):
+    card = {**_CONQUEROR_CARD, "keystone_options": keystone_options}
+    with pytest.raises(ValueError, match=message):
+        FightParams.from_request(card)
+    with pytest.raises(ValueError, match=message):
+        ChampionLoadout.from_request(card, field="enemies[0]")
+
+
 def test_roster_rejects_malformed_cast_order():
     # The roster path's shape check is champion-agnostic after C6: a repeated
     # slot is malformed for every champion, while *which* slots exist is
@@ -467,6 +502,7 @@ def test_practice_dummy_is_passive_in_the_coupled_timeline():
         ("target_stats", {"armor": True}, "must be a number"),
         ("target_stats", {"ability_power": 100001}, "must be between"),
         ("ability_ranks", {"Q": 1}, "no abilities"),
+        ("keystone_options", {"starting_stacks": 1}, "no runes"),
     ],
 )
 def test_practice_dummy_rejects_unsupported_or_invalid_controls(field, value, message):

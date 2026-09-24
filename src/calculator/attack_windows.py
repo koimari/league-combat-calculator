@@ -1,8 +1,8 @@
 """Integrate accepted temporary attack-speed windows on one actor's clock."""
 
-from dataclasses import dataclass, replace
-import math
+from dataclasses import dataclass
 
+from .attack_cadence import impact_times
 from .stats import ATTACK_SPEED_CAP, calculate_attack_speed
 
 
@@ -25,35 +25,16 @@ def attack_times_for_windows(
     ratio: float,
     duration: float,
     uptime: float,
-    reset_at: tuple[float, ...] = (),
+    phase: float,
 ) -> tuple[float, ...]:
-    """Keep attack progress through each rate change and floor total swings.
+    """One attack timer carried through each rate change the windows make.
 
     Repeated grants in one group use the strongest active grant. Separate
     groups add their bonus attack speed. Each window ends before an attack
-    at that instant reads the rate. Explicit reset boundaries preserve the
-    existing champion schedule's per-phase count and starting attack.
+    at that instant reads the rate. Impacts land by ``attack_cadence``.
     """
     if uptime <= 0 or duration <= 0 or attack_speed <= 0:
         return ()
-    if reset_at:
-        phases = sorted(
-            {0.0, duration, *(point for point in reset_at if 0 < point < duration)}
-        )
-        return tuple(
-            start + time
-            for start, end in zip(phases, phases[1:])
-            for time in attack_times_for_windows(
-                tuple(
-                    replace(window, start=window.start - start, end=window.end - start)
-                    for window in windows
-                ),
-                attack_speed=attack_speed,
-                ratio=ratio,
-                duration=end - start,
-                uptime=uptime,
-            )
-        )
     boundaries = sorted(
         {
             0.0,
@@ -65,8 +46,7 @@ def attack_times_for_windows(
             ),
         }
     )
-    segments = []
-    progress = 0.0
+    spans = []
     for start, end in zip(boundaries, boundaries[1:]):
         active_groups: dict[str, float] = {}
         for window in windows:
@@ -79,15 +59,5 @@ def attack_times_for_windows(
             min(ATTACK_SPEED_CAP, calculate_attack_speed(attack_speed, ratio, bonus))
             * uptime
         )
-        next_progress = progress + (end - start) * rate
-        segments.append((start, progress, next_progress, rate))
-        progress = next_progress
-    count = math.floor(progress + 1e-10)
-    times = []
-    index = 0
-    for swing in range(count):
-        while index + 1 < len(segments) and swing >= segments[index][2] - 1e-10:
-            index += 1
-        start, beginning, _, rate = segments[index]
-        times.append(start + (swing - beginning) / rate)
-    return tuple(times)
+        spans.append((start, end, rate))
+    return impact_times(spans, phase)

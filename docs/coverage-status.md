@@ -121,7 +121,7 @@ measured here from the tree rather than logged per pass.
 | Champion slots with no engine axis | 5 | each module's own contract |
 | Compiled runes that price a number | 49 of 62 | `rune_catalog()` through `resolve_rune` |
 | Residue rows, by reason | 9 unsourced | `docs/coverage-residue.json` |
-| Surface-area backlog rows open | 27 | `docs/surface-area-backlog.md` |
+| Surface-area backlog rows open | 25 | `docs/surface-area-backlog.md` |
 
 ## Where the remaining work is written down
 
@@ -132,7 +132,7 @@ row, and each has a gate that fails when a row appears without one.
 |---|---|---|
 | `docs/coverage-census.json` | 36 | champion and item pairs that price coarsely or refuse |
 | `docs/coverage-residue.json` | 9 | frontier entries that cannot close without inventing data |
-| `docs/surface-area-backlog.md` | 27 | everything the surface-area campaigns surfaced and did not close |
+| `docs/surface-area-backlog.md` | 25 | everything the surface-area campaigns surfaced and did not close |
 | `scripts/swing_stream_audit.py` | 9 | cached per-attack riders that do not publish a swing key |
 | `tests/test_axis_less_slots.py` | 5 | the slots with no engine axis, each blocker measured in both sources |
 

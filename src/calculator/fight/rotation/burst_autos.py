@@ -1,7 +1,6 @@
 """The auto stream an empowered burst re-times, and the swings its riders claim."""
 
-import math
-
+from ... import attack_cadence
 from ...control_intervals import merged_spans
 from ..autos.swing_schedule import _auto_attack_timestamps
 from ..empower_declaration import (
@@ -50,18 +49,22 @@ def _apply_empowered_burst_autos(state: "FightState", plan: "CastPlan") -> None:
         burst_as = _empower_burst_attack_speed(empower) if empower else 0.0
         if burst_as <= 0:
             continue
-        interval = 1.0 / burst_as
+        phase = state.impact_phase(burst_as)
         impacts: list[float] = []
         for cast_time in plan.times.get(ability_key, ()):
             landed = [
-                cast_time + hit * interval
-                for hit in range(_empower_hits(empower))
-                if cast_time + hit * interval < duration
+                time
+                for time in attack_cadence.counted_impacts(
+                    _empower_hits(empower), burst_as, phase, cast_time
+                )
+                if time < duration
             ]
             if not landed:
                 continue
             impacts.extend(landed)
-            spans.append((landed[0], min(duration, landed[-1] + interval)))
+            # The burst holds the attack timer from its cast for one cycle
+            # per swing that landed.
+            spans.append((cast_time, min(duration, cast_time + len(landed) / burst_as)))
         if impacts:
             by_ability[ability_key] = tuple(impacts)
 
@@ -70,8 +73,10 @@ def _apply_empowered_burst_autos(state: "FightState", plan: "CastPlan") -> None:
 
     schedule = BurstSwingSchedule(by_ability=by_ability, blocks=merged_spans(spans))
     leftover = max(0.0, duration - schedule.seconds)
-    state.num_auto_attacks = math.floor(
-        state.attack_speed * leftover * state.auto_attack_uptime
+    state.num_auto_attacks = attack_cadence.impact_count(
+        state.attack_speed * state.auto_attack_uptime,
+        leftover,
+        state.impact_phase(state.attack_speed),
     ) + len(schedule.times)
     state.burst_swings = schedule
 
@@ -79,14 +84,13 @@ def _apply_empowered_burst_autos(state: "FightState", plan: "CastPlan") -> None:
 def _resolve_scheduled_auto_rides(state: "FightState", plan: "CastPlan") -> None:
     """Claim the stream swing each ``rides_scheduled_auto`` cast is delivered by.
 
-    An empower is timed at its cast by default, which is where a kit that
-    resets its attack timer (Darius W, Jax W, Fiora E) genuinely swings, and
-    a burst that sets its own rate re-times the stream and declares its own
-    impacts (``BurstSwingSchedule``).  A rider does neither: the cache gives
-    it no reset, so it is carried by a swing already on the stream — the
-    first at or after its cast that an earlier rider has not taken.
-    Resolving that here, once, is what lets the ability's damage and its
-    ``target_debuff`` window both open at the swing rather than at the cast.
+    A burst that sets its own rate re-times the stream and declares its own
+    impacts (``BurstSwingSchedule``); any other empower's swing is claimed
+    once the ledger exists (``fight/after/empowered_swings.py``), while its
+    ``target_debuff`` window opens at the cast.  A rider is carried by a
+    swing already on the stream, the first at or after its cast that an
+    earlier rider has not taken.  Resolving that here, before the rotation,
+    is what lets its ``target_debuff`` window open at the swing too.
 
     Casts left without a swing keep nothing: the stream ran out, and the
     engine already caps such casts by the autos that consume them.

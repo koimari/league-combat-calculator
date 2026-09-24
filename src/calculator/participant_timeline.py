@@ -167,7 +167,7 @@ from .program.views import score as _score_view
 from .program.views import survival as _survival_view
 from .program.views.leaf import DISCARD, LeafWriter
 from .program.walk import AttackerOutcome, WalkResult, walk
-from .resistance import apply_resistance
+from .resistance import rescale_mitigated
 from .roster_composition import (
     ActorRequest,
     Combatant,
@@ -2475,13 +2475,10 @@ def _simulate_survival(
                             )
                         )
                         try:
-                            baseline = float(event[baseline_key])
-                            baseline_factor = apply_resistance(1.0, baseline)
-                            if baseline_factor <= 0.0 or not math.isfinite(
-                                baseline_factor
-                            ):
-                                raise ValueError("invalid baseline mitigation factor")
-                            raw_amount = original_amount / baseline_factor
+                            # The raw amount is the packet at zero resistance.
+                            raw_amount = rescale_mitigated(
+                                original_amount, float(event[baseline_key]), 0.0
+                            )
                         except (KeyError, TypeError, ValueError, ZeroDivisionError):
                             raw_amount = None
                     if raw_amount is None or not math.isfinite(raw_amount):

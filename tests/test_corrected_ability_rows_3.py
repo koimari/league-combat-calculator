@@ -268,18 +268,26 @@ class TestFightCorrectedDamage:
             off["breakdown"]["Q"]["total_damage"]
         )
 
-    def test_time_based_coverage_weights_the_shred(self) -> None:
-        """10s fight, Q rank-5 CD 6s -> casts at t=0 and t=6; the 3s debuff
-        covers [0,3] and [6,9] = 6/10 of the fight, so the applied shred is
-        30% * 0.6 = 18%: effective armor 100 -> 82."""
+    def test_time_based_ticks_inside_the_window_meet_the_whole_shred(self) -> None:
+        """10s fight, Q rank-5 CD 6s -> casts at t=0 and t=6, each opening a
+        3s window of the 30% shred: [0,3] and [6,9].  The published armor is
+        the fight share, 6/10 of the fight -> 30% * 0.6 = 18%: 100 -> 82.
+
+        R, cast after Q at t=0, ticks at 0..1.75: all eight land inside the
+        first window and meet the whole shred, 100 -> 70."""
         data = _fight(mode="time_based", armor=100.0)
-        coverage = 6.0 / 10.0
+        casts = [(cast["slot"], cast["time"]) for cast in data["cast_timeline"]]
+        assert [cast for cast in casts if cast[0] in ("Q", "R")] == [
+            ("Q", 0.0),
+            ("R", 0.0),
+            ("Q", 6.0),
+        ]
         assert data["effective_armor"] == pytest.approx(
-            _effective_armor(100.0, 30.0, coverage)
+            _effective_armor(100.0, 30.0, 6.0 / 10.0)
         )
         stats = data["champion_stats"]
         r_per_tick = _resolve("R", "Physical Damage Per Tick", 3, stats, 2000.0)
-        r_expected = 8 * _mitigate(r_per_tick, _effective_armor(100.0, 30.0, coverage))
+        r_expected = 8 * _mitigate(r_per_tick, _effective_armor(100.0, 30.0, 1.0))
         assert data["breakdown"]["R"]["total_damage"] == pytest.approx(
             r_expected, abs=0.06
         )

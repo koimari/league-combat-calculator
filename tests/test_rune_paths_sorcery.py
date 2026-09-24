@@ -40,7 +40,6 @@ def _priced_fight(champion, role, keystone, items, stacks):
         ],
         "fight_duration": 10,
         "fight_mode": "time_based",
-        "deterministic": True,
         "include_auto_attacks": True,
         "auto_attack_uptime": 1.0,
         "keystone": keystone,
@@ -50,7 +49,7 @@ def _priced_fight(champion, role, keystone, items, stacks):
     if stacks is not None:
         payload["minor_runes"] = ["Manaflow Band"]
         payload["rune_options"] = {"Manaflow Band": {"manaflow_band_stacks": stacks}}
-    return calculate_payload(payload)
+    return calculate_payload(payload, deterministic=True)
 
 
 def _ezreal(*, items=("Muramana",), stacks=None):

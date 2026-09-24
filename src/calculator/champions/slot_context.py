@@ -4,6 +4,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
+from .. import attack_cadence
 from .inputs import champion_stat, target_stat
 from .skill_orders import get_ability_rank
 
@@ -68,6 +69,29 @@ class SlotCtx:
     # Empty for a synthetic fixture with no module, which is why reading an
     # option it never declared raises there too.
     option_defaults: Mapping[str, Any] = field(default_factory=dict)
+    # The cached champion row, read for its windup by :meth:`impact_phase`.
+    # None for a synthetic context, which then has no swing stream to place.
+    champion_data: Mapping[str, Any] | None = None
+
+    def impact_phase(self, attack_speed: float) -> float:
+        """The champion's windup as a share of one attack cycle (``attack_cadence``)."""
+        if self.champion_data is None:
+            raise ValueError(
+                f"{self.champion_name or 'a synthetic slot context'} carries no "
+                "cached champion row, so its windup cannot place a swing"
+            )
+        return attack_cadence.champion_windup(self.champion_data).phase(attack_speed)
+
+    def ambient_swings(self, duration: float) -> tuple[float, ...]:
+        """The fight's ambient basic-attack impacts over *duration*: one stream
+        at ``attack_speed x auto_attack_uptime``, as ``pipeline.run_fight`` lands it."""
+        attack_speed = self.stat("attack_speed")
+        rate = attack_speed * float(self.option("auto_attack_uptime"))
+        if rate <= 0.0:
+            return ()
+        return attack_cadence.stream_impacts(
+            rate, duration, self.impact_phase(attack_speed)
+        )
 
     def stat(self, name: str) -> float:
         """One build stat by declared name (``inputs.CHAMPION_STATS``)."""

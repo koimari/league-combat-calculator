@@ -22,6 +22,7 @@ import math
 
 import pytest
 
+from src.calculator.attack_cadence import champion_windup, impact_count
 from src.calculator.champion_loadout import load_public_champion
 from src.calculator.champions.slot_extract import (
     extract_named,
@@ -182,14 +183,11 @@ def test_the_attack_speed_grant_reaches_the_fights_auto_count(
 ):
     """base_AS + AS_ratio x bonus/100, then the autos the rate buys.
 
-    The count splits at the moment the buff STARTS: autos before it ride
-    the base rate, autos inside it the buffed one, and the floor applies
-    per phase.  For an unwindowed grant, and for a windowed one whose
-    window opens at t=0, the pre-window phase is empty and the whole
-    thing collapses to ``floor(fought x window)`` — which is every row
-    here but Twitch, whose Ambush is cast third and so opens its window
-    at 0.25s.  Crediting those 0.25 seconds at the buffed rate is exactly
-    the one auto of over-count this term removes.
+    One attack timer runs at the build's rate until the buff STARTS and at
+    the fought rate after, and impact k lands once it has run k + phase
+    cycles.  For an unwindowed grant, and for a windowed one whose window
+    opens at t=0, the pre-buff span is empty — which is every row here but
+    Twitch, whose Ambush is cast third and so opens its window at 0.25s.
     """
     del attribute, quoted
     options = _ARMED_BY.get((champion, slot), {})
@@ -201,21 +199,28 @@ def test_the_attack_speed_grant_reaches_the_fights_auto_count(
     assert granted > 0.0
 
     start = _buff_window_start(champion, slot, result, **options)
-    assert _autos(result) == math.floor(build["attack_speed"] * start) + math.floor(
-        fought * (_WINDOW - start)
-    )
-    assert _autos(result) > math.floor(build["attack_speed"] * _WINDOW)
+    # Every windup here keeps the default modifier: one phase at any rate.
+    phase = champion_windup(_CHAMPIONS[champion]).phase(build["attack_speed"])
+    cycles = build["attack_speed"] * start + fought * (_WINDOW - start)
+    assert _autos(result) == math.ceil(cycles - phase)
+    # A whole cycle gained buys an auto.  Lulu's 30% gains 0.75 of one, which
+    # lands inside the fifth impact the build's rate already reaches.
+    gained = (fought - build["attack_speed"]) * (_WINDOW - start)
+    unbuffed = math.ceil(build["attack_speed"] * _WINDOW - phase)
+    assert _autos(result) > unbuffed or gained < 1.0
 
 
-def test_tristana_rapid_fire_doubles_the_auto_count_it_was_missing():
-    """The deleted assumption, priced: 4 autos become 8."""
+def test_tristana_rapid_fire_prices_the_autos_its_window_buys():
+    """The deleted assumption, priced: the 5s window lands 9 autos, not 5."""
     build = _build_stats("Tristana")
     result = _fight("Tristana")
-    assert math.floor(build["attack_speed"] * _WINDOW) == 4
-    assert _autos(result) == 8
+    windup = champion_windup(_CHAMPIONS["Tristana"])
+    unbuffed = build["attack_speed"]
+    assert impact_count(unbuffed, _WINDOW, windup.phase(unbuffed)) == 5
+    assert _autos(result) == 9
     assert result["champion_stats"]["attack_speed"] == pytest.approx(1.6658, abs=5e-4)
-    assert result["auto_attack_damage"] == pytest.approx(472.0, abs=0.05)
-    assert result["total_damage"] == pytest.approx(899.5, abs=0.05)
+    assert result["auto_attack_damage"] == pytest.approx(531.0, abs=0.05)
+    assert result["total_damage"] == pytest.approx(958.5, abs=0.05)
 
 
 def test_nocturne_doubles_its_row_only_when_the_spell_shield_blocks():
@@ -474,9 +479,9 @@ def test_varus_living_vengeance_is_off_until_a_takedown_arms_it():
     # attacks and his Q opens the rotation, so nothing has stacked when the
     # detonation lands (champions/armed_procs.py counts the hits BEFORE the
     # consuming cast, never after it).
-    assert _fight("Varus")["total_damage"] == pytest.approx(942.5, abs=0.05)
+    assert _fight("Varus")["total_damage"] == pytest.approx(1021.0, abs=0.05)
     assert _fight("Varus", p_champion_takedown=True)["total_damage"] == pytest.approx(
-        1190.83, abs=0.05
+        1290.0, abs=0.05
     )
 
 

@@ -6,6 +6,7 @@ import re
 import pytest
 
 from src import app as app_module
+from src.calculator.attack_cadence import champion_windup
 from src.calculator.build_evaluation import evaluate_build
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import (
@@ -13,10 +14,12 @@ from src.calculator.champions import (
     get_champion_module_contract,
     get_champion_module_meta,
     get_champion_options_meta,
+    kaisa,
     parse_champion_abilities,
 )
+from src.calculator.champions.slot_context import SlotCtx
 from src.calculator.damage import calculate_fight_damage
-from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.fight.config import FightConfig
 from src.calculator.fight_params import FightParams
 from src.calculator.fight_request_bounds import DEFAULT_AUTO_ATTACK_UPTIME
@@ -347,6 +350,60 @@ def test_timed_plasma_stream_reconciles_with_the_engine_timeline(items):
     )
 
 
+def test_the_mirrored_swings_are_the_traced_fights_own(monkeypatch):
+    """The Plasma walk's basic attacks land where the traced fight's do.
+
+    Level 18, no items, 8s at full uptime: both streams are
+    ``attack_cadence``'s at Kai'Sa's windup, so the first lands after the
+    attack command rather than at it.
+    """
+    streams = []
+    walk = kaisa._plasma_application_stream
+
+    def spy(*args):
+        streams.append(walk(*args))
+        return streams[-1]
+
+    monkeypatch.setattr(kaisa, "_plasma_application_stream", spy)
+    payload = calculate_payload(
+        {
+            "champion": "Kai'Sa",
+            "level": 18,
+            "items": [],
+            "fight_mode": "timed",
+            "include_auto_attacks": True,
+            "fight_duration": 8,
+            "auto_attack_uptime": 1,
+        },
+        deterministic=True,
+        trace=True,
+    )
+    traced = [
+        line["time"]
+        for line in payload["trace"]["lines"]
+        if line["source"] == "auto_attacks"
+    ]
+
+    assert len(traced) == 9 and traced[0] > 0.0
+    assert streams
+    for stream in streams:
+        mirrored = [time for time, kind in stream if kind == kaisa._AUTO_HIT]
+        assert mirrored == pytest.approx(traced, abs=1e-9)
+
+
+def test_a_context_without_a_champion_row_cannot_place_a_swing():
+    """No cached row means no windup: the mirror refuses rather than land
+    the first swing at the attack command."""
+    ctx = SlotCtx(
+        slot="P",
+        champion_name="Kai'Sa",
+        stats={"attack_speed": 1.0},
+        option_defaults={"auto_attack_uptime": 1.0},
+    )
+    with pytest.raises(ValueError, match="no cached champion row"):
+        ctx.ambient_swings(8.0)
+
+
 def test_timed_plasma_stacks_expire_without_an_auto_stream():
     """Void Seeker alone cannot rupture: its recast outlasts the sourced 4s
     stack window, so the walk expires the chain instead of banking stacks."""
@@ -378,9 +435,9 @@ def _seeded_plasma_row(stacks):
             "level": 18,
             "items": _MAGIC_BUILD,
             "fight_mode": "one_rotation",
-            "deterministic": True,
             "champion_options": {"plasma_starting_stacks": stacks},
-        }
+        },
+        deterministic=True,
     )
     return payload["breakdown"]["passive_plasma"]["total_damage"]
 
@@ -463,7 +520,9 @@ def test_supercharge_window_raises_timed_attack_speed_and_auto_cadence():
     )
 
     autos = timed["breakdown"]["auto_attacks"]
-    expected_swings = math.floor(timed_as * 20.0 * DEFAULT_AUTO_ATTACK_UPTIME)
+    # Impact k lands at (k + windup phase) / rate from the attack command.
+    phase = champion_windup(get_champion("Kaisa")).phase(timed_as)
+    expected_swings = math.ceil(timed_as * 20.0 * DEFAULT_AUTO_ATTACK_UPTIME - phase)
     assert autos["count"] == expected_swings
     swing_events = [
         event for event in timed["damage_events"] if event["source"] == "auto_attacks"

@@ -7,6 +7,7 @@ from types import MappingProxyType
 from typing import Any
 
 from .. import item_effects, minion_stats, rune_effects
+from ..attack_cadence import Windup
 from ..attack_windows import AttackSpeedWindow
 from ..combat_events import CombatEvent
 from ..champions import get_champion_options_meta
@@ -164,6 +165,11 @@ class FightConfig:
     # Target-side auras such as Frozen Heart reduce the attacker's total
     # attack speed before the authored swing schedule is compiled.
     attacker_attack_speed_multiplier: float = 1.0
+    # The attacker's windup, which places every impact after the attack
+    # command.  ``pipeline.run_fight`` sets it from the champion's cached row;
+    # None is a direct engine caller with no champion, whose impacts land at
+    # the command itself.
+    windup: Windup | None = None
     target_threshold_shield_amount: float = 0.0
     target_threshold_shield_health_ratio: float = 0.0
     target_threshold_shield_duration: float = 0.0

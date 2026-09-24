@@ -56,6 +56,7 @@ from ..resistance import (
     apply_armor_penetration,
     apply_magic_penetration,
     apply_resistance,
+    rescale_mitigated,
 )
 from ..survival.action_families import (
     CORE,
@@ -2024,9 +2025,10 @@ def stage_knights_vow_redirect_actions(
             )
             if baseline is not None:
                 try:
-                    baseline_factor = apply_resistance(1.0, float(baseline))
-                    if baseline_factor > 0.0 and math.isfinite(baseline_factor):
-                        raw_amount = original_amount / baseline_factor
+                    # The raw amount is the packet at zero resistance.
+                    raw_amount = rescale_mitigated(
+                        original_amount, float(baseline), 0.0
+                    )
                 except (TypeError, ValueError, ZeroDivisionError):
                     raw_amount = None
         if raw_amount is None or not math.isfinite(raw_amount):

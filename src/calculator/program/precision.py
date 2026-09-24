@@ -120,13 +120,16 @@ _SURVIVAL_ROUNDING: dict[str, int] = {
 
 # The survival row's CONDITIONAL receipt blocks -- a second table, and not
 # more rows in the first, because the first table's keys are the leaves every
-# row publishes.  These three blocks are emitted only when their mechanic
-# fired (a cleanse activated, an immunity was granted, a spell shield was
-# declared), and a reader that walked the survival table expecting to find
-# each of its keys on any row would be reading a conditional absence as a
-# missing leaf.  The precisions are the same registry either way: ``ROUNDING``
-# is flat, so ``round_field`` resolves these exactly like the rest.
+# row publishes.  These blocks are emitted only when their mechanic fired (a
+# cleanse activated, an immunity was granted, a spell shield was declared, an
+# action was lost to a death, stasis or control), and a reader that walked the
+# survival table expecting to find each of its keys on any row would be
+# reading a conditional absence as a missing leaf.  The precisions are the
+# same registry either way: ``ROUNDING`` is flat, so ``round_field`` resolves
+# these exactly like the rest.
 _SURVIVAL_RECEIPT_ROUNDING: dict[str, int] = {
+    "action_downtime_intervals.start": 3,
+    "action_downtime_intervals.end": 3,
     "crowd_control_immunity.active_until": 3,
     "spell_shield.triggered_heal.time": 3,
     "cleanse.downtime_after": 6,

@@ -53,11 +53,7 @@ def _shield_of_daybreak(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any]
         ability,
         rank,
         "magic",
-        {
-            "name": "Shield of Daybreak",
-            "damage_per_hit": value,
-            "damage_type": "magic",
-        },
+        value,
         cooldown=extract_cooldown(ability, rank),
         detail="One empowered basic attack; the stun is control state.",
     )

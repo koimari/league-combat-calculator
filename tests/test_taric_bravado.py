@@ -406,23 +406,25 @@ class TestBravadoEntry:
 
 
 class TestBravadoFight:
-    def test_one_window_grants_two_procs_against_six_swings(self) -> None:
+    def test_four_arming_casts_grant_three_procs_against_seven_swings(self) -> None:
         """The dedup, visible end to end.
 
-        A 10s fight casts Q/W/E/R at 0.0/0.25/0.5/0.5 and swings six
-        times.  ``empowers_next_auto`` would have priced four casts x
-        their forced attacks; the window prices TWO charges.
+        A 10s fight casts Q/W/E/R at 0.0/0.25/0.5/0.5 and swings seven
+        times, the first at its windup (0.337s), between W and E: it spends
+        one of the pair Q and W armed, E re-arms the pair and the next two
+        swings spend it.  ``empowers_next_auto`` would have priced four
+        casts x their forced attacks; the window prices THREE charges.
         """
         data = _fight(mode="timed", duration=10.0)
         row = data["breakdown"]["on_hit_ability_passive"]
-        assert row["count"] == 2
+        assert row["count"] == 3
         assert row["damage_per_hit"] == pytest.approx(93.0)
-        assert row["total_damage"] == pytest.approx(186.0)
+        assert row["total_damage"] == pytest.approx(3 * 93.0)
         assert row["unit"] == "procs"
-        assert data["breakdown"]["auto_attacks"]["count"] == 6
+        assert data["breakdown"]["auto_attacks"]["count"] == 7
 
     def test_a_second_arming_cast_round_grants_a_second_pair(self) -> None:
-        """Procs track ARMING CASTS, not swings: 13 swings, 6 procs.
+        """Procs track ARMING CASTS, not swings: 14 swings, 6 procs.
 
         Three arming rounds, not two: Q is a charge slot, so its cadence
         is the cached 15s recharge and it casts again inside a 20-second
@@ -432,7 +434,7 @@ class TestBravadoFight:
         row = data["breakdown"]["on_hit_ability_passive"]
         assert row["count"] == 6
         assert row["total_damage"] == pytest.approx(558.0)
-        assert data["breakdown"]["auto_attacks"]["count"] == 13
+        assert data["breakdown"]["auto_attacks"]["count"] == 14
         # E casts twice over 20s (250 raw per cast) — the second cast is
         # what re-arms the window.
         assert data["breakdown"]["E"]["total_damage"] == pytest.approx(500.0)
@@ -467,5 +469,5 @@ class TestBravadoFight:
             sum(row["total_damage"] for row in breakdown.values())
         )
         assert breakdown["on_hit_ability_passive"]["total_damage"] == pytest.approx(
-            186.0
+            3 * 93.0
         )

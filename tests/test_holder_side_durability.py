@@ -42,13 +42,12 @@ def _fight(**overrides) -> dict:
         "enemies": [_ENEMY],
         "fight_duration": 10,
         "fight_mode": "time_based",
-        "deterministic": True,
         "include_auto_attacks": True,
         "auto_attack_uptime": 1.0,
         "enemies_attack": True,
     }
     request.update(overrides)
-    return calculate_payload(request)
+    return calculate_payload(request, deterministic=True)
 
 
 class TestTheFightDoesCarryTheHolderSide:
@@ -83,8 +82,8 @@ class TestBonePlatingIsPaidOnTheWalkRatherThanTheItemChannel:
         mitigated = _fight(enemies=[{**_ENEMY, "items": ["Guardian's Horn"]}])[
             "total_damage"
         ]
-        assert bare == pytest.approx(2276.8, abs=0.1)
-        assert mitigated == pytest.approx(1826.8, abs=0.1)
+        assert bare == pytest.approx(2239.9, abs=0.1)
+        assert mitigated == pytest.approx(1796.1, abs=0.1)
         held = _fight(items=["Guardian's Horn"])["combat"]["breakdown"][0]
         assert (
             held["health_damage"] >= _fight()["combat"]["breakdown"][0]["health_damage"]
@@ -133,7 +132,9 @@ class TestSecondWindIsPaidOnTheWalkSRecoveryLane:
         bare = _fight()["combat"]["breakdown"][0]
         held = _fight(minor_runes=["Second Wind"])["combat"]["breakdown"][0]
         assert bare["healing_received"] == pytest.approx(0.0)
-        assert held["healing_received"] == pytest.approx(19.6, abs=0.1)
+        # Darius's first auto, at his 0.297s windup, arms it: three 1s ticks
+        # (1.30 to 3.30s) land before he kills the holder at 3.75s.
+        assert held["healing_received"] == pytest.approx(19.8, abs=0.1)
         assert held["effective_health"] > bare["effective_health"]
 
     def test_it_rides_the_same_lane_doran_s_shield_does(self):

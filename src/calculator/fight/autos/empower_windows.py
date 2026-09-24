@@ -38,13 +38,13 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from operator import itemgetter
 from typing import Any
 
+from ... import attack_cadence
 from ...ability_atoms import ability_field
 from ...ability_spec import AttackClass
 from ...survival.pricing import AuthoredDeclaration
 from ..resists import _mitigate
 from ..results import RotationResult
 from ..state import FightState
-from .swing_schedule import _swings_at_rate
 
 
 def _on_hit_declaration(mechanic_id: str, raw_amount: float) -> tuple[Any, ...]:
@@ -155,7 +155,9 @@ def _uniform_swing_schedule(state: "FightState", num_auto_attacks: int) -> list[
     autos_per_second = state.attack_speed * state.auto_attack_uptime
     if autos_per_second <= 0:
         return []
-    return _swings_at_rate(num_auto_attacks, autos_per_second)
+    return attack_cadence.counted_impacts(
+        num_auto_attacks, autos_per_second, state.impact_phase(state.attack_speed)
+    )
 
 
 def _add_empower_window_on_hit(

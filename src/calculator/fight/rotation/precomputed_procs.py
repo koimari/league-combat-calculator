@@ -13,7 +13,7 @@ from ..autos.swing_schedule import _auto_attack_timestamps
 from ..ledger.event_ledger import _ordered_damage_events
 from ..ledger.event_rows import _row_time
 from ..mitigation import _apply_basic_amp
-from ..resists import _mitigate
+from ..resists import _mitigate, _resistance_met_fields
 from ..results import RotationResult
 from ..state import FightState
 
@@ -384,4 +384,34 @@ def _add_precomputed_proc_damage(
         for display_key in ("detail", "unit"):
             if display_key in info:
                 state.breakdown[key][display_key] = info[display_key]
+        # Every part met the one resistance the row was priced at, so each
+        # authored packet states it when the row carries a single class.
+        row_events = state.breakdown[key].get("damage_events")
+        if isinstance(row_events, list) and all(
+            part.damage_type == dtype for part in parts
+        ):
+            met = _resistance_met_fields(dtype, resists)
+            for event in row_events:
+                for field_name, value in met.items():
+                    event.setdefault(field_name, value)
+        if isinstance(row_events, list) and state.clip_to_window:
+            proc_total = _clip_row_to_window(state, state.breakdown[key], proc_count)
         state.total_damage += proc_total
+
+
+def _clip_row_to_window(state: FightState, row: dict[str, Any], procs: int) -> float:
+    """Drop *row*'s events past the fight's end; the row keeps what they carry.
+
+    An event per proc drops its proc from the count; a proc authored as
+    several events (Brand's Blaze ticks) keeps its count while any lands.
+    """
+    events = row["damage_events"]
+    kept = [event for event in events if state.lands_in_window(float(event["time"]))]
+    if len(kept) < len(events):
+        if len(events) == procs:
+            row["count"] = len(kept)
+        elif not kept:
+            row["count"] = 0
+        row["damage_events"] = kept
+        row["total_damage"] = sum(float(event["damage"]) for event in kept)
+    return float(row["total_damage"])

@@ -11,7 +11,12 @@ from ..autos.on_hit_stream import _ability_applied_on_hit_damage
 from ..cast_control_marker import _declared_cc_kind
 from ..empower_declaration import _empower_authored_timing, _empower_hits
 from ..ledger.event_rows import _damage_type_fields
-from ..results import AbilityItemApplication, CastPlan, RotationResult
+from ..results import (
+    AbilityItemApplication,
+    CastPlan,
+    RotationResult,
+    ShredDeclaration,
+)
 from ..setup.target_debuffs import _apply_target_shred, _debuff_coverage
 from ..state import FightState
 
@@ -353,6 +358,9 @@ def _apply_slot_target_debuff(
     # Transform shreds when the attack lands).
     debuff_times = state.empowered_ride_times.get(ability_key) or plan.times.get(
         ability_key, ()
+    )
+    state.shred_declarations.append(
+        ShredDeclaration(ability_key, target_debuff, tuple(debuff_times))
     )
     coverage = (
         1.0

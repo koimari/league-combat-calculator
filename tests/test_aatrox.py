@@ -434,13 +434,13 @@ class TestReviewedCrowdControl:
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
-def test_e_is_modeled_through_the_821_5_umbral_dash_heal() -> None:
+def test_e_is_modeled_through_the_umbral_dash_heal() -> None:
     """E's own row is a sourced zero; the heal rule is what prices the slot.
 
-    A level-18 itemless timed fight with autos pays Umbral Dash 821.5,
+    A level-18 itemless timed fight with autos pays Umbral Dash 870.0,
     the receipt behind E's ``modeled`` label (count_damage_after_fight_end
     on: the second Q's third strike lands at 8.85 s in the 8 s window and
-    still feeds the heal; off, it is 715.4, pinned in test_fight_window).
+    still feeds the heal; off, its 106.1 drops out).
     """
     from src.calculator.calculate import calculate_payload
     from src.calculator.champions import get_champion_module_contract
@@ -462,7 +462,7 @@ def test_e_is_modeled_through_the_821_5_umbral_dash_heal() -> None:
         for event in payload["self_healing_events"]
         if event["source"] == "Umbral Dash"
     )
-    assert paid == pytest.approx(821.5, abs=0.1)
+    assert paid == pytest.approx(870.0, abs=0.1)
 
 
 class TestModuleCoverage:

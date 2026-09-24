@@ -72,6 +72,8 @@ def _add_stored_damage(state: FightState, rotation: RotationResult) -> None:
         row_casts = source_casts(row)
         for start_time in cast_times[: 0 if row_casts is None else max(0, row_casts)]:
             end_time = start_time + duration
+            if not state.lands_in_window(end_time):
+                continue
             source_damage = 0.0
             for event in source_events:
                 if not isinstance(event, Mapping):

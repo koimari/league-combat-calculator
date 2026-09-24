@@ -102,10 +102,7 @@ _darkness_rise_on_hit.phase = ONHIT
 
 def _stacking_hit_times(ctx: SlotCtx, duration: float) -> list[float]:
     """When the fight's stacking hits land: basic attacks, Q at the cast, E at the claw."""
-    rate = float(ctx.stat("attack_speed")) * float(ctx.option("auto_attack_uptime"))
-    hits = (
-        [index / rate for index in range(math.floor(rate * duration))] if rate else []
-    )
+    hits = list(ctx.ambient_swings(duration))
     hits.extend(
         time + (_E_CLAW_SECONDS if slot == "E" else 0.0)
         for time, slot in ability_cast_times(ctx, duration, ("Q", "E"))

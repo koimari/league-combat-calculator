@@ -33,8 +33,8 @@ ledger rather than resolved again here, because what the walk owes is the term
     The resistance this packet's own event met.  A fight publishes one
     effective armour and one effective magic resistance, and the pair engine
     prices past both when it re-prices packets it already authored:
-    ``damage._apply_temporary_lethality_windows`` rescales later physical
-    packets inside a Firmament window, and ``fight.after.reprice._apply_liandry_reprice``
+    ``fight.after.resistance_windows`` re-prices timed packets at the shred
+    and Firmament windows live when they land, and ``fight.after.reprice._apply_liandry_reprice``
     folds a raised maximum health back onto a burn's own ticks.  ``None``
     prices at the fight's published baseline, which is correct only for a
     packet no window touched.

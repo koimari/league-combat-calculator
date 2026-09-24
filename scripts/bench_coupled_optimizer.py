@@ -140,13 +140,15 @@ MUNDO_SCENARIO = {
 # leave the Imperial Mandate Command amp invisible to the harness that is
 # supposed to police it.  Cassiopeia's R authors a stun too, so this scenario
 # is not the only one carrying a kind; it is the one that *prices* the amp,
-# because Imperial Mandate is locked into every candidate
-# here and Syndra's E is authored as a stun (``champions/syndra.py``).
+# because Syndra holds Imperial Mandate and her E is authored as a stun
+# (``champions/syndra.py``).  ``items`` is what a calculate replay holds (the
+# golden's exact capture); ``locked_items`` keeps it in every optimizer candidate.
 SYNDRA_MANDATE_SCENARIO = {
     "champion": "Syndra",
     "level": 13,
     "fight_mode": "one_rotation",
     "role": "mid",
+    "items": ["Imperial Mandate"],
     "locked_items": ["Imperial Mandate"],
     "enemies": CASSIOPEIA_SCENARIO["enemies"],
 }

@@ -568,10 +568,10 @@ class TestExpiryWindow:
     def test_fight_receipts_show_the_four_second_window(self):
         # The fight's focus state_transitions show the expiry landing 4s
         # after the last accepted gain (per-stack expires_at in the
-        # expire receipts).  P1-11: the 10s fight's last post-window
-        # gain (8.5) + 4s exceeds the fight — the 14s fight shows the
-        # expiry.
-        result = _fight({}, duration=14.0, auto_attack_uptime=1.0)
+        # expire receipts).  P1-11: the post-window gains land from
+        # 7.1875s every 1.25s, the fourth (10.9375s) fills the noop cap
+        # and nothing refreshes it, so the 15s fight shows the expiry.
+        result = _fight({}, duration=15.0, auto_attack_uptime=1.0)
         account = _focus_account(result)
         assert account is not None
         expires = [
@@ -1036,12 +1036,13 @@ class TestUnchangedBoundaries:
 
     def test_autos_price_the_flurry_when_active(self):
         # The engine applies the parse-time override to the whole auto
-        # stream: 7 swings at 86.67 (flurry 1.30, armor 50) vs 4 swings
-        # at 66.67 (normal 1.0) over 6s at the seeded attack speeds.
+        # stream: 8 swings at 86.67 (flurry 1.30, armor 50; 6s x 1.175/s
+        # is 7.05 cycles) vs 5 swings at 66.67 (normal 1.0; 6s x 0.8/s is
+        # 4.8 cycles), the first at the command in both.
         full = _fight({}, duration=6.0, auto_attack_uptime=1.0)
         zero = _fight({"q_focus_stacks": 0}, duration=6.0, auto_attack_uptime=1.0)
-        assert len(_auto_swing_times(full)) == 7
-        assert len(_auto_swing_times(zero)) == 4
+        assert len(_auto_swing_times(full)) == 8
+        assert len(_auto_swing_times(zero)) == 5
         assert full["breakdown"]["auto_attacks"]["damage_per_hit"] == pytest.approx(
             100.0 * 1.30 / 1.5, rel=1e-9
         )

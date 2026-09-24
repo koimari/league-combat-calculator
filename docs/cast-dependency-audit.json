@@ -32,7 +32,7 @@
       "sample_author": "Alistar"
     },
     "on_hit": {
-      "authors": 61,
+      "authors": 60,
       "negative_test": "test_withholding_on_hit_changes_the_edge_citation",
       "sample_author": "Aatrox"
     },
@@ -52,7 +52,7 @@
       "sample_author": "Aatrox"
     },
     "target_debuff": {
-      "authors": 11,
+      "authors": 12,
       "negative_test": "test_withholding_target_debuff_drops_the_shred_edge",
       "sample_author": "Briar"
     }
@@ -260,6 +260,7 @@
       "Karthus",
       "Kog'Maw",
       "Rengar",
+      "Rumble",
       "Sion",
       "Wukong"
     ],

@@ -24,7 +24,7 @@ FIXTURE_REQUEST = {
     "level": 18,
     "items": ["Dusk and Dawn"],
     "fight_mode": "timed",
-    "fight_duration_seconds": 8.0,
+    "fight_duration": 8.0,
     "include_auto_attacks": True,
     "auto_attack_uptime": 1.0,
 }
@@ -58,6 +58,14 @@ CORPUS_BUILDS = (
         ("Hollow Radiance", "Abyssal Mask", "Hextech Gunblade", "Iceborn Gauntlet"),
     ),
     ("Ahri", ("Lich Bane", "Fated Ashes", "Eclipse", "Hextech Alternator")),
+)
+
+#: One build per item whose ``informational`` row restates a share of
+#: damage other rows already priced, beside that row's key.
+RESTATING_BUILDS = (
+    ("Ahri", ("Hexoptics C44", "Yun Tal Wildarrows"), "basic_amp_Hexoptics C44"),
+    ("Garen", ("Sundered Sky", "Infinity Edge"), "sundered_sky"),
+    ("Leona", ("Actualizer", "Zeke's Convergence"), "ability_amp_Actualizer"),
 )
 
 
@@ -120,7 +128,12 @@ class TestThePinnedFight:
     def test_the_fight_is_the_one_the_trace_is_pinned_on(self, fixture_result):
         assert len(fixture_result["breakdown"]) == 9
         assert len(fixture_result["damage_events"]) == 30
-        assert round(fixture_result["total_damage"], 4) == 1934.3695
+        # Q's two casts meet 100 MR: 2 * 314 / 2.  Inside Q's windows the
+        # rest meets 68: E 269, R 260.5478, seven swings of 114 with their
+        # 69 on-hits, two spellblades of 91.5 with their 69 doubled on-hits,
+        # 2131.5478 / 1.68.  Outside them three swings, three on-hits, one
+        # spellblade and one doubled on-hit meet 100: 709.5 / 2.
+        assert round(fixture_result["total_damage"], 4) == 1937.5285
         assert round(fixture_result["effective_armor"], 4) == 75.3333
         assert round(fixture_result["effective_mr"], 4) == 75.3333
 
@@ -157,21 +170,25 @@ class TestThePinnedFight:
         assert refused == []
 
     def test_the_shred_lands_after_the_cast_that_applies_it(self, fixture_result):
-        """Q meets the MR it shredded, and the rest of the fight meets the shred.
+        """Q meets the MR it shreds; a packet inside Q's window meets the shred.
 
-        The fight publishes 75.3333 effective MR, which is post-shred; Q's own
-        hits are priced against the 100 they met, so the trace states two
-        different numbers for one fight rather than one back-computed average.
+        Each Q hit opens 4 seconds of its rank-5 32% shred, so a packet inside
+        a window meets 100 * (1 - 0.32) = 68, E at Q's own instant included
+        because it is cast after Q, and every other packet meets 100.  The
+        75.3333 the fight publishes is the windows' share of the fight, and
+        no packet meets it.
         """
-        met: dict[str, set[float | None]] = {}
-        for line in fight_trace(fixture_result).lines:
-            met.setdefault(line.source, set()).add(line.resistance_met)
-        assert met.pop("Q") == {100.0}
-        published = {
-            fixture_result["effective_armor"],
-            fixture_result["effective_mr"],
-        }
-        assert {value for values in met.values() for value in values} == published
+        lines = fight_trace(fixture_result).lines
+        q_hits = [line.time for line in lines if line.source == "Q"]
+        assert q_hits == pytest.approx([0.0, 5.8333], abs=1e-4)
+        for line in lines:
+            inside = line.source != "Q" and any(
+                hit <= line.time <= hit + 4.0 for hit in q_hits
+            )
+            expected = 68.0 if inside else 100.0
+            assert line.resistance_met == pytest.approx(expected), line
+        met = {line.resistance_met for line in lines}
+        assert fixture_result["effective_mr"] not in met
 
     def test_a_stated_raw_is_the_events_own_and_never_the_rows_total(
         self, fixture_result
@@ -266,20 +283,45 @@ class TestTheLinesSumToTheFight:
             result["total_damage"], 4
         )
 
+    @pytest.mark.parametrize(
+        ("champion", "items", "row"),
+        RESTATING_BUILDS,
+        ids=[build[1][0] for build in RESTATING_BUILDS],
+    )
+    def test_an_informational_row_is_no_line(self, champion, items, row):
+        """Its total is a share of packets already on their own lines."""
+        result = recorded(champion, items)
+        assert result["breakdown"][row]["informational"]
+        assert result["breakdown"][row]["total_damage"] > 0
+        lines = fight_trace(result).lines
+        assert row not in {line.source for line in lines}
+        assert round(sum(line.mitigated for line in lines), 4) == round(
+            result["total_damage"], 4
+        )
+
     def test_a_row_the_ledger_under_states_keeps_its_residue(self):
-        """Darius W prices 1107.6923 and reconstructs two events worth 415.3846."""
+        """A row its packets do not reach keeps the difference on one line.
+
+        Darius W's claimed swings now ride W's own events, so no corpus row
+        under-states its ledger; the check makes one do so.
+        """
         champion, items = next(
             build for build in CORPUS_BUILDS if build[1][0] == "Titanic Hydra"
         )
         result = recorded(champion, items)
-        assert round(result["breakdown"]["W"]["total_damage"], 4) == 1107.6923
+        assert not [
+            line
+            for line in fight_trace(result).lines
+            if UNACCOUNTED_ROW_TOTAL in line.refusals
+        ]
+        result["breakdown"]["W"]["total_damage"] += 100.0
         residues = [
             line
             for line in fight_trace(result).lines
             if UNACCOUNTED_ROW_TOTAL in line.refusals
         ]
         assert [line.source for line in residues] == ["W"]
-        assert round(residues[0].mitigated, 4) == 692.3077
+        assert round(residues[0].mitigated, 4) == 100.0
         assert residues[0].raw is None
         assert (
             residues[0].step
@@ -324,8 +366,12 @@ class TestTheAmplifier:
     def test_each_amplifier_gets_one_line_naming_its_pool(self, amped):
         amps = {line["source"]: line for line in amped["lines"] if line["amp"]}
         assert set(amps) == {"damage_amp_Riftmaker", "damage_amp_Horizon Focus"}
-        assert amps["damage_amp_Riftmaker"]["amp"] == "x1.04 over 18 packets"
-        assert amps["damage_amp_Horizon Focus"]["amp"] == "x1.1 over 35 packets"
+        # Riftmaker rides every packet: E, Q's magic and true halves twice,
+        # three W and three R, and 8 swings (ceil(AS * 8 - phase) at windup).
+        # Horizon Focus rides each but E, the hit that marks, plus each of
+        # Riftmaker's 19 deltas.
+        assert amps["damage_amp_Riftmaker"]["amp"] == "x1.04 over 19 packets"
+        assert amps["damage_amp_Horizon Focus"]["amp"] == "x1.1 over 37 packets"
 
     def test_an_amplifier_states_its_bonus_and_no_packet_facts(self, amped):
         line = next(

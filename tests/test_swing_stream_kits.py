@@ -8,13 +8,16 @@ timed fight, autos on, zero resists.
 """
 
 import math
-from types import SimpleNamespace
+from types import MethodType, SimpleNamespace
 
 import pytest
 
+from src.calculator.attack_cadence import champion_windup
 from src.calculator.calculate import calculate_payload
+from src.calculator.data_fetcher import get_champion
 from src.calculator.fight.cast_slots import slot_cast_start
 from src.calculator.fight.setup.stat_buff_ultimates import _rate_attack_speed_grant
+from src.calculator.fight.state import FightState
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _FIGHT_SECONDS = 10.0
@@ -81,35 +84,44 @@ class TestTheWindowOpensAtTheGrantingSlotsCast:
             fight_duration_seconds=10.0,
             auto_attack_uptime=1.0,
             one_rotation=False,
+            windup=None,
             declared=SimpleNamespace(
                 charged_strikes=SimpleNamespace(swing_schedule=None)
             ),
         )
+        state.impact_phase = MethodType(FightState.impact_phase, state)
+        state.as_window_impacts = MethodType(FightState.as_window_impacts, state)
         _rate_attack_speed_grant(state, "E", 40.0, 5.0)
         assert state.as_window_slot == "E"
+        # One timer: 5 s at 0.98/s and 5 s at 0.7/s run 8.4 cycles, 9 impacts.
+        assert state.num_auto_attacks == 9
         with pytest.raises(ValueError, match="W places a second attack-speed window"):
             _rate_attack_speed_grant(state, "W", 40.0, 5.0)
 
     @pytest.mark.parametrize(
-        ("champion", "slot", "duration", "granted"),
+        ("champion", "slot", "duration", "granted", "claimed"),
         [
-            ("Kennen", "E", 4.0, 80.0),
-            ("Xin Zhao", "E", 5.0, 70.0),
-            ("Samira", "E", 5.0, 40.0),
-            ("Wukong", "E", 5.0, 60.0),
-            ("Xayah", "W", 4.0, 55.0),
-            ("Nidalee", "E", 7.0, 70.0),
-            ("Yuumi", "E", 3.0, 35.0),
-            ("Sivir", "W", 4.0, 40.0),
+            ("Kennen", "E", 4.0, 80.0, 0),
+            ("Xin Zhao", "E", 5.0, 70.0, 0),
+            ("Samira", "E", 5.0, 40.0, 0),
+            # Crushing Blow (Q) claims the stream's first swing, inside E's
+            # window, and carries it on Q's row.
+            ("Wukong", "E", 5.0, 60.0, 1),
+            ("Xayah", "W", 4.0, 55.0, 0),
+            ("Nidalee", "E", 7.0, 70.0, 0),
+            ("Yuumi", "E", 3.0, 35.0, 0),
+            ("Sivir", "W", 4.0, 40.0, 0),
         ],
     )
     def test_the_non_q_window_rates_the_swings_inside_it(
-        self, champion, slot, duration, granted
+        self, champion, slot, duration, granted, claimed
     ):
         result = _fight(champion)
         unbuffed = _fight(champion, ability_ranks=dict(_RANKS, **{slot: 0}))
         base_as = unbuffed["champion_stats"]["attack_speed"]
-        ratio = unbuffed["champion_stats"]["attack_speed_ratio"]
+        buffed_as = base_as + unbuffed["champion_stats"]["attack_speed_ratio"] * (
+            granted / 100.0
+        )
         # The published stat is the grant on top of the build's own.
         assert result["champion_stats"]["bonus_attack_speed"] == pytest.approx(
             unbuffed["champion_stats"]["bonus_attack_speed"] + granted, abs=1e-6
@@ -118,10 +130,22 @@ class TestTheWindowOpensAtTheGrantingSlotsCast:
         times = [float(e["time"]) for e in _swings(result)]
         inside = [t for t in times if start <= t < start + duration]
         after = [t for t in times if t >= start + duration]
-        assert len(inside) == math.floor((base_as + ratio * granted / 100.0) * duration)
-        assert inside[0] == pytest.approx(start)
+        # One attack timer: impact k lands once it has run k + phase cycles,
+        # at the base rate before the cast and the buffed rate inside.
+        phase = champion_windup(get_champion(champion)).phase(base_as)
+        banked = start * base_as
+        first = math.ceil(banked - phase)
+        assert (
+            len(inside)
+            == math.ceil(banked + buffed_as * duration - phase) - first - claimed
+        )
+        assert inside[0] == pytest.approx(
+            start + (first + claimed + phase - banked) / buffed_as, abs=1e-3
+        )
         if len(after) > 1:  # published times are rounded to the millisecond
-            assert after[1] - after[0] == pytest.approx(1.0 / base_as, abs=2e-3)
+            # A later empowered cast may claim a swing, leaving a two-cycle gap.
+            gaps = [later - earlier for earlier, later in zip(after, after[1:])]
+            assert min(gaps) == pytest.approx(1.0 / base_as, abs=2e-3)
 
 
 class TestTwistedFate:
@@ -168,15 +192,18 @@ class TestTeemo:
     def test_toxic_shot_rides_every_swing(self):
         result = _fight("Teemo")
         swings = result["breakdown"]["auto_attacks"]["count"]
-        assert result["breakdown"]["on_hit_ability_E"]["count"] == swings == 10
+        speed = result["champion_stats"]["attack_speed"]
+        phase = champion_windup(get_champion("Teemo")).phase(speed)
+        assert swings == math.ceil(speed * _FIGHT_SECONDS - phase) == 11
+        assert result["breakdown"]["on_hit_ability_E"]["count"] == swings
         assert result["breakdown"]["on_hit_ability_E"]["damage_per_hit"] == 65.0
         poison = result["breakdown"]["stacking_dot_E"]
         assert poison["count"] == swings
         # The committed accounting: from the first swing through the last
         # swing's full 4 seconds, at the Total Poison Damage rate.
-        last = max(float(e["time"]) for e in _swings(result))
+        times = [float(e["time"]) for e in _swings(result)]
         assert poison["total_damage"] == pytest.approx(
-            (last + 4.0) * 120.0 / 4.0, abs=0.1
+            (max(times) - min(times) + 4.0) * 120.0 / 4.0, abs=0.1
         )
 
 

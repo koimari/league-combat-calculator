@@ -197,7 +197,8 @@ class TestCleaveCadence:
 
     def test_passive_as_buff_feeds_the_auto_count(self, diana_data) -> None:
         """With a real AS ratio the tripled buff raises the cleave count:
-        AS 1.0 + 0.625 x 1.1206 = 1.700 -> 13 autos in 8s -> 4 cleaves."""
+        AS 1.0 + 0.625 x 1.1206 = 1.700 -> 14 autos in 8s (the first at
+        Diana's windup) -> 4 cleaves."""
         stats = dict(_STATS, attack_speed_ratio=0.625)
         entry = _parse(diana_data, options=_timed_options(duration=8.0), stats=stats)[
             "auto_attacks_moonsilver_cleave"

@@ -374,7 +374,6 @@ def _calculate_receipt():
             "target_health": 2000,
             "target_armor": 50,
             "target_mr": 50,
-            "deterministic": True,
         },
     )
     assert response.status_code == 200

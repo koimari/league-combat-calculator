@@ -226,15 +226,15 @@ def test_expose_weakness_prices_its_own_pool_and_nothing_else():
 def test_expose_weakness_number_equals_the_rate_over_its_authored_events():
     """A window with a pool prices it, and the row's events sum to the row.
 
-    Vayne timed: 14 ledger events land after the arming proc, 956.2 damage,
-    and the 5% rate over exactly those is 47.8 — the row, and the sum of the
-    deltas it authors onto them.  Pricing off ``total_damage`` instead swept
-    in the 756.2 that landed before the proc and charged 79.0.
+    Vayne timed: 17 ledger events land after the arming proc, 1170.2 damage,
+    and the 5% rate over exactly those is 58.5 — the row, and the sum of the
+    deltas it authors onto them.  Pricing off ``total_damage`` instead would
+    sweep in the damage that landed before the proc.
     """
     fight = _vayne("timed")
     row = fight["breakdown"]["expose_weakness_Bloodsong"]
 
-    assert row["total_damage"] == pytest.approx(47.8, abs=0.05)
+    assert row["total_damage"] == pytest.approx(58.5, abs=0.05)
     # Priced off the pool it authors onto, so the row can never read coarse.
     assert "expose_weakness_Bloodsong" in fight["timeline_coverage"]["exact_sources"]
     assert fight["timeline_coverage"]["coarse_sources"] == []

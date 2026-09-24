@@ -27,6 +27,7 @@ import pytest
 
 from src import app as app_module
 from src.calculator.ability_atoms import _ability_atoms
+from src.calculator.attack_cadence import champion_windup
 from src.calculator.champions import tristana
 from src.calculator.champions.slot_entries import STEROID_ZERO
 from src.calculator.data_fetcher import get_champion
@@ -192,22 +193,24 @@ class TestTheWindowSplitsTheLiveAutoCount:
         assert buffed == pytest.approx(base + ratio * 1.20)
 
     def test_the_auto_count_matches_the_windowed_arithmetic(self):
-        """floor(in-window) + floor(post-window), not one blended floor."""
+        """One attack timer through the window: impact k lands once it has
+        run k + phase cycles, 7 s of them at the buffed rate."""
         base_fight = _fight(q_rank=0)
         base_as = base_fight["champion_stats"]["attack_speed"]
         ratio = base_fight["champion_stats"]["attack_speed_ratio"]
         buffed_as = base_as + ratio * 1.20
         uptime = 0.8  # the engine's default auto-attack uptime
         window, duration = 7.0, 10.0
+        phase = champion_windup(get_champion("Tristana")).phase(base_as)
 
-        expected = math.floor(buffed_as * window * uptime) + math.floor(
-            base_as * (duration - window) * uptime
+        cycles = (buffed_as * window + base_as * (duration - window)) * uptime
+
+        assert _fight(q_rank=5)["breakdown"]["auto_attacks"]["count"] == math.ceil(
+            cycles - phase
         )
-
-        assert _fight(q_rank=5)["breakdown"]["auto_attacks"]["count"] == expected
-        # And the base fight is the plain single-rate floor.
-        assert base_fight["breakdown"]["auto_attacks"]["count"] == math.floor(
-            base_as * duration * uptime
+        # And the base fight is the plain single-rate stream.
+        assert base_fight["breakdown"]["auto_attacks"]["count"] == math.ceil(
+            base_as * duration * uptime - phase
         )
 
     def test_the_window_raises_the_count_without_changing_per_hit_damage(self):

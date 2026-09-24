@@ -27,6 +27,7 @@ from typing import Any
 
 import pytest
 
+from src.calculator import damage
 from src.calculator.champions import get_champion_cast_order
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.champions.skill_orders import get_ability_rank
@@ -607,6 +608,30 @@ class TestFightIntegration:
         )
         assert result["breakdown"]["R"]["total_damage"] == pytest.approx(125.0)
 
+    def test_cannon_shred_spares_the_stream_swing_that_delivers_it(
+        self, jayce_data
+    ) -> None:
+        """With an auto stream R rides a stream swing, which the auto row
+        still holds when the shred windows re-price it: that swing meets
+        the UNSHREDDED 100 armor too, so R's row is the same 125."""
+        stats = dict(STATS_250_AD)
+        abilities = _parse(jayce_data, stats=stats)
+        result = calculate_fight_damage(
+            stats,
+            abilities,
+            [],
+            FightConfig(
+                target_health=2500,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=8.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+                deterministic=True,
+            ),
+        )
+        assert result["breakdown"]["R"]["total_damage"] == pytest.approx(125.0)
+
     def test_hammer_r_row_includes_its_forced_swing(self, jayce_data) -> None:
         """With no auto stream the empowered attack lands on R's own row:
         the 175 magic bonus plus one 250 AD basic swing."""
@@ -670,10 +695,10 @@ class TestHyperChargeBurstAttackSpeed:
 
         10s fight at 1.0 AS: two W casts force 6 attacks, which at
         3.003/s occupy only 1.998s. The remaining 8.002s still runs at
-        Jayce's ordinary 1.0 AS, so 8 normal autos land ALONGSIDE the 6
-        empowered ones -- 14 attacks total, where a flat 1.0 AS over the
-        whole fight would have produced 10. One of those 8 is the swing
-        Cannon R rides, which leaves 7 on the auto row.
+        Jayce's ordinary 1.0 AS, so ceil(8.002) = 9 normal autos land
+        ALONGSIDE the 6 empowered ones -- 15 attacks total, where a flat
+        1.0 AS over the whole fight would have produced 10. One of those 9
+        is the swing Cannon R rides, which leaves 8 on the auto row.
         """
         stats = dict(STATS_250_AD, critical_strike_chance=0.0)
         abilities = _parse(jayce_data, stats=stats)
@@ -681,8 +706,64 @@ class TestHyperChargeBurstAttackSpeed:
         breakdown = result["breakdown"]
         assert breakdown["W"]["casts"] == 2
         # 6 swings are consumed by W's row and 1 by R's; the rest remain.
-        assert breakdown["auto_attacks"]["count"] == 7
+        assert breakdown["auto_attacks"]["count"] == 8
         assert breakdown["W"]["total_damage"] == pytest.approx(6 * 1.10 * 250.0)
+
+    def test_the_auto_row_keeps_every_swing_no_cast_claimed(
+        self, jayce_data, monkeypatch
+    ) -> None:
+        """W's burst impacts and R's ride leave the auto row at their own
+        times and prices, and every ordinary swing stays.
+
+        Against 100 armor R's shred sets swings apart, so moving any swing
+        but the claimed one would re-price both rows.
+        """
+        seen: dict[str, Any] = {}
+        reattribute = damage._reattribute_empowered_swings
+
+        def spy(state, cast_events):
+            seen["stream"] = {
+                event["time"]: event["damage"]
+                for event in state.breakdown["auto_attacks"]["damage_events"]
+            }
+            seen["claims"] = {
+                "W": state.burst_swings.by_ability["W"],
+                "R": state.empowered_ride_times["R"],
+            }
+            seen["own"] = {
+                key: state.breakdown[key]["total_damage"] for key in seen["claims"]
+            }
+            reattribute(state, cast_events)
+
+        monkeypatch.setattr(damage, "_reattribute_empowered_swings", spy)
+        stats = dict(STATS_250_AD, critical_strike_chance=0.0)
+        result = calculate_fight_damage(
+            stats,
+            _parse(jayce_data, stats=stats),
+            [],
+            FightConfig(
+                target_health=2500,
+                target_armor=100,
+                target_magic_resistance=100,
+                fight_duration_seconds=8.0,
+                auto_attack_uptime=1.0,
+                one_rotation=False,
+                deterministic=True,
+            ),
+        )
+        breakdown = result["breakdown"]
+        claimed = {time for times in seen["claims"].values() for time in times}
+        kept = {
+            event["time"]: event["damage"]
+            for event in breakdown["auto_attacks"]["damage_events"]
+        }
+        assert kept == {
+            time: dealt for time, dealt in seen["stream"].items() if time not in claimed
+        }
+        for key, times in seen["claims"].items():
+            assert breakdown[key]["total_damage"] == pytest.approx(
+                seen["own"][key] + sum(seen["stream"][time] for time in times)
+            )
 
     def test_empowered_attacks_crit(self, jayce_data) -> None:
         """They are basic attacks: crit applies to their MODIFIED damage.
@@ -702,7 +783,7 @@ class TestHyperChargeBurstAttackSpeed:
         swings are part of it — so the extra attacks the burst buys turn
         into extra procs.
 
-        14 attacks (8 ordinary + 6 empowered) -> 4 procs, where the same
+        15 attacks (9 ordinary + 6 empowered) -> 5 procs, where the same
         fight without W's re-timing would land only 10 attacks and 3.
         """
         kraken = get_item_by_name("Kraken Slayer")
@@ -716,7 +797,7 @@ class TestHyperChargeBurstAttackSpeed:
             duration=10.0,
             items=[kraken],
         )
-        assert result["breakdown"]["on_hit_Kraken Slayer"]["count"] == 4
+        assert result["breakdown"]["on_hit_Kraken Slayer"]["count"] == 5
 
     def test_one_rotation_row_reports_its_attacks_and_crit(self, jayce_data) -> None:
         """One Rotation has no auto row, so the crit the empowered attacks

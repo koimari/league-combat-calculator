@@ -166,6 +166,7 @@ CERTIFIED_DAMAGE_CASTS: dict[tuple[str, str], str] = {
     ("Jarvan IV", "E"): "every_enemy",
     ("Jarvan IV", "R"): "every_enemy",
     ("Jax", "Q"): "one_enemy",
+    ("Jax", "W"): "one_enemy",
     ("Jax", "E"): "every_enemy",
     ("Jax", "R"): "one_enemy",
     ("Jayce", "Q"): "every_enemy",
