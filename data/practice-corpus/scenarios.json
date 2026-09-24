@@ -547,17 +547,17 @@
      {
       "source": "Battle Roar (grey health)",
       "time": 0.0,
-      "amount": 97.2
+      "amount": 71.9
      },
      {
       "source": "Battle Roar (grey health)",
       "time": 10.0,
-      "amount": 25.4
+      "amount": 50.7
      }
     ],
-    "grey_health_stored": 1162.363,
+    "grey_health_stored": 1187.729,
     "grey_health_consumed": 122.588,
-    "formula": "W stores 50% of post-mitigation damage taken in the last 1.5s; the enemy Ahri's F3-derived order opens with E (charm) instead of Q, changing the t=0 opening burst stored (97.2 vs 133.3); the t=10 heal is unchanged at 25.4"
+    "formula": "W heals 50% of the post-mitigation damage taken in the 1.5s up to each cast (t=0, t=10). Ahri's F3-derived order opens with E (charm), where the combat log's 133.3 is a Q opening plus an auto, and her autos (50.7) land at her windup, 0.277 + 1.386k s. The t=0 window holds only E's 143.7 -> 71.9; the t=10 window holds the autos at 8.594 and 9.981 -> 50.7 (the combat log's 25.4 is one auto). Stored is 50% of the 2375.5 taken over the fight."
    },
    "practice_tool_steps": "Load Rengar, buy nothing. Level 18, max W. Practice Tool: let Ahri damage you, then cast W twice (t=0 and again ~10s later); the Battle Roar grey-health heal returns 50% of the damage stored in the previous 1.5s (combat log: 133.3 and 25.4 in this pattern)."
   },
@@ -630,13 +630,13 @@
    },
    "expected": {
     "kind": "revive",
-    "first_death_time": 4.312,
-    "revive_time": 10.312,
+    "first_death_time": 4.525,
+    "revive_time": 10.525,
     "revive_health_restored": 2114.0,
     "revive_source": "Rebirth",
     "death_time": 15.45,
     "revived": true,
-    "formula": "Rebirth: after lethal damage Anivia revives with 100% max HP (2114); the egg's 6s revive window is anchored to the lethal hit (death at 4.312 -> revive at 10.312 -> killed again at 15.45). Aatrox's Q now lands as three strikes a second apart and W as two hits 1.5s apart, which spreads the same incoming total later and pushes the second death out to 15.45."
+    "formula": "Rebirth: Anivia revives with 100% max HP (2114) 6s after the lethal hit. Aatrox's autos (246.5 with Deathbringer Stance) land at his windup, 0.213 + 1.078k s; his Q lands as three strikes a second apart and W as two hits 1.5s apart. First life: four autos, three Q strikes and two W hits deal 2023.5, so the fifth auto at 4.525 is lethal -> revive at 10.525. Second life: the five autos from 10.992 to 15.304, two Q strikes and two W hits deal 1919.0, so the third Q strike at 15.45 is lethal."
    },
    "practice_tool_steps": "Load Anivia, buy nothing. Level 18. Practice Tool: let Aatrox kill you; Rebirth turns you into an egg and you revive with 100% of max HP (2114) \u2014 read the death/revive events in the combat log."
   },
@@ -957,9 +957,9 @@
     "kind": "lifesteal",
     "source": "Life steal (basic attacks and on-hit)",
     "heal_per_auto": 20.1,
-    "heal_count": 8,
-    "healing_total": 160.8,
-    "formula": "Bloodthirster 15% lifesteal: 8 autos of 134.1 post-mitigation damage -> 8 heals of 20.1 (15% of 134.1). The 134.1 is a Ranger's Focus flurry auto, so q_focus_stacks now states the Focus this measurement was taken with: an unstated level derives, and a derived Ashe banks her fourth stack partway into this six-second fight and heals 15.5 per auto until she does."
+    "heal_count": 9,
+    "healing_total": 180.9,
+    "formula": "Bloodthirster 15% lifesteal: Ashe's autos land at her windup, 0.158 + 0.720k s, so nine fall inside the 6s fight -> nine heals of 20.1 raw (15% of the 134.1 post-mitigation auto); the three inside Ahri's 1.8s charm land no damage and apply 0. The 134.1 is a Ranger's Focus flurry auto, so q_focus_stacks states the Focus this measurement was taken with: an unstated level derives, and a derived Ashe banks her fourth stack partway into this six-second fight and heals 15.5 per auto until she does."
    },
    "practice_tool_steps": "Practice Tool: Ashe buys Bloodthirster (15% lifesteal). Auto-attack a practice dummy 8 times; the combat log shows 8 Life steal heals of 20.1 each (15% of the 134.1 post-mitigation auto damage)."
   }
