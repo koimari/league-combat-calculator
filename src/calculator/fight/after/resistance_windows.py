@@ -382,23 +382,40 @@ class _Pricing:
 
 def _reprice_row(pricing: _Pricing, source_key: str, row: dict[str, Any]) -> float:
     """Re-price one row's timed packets; what its total moved by."""
-    row_delta = 0.0
-    by_type = row.get("damage_by_type")
+    moved: dict[str, float] = {}
     for event in row["damage_events"]:
-        if not isinstance(event, dict):
-            continue
-        delta = pricing.reprice(source_key, row, event)
-        if not delta:
-            continue
-        row_delta += delta
-        if isinstance(by_type, dict) and event["damage_type"] in by_type:
-            by_type[event["damage_type"]] = float(by_type[event["damage_type"]]) + delta
+        if isinstance(event, dict):
+            delta = pricing.reprice(source_key, row, event)
+            if delta:
+                damage_class = event["damage_type"]
+                moved[damage_class] = moved.get(damage_class, 0.0) + delta
+    row_delta = sum(moved.values())
     if row_delta:
         priced = source_total_damage(row)
         row["total_damage"] = row_delta if priced is None else priced + row_delta
         if "damage_per_hit" in row and row.get("count"):
             row["damage_per_hit"] = float(row["total_damage"]) / float(row["count"])
+        for field_name in ("damage_by_type", "on_hit_shares"):
+            _move_by_class(row.get(field_name), moved)
     return row_delta
+
+
+def _move_by_class(split: Any, moved: Mapping[str, float]) -> None:
+    """Carry each class's change onto a row's split of it: the
+    ``damage_by_type`` total, or each producer's ``on_hit_shares`` part in
+    proportion to what it held."""
+    if isinstance(split, dict):
+        for damage_class, delta in moved.items():
+            if damage_class in split:
+                split[damage_class] = float(split[damage_class]) + delta
+        return
+    if not isinstance(split, list):
+        return
+    for damage_class, delta in moved.items():
+        held = [part for part in split if part.get("damage_type") == damage_class]
+        total = sum(float(part["damage"]) for part in held)
+        for part in held if total > 0.0 else ():
+            part["damage"] = float(part["damage"]) * (total + delta) / total
 
 
 def _apply_resistance_windows(state: FightState) -> None:
