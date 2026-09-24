@@ -18,7 +18,7 @@ PENDING: tuple[str, ...] = ()
 #: a run prints; never raise it.  At zero the rule joins ``FAILING`` and its
 #: row goes away.
 CEILINGS = {
-    "unsourced_constant": (69, "cite the cached field, the source or the composition"),
+    "unsourced_constant": (68, "cite the cached field, the source or the composition"),
 }
 
 #: One assumption at the cap and one a character past it, so the champion-tree

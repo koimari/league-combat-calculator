@@ -396,41 +396,45 @@ class TestMultiPassDamage:
 
 
 class TestEmpoweredAutoEntry:
-    """A cast whose payload rides the next basic attack."""
+    """A cast whose rider rides the next basic attack."""
 
-    _PROC = {"name": "Empower", "damage_per_hit": 40.0, "damage_type": "magic"}
+    _PROC = {"name": "Starfire", "damage_per_hit": 40.0, "damage_type": "magic"}
 
-    def test_the_shell_carries_the_proc_and_no_direct_damage(self) -> None:
+    def test_the_rider_is_the_rows_one_untimed_basic_damage_part(self) -> None:
         entry = empowered_auto_entry(
-            _json("Empower"), 3, "magic", dict(self._PROC), cooldown=7.0, detail="one"
+            _json("Empower"), 3, "magic", 125.0, cooldown=7.0, detail="one"
         )
-        assert entry["on_hit"]["damage_per_hit"] == 40.0
-        assert entry["parts"] == ()
-        assert entry["total_raw"] == 0.0
+        (part,) = entry["parts"]
+        assert (part.amount, part.basic_damage, part.time_offset) == (
+            125.0,
+            True,
+            None,
+        )
+        assert entry["total_raw"] == 125.0
+        assert "on_hit" not in entry
         assert entry["empowers_next_auto"] is True
         assert entry["detail"] == "one"
 
-    def test_a_rider_becomes_the_rows_one_basic_damage_part(self) -> None:
+    def test_an_every_attack_on_hit_rides_beside_the_rider(self) -> None:
         entry = empowered_auto_entry(
             _json("Starfire"),
             3,
             "magic",
-            dict(self._PROC),
+            125.0,
             cooldown=0.0,
             detail="passive plus one swing",
-            empowered_damage=125.0,
+            on_hit=dict(self._PROC),
             target_max_health_sensitive=True,
         )
-        part = entry["parts"][0]
-        assert (part.amount, part.basic_damage, part.time_offset) == (125.0, True, 0.1)
-        assert entry["total_raw"] == 125.0
+        assert entry["on_hit"]["damage_per_hit"] == 40.0
+        assert [part.amount for part in entry["parts"]] == [125.0]
         assert entry["target_max_health_sensitive"] is True
         assert list(entry)[-1] == "detail"
 
     def test_a_row_with_no_cached_name_is_refused(self) -> None:
         with pytest.raises(KeyError, match="carries no 'name'"):
             empowered_auto_entry(
-                {"effects": []}, 3, "magic", dict(self._PROC), cooldown=0.0, detail="x"
+                {"effects": []}, 3, "magic", 125.0, cooldown=0.0, detail="x"
             )
 
 

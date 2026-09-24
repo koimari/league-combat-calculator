@@ -26,15 +26,15 @@ class TestReviewedCrowdControl:
         assert "and stuns them for 1 second" in cc_review.slot_text(data, "E")
 
     def test_empower_is_a_reviewed_absence_on_the_swing_it_forces(self):
-        """Empower controls nothing, and the row's damage is the engine's
-        reattributed swing — the engine builds the zero-damage carrier the
-        declaration rides."""
+        """Empower controls nothing; its one part is the bonus its swing
+        carries, and the declaration rides that part."""
         data = cc_review.kit("Jax")
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
         entry = parse_champion_abilities(data, 18, 100.0)["W"]
         assert entry["empowers_next_auto"] is True
-        (marker,) = entry["parts"]
-        assert (marker.amount, marker.cc_kind) == (0.0, "none")
+        (rider,) = entry["parts"]
+        assert (rider.amount, rider.cc_kind) == (entry["total_raw"], "none")
+        assert rider.amount > 0.0
 
     def test_the_whole_kit_is_reviewed_and_the_fight_certifies(self):
         assert cc_review.unreviewed_ability_slots("Jax") == []

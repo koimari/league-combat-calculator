@@ -96,13 +96,13 @@ def _violent_tendencies(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any]
         ability,
         rank,
         "physical",
-        {
+        value,
+        cooldown=0.0,
+        on_hit={
             "name": "Violent Tendencies (first three attacks)",
             "damage_per_hit": 0.0,
             "damage_type": "physical",
         },
-        cooldown=0.0,
-        empowered_damage=value,
         target_max_health_sensitive=True,
         detail=(
             "Fourth attack of the four-hit Violent Tendencies sequence; 150% "
