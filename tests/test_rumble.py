@@ -127,25 +127,29 @@ class TestHarpoonShred:
             "duration": 4.0,
         }
 
-    def test_magic_after_the_harpoon_meets_the_time_weighted_shred(self):
+    def test_magic_inside_a_harpoon_window_meets_the_shred(self):
         payload = _traced("timed")
         harpoons = [e["time"] for e in payload["cast_timeline"] if e["slot"] == "E"]
         assert harpoons == [0.0, 0.5, 6.25]
-        # Windows [0, 4.5] and [6.25, 8] cover 6.25 of the 8 seconds.
-        shredded = _TARGET_MR * (1 - 0.18 * 6.25 / 8.0)
-        assert payload["trace"]["effective_mr"] == pytest.approx(shredded)
+        # The published MR is the fight share: windows [0, 4.5] and [6.25, 8]
+        # cover 6.25 of the 8 seconds.
+        assert payload["trace"]["effective_mr"] == pytest.approx(
+            _TARGET_MR * (1 - 0.18 * 6.25 / 8.0)
+        )
+        # Each packet meets 100 * (1 - 0.18) = 82 after a harpoon opens its
+        # 4s window, up to its end, and 100 elsewhere: a harpoon's own hit
+        # at 0 or 6.25 meets 100, the one at 0.5 lands in the first window,
+        # and R's ticks from 4.75 on land after the second closes at 4.5.
         magic = [
             line
             for line in payload["trace"]["lines"]
             if line["damage_class"] == "magic"
         ]
-        # E's own harpoons land before the shred they apply.
-        met = {(line["source"], round(line["resistance_met"], 6)) for line in magic}
-        assert met == {
-            ("E", _TARGET_MR),
-            ("Q", round(shredded, 6)),
-            ("R", round(shredded, 6)),
-        }
+        assert {line["source"] for line in magic} == {"E", "Q", "R"}
+        for line in magic:
+            inside = any(start < line["time"] <= start + 4.0 for start in harpoons)
+            expected = _TARGET_MR * (1 - 0.18) if inside else _TARGET_MR
+            assert line["resistance_met"] == pytest.approx(expected), line
 
     def test_an_autos_only_fight_shreds_nothing(self):
         payload = _traced("auto_only")

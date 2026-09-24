@@ -128,7 +128,12 @@ class TestThePinnedFight:
     def test_the_fight_is_the_one_the_trace_is_pinned_on(self, fixture_result):
         assert len(fixture_result["breakdown"]) == 9
         assert len(fixture_result["damage_events"]) == 30
-        assert round(fixture_result["total_damage"], 4) == 1934.3695
+        # Q's two casts meet 100 MR: 2 * 314 / 2.  Inside Q's windows the
+        # rest meets 68: E 269, R 260.5478, seven swings of 114 with their
+        # 69 on-hits, two spellblades of 91.5 with their 69 doubled on-hits,
+        # 2131.5478 / 1.68.  Outside them three swings, three on-hits, one
+        # spellblade and one doubled on-hit meet 100: 709.5 / 2.
+        assert round(fixture_result["total_damage"], 4) == 1937.5285
         assert round(fixture_result["effective_armor"], 4) == 75.3333
         assert round(fixture_result["effective_mr"], 4) == 75.3333
 
@@ -165,21 +170,25 @@ class TestThePinnedFight:
         assert refused == []
 
     def test_the_shred_lands_after_the_cast_that_applies_it(self, fixture_result):
-        """Q meets the MR it shredded, and the rest of the fight meets the shred.
+        """Q meets the MR it shreds; a packet inside Q's window meets the shred.
 
-        The fight publishes 75.3333 effective MR, which is post-shred; Q's own
-        hits are priced against the 100 they met, so the trace states two
-        different numbers for one fight rather than one back-computed average.
+        Each Q hit opens 4 seconds of its rank-5 32% shred, so a packet inside
+        a window meets 100 * (1 - 0.32) = 68, E at Q's own instant included
+        because it is cast after Q, and every other packet meets 100.  The
+        75.3333 the fight publishes is the windows' share of the fight, and
+        no packet meets it.
         """
-        met: dict[str, set[float | None]] = {}
-        for line in fight_trace(fixture_result).lines:
-            met.setdefault(line.source, set()).add(line.resistance_met)
-        assert met.pop("Q") == {100.0}
-        published = {
-            fixture_result["effective_armor"],
-            fixture_result["effective_mr"],
-        }
-        assert {value for values in met.values() for value in values} == published
+        lines = fight_trace(fixture_result).lines
+        q_hits = [line.time for line in lines if line.source == "Q"]
+        assert q_hits == pytest.approx([0.0, 5.8333], abs=1e-4)
+        for line in lines:
+            inside = line.source != "Q" and any(
+                hit <= line.time <= hit + 4.0 for hit in q_hits
+            )
+            expected = 68.0 if inside else 100.0
+            assert line.resistance_met == pytest.approx(expected), line
+        met = {line.resistance_met for line in lines}
+        assert fixture_result["effective_mr"] not in met
 
     def test_a_stated_raw_is_the_events_own_and_never_the_rows_total(
         self, fixture_result
@@ -348,8 +357,12 @@ class TestTheAmplifier:
     def test_each_amplifier_gets_one_line_naming_its_pool(self, amped):
         amps = {line["source"]: line for line in amped["lines"] if line["amp"]}
         assert set(amps) == {"damage_amp_Riftmaker", "damage_amp_Horizon Focus"}
-        assert amps["damage_amp_Riftmaker"]["amp"] == "x1.04 over 18 packets"
-        assert amps["damage_amp_Horizon Focus"]["amp"] == "x1.1 over 35 packets"
+        # Riftmaker rides every packet: E, Q's magic and true halves twice,
+        # three W and three R, and 8 swings (ceil(AS * 8 - phase) at windup).
+        # Horizon Focus rides each but E, the hit that marks, plus each of
+        # Riftmaker's 19 deltas.
+        assert amps["damage_amp_Riftmaker"]["amp"] == "x1.04 over 19 packets"
+        assert amps["damage_amp_Horizon Focus"]["amp"] == "x1.1 over 37 packets"
 
     def test_an_amplifier_states_its_bonus_and_no_packet_facts(self, amped):
         line = next(
