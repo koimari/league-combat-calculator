@@ -52,23 +52,23 @@
  "golden": {
   "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights",
   "entries": 672,
-  "leaves": 61242,
-  "numeric_leaves": 47007,
-  "src_tree_sha": "c627dcca20d8666e300cf1f04b26670024924437"
+  "leaves": 61226,
+  "numeric_leaves": 46994,
+  "src_tree_sha": "65b851bccf9a05e638817b3e465911356b648d26"
  },
  "coupled_golden": {
   "sections": "coupled_scenarios",
   "entries": 26,
-  "leaves": 124671,
-  "numeric_leaves": 40605,
-  "src_tree_sha": "aa669393adc88ec16ac47110d435c602f9ad4ef1"
+  "leaves": 129586,
+  "numeric_leaves": 41852,
+  "src_tree_sha": "65b851bccf9a05e638817b3e465911356b648d26"
  },
  "coupled_golden_exact": {
   "sections": "coupled_scenarios",
   "entries": 30,
   "leaves": 224,
   "numeric_leaves": 0,
-  "src_tree_sha": "aa669393adc88ec16ac47110d435c602f9ad4ef1"
+  "src_tree_sha": "65b851bccf9a05e638817b3e465911356b648d26"
  },
  "bench": {
   "cassiopeia_3champ": {
@@ -793,7 +793,7 @@
   }
  ],
  "coupled_golden_exact_values": {
-  "sha256": "169b0dc4f7d92f2beed10f2b337728a2e0fbc86c0f14096db88da2fa6795986e",
+  "sha256": "01a66cdf88a8ed1f0f6343afffc1bfb51e3dbecaa9edc2b1132aa5d3edf26e79",
   "over": "scripts/golden_coupled_exact.json coupled_scenarios",
   "rule": "scripts/golden_snapshot.exact_values_digest: sha256 over json.dumps({scenario: dict(sorted(totals))} sorted by scenario, sort_keys=True, separators=(',', ':')). The RULE is now code and a test recomputes it, so this field cannot go stale again.",
   "gate": "tests/test_golden_snapshot.py::TestFingerprintsReceipt::test_the_exact_values_digest_is_recomputable",

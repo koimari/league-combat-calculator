@@ -1,0 +1,27 @@
+{
+ "slice": "windup-cadence",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "All three baselines are re-captured in the same commit. This receipt only supersedes the two syndra_mandate_3champ keys expected-golden-diff-slots18-alistar-r.json still declares, whose pair no longer holds the captured total."
+ },
+ "what_changed": {
+  "imperial_mandate": "scripts/golden_snapshot.py's syndra_mandate_3champ request names Imperial Mandate in items, the key the calculate path reads, so the fight holds the item its name says.",
+  "cadence": "Basic-attack impacts land at windup from the attack command (src/calculator/attack_cadence.py), so every attacker in the scenario lands its swings later and most land one more."
+ },
+ "expected_diff_paths": {
+  "coupled_exact": {
+   "syndra_mandate_3champ": {
+    "combat/0:main/outgoing": {
+     "old": "640.8",
+     "new": "782.7"
+    },
+    "combat/1:enemy:Alistar/incoming": {
+     "old": "266.0",
+     "new": "325.6"
+    }
+   }
+  }
+ }
+}
