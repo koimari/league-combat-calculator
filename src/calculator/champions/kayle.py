@@ -56,9 +56,13 @@ def _kayle_e(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any]
         ability,
         rank,
         "magic",
-        {"name": "Starfire passive", "damage_per_hit": passive, "damage_type": "magic"},
+        active,
         cooldown=extract_cooldown(ability, rank),
-        empowered_damage=active,
+        on_hit={
+            "name": "Starfire passive",
+            "damage_per_hit": passive,
+            "damage_type": "magic",
+        },
         target_max_health_sensitive=True,
         detail=(
             "Passive on-hit plus one empowered attack; the active rider scales "

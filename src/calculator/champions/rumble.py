@@ -148,14 +148,14 @@ def _heat_mechanics(ctx: SlotCtx) -> tuple[float, float, float]:
 # beat, and the last flame's 0.6-second scorch tails two more at 3.25 and
 # 3.50.  Fifteen, which is exactly the ratio the rank rows already carry
 # (Maximum Magic Damage == 15 x Magic Damage per Tick at every rank), the
-# equality ``_flamespitter_full_channel`` re-checks against the cache.
+# equality ``_flamespitter_dot`` re-checks against the cache.
 _Q_TICKS = 15
 _Q_TICK_INTERVAL = data_value(spell_object("Rumble", "RumbleFlameThrower"), "TickRate")
 
 _flamespitter = simple_damage(attr="Maximum Magic Damage", dmg_type="magic")
 
 
-def _flamespitter_full_channel(ctx: SlotCtx) -> dict[str, Any] | None:
+def _flamespitter_dot(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: the full 3-second flamethrower on its sourced 0.25-second beat."""
     entry = _flamespitter(ctx)
     if entry is None:
@@ -173,7 +173,7 @@ def _flamespitter_full_channel(ctx: SlotCtx) -> dict[str, Any] | None:
     if not math.isclose(per_tick * _Q_TICKS, total, rel_tol=1e-3):
         raise ValueError(
             "Rumble Q: the cached 'Magic Damage per Tick' x 15 no longer "
-            "equals 'Maximum Magic Damage' - the 15-tick channel pinned "
+            "equals 'Maximum Magic Damage' - the 15-tick DoT pinned "
             "here has changed upstream"
         )
     # One beat, authored as the cache states it: the first flame lands at
@@ -196,7 +196,7 @@ def _flamespitter_full_channel(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-_flamespitter_full_channel.phase = "damage"
+_flamespitter_dot.phase = "damage"
 
 
 def _overheat_attack_speed(ability: dict[str, Any], level: int) -> float:
@@ -366,7 +366,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # boundary claim that carries MODULE_CC's reviewed answer for E into
     # the event ledger.  R already authors its own twenty-tick timing.
     single_hit_slots=frozenset({"E"}),
-    slot_parsers={"Q": _flamespitter_full_channel, "P": _junkyard_titan},
+    slot_parsers={"Q": _flamespitter_dot, "P": _junkyard_titan},
     slot_wrappers={"E": _with_harpoon_shred},
     cc_kinds=MODULE_CC,
     charge_rules=CHARGE_RULES,

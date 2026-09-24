@@ -489,6 +489,11 @@ champion it bit.
   count, since `_schedule_shared_casts` puts every `R` in `single_cast` (Corki R).
 - **"Empowers next basic attack" is once per cast; "basic attacks deal bonus
   damage" is every auto** (Alistar E).
+- **A next-attack rider is `empowered_auto_entry`'s rider part, never an
+  ability `on_hit`, and it carries no `time_offset`.** An `on_hit` rider pays
+  every swing of a timed fight and none in one-rotation (Jax W paid 9 in 8 s
+  for 3 casts). A timed part makes the row author its own events, so the
+  empowered-swing move leaves its swings out of the fight ledger.
 - **A granted or forced basic attack still swings when there is no auto stream.**
   One-rotation mode and zero uptime both give `num_auto_attacks == 0` and the cast
   still forces its attack, so the ability's row carries the expected-crit base

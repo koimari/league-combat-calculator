@@ -28,7 +28,6 @@ from .module_helpers import no_damage, ranked_slot
 from .slot_context import DAMAGE, SlotCtx, SlotParser
 from .slot_control import atom_receipt
 from .slot_entries import (
-    ability_on_hit_entry,
     attach_self_shield,
     damage_entry,
     on_hit_entry,
@@ -43,9 +42,6 @@ from .slot_extract import (
 
 #: How many extra targets a widened or returning projectile may be told it hit.
 SECONDARY_TARGET_CAP = 5
-
-#: Seconds from a cast to the basic attack its payload rides.
-_EMPOWERED_SWING_OFFSET = 0.1
 
 _DAMAGE_REDUCTION_ROW = "Damage Reduction"
 _PER_LEVEL_ROW = "Per-Level Scaling"
@@ -195,32 +191,30 @@ def empowered_auto_entry(
     ability: dict[str, Any],
     rank_value: int,
     dmg_type: str,
-    proc: dict[str, Any],
+    rider: float,
     *,
     cooldown: float,
     detail: str,
-    empowered_damage: float | None = None,
+    on_hit: dict[str, Any] | None = None,
     **entry_keys: Any,
 ) -> dict[str, Any]:
-    """A cast whose payload rides the next basic attack.
+    """A cast whose *rider* rides the next basic attack.
 
-    A rider on the empowered swing is the row's one basic-damage part,
-    landing on the swing that follows the cast.
+    The rider is the row's one basic-damage part and states no time of its
+    own: the fight lands it on the swing the cast takes.  *on_hit* is a
+    separate rider on every attack.
     """
 
-    entry = ability_on_hit_entry(
-        ability_name(ability), rank_value, dmg_type, proc, cooldown=cooldown
+    entry = damage_entry(
+        ability_name(ability),
+        rank_value,
+        cooldown,
+        rider,
+        dmg_type,
+        parts=(DamagePart(dmg_type, rider, basic_damage=True),),
     )
-    if empowered_damage is not None:
-        entry["parts"] = (
-            DamagePart(
-                dmg_type,
-                empowered_damage,
-                basic_damage=True,
-                time_offset=_EMPOWERED_SWING_OFFSET,
-            ),
-        )
-        entry["total_raw"] = empowered_damage
+    if on_hit is not None:
+        entry["on_hit"] = on_hit
     entry["empowers_next_auto"] = True
     entry.update(entry_keys)
     entry["detail"] = detail

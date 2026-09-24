@@ -47,19 +47,23 @@ class _Shred(NamedTuple):
     # Where a packet at a window's opening instant stands: the shredding
     # slot's cast-order rank, or None when nothing at that instant meets it.
     tie_rank: float | None
+    # The stream swings a rider's shred is delivered by (Jayce's Cannon
+    # Transform), each an applying hit though the auto row holds it.
+    carriers: tuple[float, ...]
 
     def fraction_at(self, source_key: str, time: float, rank: float) -> float:
         """The share of the reduction live for one packet of cast-order *rank*.
 
-        A packet at a window's opening instant meets it only when it is priced
-        after the hit that applies it: a slot cast later, or a row the rotation
-        does not order (a swing, an item).
+        The hit that applies a window meets the target before it.  Any other
+        packet at that instant meets it only when it is priced after that hit:
+        a slot cast later, or a row the rotation does not order (a swing, an
+        item).
         """
-        tied = (
-            self.tie_rank is not None
-            and source_key != self.source_key
-            and rank > self.tie_rank
+        applies = source_key == self.source_key or (
+            source_key == "auto_attacks"
+            and any(abs(time - carrier) <= _TIME_EPSILON for carrier in self.carriers)
         )
+        tied = self.tie_rank is not None and not applies and rank > self.tie_rank
         return max(
             (
                 window.fraction
@@ -144,6 +148,7 @@ def _shred_windows(state: FightState) -> list[_Shred]:
                 if declaration.after_its_trigger
                 else rank.get(declaration.source_key, math.inf)
             ),
+            state.empowered_ride_times.get(declaration.source_key, ()),
         )
         for declaration in state.shred_declarations
     }

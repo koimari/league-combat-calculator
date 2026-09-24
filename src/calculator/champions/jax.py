@@ -90,7 +90,7 @@ def _empower(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any]
         ability,
         rank,
         "magic",
-        {"name": "Empower", "damage_per_hit": value, "damage_type": "magic"},
+        value,
         cooldown=extract_cooldown(ability, rank),
         detail="Empowers one basic attack or Leap Strike and resets the attack timer.",
     )
