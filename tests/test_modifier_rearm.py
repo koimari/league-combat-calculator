@@ -215,6 +215,16 @@ class TestTheStackLedgerReducesOnce:
         # 100 armour mitigates to 1/2; 30% reduced armour mitigates to 1/1.7.
         assert amount == pytest.approx(100.0 * (1.0 / 1.7) / (1.0 / 2.0))
 
+    def test_a_percent_reduction_leaves_negative_armor_where_it_is(self, walk):
+        """A percent cut bites only positive armour, so a target already below
+        zero keeps its amplified price rather than being lifted to zero."""
+        state, ctx = walk
+        self._armed_carve(state, ctx, 0.30)
+        packet = _packet(at=1.0)._replace(baseline_effective_armor=-20.0)
+        amount = _apply_cross_participant_modifiers(ctx, packet, state, 100.0)
+        assert amount == pytest.approx(100.0)
+        assert packet.event["support_resistance_reduction"][0]["factor"] == 1.0
+
 
 class TestThePublishedFactorIsNotTheAppliedProduct:
     """Two live modifiers apply two factors; the receipt publishes one.

@@ -79,7 +79,7 @@ from ..healing_reduction import (
     heal_and_shield_power_factor,
     matching_healing_reduction,
 )
-from ..resistance import apply_resistance
+from ..resistance import apply_resistance, reduce_resistance, rescale_mitigated
 from ..spell_shield_eligibility import (
     SPELL_SHIELD_ONE_USE_RULE,
     SpellShieldComposition,
@@ -812,19 +812,13 @@ def reprice_dynamic_resistance(
     baseline = term(armor=base_armor, magic_resistance=base_mr)
     if delta <= 0.0:
         return None
-    if baseline is None:
+    if baseline is None or not math.isfinite(baseline):
         # A source that did not expose an effective resistance is not
         # silently repriced; the packet remains visible and the receipt
         # explains why its dynamic state was unavailable.
         ctx.ledger.write(action, dynamic_resistance_unavailable=label)
         return None
-    baseline_factor = apply_resistance(1.0, baseline)
-    dynamic_factor = apply_resistance(1.0, baseline + delta)
-    if not math.isfinite(baseline_factor) or baseline_factor <= 0.0:
-        ctx.ledger.write(action, dynamic_resistance_unavailable=label)
-        return None
-    amount = max(0.0, action.amount)
-    repriced = amount * dynamic_factor / baseline_factor
+    repriced = rescale_mitigated(max(0.0, action.amount), baseline, baseline + delta)
     ctx.ledger.write(
         action,
         dynamic_resistance={
@@ -832,7 +826,7 @@ def reprice_dynamic_resistance(
             "baseline_effective": round(baseline, 6),
             "delta": round(delta, 6),
             "effective": round(baseline + delta, 6),
-            "factor": round(dynamic_factor / baseline_factor, 6),
+            "factor": round(rescale_mitigated(1.0, baseline, baseline + delta), 6),
         },
     )
     return repriced
@@ -3306,7 +3300,7 @@ def _apply_cross_participant_modifiers(
                 if reduction_key.startswith("armor")
                 else action.baseline_effective_mr
             )
-            if baseline is None:
+            if baseline is None or not math.isfinite(baseline):
                 ctx.ledger.write(
                     action, support_resistance_reduction_unavailable=reduction_key
                 )
@@ -3315,22 +3309,17 @@ def _apply_cross_participant_modifiers(
                 0.0,
                 min(1.0, float(modifier.get(reduction_key, 0.0) or 0.0)),
             )
-            before = max(0.0, amount)
-            baseline_factor = apply_resistance(1.0, baseline)
-            reduced_factor = apply_resistance(
-                1.0, max(0.0, baseline * (1.0 - percentage))
-            )
-            if baseline_factor > 0.0:
-                amount = before * reduced_factor / baseline_factor
-                if action.event is not None:
-                    action.event.setdefault("support_resistance_reduction", []).append(
-                        {
-                            "source": modifier["source"],
-                            "type": reduction_key,
-                            "fraction": round(percentage, 6),
-                            "factor": round(reduced_factor / baseline_factor, 6),
-                        }
-                    )
+            reduced = reduce_resistance(baseline, percentage * 100.0)
+            amount = rescale_mitigated(max(0.0, amount), baseline, reduced)
+            if action.event is not None:
+                action.event.setdefault("support_resistance_reduction", []).append(
+                    {
+                        "source": modifier["source"],
+                        "type": reduction_key,
+                        "fraction": round(percentage, 6),
+                        "factor": round(rescale_mitigated(1.0, baseline, reduced), 6),
+                    }
+                )
             continue
         if modifier.get("damage_reduction"):
             before = max(0.0, amount)
