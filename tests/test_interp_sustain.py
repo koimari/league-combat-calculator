@@ -299,7 +299,7 @@ def test_a_flat_shape_resolves_without_inventing_a_fight() -> None:
     """The three shapes the pipeline and the roster ledger author from.
 
     Each is read where no fight context exists yet, and each number is the
-    same one the retired ``sustain_effect_value("<item>", key)`` branch read
+    same one the retired ``numeric_effect_value("<item>", key)`` branch read
     — which is this migration's whole claim, so it is asserted against the
     registry rather than against a copy of itself.
     """
@@ -326,7 +326,7 @@ def test_a_flat_shape_resolves_without_inventing_a_fight() -> None:
         slot = declared_sustain([owner], payload_type)
         assert slot is not None
         assert slot.owner == owner
-        assert slot.value(field) == item_effects.sustain_effect_value(owner, key)
+        assert slot.value(field) == item_effects.numeric_effect_value(owner, key)
 
 
 def test_a_build_declaring_none_answers_none_rather_than_zero() -> None:
@@ -377,7 +377,7 @@ def test_the_below_half_bonus_is_the_registry_number_the_walk_used_to_read() -> 
     slot = walk_slot([BELOW_HALF_HOLDER], BelowHalfHealingRule)
     assert slot is not None
     assert slot.owner == BELOW_HALF_HOLDER
-    assert slot.value("bonus") == item_effects.sustain_effect_value(
+    assert slot.value("bonus") == item_effects.numeric_effect_value(
         BELOW_HALF_HOLDER, "health_state_healing_multiplier_below_half"
     )
 

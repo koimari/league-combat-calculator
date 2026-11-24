@@ -23,8 +23,8 @@ from src.calculator.item_behavior_catalog import (
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     DamageInputs,
+    numeric_effect_value,
     required_effect_value,
-    sustain_effect_value,
     target_class_denials,
 )
 from src.calculator.item_source import effect_entries
@@ -115,7 +115,7 @@ def test_each_schema_reproduces_the_registrys_own_arithmetic(owner: str) -> None
         "Muramana": (("max_mana_ratio_on_hit", STATS["max_mana"]),),
         "Titanic Hydra": (("max_hp_ratio_melee", STATS["health"]),),
     }[owner]
-    expected = sum(sustain_effect_value(owner, key) * by for key, by in terms)
+    expected = sum(numeric_effect_value(owner, key) * by for key, by in terms)
     assert _strike(owner).source.raw_damage(_inputs()) == pytest.approx(expected)
 
 
@@ -124,12 +124,12 @@ def test_the_minimum_is_a_floor_on_the_sum() -> None:
     strike = _strike("Blade of the Ruined King")
     healthy = strike.source.raw_damage(_inputs())
     assert healthy == pytest.approx(
-        sustain_effect_value("Blade of the Ruined King", "current_hp_ratio_melee")
+        numeric_effect_value("Blade of the Ruined King", "current_hp_ratio_melee")
         * 1000.0
     )
     drained = dataclasses.replace(_inputs(), target_current_health=0.0)
     assert strike.source.raw_damage(drained) == pytest.approx(
-        sustain_effect_value("Blade of the Ruined King", "min_damage")
+        numeric_effect_value("Blade of the Ruined King", "min_damage")
     )
 
 
@@ -139,11 +139,11 @@ def test_the_range_split_is_paid_from_the_swings_own_range_class() -> None:
     melee = strike.source.raw_damage(_inputs(is_melee=True))
     ranged = strike.source.raw_damage(_inputs(is_melee=False))
     assert melee == pytest.approx(
-        sustain_effect_value("Blade of the Ruined King", "current_hp_ratio_melee")
+        numeric_effect_value("Blade of the Ruined King", "current_hp_ratio_melee")
         * 1000.0
     )
     assert ranged == pytest.approx(
-        sustain_effect_value("Blade of the Ruined King", "current_hp_ratio_ranged")
+        numeric_effect_value("Blade of the Ruined King", "current_hp_ratio_ranged")
         * 1000.0
     )
 

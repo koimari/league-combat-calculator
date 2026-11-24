@@ -35,7 +35,7 @@ from src.calculator.item_behavior_catalog import (
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     DamageInputs,
-    sustain_effect_value,
+    numeric_effect_value,
 )
 
 ENERGIZED = "Stormrazor"
@@ -107,7 +107,7 @@ def test_firing_once_is_declared_rather_than_inherited_from_an_absence() -> None
     assert once.payload.max_procs.get() == 1.0
     (several,) = rules_of([MULTI_PROC], RuleFamily.CHARGED_STRIKE)
     assert several.payload.max_procs.get() == pytest.approx(
-        sustain_effect_value(MULTI_PROC, "empowered_auto_count")
+        numeric_effect_value(MULTI_PROC, "empowered_auto_count")
     )
 
 
@@ -138,9 +138,9 @@ def test_a_dropped_lethality_number_raises_rather_than_granting_zero() -> None:
 
 def test_the_stepped_base_is_flat_below_its_level_and_steps_above_it() -> None:
     """The registry compiler's arithmetic, reproduced at every boundary."""
-    base = sustain_effect_value(STEPPED_REPEAT, "base_melee")
-    per_level = sustain_effect_value(STEPPED_REPEAT, "per_level_melee")
-    start = int(sustain_effect_value(STEPPED_REPEAT, "scaling_start_level"))
+    base = numeric_effect_value(STEPPED_REPEAT, "base_melee")
+    per_level = numeric_effect_value(STEPPED_REPEAT, "per_level_melee")
+    start = int(numeric_effect_value(STEPPED_REPEAT, "scaling_start_level"))
     for level, expected in (
         (start - 1, base),
         (start, base + per_level),
@@ -153,7 +153,7 @@ def test_the_stepped_base_is_flat_below_its_level_and_steps_above_it() -> None:
 
 def test_the_missing_health_scaling_multiplies_the_whole_sum() -> None:
     """Full health pays the base; one hit point pays the declared bonus."""
-    bonus = sustain_effect_value(STEPPED_REPEAT, "missing_hp_bonus_max")
+    bonus = numeric_effect_value(STEPPED_REPEAT, "missing_hp_bonus_max")
     (strike,) = _slots(STEPPED_REPEAT).stacking_on_hits
     full = strike.source.raw_damage(_inputs(max_health=2000.0, current_health=2000.0))
     nearly_dead = strike.source.raw_damage(
@@ -167,7 +167,7 @@ def test_a_repeat_that_does_not_read_live_health_says_so() -> None:
     """The engine's re-pricing question is answered by the declaration."""
     (flat,) = _slots(FLAT_REPEAT).stacking_on_hits
     assert flat.tracks_target_health is False
-    assert flat.hits_required == int(sustain_effect_value(FLAT_REPEAT, "hits_required"))
+    assert flat.hits_required == int(numeric_effect_value(FLAT_REPEAT, "hits_required"))
 
 
 def test_the_shaped_charge_supplies_the_shape_its_entry_does_not_name() -> None:
@@ -177,13 +177,13 @@ def test_the_shaped_charge_supplies_the_shape_its_entry_does_not_name() -> None:
     assert "formula" not in entry
     assert "damage_type" not in entry
     assert charge.source.damage_type == "true"
-    assert charge.cooldown == pytest.approx(sustain_effect_value(SHAPED, "cooldown"))
+    assert charge.cooldown == pytest.approx(numeric_effect_value(SHAPED, "cooldown"))
     assert charge.source.breakdown_key == (
         f"{charged_strike.SHAPED_CHARGE_BREAKDOWN_PREFIX}{SHAPED}"
     )
     assert charge.source.raw_damage(_inputs(lethality=20.0)) == pytest.approx(
-        sustain_effect_value(SHAPED, "base_melee")
-        + sustain_effect_value(SHAPED, "lethality_ratio_melee") * 20.0
+        numeric_effect_value(SHAPED, "base_melee")
+        + numeric_effect_value(SHAPED, "lethality_ratio_melee") * 20.0
     )
 
 
@@ -193,11 +193,11 @@ def test_the_empowered_auto_window_declares_five_numbers_and_no_damage() -> None
     assert buff is not None
     assert buff.item_name == BUFF
     assert buff.empowered_auto_count == int(
-        sustain_effect_value(BUFF, "empowered_auto_count")
+        numeric_effect_value(BUFF, "empowered_auto_count")
     )
-    assert buff.duration == pytest.approx(sustain_effect_value(BUFF, "duration"))
+    assert buff.duration == pytest.approx(numeric_effect_value(BUFF, "duration"))
     assert buff.reduced_crit_ratio == pytest.approx(
-        sustain_effect_value(BUFF, "reduced_crit_ratio")
+        numeric_effect_value(BUFF, "reduced_crit_ratio")
     )
     (rule,) = rules_of([BUFF], RuleFamily.CHARGED_STRIKE)
     assert rule.zero_policy.disposition is Disposition.STRUCTURAL_ZERO
@@ -242,7 +242,7 @@ def test_the_pair_interpreter_compiles_the_count_each_shape_has() -> None:
     (field,) = charged_strike.strike_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.name == charged_strike.CHARGE_COUNT_FIELD
     assert field.value == pytest.approx(
-        sustain_effect_value(FLAT_REPEAT, "hits_required")
+        numeric_effect_value(FLAT_REPEAT, "hits_required")
     )
 
 
@@ -281,19 +281,19 @@ def test_the_two_swing_mechanics_are_declared_shapes() -> None:
     assert ramp is not None
     assert ramp.window is None
     assert ramp.ramp == rearmed_swings.DecayingStackRamp(
-        per_stack=sustain_effect_value(RAMP, "seething_attack_speed_per_stack"),
-        max_stacks=int(sustain_effect_value(RAMP, "seething_max_stacks")),
-        stack_duration=sustain_effect_value(RAMP, "seething_duration"),
+        per_stack=numeric_effect_value(RAMP, "seething_attack_speed_per_stack"),
+        max_stacks=int(numeric_effect_value(RAMP, "seething_max_stacks")),
+        stack_duration=numeric_effect_value(RAMP, "seething_duration"),
     )
     window = _schedule(WINDOW)
     assert window is not None
     assert window.ramp is None
     assert window.window == rearmed_swings.RearmedWindow(
-        bonus_percent=sustain_effect_value(WINDOW, "bonus_attack_speed_percent"),
-        duration=sustain_effect_value(WINDOW, "duration"),
-        cooldown=sustain_effect_value(WINDOW, "cooldown"),
-        refund_per_attack=sustain_effect_value(WINDOW, "attack_refund_base"),
-        refund_per_crit=sustain_effect_value(WINDOW, "attack_refund_crit"),
+        bonus_percent=numeric_effect_value(WINDOW, "bonus_attack_speed_percent"),
+        duration=numeric_effect_value(WINDOW, "duration"),
+        cooldown=numeric_effect_value(WINDOW, "cooldown"),
+        refund_per_attack=numeric_effect_value(WINDOW, "attack_refund_base"),
+        refund_per_crit=numeric_effect_value(WINDOW, "attack_refund_crit"),
     )
 
 
@@ -427,7 +427,7 @@ def test_the_one_rotation_gate_is_a_declared_axis() -> None:
 def test_the_opening_rate_gives_back_exactly_what_the_walk_re_applies() -> None:
     """The panel carries the assumed-active window; the fight opens without it."""
     assert _schedule(WINDOW).opening_rate_bonus_percent == pytest.approx(
-        sustain_effect_value(WINDOW, "bonus_attack_speed_percent")
+        numeric_effect_value(WINDOW, "bonus_attack_speed_percent")
     )
     assert _schedule(RAMP).opening_rate_bonus_percent == 0.0
 
@@ -446,7 +446,7 @@ def test_a_swing_schedule_compiles_to_its_ramp_ceiling_and_no_damage() -> None:
     rule = _swing_rule(RAMP)
     (field,) = charged_strike.strike_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.value == pytest.approx(
-        sustain_effect_value(RAMP, "seething_max_stacks")
+        numeric_effect_value(RAMP, "seething_max_stacks")
     )
     assert rule.zero_policy.disposition is Disposition.STRUCTURAL_ZERO
 

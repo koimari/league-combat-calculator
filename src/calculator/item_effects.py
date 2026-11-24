@@ -1223,7 +1223,7 @@ def slay_takedown_omnivamp(
         return 0.0
     stacks = input_option_value(items, item_options, item_name, "slay_stacks")
     capped = min(stacks, int(required_effect_value(item_name, "slay_max_stacks")))
-    return capped * sustain_effect_value(item_name, SLAY_OMNIVAMP_KEY)
+    return capped * numeric_effect_value(item_name, SLAY_OMNIVAMP_KEY)
 
 
 def swiftmarch_adaptive_force(
@@ -3791,7 +3791,7 @@ def fimbulwinter_nearby_enemy_range_authority() -> dict[str, Any]:
     }
 
 
-def sustain_effect_value(item_name: str, key: str) -> float:
+def numeric_effect_value(item_name: str, key: str) -> float:
     """One sourced numeric value from an item's typed effect record.
 
     Rule 5's front door over ``ITEM_EFFECTS``: a miss names item and key.
@@ -3818,16 +3818,16 @@ def catalyst_eternity_declaration() -> dict[str, Any]:
     mana and health stats (data/atoms/items.json).
     """
     return {
-        "damage_taken_to_mana_ratio": sustain_effect_value(
+        "damage_taken_to_mana_ratio": numeric_effect_value(
             "Catalyst of Aeons", "damage_taken_to_mana_ratio"
         ),
-        "mana_spent_heal_ratio": sustain_effect_value(
+        "mana_spent_heal_ratio": numeric_effect_value(
             "Catalyst of Aeons", "mana_spent_heal_ratio"
         ),
-        "mana_spent_heal_cap_per_cast": sustain_effect_value(
+        "mana_spent_heal_cap_per_cast": numeric_effect_value(
             "Catalyst of Aeons", "mana_spent_heal_cap_per_cast"
         ),
-        "mana_spent_heal_cap_per_second": sustain_effect_value(
+        "mana_spent_heal_cap_per_second": numeric_effect_value(
             "Catalyst of Aeons", "mana_spent_heal_cap_per_second"
         ),
         "source_url": str(required_effect_value("Catalyst of Aeons", "source_url")),
@@ -4031,7 +4031,7 @@ def spell_shield_cooldown_seconds(item_name: str) -> float:
     The registry value is validated against the catalog atom so a stale
     static literal fails closed instead of riding silently.
     """
-    value = sustain_effect_value(item_name, "spell_shield_cooldown")
+    value = numeric_effect_value(item_name, "spell_shield_cooldown")
     atom = annul_spell_shield_cooldown_atom(item_name)
     atom_values = atom.get("values", ())
     if not atom_values or float(atom_values[0]) != value:
@@ -4119,7 +4119,7 @@ def _atom_pinned_value(
 ) -> float:
     """A registry value certified against every catalog atom that sources it,
     so a stale static literal fails closed instead of riding silently."""
-    value = sustain_effect_value(item, key)
+    value = numeric_effect_value(item, key)
     for atom in atoms.values():
         atom_values = atom.get("values", ())
         if not atom_values or float(atom_values[0]) != value:
@@ -4305,14 +4305,14 @@ def guardian_angel_rebirth_declaration() -> dict[str, float]:
     """
     atom_values = _GUARDIAN_ANGEL_REBIRTH_ATOM.get("values", ())
     declaration = {
-        "revive_delay": sustain_effect_value("Guardian Angel", "revive_delay"),
-        "revive_health_ratio": sustain_effect_value(
+        "revive_delay": numeric_effect_value("Guardian Angel", "revive_delay"),
+        "revive_health_ratio": numeric_effect_value(
             "Guardian Angel", "revive_health_ratio"
         ),
-        "revive_mana_ratio": sustain_effect_value(
+        "revive_mana_ratio": numeric_effect_value(
             "Guardian Angel", "revive_mana_ratio"
         ),
-        "revive_cooldown": sustain_effect_value("Guardian Angel", "revive_cooldown"),
+        "revive_cooldown": numeric_effect_value("Guardian Angel", "revive_cooldown"),
     }
     mapped = [
         declaration["revive_delay"],
@@ -4339,7 +4339,7 @@ def override_item_stat(item_name: str, stat_key: str, value: float) -> float:
     effect = ITEM_EFFECTS.get(item_name, {})
     if key not in effect:
         return float(value)
-    return sustain_effect_value(item_name, key)
+    return numeric_effect_value(item_name, key)
 
 
 # The cached stat name and the components that count, per grouped sustain
@@ -4422,10 +4422,10 @@ def grouped_sustain_stat_percent(
         effect = ITEM_EFFECTS.get(name, {})
         override_key = f"stat_override_{stat_key}"
         if override_key in effect:
-            total += sustain_effect_value(name, override_key)
+            total += numeric_effect_value(name, override_key)
             continue
         if stat_key in effect:
-            total += sustain_effect_value(name, stat_key)
+            total += numeric_effect_value(name, stat_key)
             continue
         if (
             stat_key == "lifesteal_percent"

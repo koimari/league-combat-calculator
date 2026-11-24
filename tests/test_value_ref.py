@@ -236,8 +236,8 @@ def test_resolve_flat_reads_level_independent_references() -> None:
             ValueRef("ITEM_EFFECTS", "Warmog's Armor", "heart_bonus_health_threshold"),
         ]
     ) == (
-        item_effects.sustain_effect_value("Warmog's Armor", "heart_tick_interval"),
-        item_effects.sustain_effect_value(
+        item_effects.numeric_effect_value("Warmog's Armor", "heart_tick_interval"),
+        item_effects.numeric_effect_value(
             "Warmog's Armor", "heart_bonus_health_threshold"
         ),
     )

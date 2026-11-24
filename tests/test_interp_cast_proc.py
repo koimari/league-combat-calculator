@@ -25,7 +25,7 @@ from src.calculator.item_behavior_catalog import behavior_rules, build_context
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     DamageInputs,
-    sustain_effect_value,
+    numeric_effect_value,
 )
 
 CHARGED = "Luden's Echo"
@@ -96,10 +96,10 @@ def test_the_trigger_is_read_off_the_entry_and_defaults_to_the_coarse_row() -> N
 def test_the_charge_split_multiplies_the_sum_and_not_a_share() -> None:
     """``(base + ratio x AP) x k`` is the registry compiler's own float."""
     (proc,) = _slots(CHARGED).cooldown_procs
-    base = sustain_effect_value(CHARGED, "base_per_charge")
-    ratio = sustain_effect_value(CHARGED, "ap_ratio_per_charge")
-    multiplier = sustain_effect_value(CHARGED, "single_target_multiplier")
-    charges = int(sustain_effect_value(CHARGED, "charges"))
+    base = numeric_effect_value(CHARGED, "base_per_charge")
+    ratio = numeric_effect_value(CHARGED, "ap_ratio_per_charge")
+    multiplier = numeric_effect_value(CHARGED, "single_target_multiplier")
+    charges = int(numeric_effect_value(CHARGED, "charges"))
     assert (
         proc.source.raw_damage(_inputs(ability_power=300.0))
         == (base + ratio * 300.0) * multiplier
@@ -124,10 +124,10 @@ def test_a_damage_threshold_trigger_carries_its_share_and_window() -> None:
     (burst,) = _slots(THRESHOLD).cooldown_procs
     assert burst.trigger == ProcTrigger.DAMAGE_THRESHOLD.value
     assert burst.damage_threshold_ratio == pytest.approx(
-        sustain_effect_value(THRESHOLD, "damage_threshold_ratio")
+        numeric_effect_value(THRESHOLD, "damage_threshold_ratio")
     )
     assert burst.damage_threshold_window == pytest.approx(
-        sustain_effect_value(THRESHOLD, "damage_threshold_window")
+        numeric_effect_value(THRESHOLD, "damage_threshold_window")
     )
     assert burst.repeat_on_cooldown is False
     (flat,) = _slots(FLAT).cooldown_procs
@@ -142,13 +142,13 @@ def test_the_shield_group_is_declared_whole_and_only_where_it_exists() -> None:
     assert shield is not None
     (gated,) = _slots(SHIELDING).cooldown_procs
     assert gated.self_shield_melee_base == pytest.approx(
-        sustain_effect_value(SHIELDING, "shield_melee_base")
+        numeric_effect_value(SHIELDING, "shield_melee_base")
     )
     assert gated.self_shield_duration == pytest.approx(
-        sustain_effect_value(SHIELDING, "shield_duration")
+        numeric_effect_value(SHIELDING, "shield_duration")
     )
     assert gated.stack_required == int(
-        sustain_effect_value(SHIELDING, "stack_required")
+        numeric_effect_value(SHIELDING, "stack_required")
     )
     assert gated.late_phase is True
     (plain_rule,) = rules_of([FLAT], RuleFamily.CAST_PROC)
@@ -181,7 +181,7 @@ def test_the_ultimate_procs_shred_is_a_declared_absence_where_it_has_none() -> N
     """Malignance shreds; Zeke's does not, and says so rather than zeroing."""
     shredding, plain = _slots(SHREDDING, PLAIN_ULTIMATE).ultimate_procs
     assert shredding.mr_reduction == pytest.approx(
-        sustain_effect_value(SHREDDING, "mr_reduction")
+        numeric_effect_value(SHREDDING, "mr_reduction")
     )
     assert plain.mr_reduction == cast_proc.NO_SIBLING
     (plain_rule,) = [
@@ -213,4 +213,4 @@ def test_the_pair_interpreter_compiles_the_clock_each_shape_has() -> None:
         )
         (field,) = cast_proc.proc_fields(rule, ctx, EngineLane.PAIR_ENGINE)
         assert field.name == cast_proc.PROC_COOLDOWN_FIELD
-        assert field.value == pytest.approx(sustain_effect_value(owner, key))
+        assert field.value == pytest.approx(numeric_effect_value(owner, key))

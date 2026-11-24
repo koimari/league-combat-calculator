@@ -4,7 +4,7 @@ Spellblade, Energized, Hydra families).
 Every item sibling the issues call out is verified twice here:
 
 * **Parse-level sourced pins** — the typed registry value and the wiki
-  revision it was sourced from (``sustain_effect_value`` /
+  revision it was sourced from (``numeric_effect_value`` /
   ``required_effect_value`` / family accessors).  Missing keys raise,
   naming the item and key; there are no literal fallbacks.
 * **``/api/calculate`` fights** — the sourced value reaches the public
@@ -28,8 +28,8 @@ from src.calculator.item_effects import (
     grouped_sustain_stat_percent,
     hydra_cleave_secondary_ad_damage,
     hydra_secondary_target_damage,
+    numeric_effect_value,
     required_effect_value,
-    sustain_effect_value,
 )
 from src.calculator.pipeline import run_fight
 from src.calculator.stats import calculate_total_stats
@@ -94,7 +94,7 @@ LIFESTEAL_PINS = {
 )
 def test_lifesteal_typed_receipts_pin_wiki_values(item_name, percent, revision):
     """Every lifesteal item has a typed registry entry with its source."""
-    assert sustain_effect_value(item_name, "lifesteal_percent") == pytest.approx(
+    assert numeric_effect_value(item_name, "lifesteal_percent") == pytest.approx(
         percent
     )
     assert required_effect_value(item_name, "source_revision_id") == revision
@@ -111,7 +111,7 @@ def test_missing_lifesteal_key_raises_naming_item_and_key(monkeypatch):
     """A missing typed key fails loudly instead of borrowing a literal."""
     monkeypatch.setitem(ITEM_EFFECTS, "Vampiric Scepter", {"type": "sustain"})
     with pytest.raises(KeyError, match=r"Vampiric Scepter.*lifesteal_percent"):
-        sustain_effect_value("Vampiric Scepter", "lifesteal_percent")
+        numeric_effect_value("Vampiric Scepter", "lifesteal_percent")
     with pytest.raises(KeyError, match=r"Vampiric Scepter.*lifesteal_percent"):
         grouped_sustain_stat_percent(_items("Vampiric Scepter"), "lifesteal_percent")
 
@@ -169,7 +169,7 @@ def test_heal_shield_power_aggregates_into_loadout_stats(ahri_data):
 
 def test_cull_three_health_on_hit_is_typed_and_heals_per_auto():
     """Reap's 3 health on-hit is the typed term, not a parsed guess."""
-    assert sustain_effect_value("Cull", "health_per_on_hit") == pytest.approx(3.0)
+    assert numeric_effect_value("Cull", "health_per_on_hit") == pytest.approx(3.0)
     params = FightParams.from_request(
         {
             "fight_mode": "timed",
