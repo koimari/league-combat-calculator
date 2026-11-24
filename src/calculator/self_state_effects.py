@@ -66,7 +66,8 @@ def derive_self_state_effects(
                     time_offset = float(raw_event.get("time_offset", 0.0) or 0.0)
                 except (KeyError, TypeError, ValueError) as exc:
                     raise ValueError(
-                        f"{slot} self state event needs numeric duration and offset"
+                        f"{slot} self state event needs a numeric duration, and a "
+                        "numeric time_offset if it states one (absent is the cast)"
                     ) from exc
                 if not math.isfinite(duration) or duration <= 0.0:
                     raise ValueError(f"{slot} self state duration must be positive")

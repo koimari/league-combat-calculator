@@ -175,6 +175,7 @@ root|rune_effects.py
 root|rune_parser.py
 root|rune_paths
 root|rune_pull.py
+root|self_state_effects.py
 root|shield_ledger.py
 root|shield_pools.py
 root|spell_shield_rearm.py
@@ -228,7 +229,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|70
+er5-tail-ceiling|69
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
@@ -413,6 +414,11 @@ AUTHORED_DECLARATION|ability_dps_matrix.py|rank_ability_dps|dict.get|"cooldown" 
 AUTHORED_DECLARATION|ability_dps_matrix.py|rank_ability_dps|dict.get|"total_raw" 1
 AUTHORED_DECLARATION|ability_dps_matrix.py|rank_ability_dps|or-default|"cooldown" 1
 AUTHORED_DECLARATION|ability_dps_matrix.py|rank_ability_dps|or-default|"total_raw" 1
+AUTHORED_DECLARATION|self_state_effects.py|derive_self_state_effects|dict.get|"kind" 1
+AUTHORED_DECLARATION|self_state_effects.py|derive_self_state_effects|dict.get|"rank" 1
+AUTHORED_DECLARATION|self_state_effects.py|derive_self_state_effects|dict.get|"source" 1
+AUTHORED_DECLARATION|self_state_effects.py|derive_self_state_effects|dict.get|"time_offset" 1
+AUTHORED_DECLARATION|self_state_effects.py|derive_self_state_effects|or-default|"time_offset" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"attribute" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"effects" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"leveling" 1
