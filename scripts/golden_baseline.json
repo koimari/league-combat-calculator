@@ -9986,14 +9986,14 @@
           "event_order_certified": "sourced turret attack and beam cadence",
           "name": "H-28G Evolution Turret",
           "parts": [
-            "DamagePart(magic, amount=16.411764705882355, count=9, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0, hit_interval=1.75, cc_kind='none')",
+            "DamagePart(magic, amount=23.0, count=9, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0, hit_interval=1.75, cc_kind='none')",
             "DamagePart(magic, amount=120.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=2.0, hit_interval=1.0, cc_kind='none')"
           ],
           "rank": 5,
           "resource_cost": 20.0,
           "resource_type": "MANA",
           "skillshot": true,
-          "total_raw": 267.71
+          "total_raw": 327.0
         },
         "R": {
           "cc_reviewed": true,
@@ -54209,14 +54209,14 @@
       "numeric_leaves": 46994,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "402c7b67c32f3885cdf91164a40caae9fa1b9f6d",
+    "git_head": "d055464ab3552e83f5bb0c65ddef14853f4fcea1",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "09443cb162150aa700d22e3819975b72549deffb"
+    "src_tree_sha": "9892fe3ce736b83db673d371afa820dfdd9fa623"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -62519,89 +62519,89 @@
         "magic_build": {
           "breakdown_totals": {
             "E": 260.16,
-            "Q": 1522.48,
+            "Q": 1569.92,
             "R": 0.0,
             "W": 508.21,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 310.72,
-            "shadowflame_Shadowflame": 222.72
+            "shadowflame_Shadowflame": 288.19
           },
-          "total_damage": 2824.29
+          "total_damage": 2937.2
         },
         "no_items": {
           "breakdown_totals": {
             "E": 42.86,
-            "Q": 191.22,
+            "Q": 233.57,
             "R": 0.0,
             "W": 128.57,
             "auto_attacks": 0.0
           },
-          "total_damage": 362.65
+          "total_damage": 405.0
         },
         "physical_build": {
           "breakdown_totals": {
             "E": 42.86,
-            "Q": 191.22,
+            "Q": 233.57,
             "R": 0.0,
             "W": 128.57,
             "auto_attacks": 0.0
           },
-          "total_damage": 362.65
+          "total_damage": 405.0
         },
         "spellblade_build": {
           "breakdown_totals": {
             "E": 42.86,
-            "Q": 191.22,
+            "Q": 233.57,
             "R": 0.0,
             "W": 128.57,
             "auto_attacks": 0.0
           },
-          "total_damage": 362.65
+          "total_damage": 405.0
         },
         "sustained": {
           "magic_build": {
             "breakdown_totals": {
               "E": 260.16,
-              "Q": 1522.48,
+              "Q": 1569.92,
               "R": 0.0,
               "W": 508.21,
               "auto_attacks": 213.33,
               "proc_Luden's Echo": 310.72,
-              "shadowflame_Shadowflame": 280.81
+              "shadowflame_Shadowflame": 288.19
             },
-            "total_damage": 3095.72
+            "total_damage": 3150.53
           },
           "no_items": {
             "breakdown_totals": {
               "E": 42.86,
-              "Q": 191.22,
+              "Q": 233.57,
               "R": 0.0,
               "W": 128.57,
               "auto_attacks": 213.33
             },
-            "total_damage": 575.98
+            "total_damage": 618.33
           },
           "physical_build": {
             "breakdown_totals": {
               "E": 42.86,
-              "Q": 191.22,
+              "Q": 233.57,
               "R": 0.0,
               "W": 128.57,
               "auto_attacks": 1292.5,
               "on_hit_Kraken Slayer": 105.06
             },
-            "total_damage": 1760.21
+            "total_damage": 1802.56
           },
           "spellblade_build": {
             "breakdown_totals": {
               "E": 42.86,
-              "Q": 191.22,
+              "Q": 233.57,
               "R": 0.0,
               "W": 128.57,
               "auto_attacks": 1012.3,
               "spellblade_Trinity Force": 213.33
             },
-            "total_damage": 1588.28
+            "total_damage": 1630.63
           }
         }
       },
