@@ -220,7 +220,7 @@ def _intervention_packets(ctx: SupportCtx) -> list[dict[str, Any]]:
     intervention.declared(PacketKind.DAMAGE)
     true_damage_ratio = intervention.value("enemy_max_health_true_damage_ratio")
     for target in (actor for actor in all_actors if not _same_side(attacker, actor)):
-        amount = max(0.0, float(target.stats.get("health", 0.0))) * true_damage_ratio
+        amount = max(0.0, float(target.stats["health"])) * true_damage_ratio
         packets.append(
             _packet(
                 attacker=attacker,

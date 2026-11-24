@@ -83,7 +83,7 @@ def _expose_weakness_packets(ctx: SupportCtx) -> list[dict[str, Any]]:
     expose_weakness.declared(PacketKind.DAMAGE_MODIFIER)
     expose_key = (
         "expose_weakness_melee"
-        if bool(attacker.stats.get("is_melee", False))
+        if bool(attacker.stats["is_melee"])
         else "expose_weakness_ranged"
     )
     spellblade_key = f"spellblade_{expose_weakness.owner}"
