@@ -1544,6 +1544,12 @@ class TestSourcedChampionTimings:
 
         assert aurelion_sol._Q_CHANNEL_SECONDS == pytest.approx(3.25)
         assert kennen._BOLT_INTERVAL == pytest.approx(0.5)
+        assert kennen._BOLT_OFFSET == kennen._BOLT_INTERVAL
+
+    def test_aurelion_sol_bursts_per_channel(self):
+        from src.calculator.champions import aurelion_sol_stardust
+
+        assert aurelion_sol_stardust._Q_BURSTS_PER_CHANNEL == 3
 
     def test_yasuo_and_yone_share_one_crit_damage_mod(self, monkeypatch):
         from src.calculator.champions import yasuo_yone

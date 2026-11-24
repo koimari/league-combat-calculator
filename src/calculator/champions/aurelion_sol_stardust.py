@@ -7,7 +7,13 @@ from typing import Any, NamedTuple
 from ..binary_roots import data_value, spell_object
 from .source_receipts import state_receipt
 
-_Q_BURSTS_PER_CHANNEL = 3
+# Binary AurelionSolQ: one burst every BurstAfter seconds of a full
+# MaxChannelDuration channel (3.25 s // 1.0 s = 3).
+_AURELION_SOL_Q_SPELL = spell_object("Aurelion Sol", "AurelionSolQ")
+_Q_BURSTS_PER_CHANNEL = int(
+    data_value(_AURELION_SOL_Q_SPELL, "MaxChannelDuration")
+    // data_value(_AURELION_SOL_Q_SPELL, "BurstAfter")
+)
 
 
 # The Stardust/execute constants are ROOTED IN THE BINARY, not hand-copied:
