@@ -1538,3 +1538,9 @@ class TestSourcedChampionTimings:
         assert kaisa._W_MISSILE_SPEED == pytest.approx(1750.0)
         assert taliyah._Q_NORMAL_INITIAL_SPEED == pytest.approx(3600.0)
         assert vi._Q_MAX_CHARGE_SECONDS == pytest.approx(1.25)
+
+    def test_aurelion_sol_and_kennen(self):
+        from src.calculator.champions import aurelion_sol, kennen
+
+        assert aurelion_sol._Q_CHANNEL_SECONDS == pytest.approx(3.25)
+        assert kennen._BOLT_INTERVAL == pytest.approx(0.5)

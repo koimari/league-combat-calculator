@@ -85,7 +85,11 @@ _MARK_EFFECT = 0
 _STUN_EFFECT = 1
 #: Bolt cadence Slicing Maelstrom's own row authors (cast + 0.5s, every 0.5s).
 _BOLT_OFFSET = 0.5
-_BOLT_INTERVAL = 0.5
+
+# The interval is the binary KennenShurikenStorm KennenRTickRate.
+_BOLT_INTERVAL = data_value(
+    spell_object("Kennen", "KennenShurikenStorm"), "KennenRTickRate"
+)
 
 
 @ranked_slot

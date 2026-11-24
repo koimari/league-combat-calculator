@@ -21,7 +21,7 @@ Q gated by ``w_active``.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..binary_roots import data_value
+from ..binary_roots import data_value, spell_object
 from .aurelion_sol_stardust import (
     _E_EXECUTE_BASE_PCT,
     _E_EXECUTE_PCT_PER_100_STARDUST,
@@ -41,9 +41,11 @@ from .slot_extract import ability_name, extract_cooldown, extract_named, extract
 from .slotlib import by_option
 from .source_receipts import load_champion_sources
 
-# One full Q channel: 3.25 s of beam, with a burst on the primary target
-# at each full second of channel (3 bursts).
-_Q_CHANNEL_SECONDS = 3.25
+# One full Q channel, the binary AurelionSolQ MaxChannelDuration (3.25 s of
+# beam), with a burst on the primary target at each full second (3 bursts).
+_Q_CHANNEL_SECONDS = data_value(
+    spell_object("Aurelion Sol", "AurelionSolQ"), "MaxChannelDuration"
+)
 
 # Sourced channel bounds: the 0.25s recast lockout (binary
 # mSpellCooldownOrSealedQueueThreshold 0.25, wiki effects[5]) means a
