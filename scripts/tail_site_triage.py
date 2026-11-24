@@ -165,6 +165,40 @@ def _module_file(dotted: str) -> str:
     return dotted.replace(".", "/") + ".py"
 
 
+_FROM_CALCULATOR_IMPORT = re.compile(
+    r"from src\.calculator((?:\.[a-z_]+)*) import (\([^)]*\)|[^\n]+)"
+)
+
+
+def _imported_modules(package: str, names: str) -> set[str]:
+    """The module files one ``from src.calculator<package> import <names>`` reads.
+
+    An imported name that is a submodule of *package* is that submodule, so
+    ``from src.calculator.fight import authorship`` credits
+    ``fight/authorship.py``; any other name credits *package*'s own file,
+    which for a package directory is its ``__init__.py``.
+    """
+    package = package.lstrip(".")
+    modules: set[str] = set()
+    for entry in re.sub(r"#[^\n]*", "", names).strip("() \t").split(","):
+        words = entry.split()
+        if not words or not words[0].isidentifier():
+            continue
+        dotted = f"{package}.{words[0]}" if package else words[0]
+        if (CALCULATOR / _module_file(dotted)).exists():
+            modules.add(_module_file(dotted))
+        elif package:
+            modules.add(_package_file(package))
+    return modules
+
+
+def _package_file(dotted: str) -> str:
+    """A dotted name's own file: ``<name>.py``, or a package's ``__init__.py``."""
+    if (CALCULATOR / dotted.replace(".", "/")).is_dir():
+        return dotted.replace(".", "/") + "/__init__.py"
+    return _module_file(dotted)
+
+
 def _tolerance_modules() -> set[str]:
     """Modules whose own suite pins them tolerating input they did not build.
 
@@ -178,12 +212,8 @@ def _tolerance_modules() -> set[str]:
         source = path.read_text(encoding="utf-8")
         if not any(word in source.lower() for word in TOLERANCE_WORDS):
             continue
-        for match in re.finditer(r"src\.calculator\.([a-z_.]+) import", source):
-            found.add(_module_file(match.group(1)))
-        for match in re.finditer(r"from src\.calculator import \(([^)]*)\)", source):
-            found.update(
-                _module_file(name) for name in match.group(1).replace(",", " ").split()
-            )
+        for match in _FROM_CALCULATOR_IMPORT.finditer(source):
+            found.update(_imported_modules(match.group(1), match.group(2)))
     return found | {
         _module_file(leaf)
         for leaf, source in SPLIT_LEAVES.items()
