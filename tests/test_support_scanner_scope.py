@@ -274,7 +274,7 @@ def test_zilean_r_is_the_revive_channel_and_not_a_scanner_packet():
 # ---------------------------------------------------------------------------
 
 
-def test_kindred_r_heals_every_selected_teammate():
+def test_kindred_r_heals_every_selected_ally():
     """ "All targetable units within the zone are healed when the blessing
     ends" names no ally, so the scope override is what keeps the packet --
     and "all units" is every selected teammate, not the first one.

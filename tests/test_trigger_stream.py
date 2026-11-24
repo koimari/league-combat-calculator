@@ -2201,7 +2201,7 @@ class TestTheSupportTriggerLinkRaise:
     delete the guard.  Replacing one sentence with another only moves the
     day it goes stale, so the replacement comment states three facts and
     every one of them is asserted here instead: the link *is* emitted, the
-    emitted one is declined a branch earlier, and the branch is live for
+    emitted one is refused a branch earlier, and the branch is live for
     anything the earlier receipt admits.
     """
 
@@ -2251,10 +2251,10 @@ class TestTheSupportTriggerLinkRaise:
         assert enriched["_trigger_event_id"] == "e1"
         assert plain["_trigger_event_id"] is None
 
-    def test_the_emitted_link_is_declined_one_branch_earlier(self):
+    def test_the_emitted_link_is_refused_one_branch_earlier(self):
         """Everlasting's own declaration refuses it before any template gate.
 
-        The 3 s duration is not that earlier decline: the typed shield
+        The 3 s duration is not that earlier refusal: the typed shield
         ledger stages a timed shield, so the duration refuses nothing and
         the template receipt admits this packet.  What still shadows the
         guard is a branch earlier still — Everlasting is declared a SELF

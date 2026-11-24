@@ -67,7 +67,7 @@ def test_checked_in_bis_profiles_track_the_wiki_rebuild():
     """Everything the wiki can build must match; only aux-filled slots may differ.
 
     This artifact cannot be compared against a plain rebuild the way the other
-    two catalogues can. It is built by merging a wiki parse with an Axword
+    two catalogs can. It is built by merging a wiki parse with an Axword
     Meraki kit reference from a sibling repo that is usually absent, and that
     merge supplies 24 damage packets the wiki parser cannot read. Rebuilding
     without the sibling repo silently drops them, so the invariant checked here

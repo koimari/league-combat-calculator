@@ -657,7 +657,7 @@ def test_scheduler_authors_nothing_for_a_non_owner_or_empty_roster():
     assert not support2
 
 
-def test_missing_authored_index_selects_the_first_teammate_today():
+def test_missing_authored_index_selects_the_first_ally_today():
     """P3-3S sentinel rule: with no authored worthy_target_index the
     scheduler falls back to the no-selection sentinel (-1) — no Worthy
     ally is designated and the redirect/heal do NOT fire (Pledge is

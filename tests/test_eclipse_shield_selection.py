@@ -164,7 +164,7 @@ def _receipt(events: list[dict], *, duration: float = 4.0):
     return _walk(events, ReceiptLedger, duration=duration)
 
 
-def test_bis_receipt_names_unavailable_strongest_shield_rule():
+def test_bis_receipt_names_withheld_strongest_shield_rule():
     """The public BIS boundary names what the survival ledger does with the proc.
 
     The note is derived from the declaration now

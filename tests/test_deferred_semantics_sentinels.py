@@ -614,7 +614,7 @@ class TestIsAttackOrSpellVersusFromAllSources:
     otherwise, so ``AttackClass.OTHER`` damage (item procs, burns, thorns
     returns) goes unpriced for those five.
 
-    C3 declines to widen the gate: silently widening a gate inside a commit
+    C3 refuses to widen the gate: silently widening a gate inside a commit
     labelled "add a typed field" is a second correction riding the first,
     and no committed baseline scenario reaches the branch, so the widening
     would land unfixtured.  The commit that widens it turns this sentinel

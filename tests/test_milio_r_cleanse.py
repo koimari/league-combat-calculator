@@ -718,7 +718,7 @@ class TestHealAndCleanseSeparate:
 
 
 class TestScope:
-    def test_r_heal_fan_out_roster_is_self_plus_all_teammates(self):
+    def test_r_heal_fan_out_roster_is_self_plus_all_allies(self):
         # Pinned actual (the roster half of the brief's contract #5): the
         # R heal fans out to Milio AND every selected teammate — with two
         # selected allies there are two support copies (one per ally) and
@@ -776,7 +776,7 @@ class TestScope:
         assert decision.reason == "target_not_selected"
         assert decision.use_consumed is False
 
-    def test_r_cleanse_targets_self_and_every_selected_teammate(self):
+    def test_r_cleanse_targets_self_and_every_selected_ally(self):
         # P2-7 contract (the brief's contract #5): the R cleanse targets
         # Milio AND every selected teammate — the SAME roster the heal
         # fans out to — and each recipient carries its own decision

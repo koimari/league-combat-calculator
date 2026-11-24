@@ -195,7 +195,7 @@ def test_reviewed_self_or_ally_shields_expose_their_target_scope(champion, slot,
     assert shield["target_scope"] == scope
 
 
-def test_self_granted_shield_targets_the_caster_without_a_teammate():
+def test_self_granted_shield_targets_the_caster_without_a_ally():
     effects = derive_ally_effects(
         get_champion("Annie"),
         12,
@@ -253,7 +253,7 @@ def test_support_packet_missing_or_invalid_cast_time_fails_closed(bad_time):
         _sona_effects([cast])
 
 
-def test_prose_that_grants_only_the_caster_never_targets_a_teammate():
+def test_prose_that_grants_only_the_caster_never_targets_a_ally():
     """Rumble W: "grant himself a shield" is a self grant, not an ally packet.
 
     The scanner's self markers were inflected verb forms ("grants himself",

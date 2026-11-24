@@ -695,7 +695,7 @@ def test_champion_damage_after_consumption_delays_the_rearm_past_the_second_cast
     assert _row(result)["spell_shield_used"] is True
     assert receipt["uses_after"] == 0
     # The t=65 cast was ELIGIBLE — the window and acceptance admitted it and
-    # only the unelapsed cooldown declined it.  Without this the "not
+    # only the unelapsed cooldown refused it.  Without this the "not
     # blocked" assertions above would pass equally for a cast the shield
     # never even considered.
     late = [

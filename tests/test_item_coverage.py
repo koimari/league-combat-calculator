@@ -699,7 +699,7 @@ def test_a_defence_gated_by_a_bounded_option_publishes_that_gate(item_name):
 def test_a_defence_without_both_halves_of_the_gate_keeps_the_family_census(
     item_name, why_the_gate_does_not_apply
 ):
-    """Both ways the sub-question declines, so the discriminator is pinned."""
+    """Both ways the sub-question refuses, so the discriminator is pinned."""
     coverage = item_model_coverage(item_name, ATTACKER_LANES)
     assert coverage.status == "stats_only", why_the_gate_does_not_apply
     # The census names the mechanic it is about; what the gate decides is

@@ -37,7 +37,7 @@ PUBLISHED_PHASES = [
 ]
 
 
-def test_capability_contract_exposes_named_participant_and_catalogue_fields() -> None:
+def test_capability_contract_exposes_named_participant_and_catalog_fields() -> None:
     contract = public_capability_contract(
         input_limits={"level": (1.0, 18.0)},
         champion_option_count=2,

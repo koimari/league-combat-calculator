@@ -1790,7 +1790,7 @@ class TestSameTimeOrdering:
 
 
 class TestMissingIdentityAndRows:
-    def test_unavailable_source_fails_closed_named(self):
+    def test_withheld_source_fails_closed_named(self):
         # Pinned actual (the brief's contract #11): the R source is not
         # a declared cleanse — resolve_cleanse_item fails closed with a
         # KeyError naming the source (the unavailable-source denial).

@@ -67,7 +67,7 @@ def test_snapshot_carries_no_number_the_api_owns(committed):
     assert numbers <= {"maxRank", "maxHits"}
 
 
-def test_the_page_takes_every_item_from_the_served_catalogue():
+def test_the_page_takes_every_item_from_the_served_catalog():
     """No snapshot item can outrank /api/items or /api/boots: there are none."""
     source = APP_JS.read_text(encoding="utf-8")
     assert "DATA = { champions: data.champions || [], items: [] };" in source
@@ -76,7 +76,7 @@ def test_the_page_takes_every_item_from_the_served_catalogue():
     )
 
 
-def test_published_catalogues_stamp_the_patch_the_cache_pins():
+def test_published_catalogs_stamp_the_patch_the_cache_pins():
     """A builder rerun must not stamp last patch's number on this patch's asset."""
     for name in ("ability-catalog.json", "effect-catalog.json", "bis-profiles.json"):
         catalog = json.loads((ROOT / "static" / name).read_text(encoding="utf-8"))

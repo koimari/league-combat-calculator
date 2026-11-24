@@ -669,7 +669,7 @@ class TestExcludedTargets:
 # ---------------------------------------------------------------------------
 
 
-class TestDeniedAndUnavailableCasts:
+class TestDeniedAndWithheldCasts:
     def test_denied_w_cast_gets_no_kill_rule_and_no_refund(self) -> None:
         """A W cast the mana walk denies (insufficient mana) never happens,
         so the kill rule never fires: no refund, no cooldown change, W

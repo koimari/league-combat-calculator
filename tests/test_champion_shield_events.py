@@ -377,7 +377,7 @@ def test_senna_api_dawning_shadow_shields_senna_and_selected_ally():
 # ---------------------------------------------------------------------------
 
 
-def test_thresh_dark_passage_ally_shield_flows_to_selected_teammate():
+def test_thresh_dark_passage_ally_shield_flows_to_selected_ally():
     combat = _run_api_fight(
         "Thresh",
         allies=[

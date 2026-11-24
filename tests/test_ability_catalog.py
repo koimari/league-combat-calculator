@@ -28,12 +28,12 @@ def test_cached_catalog_contains_all_five_slots_for_all_champions():
 
 
 def test_checked_in_catalog_is_not_stale():
-    """The served catalogue must match what the builder produces from current data.
+    """The served catalog must match what the builder produces from current data.
 
-    Compares the *derived* catalogue rather than `source.sha256`. That hash
+    Compares the *derived* catalog rather than `source.sha256`. That hash
     covers every byte of data/champions.json, so it moved on any patch that
     touched unrelated champion fields and reported staleness where the
-    catalogue was in fact identical. app.js fetches this file at runtime, so
+    catalog was in fact identical. app.js fetches this file at runtime, so
     the content it serves is what matters.
     """
     checked_in = json.loads(
@@ -45,7 +45,7 @@ def test_checked_in_catalog_is_not_stale():
     assert len(checked_in["champions"]) == checked_in["champion_count"]
     assert all(len(champion["abilities"]) == 5 for champion in checked_in["champions"])
     assert all(champion["complete"] for champion in checked_in["champions"])
-    assert checked_in["champions"] == fresh["champions"], f"catalogue stale — {REBUILD}"
+    assert checked_in["champions"] == fresh["champions"], f"catalog stale — {REBUILD}"
 
 
 def test_checked_in_catalog_records_the_data_it_was_built_from():

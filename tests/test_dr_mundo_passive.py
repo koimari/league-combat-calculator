@@ -1189,7 +1189,7 @@ class TestCleanseReceipt:
         assert survival["cleanse"]["item"] == _P_CLEANSE_ITEM
         assert survival["cleanse_use"]["uses_after"] == 0
 
-    def test_unavailable_source_fails_closed(self):
+    def test_withheld_source_fails_closed(self):
         # Pinned actual (the brief's contract #14): the passive source is
         # not declared today, so the resolver fails closed with a KeyError
         # naming the source (a packet that cannot be attributed to a
@@ -1262,7 +1262,7 @@ class TestCooldownAndReduction:
 # ---------------------------------------------------------------------------
 
 
-class TestDestructionAndUnavailablePickup:
+class TestDestructionAndWithheldPickup:
     def test_wired_destruction_and_pickup_fail_closed(self):
         # P2-8 contract (the brief's contract #10): BOTH follow-ups are
         # named fail-closed denials — the enemy destruction needs enemy
@@ -1432,7 +1432,7 @@ class TestRepeatedTriggers:
 
 
 class TestMissingIdentityAndRows:
-    def test_unavailable_source_fails_closed_named(self):
+    def test_withheld_source_fails_closed_named(self):
         # Pinned actual (the brief's contract #14): the P source is not
         # declared, so the resolver's KeyError NAMES the source (the
         # "unavailable evidence" denial) — never a silent guess.

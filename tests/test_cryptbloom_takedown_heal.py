@@ -404,11 +404,11 @@ def test_heal_amount_is_base_plus_ap_ratio_of_attacker_ap():
     200 AP -> 140 at the derive level; the timeline packet equals the same
     formula on the main's resolved stats."""
     holder = _actor("ally:Lulu", "ally", (CRYPTBLOOM,), ap=0.0)
-    teammate = _actor("main:Ahri", "main", ())
+    ally = _actor("main:Ahri", "main", ())
     packets = derive_item_support_effects(
         holder,
         {"takedown_events": [{"time": 3.0, "target": "enemy:Aatrox"}]},
-        [holder, teammate],
+        [holder, ally],
     )
     heals = [p for p in packets if p["source"] == SOURCE]
     assert all(p["amount"] == pytest.approx(100.0) for p in heals)
@@ -417,7 +417,7 @@ def test_heal_amount_is_base_plus_ap_ratio_of_attacker_ap():
     packets = derive_item_support_effects(
         holder,
         {"takedown_events": [{"time": 3.0, "target": "enemy:Aatrox"}]},
-        [holder, teammate],
+        [holder, ally],
     )
     heals = [p for p in packets if p["source"] == SOURCE]
     assert all(p["amount"] == pytest.approx(140.0) for p in heals)
@@ -438,11 +438,11 @@ def test_derive_packet_shape_is_typed():
     duration, cooldown, target_scope, trigger, the roster target policy and
     selection key, and the _item_support marker."""
     holder = _actor("ally:Lulu", "ally", (CRYPTBLOOM,), ap=200.0)
-    teammate = _actor("main:Ahri", "main", ())
+    ally = _actor("main:Ahri", "main", ())
     packets = derive_item_support_effects(
         holder,
         {"takedown_events": [{"time": 3.0, "target": "enemy:Aatrox"}]},
-        [holder, teammate],
+        [holder, ally],
     )
     (packet,) = [
         p
@@ -484,8 +484,8 @@ def test_absent_or_malformed_takedown_receipts_are_filtered():
     with no time, a None time, no target, or a non-mapping row are
     filtered.  A time of 0.0 is a valid receipt time (not filtered)."""
     holder = _actor("ally:Lulu", "ally", (CRYPTBLOOM,))
-    teammate = _actor("main:Ahri", "main", ())
-    assert derive_item_support_effects(holder, {}, [holder, teammate]) == []
+    ally = _actor("main:Ahri", "main", ())
+    assert derive_item_support_effects(holder, {}, [holder, ally]) == []
 
     takedowns = [
         {"time": 3.0, "target": "enemy:Aatrox"},  # valid
@@ -496,7 +496,7 @@ def test_absent_or_malformed_takedown_receipts_are_filtered():
         {"time": 0.0, "target": "enemy:C"},  # time 0.0 is valid
     ]
     packets = derive_item_support_effects(
-        holder, {"takedown_events": takedowns}, [holder, teammate]
+        holder, {"takedown_events": takedowns}, [holder, ally]
     )
     heals = [p for p in packets if p["source"] == SOURCE]
     assert sorted(p["time"] for p in heals) == [0.0, 0.0, 3.0, 3.0]
@@ -547,17 +547,17 @@ def test_dead_holder_still_emits_heal_packets_at_derive_level():
     """The emission has no holder-health gate: a holder whose stats report
     health 0.0 still emits the full heal set for an authored takedown."""
     holder = _actor("ally:Lulu", "ally", (CRYPTBLOOM,), health=0.0, ap=100.0)
-    teammate = _actor("main:Ahri", "main", ())
+    ally = _actor("main:Ahri", "main", ())
     packets = derive_item_support_effects(
         holder,
         {"takedown_events": [{"time": 3.0, "target": "enemy:Aatrox"}]},
-        [holder, teammate],
+        [holder, ally],
     )
     heals = [p for p in packets if p["source"] == SOURCE]
     assert len(heals) == 2
     assert {p["target"] for p in heals} == {
         holder.participant_id,
-        teammate.participant_id,
+        ally.participant_id,
     }
     assert all(p["amount"] == pytest.approx(120.0) for p in heals)
 
@@ -567,7 +567,7 @@ def test_dead_holder_still_emits_heal_packets_at_derive_level():
 # ---------------------------------------------------------------------------
 
 
-def test_recipients_are_attacker_and_every_teammate_never_the_enemy():
+def test_recipients_are_attacker_and_every_ally_never_the_enemy():
     """With two teammates the heal set covers the attacker plus BOTH
     teammates; the dead enemy is never a recipient."""
     timeline = _timeline(
@@ -579,7 +579,7 @@ def test_recipients_are_attacker_and_every_teammate_never_the_enemy():
     assert "enemy:Aatrox" not in {event["target"] for event in heals}
 
 
-def test_no_teammates_attacker_only_heal():
+def test_no_allies_attacker_only_heal():
     """No teammates -> attacker-only heal: exactly one packet targeting the
     holder, same amount and receipt fields."""
     timeline = _timeline(allies=[], autos=False)
@@ -606,7 +606,7 @@ def test_second_authored_takedown_fires_a_second_set_derive_level():
     cooldown window between takedowns is not modeled at the derivation
     layer."""
     holder = _actor("ally:Lulu", "ally", (CRYPTBLOOM,), ap=200.0)
-    teammate = _actor("main:Ahri", "main", ())
+    ally = _actor("main:Ahri", "main", ())
     packets = derive_item_support_effects(
         holder,
         {
@@ -615,7 +615,7 @@ def test_second_authored_takedown_fires_a_second_set_derive_level():
                 {"time": 5.0, "target": "enemy:Darius"},
             ]
         },
-        [holder, teammate],
+        [holder, ally],
     )
     heals = [p for p in packets if p["source"] == SOURCE]
     assert len(heals) == 4

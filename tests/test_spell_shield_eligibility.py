@@ -1367,7 +1367,7 @@ def _late_decision(row: dict, cast_identity: str) -> dict:
     """The one eligibility decision recorded for *cast_identity*.
 
     The decisions receipt records the ELIGIBILITY reason, never the block
-    reason, so "was this cast declined on the cooldown or never considered
+    reason, so "was this cast refused on the cooldown or never considered
     at all?" is only answerable through it.
     """
     matches = [
@@ -1449,7 +1449,7 @@ def test_r13_the_rearm_instant_is_an_endpoint_start_inclusive():
     assert one_ms_early["damage_taken"] == pytest.approx(100.0)
     assert one_ms_early["spell_shield"]["rearms"] == []
     assert len(one_ms_early["spell_shield"]["blocked_packets"]) == 1
-    # Declined on the cooldown, not on eligibility.
+    # Refused on the cooldown, not on eligibility.
     assert _late_decision(one_ms_early, "Q:40.999")["eligible"] is True
 
 
@@ -1518,7 +1518,7 @@ def test_r13_every_champion_hit_restarts_the_timer_including_one_that_got_throug
     assert rearms[0]["consumed_at"] == pytest.approx(1.0)
     assert rearms[0]["timer_started_at"] == pytest.approx(41.0)
     assert rearms[0]["ready_at"] == pytest.approx(81.0)
-    # The t=41 ability was eligible and declined only by the restarted clock.
+    # The t=41 ability was eligible and refused only by the restarted clock.
     assert _late_decision(row, "Q:41.0")["eligible"] is True
 
 

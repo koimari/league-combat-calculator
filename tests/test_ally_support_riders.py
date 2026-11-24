@@ -157,7 +157,7 @@ def test_yuumi_best_friend_bonus_reads_the_per_level_row_at_level_one():
     assert bonus["amount"] == pytest.approx(105.0)
 
 
-def test_renata_e_ally_packets_scope_all_selected_teammates():
+def test_renata_e_ally_packets_scope_all_selected_allies():
     effects = _effects("Renata Glasc", casts=[{"slot": "E", "time": 1.0}])
 
     ally_shields = [e for e in effects if e["kind"] == "shield"]
@@ -314,7 +314,7 @@ def test_yuumi_r_best_friend_and_conversion_flow_into_the_ledger():
     assert any(e["kind"] == "shield" for e in bonus_events)
 
 
-def test_renata_e_shields_every_selected_teammate_and_self_once():
+def test_renata_e_shields_every_selected_ally_and_self_once():
     combat = _roster_combat(
         "Renata Glasc",
         allies=[

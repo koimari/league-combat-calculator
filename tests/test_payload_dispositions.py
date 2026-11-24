@@ -427,7 +427,7 @@ class TestARetaggedFieldFailsTheRankingSurfaces:
         assert components
 
     def test_one_retagged_leaf_refuses_the_whole_ranking(self) -> None:
-        """A preview in the map, and BIS declines to name a winner."""
+        """A preview in the map, and BIS refuses to name a winner."""
         from src.calculator.program.views.view_tag import UnrankableNumber
 
         combat = dict(_combat())

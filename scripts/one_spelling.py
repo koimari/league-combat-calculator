@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One concept, one spelling, over ``src/`` and ``scripts/``.
+"""One concept, one spelling, over ``src/``, ``scripts/`` and ``tests/``.
 
 A refusal is a rule answering with a named reason instead of a number, and
 ``src/calculator/quantity.py`` owns both kinds it comes in: ``withheld`` and
@@ -33,8 +33,10 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-TARGETS = ("src", "scripts")
-SELF = "scripts/one_spelling.py"
+TARGETS = ("src", "scripts", "tests")
+#: The gate's own source and its fixtures, which spell every banned word on
+#: purpose so the gate can be seen to catch it.
+SELF = frozenset({"scripts/one_spelling.py", "tests/test_one_spelling.py"})
 
 #: A word with no other sense in this tree, and the spelling that replaces it.
 RESPELLED: Mapping[str, str] = {
@@ -131,7 +133,7 @@ def scan(root: Path = ROOT, targets: Iterable[str] = TARGETS) -> list[str]:
     found: list[str] = []
     for path in sorted(paths, key=lambda p: p.as_posix()):
         where = path.relative_to(root).as_posix()
-        if where == SELF:
+        if where in SELF:
             continue
         found += _file_findings(where, path.read_text(encoding="utf-8"))
     return sorted(set(found))
