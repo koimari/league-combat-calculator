@@ -107,6 +107,7 @@ root|data_registry.py
 root|data_updater.py
 root|defense_composition.py
 root|defensive_effects.py
+root|delivery_eligibility.py
 root|economics_data.py
 root|event_row_field.py
 root|fight
@@ -223,7 +224,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|75
+er5-tail-ceiling|74
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
