@@ -3774,7 +3774,7 @@ class DefenseSubject:
     @property
     def is_melee(self) -> bool:
         """Whether the subject pays the melee rate of a range-split defence."""
-        return bool(self.stats.get("is_melee", False))
+        return bool(self.stats["is_melee"])
 
     def option(self, owner: str, option: DefenseOption) -> float:
         """One declared input option, validated, zero when none was supplied.

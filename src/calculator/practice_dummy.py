@@ -102,9 +102,9 @@ def apply_stat_overrides(
     result.update({key: float(value) for key, value in overrides.items()})
 
     if "bonus_health" in overrides and "health" not in overrides:
-        result["health"] = result.get("base_health", 0.0) + result["bonus_health"]
+        result["health"] = result["base_health"] + result["bonus_health"]
     if "health" in overrides:
-        result["base_health"] = result["health"] - result.get("bonus_health", 0.0)
+        result["base_health"] = result["health"] - result["bonus_health"]
     if "armor" in overrides:
         result["bonus_armor"] = max(
             0.0, result["armor"] - PRACTICE_DUMMY_BASE_STATS["armor"]

@@ -116,6 +116,7 @@ root|fight_result_row.py
 root|heal_event_row.py
 root|healing_helpers.py
 root|interpreters
+root|item_behavior.py
 root|item_coverage.py
 root|item_effects.py
 root|item_outcomes.py
@@ -131,6 +132,7 @@ root|manaflow_ledger.py
 root|minion_stats.py
 root|passive_parser.py
 root|patch_identity.py
+root|practice_dummy.py
 root|program/__init__.py
 root|program/amp.py
 root|program/build.py
@@ -220,7 +222,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|78
+er5-tail-ceiling|76
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
@@ -400,6 +402,7 @@ AUTHORED_DECLARATION|stats.py|calculate_total_stats|dict.get|"ability_power" 2
 AUTHORED_DECLARATION|program/rung.py|reason_of|getattr|"reason" 1
 AUTHORED_DECLARATION|rotation_resolver.py|build_rotation_receipt|dict.get|"slot" 1
 AUTHORED_DECLARATION|state_lifecycle.py|start|or-default|"source" 1
+AUTHORED_DECLARATION|item_behavior.py|_validate_stat_derivation|getattr|"granted" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"attribute" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"effects" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"leveling" 1
