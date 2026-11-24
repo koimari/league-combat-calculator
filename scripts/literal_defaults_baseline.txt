@@ -114,6 +114,7 @@ root|fight_receipts.py
 root|fight_request_bounds.py
 root|fight_result_row.py
 root|heal_event_row.py
+root|healing.py
 root|healing_helpers.py
 root|interpreters
 root|item_behavior.py
@@ -222,7 +223,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|76
+er5-tail-ceiling|75
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
@@ -596,6 +597,7 @@ LOADOUT_NAMES|item_effects.py|resolve_damage_effects|dict.get|"name" 1
 LOADOUT_NAMES|item_effects.py|target_class_denials|dict.get|"name" 1
 LOADOUT_NAMES|item_effects.py|target_class_denials|or-default|"name" 1
 LOADOUT_NAMES|defensive_effects.py|resolve_starting_defenses|dict.get|"name" 1
+LOADOUT_NAMES|healing.py|derive_self_healing|dict.get|"name" 1
 MODULE_DECLARATION|champions/__init__.py|_module_declaration|getattr|attribute 1
 MODULE_DECLARATION|champions/module_contract.py|contract_from_module|getattr|"MODULE_COVERAGE" 1
 MODULE_DECLARATION|champions/module_contract.py|contract_from_module|getattr|"SLOTS" 1
@@ -621,6 +623,7 @@ MODULE_DECLARATION|interpreters/__init__.py|_validate_authority_agreement|getatt
 MODULE_DECLARATION|interpreters/cast_proc.py|self_shield_owners|getattr|"self_shield" 1
 MODULE_DECLARATION|interpreters/defense_state.py|_policy_reference|getattr|name 1
 MODULE_DECLARATION|item_coverage.py|_prices_holder_durability|getattr|field 1
+MODULE_DECLARATION|healing.py|_load_declarations|getattr|"SELF_HEALING_RULE" 1
 OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_ap_per_unit" 1
 OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_health_per_unit" 1
 OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_mana_per_unit" 1
