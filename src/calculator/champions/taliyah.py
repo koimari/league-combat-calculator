@@ -48,7 +48,7 @@ _Q_NORMAL_INITIAL_SPEED = uniform_spell_field(
     spell_object("Taliyah", "TaliyahQMis"), "missileSpeed"
 )
 _Q_NORMAL_DECELERATION = 5000.0
-_Q_WORKED_SPEED = 2000.0
+_Q_WORKED_SPEED = 2000.0  # cached Q speed field: "3600 - 1800 • 2000"
 _Q_ORIGIN_OFFSET = 50.0
 _TALIYAH_Q_SPELL = spell_object("Taliyah", "TaliyahQ")
 _Q_MAX_RANGE = uniform_spell_field(_TALIYAH_Q_SPELL, "castRange")

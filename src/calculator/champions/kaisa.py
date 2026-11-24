@@ -40,7 +40,7 @@ from .slot_extract import (
 )
 from .source_receipts import load_champion_sources
 
-_Q_VOLLEY_DURATION = 1.0
+_Q_VOLLEY_DURATION = 1.0  # cached Q: "It takes 1 second for all missiles to fire"
 
 # Cached prose: Q "releases a swarm of 6 missiles ... each one hitting their
 # target after 0.4 seconds" and evolved "instead fires 12 missiles"; W

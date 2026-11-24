@@ -73,7 +73,7 @@ _JAYCE_STATIC_FIELD_SPELL = spell_object("Jayce", "JayceStaticField")
 LIGHTNING_FIELD_DURATION = data_value(_JAYCE_STATIC_FIELD_SPELL, "Duration")
 
 # R is never leveled: it is permanently rank 1.
-_TRANSFORM_RANK = 1
+_TRANSFORM_RANK = 1  # cached R: Transform "cannot increase its rank"
 
 # Q/W/E JSON entry order. R's is inverted — ``_transform_ability``
 # resolves that slot by name instead.
