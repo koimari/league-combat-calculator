@@ -1333,8 +1333,13 @@ class TestRefreshItemEffects:
 
     @pytest.fixture(autouse=True)
     def preserve_registry(self):
-        """Snapshot and restore ITEM_EFFECTS around each test."""
-        saved = copy.deepcopy(item_effects.ITEM_EFFECTS)
+        """Snapshot and restore ITEM_EFFECTS around each test.
+
+        The entry objects themselves come back, not copies: the rule memo
+        re-checks entries by identity, so a copy would make every later test
+        recompile every owner.  The tests here replace entries, never edit one.
+        """
+        saved = dict(item_effects.ITEM_EFFECTS)
         yield
         item_effects.ITEM_EFFECTS.clear()
         item_effects.ITEM_EFFECTS.update(saved)
