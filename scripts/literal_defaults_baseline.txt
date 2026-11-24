@@ -76,6 +76,7 @@ root|ability_atoms.py
 root|ability_dps_matrix.py
 root|ability_prose.py
 root|ability_spec.py
+root|ally_effects.py
 root|ally_packet_recipient.py
 root|application_errors.py
 root|attack_cadence.py
@@ -226,7 +227,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|72
+er5-tail-ceiling|71
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
@@ -594,6 +595,8 @@ CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"mana" 2
 CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"manaRegen" 2
 CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"perLevel" 3
 CACHED_SOURCE_ROW|auto_attack_policy.py|_source_cast_time|dict.get|"abilities" 1
+CACHED_SOURCE_ROW|ally_effects.py|_cached_producer_passive|dict.get|"name" 1
+CACHED_SOURCE_ROW|ally_effects.py|_cached_producer_passive|dict.get|"passives" 1
 LOADOUT_NAMES|item_effects.py|_cached_sustain_stat|or-default|"name" 1
 LOADOUT_NAMES|item_effects.py|_resolve_damage_effects_uncached|dict.get|"name" 1
 LOADOUT_NAMES|item_effects.py|active_secondary_ad_item_name|dict.get|"name" 1
@@ -606,6 +609,7 @@ LOADOUT_NAMES|item_effects.py|target_class_denials|or-default|"name" 1
 LOADOUT_NAMES|defensive_effects.py|resolve_starting_defenses|dict.get|"name" 1
 LOADOUT_NAMES|healing.py|derive_self_healing|dict.get|"name" 1
 LOADOUT_NAMES|projectile_defense.py|resolve_projectile_defense|dict.get|"name" 1
+LOADOUT_NAMES|ally_effects.py|resolve_ally_stat_effects|dict.get|"name" 1
 MODULE_DECLARATION|champions/__init__.py|_module_declaration|getattr|attribute 1
 MODULE_DECLARATION|champions/module_contract.py|contract_from_module|getattr|"MODULE_COVERAGE" 1
 MODULE_DECLARATION|champions/module_contract.py|contract_from_module|getattr|"SLOTS" 1
