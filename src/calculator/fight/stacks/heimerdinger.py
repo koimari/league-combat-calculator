@@ -11,7 +11,7 @@ from ...champions.shared_option_keys import (
 from ...damage_event_row import event_raw_damage
 from ..results import RotationResult
 from ..state import FightState
-from .account import StackEvent, _resource_ledger, _StackAccount
+from .account import StackEvent, _resource_ledger, _StackAccount, walks_for
 
 
 def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
@@ -30,6 +30,8 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
     ``resource_ledger["w_e"]`` (kind "w_e") sub-section — the mana
     account is never replaced — and never re-prices any damage.
     """
+    if not walks_for(state, "Heimerdinger"):
+        return
     if (
         HEIMERDINGER_ROCKETS not in state.champion_options
         and HEIMERDINGER_GRENADE_UPGRADE not in state.champion_options

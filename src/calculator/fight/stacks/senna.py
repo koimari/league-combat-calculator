@@ -8,7 +8,7 @@ from ...champions.shared_option_keys import SENNA_MIST_STACKS
 from ..config import _seeded_option_stacks
 from ..results import RotationResult
 from ..state import FightState
-from .account import StackEvent, _resource_ledger, _StackAccount
+from .account import StackEvent, _resource_ledger, _StackAccount, walks_for
 
 
 def _add_senna_souls(
@@ -29,6 +29,8 @@ def _add_senna_souls(
     ``resource_ledger["mist"]`` (kind "souls") sub-section — the mana
     account is never replaced — and never re-prices any damage.
     """
+    if not walks_for(state, "Senna"):
+        return
     if SENNA_MIST_STACKS not in (state.champion_options):
         # Not a Senna-configured fight: no souls surface at all.
         return

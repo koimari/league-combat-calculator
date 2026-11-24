@@ -170,6 +170,12 @@ class FightConfig:
     # None is a direct engine caller with no champion, whose impacts land at
     # the command itself.
     windup: Windup | None = None
+    # The attacker's cached champion name, set beside ``windup`` by
+    # ``pipeline.run_fight``.  A champion's stack walk runs only for its own
+    # champion, since two kits can share an option key (Irelia and K'Sante
+    # both declare ``w_charge``).  None is a direct engine caller that names
+    # no champion, whose walks stay gated on their options alone.
+    champion_name: str | None = None
     target_threshold_shield_amount: float = 0.0
     target_threshold_shield_health_ratio: float = 0.0
     target_threshold_shield_duration: float = 0.0

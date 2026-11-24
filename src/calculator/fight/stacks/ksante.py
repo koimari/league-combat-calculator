@@ -6,7 +6,7 @@ from ...champions.ksante import KSANTE_PATH_MAKER_RULE
 from ...champions.shared_option_keys import KSANTE_ALL_OUT, KSANTE_PATH_MAKER_CHARGE
 from ..results import RotationResult
 from ..state import FightState
-from .account import StackEvent, _resource_ledger, _StackAccount
+from .account import StackEvent, _resource_ledger, _StackAccount, walks_for
 
 
 def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
@@ -26,6 +26,8 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
     sub-section — the mana account is never replaced — and never
     re-prices any damage.
     """
+    if not walks_for(state, "K'Sante"):
+        return
     if (
         KSANTE_PATH_MAKER_CHARGE not in state.champion_options
         and KSANTE_ALL_OUT not in state.champion_options

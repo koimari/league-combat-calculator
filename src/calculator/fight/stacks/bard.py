@@ -18,7 +18,7 @@ from ...champions.bard import (
 from ...champions.shared_option_keys import BARD_CHIMES
 from ..results import RotationResult
 from ..state import FightState
-from .account import StackEvent, _resource_ledger, _stack_receipt_row
+from .account import StackEvent, _resource_ledger, _stack_receipt_row, walks_for
 
 
 def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> None:
@@ -38,6 +38,8 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
     (kind "chimes") sub-section — the mana account is never replaced —
     and never re-prices any damage.
     """
+    if not walks_for(state, "Bard"):
+        return
     if BARD_CHIMES not in (state.champion_options):
         return
 

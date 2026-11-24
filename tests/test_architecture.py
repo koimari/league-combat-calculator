@@ -125,7 +125,6 @@ FIGHT_STEPS_WITHOUT_A_FRONT_DOOR = (
     "fight.runes.streams",
     "fight.setup.combat_state",
     "fight.setup.shield_reaver",
-    "fight.stacks.account",
     "fight.stacks.ashe",
     "fight.stacks.aurelion_sol",
     "fight.stacks.bard",

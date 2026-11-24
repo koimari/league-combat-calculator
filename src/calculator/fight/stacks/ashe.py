@@ -15,7 +15,7 @@ from ..config import _seeded_option_stacks, declared_option_default
 from ..ledger.breakdown import source_damage_events
 from ..results import RotationResult
 from ..state import FightState
-from .account import StackEvent, _resource_ledger, _stack_receipt_row
+from .account import StackEvent, _resource_ledger, _stack_receipt_row, walks_for
 
 
 class FocusWalk(NamedTuple):
@@ -170,6 +170,8 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
     never replaced — and never re-prices the parse-time Q (the gate +
     the flurry/AS pricing stay exactly as the module prices them).
     """
+    if not walks_for(state, "Ashe"):
+        return
     option = state.champion_options
     q_entry = ability_payload(state.ability_damages, "Q")
     q_active = bool(
