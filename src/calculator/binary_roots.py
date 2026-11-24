@@ -162,11 +162,11 @@ def calculation_breakpoint_value(
     tiers = calculation_breakpoints(spell_obj, calculation_name)
     for part in _breakpoint_parts(spell_obj, calculation_name):
         if "mLevel1Value" in part:
-            reached = sum(
-                1
-                for step in part.get("mBreakpoints") or ()
-                if _breakpoint_level(step) <= level
-            )
+            # calculation_breakpoints above already refused a non-list table.
+            steps = part.get("mBreakpoints")
+            if steps is None:
+                return tiers[0]
+            reached = sum(1 for step in steps if _breakpoint_level(step) <= level)
             return tiers[reached]
     raise RuntimeError(
         f"calculation {calculation_name!r}: no level-breakpoint formula part"
