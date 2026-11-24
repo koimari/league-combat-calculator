@@ -132,14 +132,11 @@ def _active_seconds(attacker: Any, slot: AllyPacketSlot | None) -> float:
 
 
 def _active_seconds_for(attacker: Any, item_name: str) -> float:
-    """One validated active-seconds read for *item_name*.
+    """One validated active-seconds read for *item_name*; absent reads 0.0.
 
-    Delegates to the typed ``input_option_float_value`` accessor so the
-    emission layer re-checks the schema bounds AND step multiple: a direct
-    timeline caller cannot author an out-of-domain activation even though
-    the request layer already validates.  Absent input reads 0.0 (no cast).
+    The typed accessor re-checks schema bounds and step multiple here too,
+    so a direct timeline caller cannot author an out-of-domain activation.
     """
-
     request = getattr(attacker, "request", None)
     item_options = getattr(request, "item_options", None) or {}
     return input_option_float_value(

@@ -18,7 +18,6 @@ def _cleanse_active_packet(
     attacker: Any, target: Any, time: float, item: str
 ) -> dict[str, Any]:
     """One self-cast cleanse-kind packet for a cleanse active item."""
-
     declaration = item_declaration(item)
     return _packet(
         attacker=attacker,
@@ -36,7 +35,6 @@ def _cleanse_active_packet(
 
 def _cleanse_movement_entry(item: str) -> dict[str, Any] | None:
     """*item*'s atom-backed movement entry, or ``None`` when it grants none."""
-
     return movement_entry(item_declaration(item))
 
 

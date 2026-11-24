@@ -113,7 +113,6 @@ def _bailout_denied_components() -> tuple[str, ...]:
 
 def _bailout_w_source() -> Mapping[str, Any]:
     """Return the reviewed W wiki-entry receipt (url + revision)."""
-
     for entry in renata_glasc.SOURCES:
         if str(entry.get("label", "")) == _BAILOUT_W_SOURCE_LABEL:
             return entry
