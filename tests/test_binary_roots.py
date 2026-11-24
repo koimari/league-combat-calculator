@@ -19,6 +19,7 @@ from src.calculator.binary_roots import (
     data_value_at_rank,
     record_value,
     spell_object,
+    uniform_spell_field,
 )
 from src.calculator.champions import aphelios_weapons
 
@@ -1499,3 +1500,41 @@ class TestCalculationBreakpointValue:
         spell = _breakpoint_spell({"mNumber": 0.67})
         with pytest.raises(RuntimeError, match="no level-breakpoint formula part"):
             calculation_breakpoint_value(spell, "Ratio", 1)
+
+
+class TestUniformSpellField:
+    """An mSpell field read as one number: a scalar, or one value at every rank."""
+
+    def test_a_scalar_and_a_uniform_row_read_as_their_value(self):
+        spell = {"mSpell": {"missileSpeed": 1750.0, "mChannelDuration": [2.75] * 7}}
+        assert uniform_spell_field(spell, "missileSpeed") == 1750.0
+        assert uniform_spell_field(spell, "mChannelDuration") == 2.75
+
+    def test_a_row_whose_ranks_differ_raises(self):
+        spell = {"mSpell": {"mChannelDuration": [1.0, 1.5]}}
+        with pytest.raises(RuntimeError, match="ranks differ"):
+            uniform_spell_field(spell, "mChannelDuration")
+
+    @pytest.mark.parametrize("value", [None, True, "fast"])
+    def test_an_absent_or_non_numeric_field_raises(self, value):
+        with pytest.raises(RuntimeError):
+            uniform_spell_field({"mSpell": {"missileSpeed": value}}, "missileSpeed")
+
+
+class TestSourcedChampionTimings:
+    """Each module constant below is the binary value it now reads."""
+
+    def test_galio(self):
+        from src.calculator.champions import galio
+
+        assert galio._Q_TORNADO_TICKS == 4
+        assert galio._Q_TORNADO_TICK_INTERVAL == pytest.approx(0.5)
+        assert galio._W_MAX_CHARGE == pytest.approx(2.0)
+        assert galio._R_LANDING_TIME == pytest.approx(2.75)
+
+    def test_kaisa_taliyah_vi(self):
+        from src.calculator.champions import kaisa, taliyah, vi
+
+        assert kaisa._W_MISSILE_SPEED == pytest.approx(1750.0)
+        assert taliyah._Q_NORMAL_INITIAL_SPEED == pytest.approx(3600.0)
+        assert vi._Q_MAX_CHARGE_SECONDS == pytest.approx(1.25)

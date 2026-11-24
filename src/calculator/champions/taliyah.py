@@ -22,7 +22,7 @@ import math
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import data_value, spell_object, uniform_spell_field
 from ..stat_formulas import effective_cooldown
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
@@ -44,7 +44,9 @@ _TALIYAH_E_SPELL = spell_object("Taliyah", "TaliyahE")
 _E_ROW_INTERVAL = data_value(_TALIYAH_E_SPELL, "DelayBetweenRows")
 _E_DETONATION_MULTIPLIERS = (1.0, 0.75, 0.5, 0.25)
 _Q_NORMAL_LAUNCH_OFFSETS = (0.25, 0.75, 1.25, 1.5, 1.75)
-_Q_NORMAL_INITIAL_SPEED = 3600.0
+_Q_NORMAL_INITIAL_SPEED = uniform_spell_field(
+    spell_object("Taliyah", "TaliyahQMis"), "missileSpeed"
+)
 _Q_NORMAL_DECELERATION = 5000.0
 _Q_WORKED_SPEED = 2000.0
 _Q_ORIGIN_OFFSET = 50.0

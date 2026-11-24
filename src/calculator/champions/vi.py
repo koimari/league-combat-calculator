@@ -23,7 +23,7 @@ from typing import Any
 
 from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import data_value, spell_object, uniform_spell_field
 from ..stat_formulas import effective_cooldown
 from .charge_cadence import ChargeRule
 from .contract_vocabulary import coverage
@@ -42,7 +42,7 @@ from .slot_extract import (
 from .source_receipts import load_champion_sources
 
 _VI_Q_SPELL = spell_object("Vi", "ViQ")
-_Q_MAX_CHARGE_SECONDS = 1.25
+_Q_MAX_CHARGE_SECONDS = uniform_spell_field(_VI_Q_SPELL, "mChannelDuration")
 _Q_MIN_RANGE = data_value(_VI_Q_SPELL, "MinDashRange")
 # The named DataValue is the dash-range delta; mCastRangeGrowthMax is a
 # separate targeting field and is not the Q endpoint used by this module.

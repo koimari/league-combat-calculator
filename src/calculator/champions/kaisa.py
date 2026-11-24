@@ -22,7 +22,7 @@ from collections.abc import Iterable
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import data_value, spell_object, uniform_spell_field
 from ..stat_formulas import effective_cooldown
 from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
@@ -44,7 +44,7 @@ _Q_FIRST_HIT_DELAY = 0.4
 _Q_VOLLEY_DURATION = 1.0
 _Q_NORMAL_MISSILES = 6
 _Q_EVOLVED_MISSILES = 12
-_W_MISSILE_SPEED = 1750.0
+_W_MISSILE_SPEED = uniform_spell_field(spell_object("Kai'Sa", "KaisaW"), "missileSpeed")
 _W_MAX_RANGE = 3000.0
 _W_NORMAL_STACKS = 2
 _W_EVOLVED_STACKS = 3

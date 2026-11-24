@@ -340,6 +340,25 @@ def _data_value_at_index(
     raise RuntimeError(f"{label} not found")
 
 
+def uniform_spell_field(spell_obj: dict[str, Any], field: str) -> float:
+    """An ``mSpell`` field that states one value: a scalar, or one at every rank.
+
+    Galio's R lands when its ``mChannelDuration`` ends, the same 2.75 s at
+    every rank; a row whose ranks differ raises, since one number would then
+    misstate the others.  ``missileSpeed`` is a scalar.
+    """
+    label = f"spell field {field!r}"
+    row = _dig(spell_obj, "mSpell", field, want=(list, int, float), label=label)
+    if isinstance(row, bool):
+        raise RuntimeError(f"{label}: a bool is not a number")
+    values = {
+        _snapped(value, label) for value in (row if isinstance(row, list) else [row])
+    }
+    if len(values) != 1:
+        raise RuntimeError(f"{label}: ranks differ ({sorted(values)})")
+    return values.pop()
+
+
 def data_value(spell_obj: dict[str, Any], value_name: str) -> float:
     """Read the first finite, snapped entry of a named DataValue rank row."""
     return _data_value_at_index(spell_obj, value_name, 0, "first value")
