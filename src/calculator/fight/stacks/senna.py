@@ -3,6 +3,7 @@
 from collections.abc import Iterable, Mapping
 from typing import Any
 
+from ...champions.senna import SENNA_MIST_RULE
 from ...champions.shared_option_keys import SENNA_MIST_STACKS
 from ..config import _seeded_option_stacks
 from ..results import RotationResult
@@ -31,7 +32,6 @@ def _add_senna_souls(
     if SENNA_MIST_STACKS not in (state.champion_options):
         # Not a Senna-configured fight: no souls surface at all.
         return
-    from ...champions.senna import SENNA_MIST_RULE
 
     option = state.champion_options
     seeded = _seeded_option_stacks(option, "champion", "Senna", SENNA_MIST_STACKS)

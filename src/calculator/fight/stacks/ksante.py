@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from ...champions.ksante import KSANTE_PATH_MAKER_RULE
 from ...champions.shared_option_keys import KSANTE_ALL_OUT, KSANTE_PATH_MAKER_CHARGE
 from ..results import RotationResult
 from ..state import FightState
@@ -30,7 +31,6 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
         and KSANTE_ALL_OUT not in state.champion_options
     ):
         return
-    from ...champions.ksante import KSANTE_PATH_MAKER_RULE
 
     w_entry = state.ability_damages.get("W")
     parts: list[Any] = []

@@ -14,6 +14,7 @@ from .capabilities import SUPPORT_TARGET_SCOPES
 from .interpreters.ally_packet import AllyPacketSlot
 from .interpreters.resistance_shred import ShredSlot, walk_slot
 from .item_behavior import AllyProducer, FightFacts, Resistance
+from .item_effects import input_option_float_value
 from .roster_composition import Combatant
 from .survival.classify import SUPPORT_RANK_KEY
 from .survival.phases import TransitionRank
@@ -138,7 +139,6 @@ def _active_seconds_for(attacker: Any, item_name: str) -> float:
     timeline caller cannot author an out-of-domain activation even though
     the request layer already validates.  Absent input reads 0.0 (no cast).
     """
-    from .item_effects import input_option_float_value
 
     request = getattr(attacker, "request", None)
     item_options = getattr(request, "item_options", None) or {}

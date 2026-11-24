@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 
+from .champions import _CHAMPION_MODULES
 from .champions.skill_orders import get_ability_rank
 from .item_behavior import DefenseField, DefenseMechanic
 from .item_behavior_catalog import DEFENSE_RECEIPTS
@@ -58,7 +59,6 @@ def _champion_starting_revive(
     Division, Zilean Chronoshift) return the revive payload; every other
     champion fails closed with zero revive fields.
     """
-    from .champions import _CHAMPION_MODULES
 
     module = _CHAMPION_MODULES.get(champion_name)
     if module is None:

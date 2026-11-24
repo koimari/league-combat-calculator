@@ -3,6 +3,7 @@
 from typing import Any
 
 from ...ability_atoms import ability_field
+from ...champions.rengar import RENGAR_FEROCITY_STACK_RULE
 from ...champions.shared_option_keys import RENGAR_FEROCITY
 from ...state_timeline import EventStamp
 from ...timed_stacks import TimedStackState
@@ -40,7 +41,6 @@ def _build_ferocity_timeline(
         if isinstance(info, dict)
     ):
         return None
-    from ...champions.rengar import RENGAR_FEROCITY_STACK_RULE
 
     rule = RENGAR_FEROCITY_STACK_RULE
     options = state.champion_options

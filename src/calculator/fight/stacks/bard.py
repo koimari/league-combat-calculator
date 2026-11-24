@@ -4,6 +4,17 @@ from collections.abc import Mapping
 from typing import Any
 
 from ...ability_atoms import ability_field, ability_payload, ability_sub_payload
+from ...champions.bard import (
+    _CHIMES_PER_TIER,
+    _DEFAULT_CHIMES,
+    _MEEP_AP_RATIO,
+    _MEEP_BASE,
+    _MEEP_PER_TIER,
+    _MEEP_RECHARGE_TIERS,
+    _MEEP_STOCK_TIERS,
+    BARD_TRAVELERS_CALL_RULE,
+    _tier_value,
+)
 from ...champions.shared_option_keys import BARD_CHIMES
 from ..results import RotationResult
 from ..state import FightState
@@ -29,17 +40,6 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
     """
     if BARD_CHIMES not in (state.champion_options):
         return
-    from ...champions.bard import (
-        _CHIMES_PER_TIER,
-        _DEFAULT_CHIMES,
-        _MEEP_AP_RATIO,
-        _MEEP_BASE,
-        _MEEP_PER_TIER,
-        _MEEP_RECHARGE_TIERS,
-        _MEEP_STOCK_TIERS,
-        BARD_TRAVELERS_CALL_RULE,
-        _tier_value,
-    )
 
     option = state.champion_options
     try:

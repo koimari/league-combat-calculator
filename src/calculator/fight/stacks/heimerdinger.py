@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 from typing import Any
 
+from ...champions.heimerdinger import HEIMER_E_GRENADE_RULE, HEIMER_W_ROCKETS_RULE
 from ...champions.shared_option_keys import (
     HEIMERDINGER_GRENADE_UPGRADE,
     HEIMERDINGER_ROCKETS,
@@ -34,10 +35,6 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
         and HEIMERDINGER_GRENADE_UPGRADE not in state.champion_options
     ):
         return
-    from ...champions.heimerdinger import (
-        HEIMER_E_GRENADE_RULE,
-        HEIMER_W_ROCKETS_RULE,
-    )
 
     account = _StackAccount("w_e", 0.0, 0, counting=False)
     # The accepted stream: the engine-priced W/E parts, one receipt per
