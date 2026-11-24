@@ -7,6 +7,7 @@ from types import MappingProxyType
 from typing import Any, NamedTuple
 
 from ..ability_spec import DamagePart
+from ..binary_roots import calculation_coefficient, data_value_at_rank, spell_object
 from .charge_cadence import ChargeRule
 from .engine import SlotCtx, build_parser
 from .inputs import int_option
@@ -26,6 +27,9 @@ from .slot_extract import (
 )
 from .source_receipts import load_champion_sources, state_receipt
 
+_HEIMER_Q_SPELL = spell_object("Heimerdinger", "HeimerdingerQ")
+_HEIMER_R_SPELL = spell_object("Heimerdinger", "HeimerdingerR")
+
 
 def _turret_damage(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("Q", min(max(int(ctx.option("q_variant")), 0), 1))
@@ -37,18 +41,30 @@ def _turret_damage(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     turret_count = min(max(int(ctx.option("q_turrets")), 1), 3)
     attacks = min(max(int(ctx.option("q_turret_attacks")), 1), 12)
+    ap = ctx.stat("ability_power")
     if variant == 0:
+        # Binary HeimerdingerQ: both rows are per Q rank, as is each ratio.
         shot = (
-            7.0
-            + (23.0 - 7.0) * (ctx.level - 1) / 17.0
-            + 0.35 * ctx.stat("ability_power")
+            data_value_at_rank(_HEIMER_Q_SPELL, "BaseDamage", rank)
+            + data_value_at_rank(_HEIMER_Q_SPELL, "TurretAPRatio", rank) * ap
         )
-        beam = 40.0 + 20.0 * (rank - 1) + 0.55 * ctx.stat("ability_power")
+        beam = (
+            data_value_at_rank(_HEIMER_Q_SPELL, "BaseDamageBeam", rank)
+            + data_value_at_rank(_HEIMER_Q_SPELL, "BeamAPRatio", rank) * ap
+        )
         name = "H-28G Evolution Turret"
     else:
+        # Binary HeimerdingerR: the Apex turret's rows are per R rank, and its
+        # QUltDamage / QUltDamageBeam calculations carry the AP coefficients.
         r_rank = min(max(ctx.rank_for("R"), 1), 3)
-        shot = 80.0 + 20.0 * (r_rank - 1) + 0.35 * ctx.stat("ability_power")
-        beam = 100.0 + 40.0 * (r_rank - 1) + 0.70 * ctx.stat("ability_power")
+        shot = (
+            data_value_at_rank(_HEIMER_R_SPELL, "QUltBaseDamage", r_rank)
+            + calculation_coefficient(_HEIMER_R_SPELL, "QUltDamage") * ap
+        )
+        beam = (
+            data_value_at_rank(_HEIMER_R_SPELL, "QUltBaseDamageBeam", r_rank)
+            + calculation_coefficient(_HEIMER_R_SPELL, "QUltDamageBeam") * ap
+        )
         name = "H-28Q Apex Turret"
     total_shots = turret_count * attacks
     beam_count = min(max(int(ctx.option("q_beams")), 0), turret_count)
