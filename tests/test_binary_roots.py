@@ -1544,3 +1544,15 @@ class TestSourcedChampionTimings:
 
         assert aurelion_sol._Q_CHANNEL_SECONDS == pytest.approx(3.25)
         assert kennen._BOLT_INTERVAL == pytest.approx(0.5)
+
+    def test_yasuo_and_yone_share_one_crit_damage_mod(self, monkeypatch):
+        from src.calculator.champions import yasuo_yone
+
+        assert yasuo_yone.CRIT_DAMAGE_MULTIPLIER_FACTOR == pytest.approx(0.9)
+        monkeypatch.setattr(
+            yasuo_yone,
+            "data_value",
+            lambda spell, name: 0.9 if spell["mScriptName"] == "YasuoPassive" else 1.0,
+        )
+        with pytest.raises(RuntimeError, match="CritDamageMod differ"):
+            yasuo_yone._shared_crit_damage_mod()
