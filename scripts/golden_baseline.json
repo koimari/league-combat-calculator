@@ -4884,7 +4884,7 @@
           "area_damage": true,
           "cooldown": 12.0,
           "damage_type": "physical",
-          "detail": "W carries Adaptive Defenses' pre-fight shield: 303.8 (20% of max HP) for 2s; the physical/magic adaptation boundary is documented in ASSUMPTIONS",
+          "detail": "W carries Adaptive Defenses' pre-fight shield: 227.85 (15% of max HP) for 2s; the physical/magic adaptation boundary is documented in ASSUMPTIONS",
           "event_order_certified": "single_hit",
           "name": "Tactical Sweep",
           "parts": [
@@ -4896,7 +4896,7 @@
           "self_shield_events": [
             {
               "actor_wide": true,
-              "amount": 303.8,
+              "amount": 227.85,
               "duration": 2.0,
               "rebind_on_ability_hit": true,
               "source": "Adaptive Defenses"
@@ -54209,14 +54209,14 @@
       "numeric_leaves": 46994,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "7f4d7356885806e46072f16d8fd08f05b156112c",
+    "git_head": "402c7b67c32f3885cdf91164a40caae9fa1b9f6d",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "5403cb65754c44bed9f9709132a23b32f2a99c78"
+    "src_tree_sha": "09443cb162150aa700d22e3819975b72549deffb"
   },
   "registered_champion_fights": {
     "Aatrox": {
