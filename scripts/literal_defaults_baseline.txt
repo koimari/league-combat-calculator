@@ -95,6 +95,7 @@ root|cast_order_overrides.py
 root|certified_casts.py
 root|champion_cleanses.py
 root|champion_growth.py
+root|champion_opening_defenses.py
 root|champions
 root|cleanse_declarations.py
 root|combat_events.py
@@ -227,7 +228,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|71
+er5-tail-ceiling|70
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
@@ -636,6 +637,7 @@ MODULE_DECLARATION|interpreters/cast_proc.py|self_shield_owners|getattr|"self_sh
 MODULE_DECLARATION|interpreters/defense_state.py|_policy_reference|getattr|name 1
 MODULE_DECLARATION|item_coverage.py|_prices_holder_durability|getattr|field 1
 MODULE_DECLARATION|healing.py|_load_declarations|getattr|"SELF_HEALING_RULE" 1
+MODULE_DECLARATION|champion_opening_defenses.py|_champion_starting_revive|getattr|"starting_revive_defense" 1
 OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_ap_per_unit" 1
 OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_health_per_unit" 1
 OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_mana_per_unit" 1

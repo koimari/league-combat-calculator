@@ -78,12 +78,8 @@ def _apply_champion_revive(
         return
     ledger.write(
         DefenseField.REVIVE_HEALTH_AMOUNT,
-        float(fields.get("revive_health_amount", 0.0)),
+        float(fields["revive_health_amount"]),
     )
-    ledger.write(DefenseField.REVIVE_DELAY, float(fields.get("revive_delay", 0.0)))
-    ledger.write(
-        DefenseField.REVIVE_COOLDOWN, float(fields.get("revive_cooldown", 0.0))
-    )
-    ledger.write(
-        DefenseField.REVIVE_SOURCE, _CHAMPION_REVIVE_SOURCES.get(champion_name, "")
-    )
+    ledger.write(DefenseField.REVIVE_DELAY, float(fields["revive_delay"]))
+    ledger.write(DefenseField.REVIVE_COOLDOWN, float(fields["revive_cooldown"]))
+    ledger.write(DefenseField.REVIVE_SOURCE, _CHAMPION_REVIVE_SOURCES[champion_name])
