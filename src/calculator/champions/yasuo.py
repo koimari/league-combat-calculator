@@ -63,7 +63,7 @@ def _way_of_the_wanderer(
         name=ability_name(ability),
         reason=(
             f"Flow reaches 100 stacks (5900/5250/4600 units by level) to "
-            f"grant a {shield:.2f} magic-damage shield for 1s.  Intent: "
+            f"grant a {shield:.2f} shield for 1s.  Intent: "
             "total crit chance doubled (capped at 100%), crits deal 90% of "
             "the normal crit damage, and excess crit chance converts to "
             "bonus AD (0.5 per 1%) — applied by the fight engine to autos "
