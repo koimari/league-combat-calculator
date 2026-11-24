@@ -63,6 +63,7 @@ from ..item_behavior import (
     ReceiptOnly,
     ReceiptScope,
     RuleFamily,
+    ShieldStacking,
     Subject,
     ThresholdRegenRule,
 )
@@ -745,6 +746,14 @@ _LEDGER_CONTRIBUTION_NOTES: Mapping[SurvivalLedgerContribution, str] = {
 }
 
 
+#: What each declared stacking rule leaves unmodelled, stated on the note.
+_SHIELD_STACKING_DISCLOSURES: Mapping[ShieldStacking, str] = {
+    ShieldStacking.ADDITIVE: (
+        "Overlapping grants add; the strongest-shield rule is not modelled."
+    ),
+}
+
+
 @dataclass(frozen=True, slots=True)
 class SurvivalLedgerEntry:
     """One declared contribution to its holder's own survival ledger."""
@@ -752,13 +761,24 @@ class SurvivalLedgerEntry:
     owner: str
     mechanic_id: str
     contribution: SurvivalLedgerContribution
+    #: The caveat the declaration itself carries, or None when it has none.
+    disclosure: str | None
 
     @property
     def note(self) -> str:
-        """The published sentence, keyed by shape and filled by declaration."""
-        return _LEDGER_CONTRIBUTION_NOTES[self.contribution].format(
+        """The published sentence, keyed by shape, filled and qualified by declaration."""
+        sentence = _LEDGER_CONTRIBUTION_NOTES[self.contribution].format(
             mechanic=self.mechanic_id
         )
+        return sentence if self.disclosure is None else f"{sentence} {self.disclosure}"
+
+
+def _ledger_disclosure(rule: BehaviorRule) -> str | None:
+    """The caveat *rule*'s declaration states, read from its payload."""
+    payload = rule.payload
+    if isinstance(payload, CooldownProcRule) and payload.self_shield is not None:
+        return _SHIELD_STACKING_DISCLOSURES[payload.self_shield.stacking]
+    return None
 
 
 def survival_ledger_contribution(
@@ -789,7 +809,9 @@ def survival_ledger_contribution(
 def survival_ledger_entries(owner: str) -> tuple[SurvivalLedgerEntry, ...]:
     """Every declared contribution *owner* makes to its holder's ledger."""
     return tuple(
-        SurvivalLedgerEntry(owner, rule.mechanic_id, contribution)
+        SurvivalLedgerEntry(
+            owner, rule.mechanic_id, contribution, _ledger_disclosure(rule)
+        )
         for rule in behavior_rules(owner)
         if (contribution := survival_ledger_contribution(rule)) is not None
     )

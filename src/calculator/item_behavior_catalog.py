@@ -136,6 +136,7 @@ from .item_behavior import (
     ShapedChargeRule,
     ShieldAbsorbs,
     ShieldBypassRule,
+    ShieldStacking,
     SpellbladeRule,
     StackedStatRule,
     StackGate,
@@ -2927,7 +2928,11 @@ def _cooldown_proc_rule(source: ValueSource, entry: Mapping[str, Any]) -> Behavi
             ),
             charged=charged,
             stacks=StackGate(*stack_refs) if stack_refs is not None else None,
-            self_shield=SelfShield(*shield_refs) if shield_refs is not None else None,
+            self_shield=(
+                SelfShield(*shield_refs, stacking=ShieldStacking.ADDITIVE)
+                if shield_refs is not None
+                else None
+            ),
         ),
         compilability=(
             COMPILED_KERNEL_CANNOT_SELF_SHIELD
