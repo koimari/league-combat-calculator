@@ -1288,6 +1288,25 @@ class TestItemEffectProvenance:
             )
             assert frozenset(parsed[item_name]) <= classified
 
+    def test_no_parsed_key_is_code_owned(self) -> None:
+        """A code-owned value the parser also emits wins silently over the parse.
+
+        That is how Essence Reaver's Manaflow crit ratio sat at 25.0 in code
+        while the parse read 0.25: the literal won and nothing compared them.
+        """
+        from src.calculator.data_fetcher import DEFAULT_DATA_DIR, fetch_item_data
+        from src.calculator.passive_parser import parse_all_item_effects
+
+        parsed = parse_all_item_effects(
+            fetch_item_data(data_directory=DEFAULT_DATA_DIR)
+        )
+        both = {
+            f"{item_name}.{key}"
+            for item_name, owned in item_effects._STATIC_VALUE_KEYS_BY_ITEM.items()
+            for key in owned & frozenset(parsed.get(item_name, ()))
+        }
+        assert not both, sorted(both)
+
 
 class TestTargetDefenseParsing:
     def test_shieldbow_lifeline_is_parser_backed(self) -> None:

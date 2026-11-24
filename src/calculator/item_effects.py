@@ -2454,8 +2454,8 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "crit_bonus_max": 50.0,
         # Manaflow restores half of Spellblade's damage formula: 62.5% base
         # AD plus 0.25 mana per 1% critical strike chance.
-        "mana_restore_base_ad_ratio": CodeOwned(0.625),
-        "mana_restore_crit_ratio": CodeOwned(25.0),
+        "mana_restore_base_ad_ratio": 0.625,
+        "mana_restore_crit_ratio": 25.0,
         "cooldown": 1.5,
         "weave_delay": 1.5,  # CD starts after empowered attack
     },
@@ -2936,7 +2936,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "type": "thorns",
         "damage_type": "magic",
         "base": 20.0,
-        "bonus_armor_ratio": CodeOwned(0.10),
+        "bonus_armor_ratio": 0.10,
         "grievous_duration": 3.0,
     },
     # ── Resistance Reduction ──────────────────────────────────────────────
@@ -3091,7 +3091,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     },
     "Fimbulwinter": {
         "type": "stat_conversion",
-        "bonus_mana_to_health_ratio": CodeOwned(0.15),
+        "bonus_mana_to_health_ratio": 0.15,
         # Everlasting is event-driven.  The participant timeline only arms
         # this branch when a champion module supplies explicit crowd-control
         # metadata; it never infers a slow or immobilize from an ability name.
@@ -3539,7 +3539,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         # Anguish: every 4 seconds, deal 3% bonus health as magic damage
         "interval": 4.0,
         # Anguish saps every enemy champion within this radius.
-        "range_units": CodeOwned(650.0),
+        "range_units": 650.0,
         "bonus_hp_ratio": 0.03,
         # Anguish heals the holder for 250% of post-mitigation damage dealt.
         "self_heal_post_mitigation_multiplier": 2.50,
