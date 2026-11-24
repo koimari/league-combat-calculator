@@ -133,7 +133,7 @@ def displayed_prediction(
     rotation total and its per-slot breakdown.
     """
     combat = payload.get("combat")
-    rows = combat.get("breakdown", ()) if isinstance(combat, Mapping) else ()
+    rows = combat["breakdown"] if isinstance(combat, Mapping) else ()
     for row in rows:
         if isinstance(row, Mapping) and row.get("participant_id") == "main":
             sources = {
@@ -150,11 +150,9 @@ def displayed_prediction(
                 row["total_damage"], "predicted combat total_damage"
             )
             return total, sources
-    total = validate_damage_number(
-        payload.get("total_damage", 0.0), "predicted total_damage"
-    )
+    total = validate_damage_number(payload["total_damage"], "predicted total_damage")
     sources = {}
-    breakdown = payload.get("breakdown", {})
+    breakdown = payload["breakdown"]
     if isinstance(breakdown, Mapping):
         for key, row in breakdown.items():
             if isinstance(row, Mapping) and row.get("total_damage"):

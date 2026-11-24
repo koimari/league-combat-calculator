@@ -73,6 +73,7 @@
 # The covered set.
 root|__init__.py
 root|ability_atoms.py
+root|ability_dps_matrix.py
 root|ability_prose.py
 root|ability_spec.py
 root|ally_packet_recipient.py
@@ -225,7 +226,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|73
+er5-tail-ceiling|72
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
@@ -406,6 +407,10 @@ AUTHORED_DECLARATION|program/rung.py|reason_of|getattr|"reason" 1
 AUTHORED_DECLARATION|rotation_resolver.py|build_rotation_receipt|dict.get|"slot" 1
 AUTHORED_DECLARATION|state_lifecycle.py|start|or-default|"source" 1
 AUTHORED_DECLARATION|item_behavior.py|_validate_stat_derivation|getattr|"granted" 1
+AUTHORED_DECLARATION|ability_dps_matrix.py|rank_ability_dps|dict.get|"cooldown" 1
+AUTHORED_DECLARATION|ability_dps_matrix.py|rank_ability_dps|dict.get|"total_raw" 1
+AUTHORED_DECLARATION|ability_dps_matrix.py|rank_ability_dps|or-default|"cooldown" 1
+AUTHORED_DECLARATION|ability_dps_matrix.py|rank_ability_dps|or-default|"total_raw" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"attribute" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"effects" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"leveling" 1
