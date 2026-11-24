@@ -7,7 +7,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import calculation_constant, data_value, spell_object
 from ..damage_event_row import event_damage as _row_damage
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -20,8 +20,11 @@ from .source_receipts import load_champion_sources
 
 _GWEN_Q_SPELL = spell_object("Gwen", "GwenQ")
 _GWEN_E_SPELL = spell_object("Gwen", "GwenE")
+_GWEN_P_SPELL = spell_object("Gwen", "GwenP")
 _Q_CENTER_TRUE_FRACTION = data_value(_GWEN_Q_SPELL, "TrueDamageConversion")
 _E_BASE_DAMAGE = data_value(_GWEN_E_SPELL, "BaseDamage")
+#: Share of post-mitigation champion damage A Thousand Cuts heals (0.67).
+_P_HEAL_SHARE = calculation_constant(_GWEN_P_SPELL, "HealingPercent")
 
 
 @ability_slot()
@@ -310,7 +313,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         _healing.heal_from_damage(
             healing,
             event,
-            min(0.50 * dealt, per_instance_cap),
+            min(_P_HEAL_SHARE * dealt, per_instance_cap),
             "A Thousand Cuts",
         )
     return healing

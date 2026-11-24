@@ -11,8 +11,8 @@ the value the cached Wiki data (data/champions.json) specifies:
 - Garen P    Perseverance     0.15% : 1.01% max health / 0.5s, lost for
                               8s after champion damage (combat gate)
 - Gragas P   Happy Hour       5.5% max health per ability cast
-- Gwen P     A Thousand Cuts  50% of post-mitigation passive damage,
-                              capped at 10 : 25 (+ 6.5% AP) per instance
+- Gwen P     A Thousand Cuts  67% of post-mitigation passive damage,
+                              capped at 12 : 40 (+ 7% AP) per instance
 - Yorick Q   Last Rites       10 : 78 (based on level) (+ 6% : 10% missing
                               health, based on rank) against champions
 
@@ -201,10 +201,10 @@ def test_gragas_happy_hour_heals_per_ability_cast():
     assert len(set(sources)) == 4
 
 
-def test_gwen_a_thousand_cuts_heals_half_post_mitigation_damage_capped():
-    """The passive heals 50% of the post-mitigation damage dealt against
-    champions, capped per instance at 10 : 25 (based on level) + 6.5% AP
-    (level 18 cap = 25, so the small on-hit instances are uncapped)."""
+def test_gwen_a_thousand_cuts_heals_two_thirds_post_mitigation_damage_capped():
+    """The passive heals 67% of the post-mitigation damage dealt against
+    champions, capped per instance at 12 : 40 (based on level) + 7% AP
+    (level 18 cap = 40 with no AP, so the small on-hit instances are uncapped)."""
     combat = _fight("Gwen")
     heals = [e for e in _main_heals(combat) if e["source"] == "A Thousand Cuts"]
     assert heals
@@ -216,7 +216,7 @@ def test_gwen_a_thousand_cuts_heals_half_post_mitigation_damage_capped():
     for heal in heals:
         event = events_by_time.get(round(float(heal["time"]), 3))
         assert event is not None, f"no passive event at {heal['time']}"
-        expected = min(0.5 * float(event["damage"]), 25.0)
+        expected = min(0.67 * float(event["damage"]), 40.0)
         assert heal["raw_amount"] == pytest.approx(expected, abs=0.1)
 
 
