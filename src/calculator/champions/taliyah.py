@@ -39,7 +39,7 @@ from .slot_extract import (
 )
 from .source_receipts import load_champion_sources
 
-_W_ERUPTION_DELAY = 0.792
+_W_ERUPTION_DELAY = 0.792  # cached W: "After 0.792 seconds, a ledge erupts"
 _TALIYAH_E_SPELL = spell_object("Taliyah", "TaliyahE")
 _E_ROW_INTERVAL = data_value(_TALIYAH_E_SPELL, "DelayBetweenRows")
 _E_DETONATION_MULTIPLIERS = (1.0, 0.75, 0.5, 0.25)

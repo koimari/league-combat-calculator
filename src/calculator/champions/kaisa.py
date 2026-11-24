@@ -40,19 +40,27 @@ from .slot_extract import (
 )
 from .source_receipts import load_champion_sources
 
-_Q_FIRST_HIT_DELAY = 0.4
 _Q_VOLLEY_DURATION = 1.0
+
+# Cached prose: Q "releases a swarm of 6 missiles ... each one hitting their
+# target after 0.4 seconds" and evolved "instead fires 12 missiles"; W
+# "applies 2 Plasma", evolved "applies 3 Plasma instead"; Plasma stacks "up
+# to 5 times"; each evolution "Requires 100" of its stat.
+_Q_FIRST_HIT_DELAY = 0.4
 _Q_NORMAL_MISSILES = 6
 _Q_EVOLVED_MISSILES = 12
-_W_MISSILE_SPEED = uniform_spell_field(spell_object("Kai'Sa", "KaisaW"), "missileSpeed")
-_W_MAX_RANGE = 3000.0
 _W_NORMAL_STACKS = 2
 _W_EVOLVED_STACKS = 3
 _PLASMA_STACKS_TO_RUPTURE = 5
+_EVOLUTION_THRESHOLD = 100.0
+
+# Binary KaisaW: the bolt's missile speed and its cast range.
+_KAISA_W_SPELL = spell_object("Kai'Sa", "KaisaW")
+_W_MISSILE_SPEED = uniform_spell_field(_KAISA_W_SPELL, "missileSpeed")
+_W_MAX_RANGE = uniform_spell_field(_KAISA_W_SPELL, "castRange")
 _KAISA_P_SPELL = spell_object("Kai'Sa", "KaisaPassive")
 _RUPTURE_BASE_MISSING_HEALTH_RATIO = data_value(_KAISA_P_SPELL, "PExecuteRatio")
 _RUPTURE_RATIO_PER_AP = data_value(_KAISA_P_SPELL, "PExecuteAPRatio")
-_EVOLUTION_THRESHOLD = 100.0
 # HARDCODED: verify on patch updates — these live in cached description
 # prose (data/champions.json Kaisa P effect[1], W effect[1], E effects
 # [0]-[2]), not in leveling arrays:

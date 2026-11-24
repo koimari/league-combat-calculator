@@ -28,9 +28,9 @@ from .slot_extract import (
 from .source_receipts import load_champion_sources
 
 _Q_TORNADO_FIRST_TICK = 0.75
-_W_DAMAGE_CAP_TIME = 1.25
+_W_DAMAGE_CAP_TIME = 1.25  # cached W: "over the first 1.25 seconds of the channel"
 _W_DAMAGE_STEP = 0.16
-_W_RECAST_LOCKOUT = 0.4
+_W_RECAST_LOCKOUT = 0.4  # cached W: "for 0.4 seconds after the recast"
 _E_DASH_SPEED = 2300.0
 
 # Binary GalioQ TornadoTicks over its SuperQDuration (4 over 2 s), GalioW

@@ -71,7 +71,7 @@ _BASE_SLOTS = {
     ),
 }
 _MARK_MAX = 25
-_E_STACK_MAX = 3
+_E_STACK_MAX = 3  # cached E: "The third stack directs Wolf to pounce"
 
 # ROOTED IN THE BINARY (KindredEWrapper): how long Mounting Dread's mark
 # stands, which every marked attack refreshes, and the slow the shot itself

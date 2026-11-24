@@ -64,6 +64,8 @@ _VI_R_SPELL = spell_object("Vi", "ViR")
 _ABILITY_HIT = 0
 _ATTACK = 1
 
+# Cached R: "Upon approaching within 300 units of the target" she grabs them,
+# "dealing physical damage after 0.75 seconds into the grab duration".
 _R_GRAB_DAMAGE_DELAY = 0.75
 _R_GRAB_RANGE = 300.0
 _R_INITIAL_SPEED = data_value(_VI_R_SPELL, "RBaseSpeed")

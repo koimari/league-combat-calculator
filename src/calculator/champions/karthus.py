@@ -34,7 +34,7 @@ _KARTHUS_W_SPELL = spell_object("Karthus", "KarthusWallOfPain")
 _W_MR_REDUCTION_PERCENT = data_value(_KARTHUS_W_SPELL, "MagicResistShred")
 _W_DEBUFF_DURATION = data_value(_KARTHUS_W_SPELL, "DebuffDuration")
 _Q_CONSERVATIVE_DETONATION_DELAY = 0.75
-_E_TICK_INTERVAL = 0.25
+_E_TICK_INTERVAL = 0.25  # cached E: "deals magic damage every 0.25 seconds"
 _E_MAX_SELECTED_TICKS = 40
 # Timed mode prices the toggle in one-second pulses: the sourced drain is
 # "mana per second" and 4 ticks x the sourced per-tick row is exactly the
