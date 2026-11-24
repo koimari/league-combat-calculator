@@ -507,8 +507,8 @@ class TestReviewedCrowdControl:
 def test_p_is_modeled_through_the_466_6_adaptive_defenses_shield() -> None:
     """P has no cast; the shield it grants rides W's damage event.
 
-    Adaptive Defenses grants 20% of Camille's maximum health for 2
-    seconds — 466.6 at level 18 with no items, the receipt behind P's
+    Adaptive Defenses grants 20% of Camille's maximum health at level 18
+    for 2 seconds — 466.6 with no items, the receipt behind P's
     ``modeled`` label.
     """
     from src.calculator.champions import get_champion_module_contract
@@ -526,6 +526,27 @@ def test_p_is_modeled_through_the_466_6_adaptive_defenses_shield() -> None:
     assert payload["source"] == "Adaptive Defenses"
     assert payload["amount"] == pytest.approx(466.6, abs=0.01)
     assert payload["duration"] == pytest.approx(2.0)
+
+
+@pytest.mark.parametrize(
+    ("level", "ratio"),
+    [(3, 0.10), (6, 0.10), (7, 0.15), (12, 0.15), (13, 0.20), (18, 0.20), (19, 0.25)],
+)
+def test_adaptive_defenses_ratio_steps_with_level(level: int, ratio: float) -> None:
+    """The binary ShieldAmount bands: 10%, then +5% at levels 7, 13 and 19.
+
+    The shield on W is that share of maximum health at the fight's level, so a
+    level-6 Camille is not priced the level-18 shield.
+    """
+    from src.calculator.champions import camille
+    from src.calculator.stats import calculate_total_stats
+
+    assert camille.adaptive_defenses_ratio(level) == pytest.approx(ratio)
+    data = cc_review.kit("Camille")
+    stats = calculate_total_stats(data, level, [])
+    parsed = parse_abilities(data, level, stats["ability_power"], champion_stats=stats)
+    (payload,) = parsed["W"]["self_shield_events"]
+    assert payload["amount"] == pytest.approx(ratio * stats["health"], abs=0.01)
 
 
 class TestModuleCoverage:

@@ -7,6 +7,7 @@ import pytest
 
 from src.calculator.binary_roots import (
     _BIN_DIR,
+    calculation_breakpoint_value,
     calculation_breakpoints,
     calculation_coefficient,
     calculation_coefficients,
@@ -1458,3 +1459,43 @@ class TestBatch40RootedMelConstants:
         assert calculation_coefficient(
             spell, "PassiveBonusMissileDamage"
         ) == pytest.approx(mel._P_MISSILE_AP_RATIO)
+
+
+def _breakpoint_spell(part: dict) -> dict:
+    """A spell object whose one calculation ``Ratio`` holds *part*."""
+    return {"mSpell": {"mSpellCalculations": {"Ratio": {"mFormulaParts": [part]}}}}
+
+
+_LEVEL_TABLE = {
+    "mLevel1Value": 0.1,
+    "mBreakpoints": [
+        {"mLevel": 13, "mAdditionalBonusAtThisLevel": 0.05},
+        {"mLevel": 7, "mAdditionalBonusAtThisLevel": 0.05},
+    ],
+}
+
+
+class TestCalculationBreakpointValue:
+    """The tier a level reaches comes from the table's own breakpoint levels."""
+
+    @pytest.mark.parametrize(
+        ("level", "expected"),
+        [(1, 0.1), (6, 0.1), (7, 0.15), (12, 0.15), (13, 0.2), (20, 0.2)],
+    )
+    def test_top_level_table(self, level, expected):
+        spell = _breakpoint_spell(_LEVEL_TABLE)
+        assert calculation_breakpoint_value(spell, "Ratio", level) == pytest.approx(
+            expected
+        )
+
+    def test_a_stat_scaled_subpart_is_read_in_its_parents_place(self):
+        spell = _breakpoint_spell({"mStat": 12, "mSubpart": _LEVEL_TABLE})
+        assert calculation_breakpoints(spell, "Ratio") == pytest.approx(
+            (0.1, 0.15, 0.2)
+        )
+        assert calculation_breakpoint_value(spell, "Ratio", 9) == pytest.approx(0.15)
+
+    def test_a_calculation_with_no_table_raises(self):
+        spell = _breakpoint_spell({"mNumber": 0.67})
+        with pytest.raises(RuntimeError, match="no level-breakpoint formula part"):
+            calculation_breakpoint_value(spell, "Ratio", 1)

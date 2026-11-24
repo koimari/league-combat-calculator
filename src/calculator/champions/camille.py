@@ -23,7 +23,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import calculation_breakpoint_value, data_value, spell_object
 from ..damage_event_row import event_damage as _row_damage
 from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
@@ -218,18 +218,18 @@ OPTIONS: list[dict[str, Any]] = [
     ),
 ]
 
-# HARDCODED: verify on patch updates — Adaptive Defenses' shield amount,
-# duration, and damage-type adaptation are prose-only in the cached
-# passive description (data/champions.json, Camille P): "grants her a
-# shield equal to 10% / 15% / 20% (based on level) of her maximum health,
-# lasting for 2 seconds and
-# absorbing damage from either exclusively physical damage or magic damage,
-# based on which type the target has ... dealt most of" (wiki text).
+# Adaptive Defenses' shield ratio and duration are binary CamillePassive
+# values: ShieldAmount is max health times a level-breakpoint ratio (10%,
+# +5% at levels 7, 13 and 19), and ShieldDuration is a DataValue.  The
+# cached prose states the 10% / 15% / 20% bands and the 2 seconds; the
+# physical-or-magic adaptation is prose-only.
 _CAMILLE_P_SPELL = spell_object("Camille", "CamillePassive")
-# The duration is the binary CamillePassive.ShieldDuration DataValue; the
-# ratio stays wiki prose (no amount row in the dump).
-ADAPTIVE_DEFENSES_MAX_HP_RATIO = 0.20  # the level-18 band of the cache's 10/15/20
 ADAPTIVE_DEFENSES_DURATION_SECONDS = data_value(_CAMILLE_P_SPELL, "ShieldDuration")
+
+
+def adaptive_defenses_ratio(level: int) -> float:
+    """Adaptive Defenses' share of maximum health at champion *level*."""
+    return calculation_breakpoint_value(_CAMILLE_P_SPELL, "ShieldAmount", level)
 
 
 ASSUMPTIONS = [
@@ -245,8 +245,8 @@ ASSUMPTIONS = [
     "E's 40 to 60% attack speed holds for the whole fight, where the game gives 5s "
     "per cast.",
     "E's sourced 0.75s stun counts as action downtime.",
-    "P (Adaptive Defenses) is granted pre-fight: 20% of maximum health for 2s riding "
-    "the first W cast.",
+    "P (Adaptive Defenses) is granted pre-fight: 10-25% of maximum health by level "
+    "for 2s riding the first W cast.",
     "P's next-auto trigger and its physical or magic split are documented boundaries; "
     "the W shield absorbs both.",
     "R deals damage only through basic attacks on the trapped target, so its row is 0 "
@@ -264,12 +264,12 @@ SLOTS = {
     # ledger's payload absorbs both damage types the passive adapts between.
     "W": with_self_shield(
         _tactical_sweep,
-        shield=lambda ctx: ADAPTIVE_DEFENSES_MAX_HP_RATIO * ctx.stat("health"),
+        shield=lambda ctx: adaptive_defenses_ratio(ctx.level) * ctx.stat("health"),
         window=ADAPTIVE_DEFENSES_DURATION_SECONDS,
         source="Adaptive Defenses",
         detail=lambda ctx, shield: (
             f"W carries Adaptive Defenses' pre-fight shield: {shield:g} "
-            f"({ADAPTIVE_DEFENSES_MAX_HP_RATIO * 100:g}% of max HP) for "
+            f"({adaptive_defenses_ratio(ctx.level) * 100:g}% of max HP) for "
             f"{ADAPTIVE_DEFENSES_DURATION_SECONDS:g}s; the physical/magic "
             "adaptation boundary is documented in ASSUMPTIONS"
         ),
