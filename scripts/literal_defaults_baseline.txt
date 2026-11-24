@@ -79,6 +79,7 @@ root|ally_packet_recipient.py
 root|application_errors.py
 root|attack_cadence.py
 root|attack_windows.py
+root|auto_attack_policy.py
 root|binary_roots.py
 root|breakdown_row.py
 root|build_search.py
@@ -104,6 +105,7 @@ root|data_fetcher.py
 root|data_registry.py
 root|data_updater.py
 root|defense_composition.py
+root|defensive_effects.py
 root|economics_data.py
 root|event_row_field.py
 root|fight
@@ -138,6 +140,7 @@ root|program/events.py
 root|program/identity.py
 root|program/precision.py
 root|program/route.py
+root|program/rung.py
 root|program/scope.py
 root|program/sums.py
 root|program/tagged.py
@@ -158,6 +161,7 @@ root|resistance.py
 root|resource_events.py
 root|resource_ledger.py
 root|role_quests.py
+root|rotation_resolver.py
 root|rune_effects.py
 root|rune_parser.py
 root|rune_paths
@@ -169,6 +173,7 @@ root|stack_rules.py
 root|starting_defenses.py
 root|stat_conversion.py
 root|stat_formulas.py
+root|state_lifecycle.py
 root|stats.py
 root|support_context.py
 root|survival/__init__.py
@@ -214,7 +219,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|84
+er5-tail-ceiling|79
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
@@ -391,6 +396,9 @@ AUTHORED_DECLARATION|rune_paths/sorcery.py|_compile_waterwalking|dict.get|"effec
 AUTHORED_DECLARATION|rune_pull.py|reparse_cached_rune_effects|dict.get|"slots" 1
 AUTHORED_DECLARATION|stats.py|calculate_total_stats|dict.get|"ability_haste" 1
 AUTHORED_DECLARATION|stats.py|calculate_total_stats|dict.get|"ability_power" 2
+AUTHORED_DECLARATION|program/rung.py|reason_of|getattr|"reason" 1
+AUTHORED_DECLARATION|rotation_resolver.py|build_rotation_receipt|dict.get|"slot" 1
+AUTHORED_DECLARATION|state_lifecycle.py|start|or-default|"source" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"attribute" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"effects" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"leveling" 1
@@ -573,6 +581,7 @@ CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"healthRegen" 2
 CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"mana" 2
 CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"manaRegen" 2
 CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"perLevel" 3
+CACHED_SOURCE_ROW|auto_attack_policy.py|_source_cast_time|dict.get|"abilities" 1
 LOADOUT_NAMES|item_effects.py|_cached_sustain_stat|or-default|"name" 1
 LOADOUT_NAMES|item_effects.py|_resolve_damage_effects_uncached|dict.get|"name" 1
 LOADOUT_NAMES|item_effects.py|active_secondary_ad_item_name|dict.get|"name" 1
@@ -582,6 +591,7 @@ LOADOUT_NAMES|item_effects.py|hydra_secondary_item_name|dict.get|"name" 1
 LOADOUT_NAMES|item_effects.py|resolve_damage_effects|dict.get|"name" 1
 LOADOUT_NAMES|item_effects.py|target_class_denials|dict.get|"name" 1
 LOADOUT_NAMES|item_effects.py|target_class_denials|or-default|"name" 1
+LOADOUT_NAMES|defensive_effects.py|resolve_starting_defenses|dict.get|"name" 1
 MODULE_DECLARATION|champions/__init__.py|_module_declaration|getattr|attribute 1
 MODULE_DECLARATION|champions/module_contract.py|contract_from_module|getattr|"MODULE_COVERAGE" 1
 MODULE_DECLARATION|champions/module_contract.py|contract_from_module|getattr|"SLOTS" 1
