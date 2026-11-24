@@ -35,6 +35,8 @@ def one_participant_context() -> tuple[TransitionContext, ScoreLedger]:
     combatants = [
         SimpleNamespace(
             participant_id="target",
+            champion_data={"name": ""},
+            request=SimpleNamespace(champion_options=None),
             stats={"health": 100.0, "is_melee": True},
             defenses=StartingDefenses(
                 magic_shield=0.0,

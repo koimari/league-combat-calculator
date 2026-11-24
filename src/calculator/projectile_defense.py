@@ -68,10 +68,10 @@ class ProjectileDefense:
 def resolve_projectile_defense(combatant: CombatantFacts) -> ProjectileDefense | None:
     """Resolve one authored champion defensive window."""
 
-    champion_data = getattr(combatant, "champion_data", {})
+    champion_data = combatant.champion_data
     champion = str(champion_data.get("name", ""))
-    request = getattr(combatant, "request", None)
-    options = getattr(request, "champion_options", None)
+    request = combatant.request
+    options = request.champion_options
     options = options if isinstance(options, Mapping) else {}
 
     if champion == "Braum" and bool(options.get(E_WINDOW.active, False)):

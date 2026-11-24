@@ -157,6 +157,7 @@ root|program/views/survival.py
 root|program/views/survival_blocks.py
 root|program/views/tdd.py
 root|program/views/view_tag.py
+root|projectile_defense.py
 root|public_response.py
 root|quantity.py
 root|rank_allocation.py
@@ -224,7 +225,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|74
+er5-tail-ceiling|73
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
@@ -599,6 +600,7 @@ LOADOUT_NAMES|item_effects.py|target_class_denials|dict.get|"name" 1
 LOADOUT_NAMES|item_effects.py|target_class_denials|or-default|"name" 1
 LOADOUT_NAMES|defensive_effects.py|resolve_starting_defenses|dict.get|"name" 1
 LOADOUT_NAMES|healing.py|derive_self_healing|dict.get|"name" 1
+LOADOUT_NAMES|projectile_defense.py|resolve_projectile_defense|dict.get|"name" 1
 MODULE_DECLARATION|champions/__init__.py|_module_declaration|getattr|attribute 1
 MODULE_DECLARATION|champions/module_contract.py|contract_from_module|getattr|"MODULE_COVERAGE" 1
 MODULE_DECLARATION|champions/module_contract.py|contract_from_module|getattr|"SLOTS" 1
