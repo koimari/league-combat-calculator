@@ -287,6 +287,7 @@ AUTHORED_DECLARATION|champions/slot_cc.py|_validate_cc_event_contract|or-default
 AUTHORED_DECLARATION|champions/slot_control.py|parse|dict.get|"control_events" 1
 AUTHORED_DECLARATION|champions/slot_control.py|parse|dict.get|"control_source_atoms" 1
 AUTHORED_DECLARATION|champions/slot_control.py|parse|dict.get|"parts" 1
+AUTHORED_DECLARATION|champions/slot_control.py|park_control_interval|dict.get|"_pending_control_events" 1
 AUTHORED_DECLARATION|champions/slot_entries.py|parse|or-default|"parts" 1
 AUTHORED_DECLARATION|champions/slot_entries.py|parse|or-default|"total_raw" 1
 AUTHORED_DECLARATION|champions/smolder.py|parse|dict.get|"total_raw" 2
@@ -523,6 +524,7 @@ CACHED_SOURCE_ROW|item_source.py|sr_availability|or-default|"name" 1
 CACHED_SOURCE_ROW|item_source.py|sr_availability|or-default|"prices" 1
 CACHED_SOURCE_ROW|item_source.py|sr_availability|or-default|"rank" 1
 CACHED_SOURCE_ROW|item_source.py|sr_availability|or-default|"shop" 1
+CACHED_SOURCE_ROW|item_source.py|sr_availability|dict.get|"classic sr 5v5" 1
 CACHED_SOURCE_ROW|item_source_merge.py|_champion_restriction|or-default|"champion" 1
 CACHED_SOURCE_ROW|item_source_merge.py|_champion_restriction|or-default|key 1
 CACHED_SOURCE_ROW|item_source_merge.py|_merge_effect_branches|or-default|"branches" 1
@@ -641,6 +643,7 @@ REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"eminence_stac
 REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"feast_active_seconds" 1
 REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"shared_riches_gold" 1
 REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"ward_uses" 1
+REQUEST_ITEM_STATE|item_effects.py|actualizer_active_seconds|or-default|"Actualizer" 1
 WIKI_TRAVERSALS|ability_atoms.py|_valid_atom_hash|dict.get|"hash" 1
 WIKI_TRAVERSALS|ability_atoms.py|ranked_ability_atom_value|dict.get|"values" 1
 WIKI_TRAVERSALS|ability_atoms.py|required_ability_atom|dict.get|"evidence" 1
