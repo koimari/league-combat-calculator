@@ -26,6 +26,7 @@ from . import rune_effects
 from .ability_spec import AttackClass, DamageClass
 from .ally_packet_recipient import RETARGETABLE_SCOPES, repriced_for_recipient
 from .attack_windows import AttackSpeedWindow
+from .binary_roots import data_value_at_rank, spell_object
 from .breakdown_row import (
     breakdown_champion,
     breakdown_participant_id,
@@ -80,6 +81,7 @@ from .healing_reduction import (
     champion_grievous_wound_sources,
     healing_reduction_profiles,
 )
+from .interaction_atoms import rank_for
 from .interpreters import uncompilable_item_receipt
 from .interpreters.damage_routing import (
     walk_deferral,
@@ -1921,16 +1923,17 @@ def _support_effect_templates(
             }
         )
     elif champion_name == "Olaf":
-        # The R rank comes from the request's ability ranks (the result's
-        # ability_damages entry may not carry the rank).
-        request_ranks = getattr(
-            getattr(attacker, "request", None), "ability_ranks", None
+        # The R rank is the request's, else the skill order's at this level
+        # (the result's ability_damages entry may not carry it); the values
+        # are the binary OlafRagnarok Resists and Haste rows at that rank.
+        r_rank = max(
+            1, min(3, rank_for("Olaf", int(attacker.level), attacker.request, "R"))
         )
-        r_rank = 1
-        if isinstance(request_ranks, dict):
-            r_rank = max(1, min(3, int(request_ranks.get("R", 1) or 1)))
-        olaf_r_bonus_resists = (10.0, 15.0, 20.0)[r_rank - 1]
-        olaf_r_first_second_ms = (20.0, 45.0, 70.0)[r_rank - 1]
+        olaf_r_spell = spell_object("Olaf", "OlafRagnarok")
+        olaf_r_bonus_resists = data_value_at_rank(olaf_r_spell, "Resists", r_rank)
+        olaf_r_first_second_ms = 100.0 * data_value_at_rank(
+            olaf_r_spell, "Haste", r_rank
+        )
         # Ragnarok: the R cast IS the activation (no toggle,
         # no typed option) — one cast authors FOUR separate receipts: the
         # cast-time CLEANSE (the displacement family
