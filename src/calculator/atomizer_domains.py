@@ -112,10 +112,10 @@ def atomize_item(item: Mapping[str, Any]) -> list[dict[str, Any]]:
     and dedup happens at emission by (atom_id, behavior) with evidence
     receipts naming the exact effect + keyword.
     """
-    a = Atomizer("items", source_ref=item.get("name", "?"))
-    name = str(item.get("name", "Unknown"))
+    name = str(item["name"])
+    a = Atomizer("items", source_ref=name)
     # stats block
-    for stat_name, stat in (item.get("stats") or {}).items():
+    for stat_name, stat in item["stats"].items():
         if isinstance(stat, dict):
             flat = stat.get("flat")
             if isinstance(flat, (int, float)) and flat:
@@ -128,7 +128,7 @@ def atomize_item(item: Mapping[str, Any]) -> list[dict[str, Any]]:
                     units=["flat"],
                     evidence=[f"stats.{stat_name}.flat"],
                 )
-    prices = (item.get("shop") or {}).get("prices") or {}
+    prices = item["shop"]["prices"]
     if isinstance(prices.get("total"), (int, float)):
         a.add(
             "economy.total",
@@ -198,10 +198,16 @@ def atomize_rune_catalog(
     runes: Mapping[str, Mapping[str, Any]] | Iterable[Mapping[str, Any]] | None,
 ) -> dict[str, list[dict[str, Any]]]:
     out: dict[str, list[dict[str, Any]]] = {}
-    records = runes.values() if isinstance(runes, Mapping) else runes or ()
-    for rune in records:
-        a = Atomizer("runes", source_ref=str(rune.get("name", "?")))
-        name = str(rune.get("name", "?"))
+    # A cached catalog is keyed by name; its two page tables (shards,
+    # adaptive_force) carry no name, so the key is the identity.
+    records = (
+        runes.items()
+        if isinstance(runes, Mapping)
+        else ((rune["name"], rune) for rune in runes or ())
+    )
+    for key, rune in records:
+        name = str(key)
+        a = Atomizer("runes", source_ref=name)
 
         def numeric_values(value: Any) -> list[float]:
             if isinstance(value, bool):
@@ -279,9 +285,9 @@ def atomize_rune_catalog(
 def atomize_economics(economics: Mapping[str, Any]) -> dict[str, list[dict[str, Any]]]:
     """Atomize the sourced sell/combine tables."""
     out: dict[str, list[dict[str, Any]]] = {}
-    for row in economics.get("per_item_sell", []):
-        a = Atomizer("economics", source_ref=str(row.get("name", "?")))
-        name = str(row.get("name", "?"))
+    for row in economics["per_item_sell"]:
+        name = str(row["name"])
+        a = Atomizer("economics", source_ref=name)
         if isinstance(row.get("total"), (int, float)):
             a.add(
                 "economy.total",
@@ -303,9 +309,9 @@ def atomize_economics(economics: Mapping[str, Any]) -> dict[str, list[dict[str, 
                 evidence=["per_item_sell.ddragon_sell"],
             )
         out[name] = a.emit()
-    for row in economics.get("combine_costs", []):
-        a = Atomizer("economics", source_ref=str(row.get("name", "?")))
-        name = str(row.get("name", "?"))
+    for row in economics["combine_costs"]:
+        name = str(row["name"])
+        a = Atomizer("economics", source_ref=name)
         if isinstance(row.get("derived_combine"), (int, float)):
             a.add(
                 "economy.combine",
@@ -321,9 +327,9 @@ def atomize_economics(economics: Mapping[str, Any]) -> dict[str, list[dict[str, 
 
 
 def atomize_stats(champion: Mapping[str, Any]) -> list[dict[str, Any]]:
-    a = Atomizer("stats", source_ref=str(champion.get("name", "?")))
-    name = str(champion.get("name", "?"))
-    for stat_name, stat in (champion.get("stats") or {}).items():
+    name = str(champion["name"])
+    a = Atomizer("stats", source_ref=name)
+    for stat_name, stat in champion["stats"].items():
         if not isinstance(stat, dict):
             continue
         for field, value in stat.items():

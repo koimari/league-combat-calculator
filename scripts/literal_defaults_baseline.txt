@@ -81,6 +81,7 @@ root|ally_effects.py
 root|ally_packet_recipient.py
 root|application_errors.py
 root|atom_spelling.py
+root|atomizer_domains.py
 root|attack_cadence.py
 root|attack_windows.py
 root|auto_attack_policy.py
@@ -237,7 +238,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|61
+er5-tail-ceiling|60
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
