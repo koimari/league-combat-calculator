@@ -32,7 +32,7 @@ Contract under test (current runtime facts, verified before pinning):
   naming Gunmetal Greaves AND the key; the source receipt
   (``source_revision_id`` 4013706 + ``source_url``) is discoverable
   through the typed registry (ITEM_EFFECTS static keys /
-  ``sustain_effect_value``) — AGENTS.md rule 5, no silent fallbacks.
+  ``numeric_effect_value``) — AGENTS.md rule 5, no silent fallbacks.
 * ORDINARY STATS PARITY: equipping the boots yields exactly +45% attack
   speed, +45 move speed, +5% lifesteal vs the bare build; NO change to
   ability haste, damage, or any other stat.  Fights are bit-identical
@@ -115,9 +115,9 @@ from src.calculator.item_effects import (
     grouped_sustain_stat_percent,
     item_input_options_meta,
     item_state_receipts,
+    numeric_effect_value,
     required_effect_value,
     resolve_damage_effects,
-    sustain_effect_value,
     validate_item_input_options,
 )
 from src.calculator.item_source import item_source_audit, riot_declared_effects
@@ -311,7 +311,7 @@ def test_typed_lifesteal_reads_exactly_5_and_aggregates_into_stats():
     accessors return exactly 5.0 (never a bool), the grouped sustain path
     sums it, and stats.py folds it into the loadout lifesteal_percent."""
     assert required_effect_value(BOOTS, "lifesteal_percent") == pytest.approx(5.0)
-    value = sustain_effect_value(BOOTS, "lifesteal_percent")
+    value = numeric_effect_value(BOOTS, "lifesteal_percent")
     assert value == pytest.approx(5.0)
     assert not isinstance(value, bool)
     assert grouped_sustain_stat_percent(
@@ -341,7 +341,7 @@ def test_lifesteal_source_receipt_rides_the_typed_registry():
     assert effect["lifesteal_percent"] == pytest.approx(5.0)
     assert effect["source_revision_id"] == REVISION_ID
     assert effect["source_url"] == SOURCE_URL
-    assert sustain_effect_value(BOOTS, "lifesteal_percent") == pytest.approx(5.0)
+    assert numeric_effect_value(BOOTS, "lifesteal_percent") == pytest.approx(5.0)
     assert required_effect_value(BOOTS, "source_revision_id") == REVISION_ID
     assert required_effect_value(BOOTS, "source_url") == SOURCE_URL
 

@@ -857,8 +857,6 @@ def no_runtime_behavior_block() -> dict[str, Any]:
 
 CHAMPIONS_ROOT = SRC_ROOT / "calculator" / "champions"
 
-ZERO_POLICY_ISSUE = "issue #213"
-
 # Keys that make a dict literal an ability entry rather than any other
 # mapping: the fight engine reads ``parts`` and the producer diagnostics
 # carry ``total_raw``.
@@ -1012,7 +1010,6 @@ def zero_policy_frontier(root: Path = CHAMPIONS_ROOT) -> ZeroPolicyFrontier:
 def zero_policy_block(frontier: ZeroPolicyFrontier) -> dict[str, Any]:
     """The receipt's zero-policy section — one refusal and two ratchets."""
     return {
-        "issue": ZERO_POLICY_ISSUE,
         "rule": (
             "a .get(key, <literal>) on a champion input block (stats, "
             "target, options) is forbidden outright — D-24's source "
@@ -1065,7 +1062,7 @@ def _zero_policy_failures(
             f"{len(forbidden)} champion-input .get(key, <literal>) "
             "fallback(s) — forbidden outright, because the declared "
             "zero_policy default would stamp the resulting zero MEASURED "
-            f"(D-24, {ZERO_POLICY_ISSUE}); read them through "
+            "(D-24); read them through "
             "champions/inputs.py instead: " + "; ".join(forbidden)
         )
 
@@ -1087,7 +1084,7 @@ def _zero_policy_failures(
             failures.append(
                 f"zero-policy frontier: {population} grew from {recorded} to "
                 f"{measured}; the ruled default at champions/slotlib may not "
-                f"cover a wider population ({ZERO_POLICY_ISSUE})"
+                "cover a wider population"
             )
 
     # Per-key, not only per-total: a total-only ratchet lets a site removed
@@ -1105,8 +1102,7 @@ def _zero_policy_failures(
             if not isinstance(recorded, int) or measured > recorded:
                 failures.append(
                     f"zero-policy frontier: {section} for {unit} {key!r} "
-                    f"grew from {recorded!r} to {measured} "
-                    f"({ZERO_POLICY_ISSUE})"
+                    f"grew from {recorded!r} to {measured}"
                 )
 
     # The ratchets refuse growth; equality refuses a shrink the receipt lacks.

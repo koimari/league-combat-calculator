@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 
+from .champions import _CHAMPION_MODULES
 from .champions.skill_orders import get_ability_rank
 from .item_behavior import DefenseField, DefenseMechanic
 from .item_behavior_catalog import DEFENSE_RECEIPTS
@@ -58,7 +59,6 @@ def _champion_starting_revive(
     Division, Zilean Chronoshift) return the revive payload; every other
     champion fails closed with zero revive fields.
     """
-    from .champions import _CHAMPION_MODULES
 
     module = _CHAMPION_MODULES.get(champion_name)
     if module is None:
@@ -78,12 +78,8 @@ def _apply_champion_revive(
         return
     ledger.write(
         DefenseField.REVIVE_HEALTH_AMOUNT,
-        float(fields.get("revive_health_amount", 0.0)),
+        float(fields["revive_health_amount"]),
     )
-    ledger.write(DefenseField.REVIVE_DELAY, float(fields.get("revive_delay", 0.0)))
-    ledger.write(
-        DefenseField.REVIVE_COOLDOWN, float(fields.get("revive_cooldown", 0.0))
-    )
-    ledger.write(
-        DefenseField.REVIVE_SOURCE, _CHAMPION_REVIVE_SOURCES.get(champion_name, "")
-    )
+    ledger.write(DefenseField.REVIVE_DELAY, float(fields["revive_delay"]))
+    ledger.write(DefenseField.REVIVE_COOLDOWN, float(fields["revive_cooldown"]))
+    ledger.write(DefenseField.REVIVE_SOURCE, _CHAMPION_REVIVE_SOURCES[champion_name])

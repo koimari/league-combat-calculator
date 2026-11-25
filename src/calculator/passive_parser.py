@@ -525,12 +525,15 @@ def _parse_essence_reaver_spellblade(text: str) -> dict[str, Any]:
     """Parse Essence Reaver's spellblade with crit scaling."""
     result = _parse_spellblade(text)
     crit_match = re.search(r"\{\{pp\|0\s+to\s+(\d+)", text)
-    if crit_match:
+    share_match = re.search(r"(\d+(?:\.\d+)?)%\s+of\s+that\s+amount", text)
+    if crit_match and share_match and "base_ad_ratio" in result:
         result["crit_bonus_max"] = float(crit_match.group(1))
-        # Manaflow restores 50% of the Spellblade amount. The base branch is
-        # 125% base AD, while the crit branch reaches 50% at 100% crit.
-        result["mana_restore_base_ad_ratio"] = 1.25 * 0.5
-        result["mana_restore_crit_ratio"] = (float(crit_match.group(1)) / 100.0) * 0.5
+        # Manaflow restores the stated share of Spellblade's amount, both
+        # branches: the base-AD ratio, and the crit bonus's value at 100%
+        # crit, which the reader scales by crit chance as a fraction.
+        share = float(share_match.group(1)) / 100.0
+        result["mana_restore_base_ad_ratio"] = result["base_ad_ratio"] * share
+        result["mana_restore_crit_ratio"] = result["crit_bonus_max"] * share
     return result
 
 

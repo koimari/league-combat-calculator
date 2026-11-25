@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from typing import Any, NamedTuple
 
 from ..results import RotationResult
+from ..state import FightState
 
 
 class StackEvent(NamedTuple):
@@ -119,3 +120,8 @@ def _resource_ledger(rotation: RotationResult) -> dict[str, Any]:
         ledger = {}
         rotation.resource_ledger = ledger
     return ledger
+
+
+def walks_for(state: FightState, owner: str) -> bool:
+    """Whether *owner*'s walk runs: its own fight, or one naming no champion."""
+    return state.champion_name in (None, owner)

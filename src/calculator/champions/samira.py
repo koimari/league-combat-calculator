@@ -43,7 +43,7 @@ _E_ATTACK_SPEED_SECONDS = data_value(
     spell_object("Samira", "SamiraE"), "AttackSpeedDuration"
 )
 
-_STYLE_MAX = 6
+_STYLE_MAX = 6  # cached P: a 16.5% movement speed cap / 2.75% per Style stack
 # Style bonus movement speed per stack by level bracket (wiki prose:
 # 2.75% / 3% / 3.25% / 3.5% at levels 1 / 6 / 11 / 16).
 _STYLE_MS_BRACKETS = ((16, 3.5), (11, 3.25), (6, 3.0), (1, 2.75))

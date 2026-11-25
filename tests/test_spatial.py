@@ -145,7 +145,7 @@ class TestEnemiesWithinRange:
         assert count == 0
         assert reason == SPATIAL_UNAVAILABLE
 
-    def test_skips_teammates(self):
+    def test_skips_allies(self):
         holder = _actor("main", "main", (0.0, 0.0))
         allies = [_actor("ally1", "main", (600.0, 0.0))]
         count, reason = enemies_within_range(holder, allies, 1200.0)

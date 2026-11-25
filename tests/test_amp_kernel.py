@@ -79,7 +79,7 @@ def aura_armed_producers() -> frozenset[str]:
     once, and answering that needs one ledger over the whole composed
     fight.  The compiled path has no such moment — the roster panel is
     compiled once per search and the candidate's actions once per
-    evaluation — so it declines instead of arming a second curse the walk
+    evaluation — so it refuses instead of arming a second curse the walk
     would have dropped.
     """
     return frozenset(
@@ -115,7 +115,7 @@ class AmpFixture:
     panel exists, which a candidate-local fallback also satisfies; here the
     *named* receipt of every refusal the score path raised is captured and
     compared as a set.  An empty set is the strong claim — this build
-    compiled with nothing declined — and a non-empty one names the
+    compiled with nothing refused — and a non-empty one names the
     mechanic, so a build that started falling back for a new reason fails
     with that reason printed rather than passing as "still has panels".
     """
@@ -161,7 +161,7 @@ _SCAN_BUILD = ("Black Cleaver", "Bloodletter's Curse", "Bloodsong")
 _BUBBLE_BUILD = ("Dream Maker",)
 _AURA_BUILD = ("Abyssal Mask",)
 
-# Dream Maker's own build declines for a mechanic that is *not* an amp:
+# Dream Maker's own build refuses for a mechanic that is *not* an amp:
 # Help, Pix! is an on-hit magic grant, and ``support_kind=on_hit_magic`` is
 # the standing refusal for that kind.  It is named here rather than removed
 # from the build because the Blue Dream Bubble packet rides the same item,
@@ -290,7 +290,7 @@ def test_every_modifier_producer_is_reached_from_both_sides():
     assert not missing, f"producers no amp fixture reaches: {missing}"
 
 
-def test_the_aura_is_the_only_producer_the_compiled_lane_declines():
+def test_the_aura_is_the_only_producer_the_compiled_lane_refuses():
     """Which producers compile is a declaration, not a list.
 
     Both sides of the equality are derived: the refusal set from the
@@ -300,13 +300,13 @@ def test_the_aura_is_the_only_producer_the_compiled_lane_declines():
     aura = aura_armed_producers()
     assert aura, "the aura set may not be empty while a mechanic declares one"
     assert compilable_producers() == frozenset(_declared_authorities()) - aura
-    declined = {
+    refused = {
         receipt.split("=", 1)[1]
         for fixture in AMP_FIXTURES
         for receipt in fixture.expected_receipts
         if receipt.startswith("modifier_aura_arming=")
     }
-    assert declined == aura
+    assert refused == aura
     # And the item every one of those producers hangs on has a fixture on
     # both sides, so the refusal is exercised rather than merely declared.
     assert {producer_item(source) for source in aura} <= {
@@ -348,7 +348,7 @@ def test_the_template_refusal_admits_the_kind_and_still_names_its_own():
 
     The negative half is what makes the positive one mean something:
     an amount only the walk can price, and a deferred transition, are still
-    declined by name, so "admits ``damage_modifier``" is not "admits
+    refused by name, so "admits ``damage_modifier``" is not "admits
     anything spelled ``damage_modifier``".
     """
     assert unrepresentable_template_receipt(_template()) is None

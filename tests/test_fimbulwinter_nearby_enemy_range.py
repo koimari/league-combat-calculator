@@ -30,7 +30,7 @@ MULTI_TARGET_MULTIPLIER = 1.8
 BASE_SHIELD = 100.0
 CURRENT_MANA_RATIO = 0.045
 CURRENT_MANA = 900.0
-SPATIAL_UNAVAILABLE = "nearby_enemy_spatial_input_unavailable"
+SPATIAL_WITHHELD = "nearby_enemy_spatial_input_unavailable"
 MISSING = object()
 
 
@@ -202,7 +202,7 @@ def test_missing_enemy_positions_keep_base_shield_and_name_the_gap() -> None:
     assert packet["nearby_enemy_count"] is None
     assert packet["multi_target_multiplier"] == pytest.approx(1.0)
     assert packet["amount"] == pytest.approx(_base_amount())
-    assert [row["reason"] for row in _denials(packets)] == [SPATIAL_UNAVAILABLE]
+    assert [row["reason"] for row in _denials(packets)] == [SPATIAL_WITHHELD]
 
 
 def test_missing_holder_position_keeps_base_shield_and_names_the_gap() -> None:
@@ -212,7 +212,7 @@ def test_missing_holder_position_keeps_base_shield_and_names_the_gap() -> None:
     assert packet["nearby_enemy_count"] is None
     assert packet["multi_target_multiplier"] == pytest.approx(1.0)
     assert packet["amount"] == pytest.approx(_base_amount())
-    assert [row["reason"] for row in _denials(packets)] == [SPATIAL_UNAVAILABLE]
+    assert [row["reason"] for row in _denials(packets)] == [SPATIAL_WITHHELD]
 
 
 @pytest.mark.parametrize(
@@ -227,7 +227,7 @@ def test_malformed_enemy_distance_keeps_base_shield_and_names_the_gap(
     packet = _shield(packets)
     assert packet["nearby_enemy_count"] is None
     assert packet["multi_target_multiplier"] == pytest.approx(1.0)
-    assert [row["reason"] for row in _denials(packets)] == [SPATIAL_UNAVAILABLE]
+    assert [row["reason"] for row in _denials(packets)] == [SPATIAL_WITHHELD]
 
 
 def test_missing_holder_identity_fails_closed() -> None:
@@ -309,7 +309,7 @@ def _fight(*, score_only: bool) -> dict:
     return result
 
 
-def test_full_and_score_paths_match_spatial_unavailable_receipts() -> None:
+def test_full_and_score_paths_match_spatial_withheld_receipts() -> None:
     holder = _actor(
         "main:Morgana",
         "main",

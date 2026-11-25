@@ -3,6 +3,7 @@
 from typing import Any
 
 from ...ability_atoms import ability_field
+from ...champions.rengar import RENGAR_FEROCITY_STACK_RULE
 from ...champions.shared_option_keys import RENGAR_FEROCITY
 from ...state_timeline import EventStamp
 from ...timed_stacks import TimedStackState
@@ -10,6 +11,7 @@ from ..autos.swing_schedule import _restore_stream_attack_timestamps
 from ..config import _seeded_option_stacks
 from ..results import CastPlan, FerocityTimeline, RotationResult
 from ..state import FightState
+from .account import walks_for
 
 
 def _build_ferocity_timeline(
@@ -40,7 +42,6 @@ def _build_ferocity_timeline(
         if isinstance(info, dict)
     ):
         return None
-    from ...champions.rengar import RENGAR_FEROCITY_STACK_RULE
 
     rule = RENGAR_FEROCITY_STACK_RULE
     options = state.champion_options
@@ -145,6 +146,8 @@ def _add_rengar_ferocity(state: FightState, rotation: RotationResult) -> None:
     the kernel's stack_events and state_transitions, mirroring the
     Conqueror receipt shape.
     """
+    if not walks_for(state, "Rengar"):
+        return
     timeline = state.ferocity_timeline
     if timeline is None:
         return

@@ -25,7 +25,7 @@ from src.calculator.item_behavior_catalog import behavior_rules, build_context
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     DamageInputs,
-    sustain_effect_value,
+    numeric_effect_value,
 )
 
 BURN = "Blackfire Torch"
@@ -90,22 +90,22 @@ def test_a_burn_carries_its_window_and_its_tick_from_the_registry() -> None:
     """The two clocks a burn has are two declared numbers, not one."""
     slots = _slots(BURN)
     (burn,) = slots.burns
-    assert burn.duration == pytest.approx(sustain_effect_value(BURN, "duration"))
+    assert burn.duration == pytest.approx(numeric_effect_value(BURN, "duration"))
     assert burn.tick_interval == pytest.approx(
-        sustain_effect_value(BURN, "tick_interval")
+        numeric_effect_value(BURN, "tick_interval")
     )
     assert burn.source.breakdown_key == f"burn_{BURN}"
     assert burn.source.display_name == f"{BURN} (burn)"
     assert burn.source.raw_damage(_inputs(ability_power=200.0)) == pytest.approx(
-        sustain_effect_value(BURN, "base_total")
-        + sustain_effect_value(BURN, "ap_ratio_total") * 200.0
+        numeric_effect_value(BURN, "base_total")
+        + numeric_effect_value(BURN, "ap_ratio_total") * 200.0
     )
 
 
 def test_a_max_health_burn_is_a_share_of_the_targets_pool() -> None:
     """The holder/target split the registry's key names could not express."""
     (burn,) = _slots(MAX_HEALTH_BURN).burns
-    ratio = sustain_effect_value(MAX_HEALTH_BURN, "max_hp_ratio_total")
+    ratio = numeric_effect_value(MAX_HEALTH_BURN, "max_hp_ratio_total")
     assert burn.source.raw_damage(_inputs()) == pytest.approx(ratio * 2500.0)
 
 
@@ -115,16 +115,16 @@ def test_an_aura_pays_a_rate_and_publishes_its_own_event_spacing() -> None:
     assert [source.item_name for source in slots.auras] == [AURA, FLAT_AURA]
     scaling, flat = slots.auras
     assert scaling.event_interval == pytest.approx(
-        sustain_effect_value(AURA, "event_interval")
+        numeric_effect_value(AURA, "event_interval")
     )
     assert scaling.breakdown_key == f"immolate_{AURA}"
     assert scaling.display_name == f"{AURA} (Immolate)"
     assert scaling.raw_damage(_inputs(bonus_health=1000.0)) == pytest.approx(
-        sustain_effect_value(AURA, "base_per_second")
-        + sustain_effect_value(AURA, "bonus_hp_ratio_per_second") * 1000.0
+        numeric_effect_value(AURA, "base_per_second")
+        + numeric_effect_value(AURA, "bonus_hp_ratio_per_second") * 1000.0
     )
     assert flat.raw_damage(_inputs(bonus_health=1000.0)) == pytest.approx(
-        sustain_effect_value(FLAT_AURA, "base_per_second")
+        numeric_effect_value(FLAT_AURA, "base_per_second")
     )
 
 
@@ -134,12 +134,12 @@ def test_the_anguish_radius_comes_off_the_declaration_not_the_item_name() -> Non
     (interval,) = slots.intervals
     assert slots.range_units == {
         interval.source.breakdown_key: pytest.approx(
-            sustain_effect_value(ANGUISH, "range_units")
+            numeric_effect_value(ANGUISH, "range_units")
         )
     }
-    assert interval.interval == pytest.approx(sustain_effect_value(ANGUISH, "interval"))
+    assert interval.interval == pytest.approx(numeric_effect_value(ANGUISH, "interval"))
     assert interval.self_heal_post_mitigation_multiplier == pytest.approx(
-        sustain_effect_value(ANGUISH, "self_heal_post_mitigation_multiplier")
+        numeric_effect_value(ANGUISH, "self_heal_post_mitigation_multiplier")
     )
     assert interval.source.breakdown_key == f"periodic_{ANGUISH}"
     assert interval.source.display_name == f"{ANGUISH} (Anguish)"
@@ -219,5 +219,5 @@ def test_the_pair_interpreter_compiles_the_cadence_it_can_know() -> None:
     )
     (field,) = periodic.cadence_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.name == periodic.PERIODIC_INTERVAL_FIELD
-    assert field.value == pytest.approx(sustain_effect_value(ANGUISH, "interval"))
+    assert field.value == pytest.approx(numeric_effect_value(ANGUISH, "interval"))
     assert field.rule_id == rule.mechanic_id

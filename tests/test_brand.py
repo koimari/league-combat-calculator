@@ -131,6 +131,40 @@ class TestBlazePassive:
         assert len(passive["parts"]) == 1
 
 
+class TestPyroclasmHitCap:
+    """The R hit cap is the cache's single-target total over per-bounce damage."""
+
+    def test_a_request_past_the_cap_is_held_to_three(self, brand_data, parse_at):
+        _, abilities = parse_at(
+            brand_data,
+            18,
+            ap=0.0,
+            target_stats=TARGET,
+            champion_options={"r_bounces": 5},
+        )
+        assert abilities["R"]["total_raw"] == pytest.approx(3 * 250.0)
+
+    def test_a_ratio_that_is_no_whole_count_refuses(self, brand_data):
+        r = {
+            "effects": [
+                {
+                    "leveling": [
+                        {
+                            "attribute": "Magic Damage",
+                            "modifiers": [{"values": [100.0], "units": [""]}],
+                        },
+                        {
+                            "attribute": "Total Single-Target Damage",
+                            "modifiers": [{"values": [250.0], "units": [""]}],
+                        },
+                    ]
+                }
+            ]
+        }
+        with pytest.raises(ValueError, match="not a whole bounce count"):
+            brand._r_bounces(None, r, 1)
+
+
 class TestBrandSkillOrder:
     """Brand maxes W first, then Q, then E (R at 6/11/16)."""
 

@@ -30,7 +30,12 @@ from copy import deepcopy
 
 import pytest
 
-from src.calculator.interpreters import survival_ledger_certifications
+from src.calculator.interpreters import (
+    survival_ledger_certifications,
+    survival_ledger_contribution,
+)
+from src.calculator.item_behavior import ShieldStacking
+from src.calculator.item_behavior_catalog import behavior_rules
 from src.calculator.participant_timeline import Combatant
 from src.calculator.program.build import roster_program
 from src.calculator.program.compile import action_from_event
@@ -164,7 +169,7 @@ def _receipt(events: list[dict], *, duration: float = 4.0):
     return _walk(events, ReceiptLedger, duration=duration)
 
 
-def test_bis_receipt_names_unavailable_strongest_shield_rule():
+def test_bis_receipt_names_withheld_strongest_shield_rule():
     """The public BIS boundary names what the survival ledger does with the proc.
 
     The note is derived from the declaration now
@@ -173,14 +178,24 @@ def test_bis_receipt_names_unavailable_strongest_shield_rule():
     item, so it names the modelled behaviour and nothing else.  The additive
     stacking itself is pinned by the same-time rows below.
 
-    The derived note carries no disclosure that the strongest-shield rule is
-    unmodelled, because a contribution has no field for one; row ER1 of
-    docs/surface-area-backlog.md owns that.
+    The caveat rides the declaration too: the self shield declares
+    ``ShieldStacking.ADDITIVE``, so the note says the strongest-shield rule
+    is not modelled, and a shield declaring another rule would say otherwise.
     """
     receipt = survival_ledger_certifications()["Eclipse"]
 
     assert "declares a self shield on its proc" in receipt
     assert "survival ledger" in receipt
+    assert "the strongest-shield rule is not modelled" in receipt
+
+
+def test_the_disclosure_is_read_off_the_declared_stacking():
+    rule = next(
+        rule
+        for rule in behavior_rules("Eclipse")
+        if survival_ledger_contribution(rule) is not None
+    )
+    assert rule.payload.self_shield.stacking is ShieldStacking.ADDITIVE
 
 
 @pytest.mark.parametrize(

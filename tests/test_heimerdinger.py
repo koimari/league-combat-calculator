@@ -64,3 +64,29 @@ def test_the_turret_packet_carries_pet_damage_and_its_cadence():
     assert turret["total_raw"] > 0
     assert turret["event_order_certified"]
     assert len(turret["parts"]) == 2
+
+
+def test_the_turret_shot_follows_q_rank_not_champion_level():
+    """The binary HeimerdingerQ BaseDamage row is per Q rank (7/11/15/19/23).
+
+    At level 11 Q is already rank 5, so a shot with no AP is 23. Reading the
+    row as a 7-to-23 ramp over champion level priced it at 16.4 there.
+    """
+    from src.calculator.champions import parse_champion_abilities
+    from src.calculator.champions.skill_orders import get_ability_rank
+    from src.calculator.data_fetcher import get_champion
+    from src.calculator.stats import calculate_total_stats
+
+    data = get_champion("Heimerdinger")
+    stats = calculate_total_stats(data, 11, [])
+    assert get_ability_rank("Q", 11, "Heimerdinger") == 5
+    parsed = parse_champion_abilities(
+        data,
+        11,
+        0.0,
+        champion_stats=dict(stats, ability_power=0.0),
+        champion_options={"q_turrets": 1, "q_turret_attacks": 1, "q_beams": 1},
+    )
+    shot, beam = parsed["Q"]["parts"]
+    assert shot.amount == 23.0
+    assert beam.amount == 120.0

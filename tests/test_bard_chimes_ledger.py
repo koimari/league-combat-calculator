@@ -633,7 +633,7 @@ class TestLedgerReceipts:
         spends = [r for r in ledger["receipts"] if r["operation"] == "spend"]
         assert len(spends) == 5
         # The second Q is REFUSED: 60 + 70 + 70 + 100 already spends the
-        # whole 300 pool, so the ledger declines it rather than overdrawing,
+        # whole 300 pool, so the ledger refuses it rather than overdrawing,
         # and no damage is priced for it. That refusal is the point of the
         # account, so it is asserted rather than tolerated.
         assert [r["accepted"] for r in spends] == [True, True, True, True, False]

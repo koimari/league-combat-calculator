@@ -7,6 +7,7 @@ from typing import Any
 
 from .ally_packet_recipient import _recipient_amount
 from .ally_packet_shape import _active_seconds, _active_seconds_for, _packet, _same_side
+from .cleanse_declarations import ITEM_CLEANSE_DECLARATIONS, item_declaration
 from .control_intervals import movement_entry
 from .item_behavior import AllyProducer, PacketKind
 from .support_context import SupportCtx
@@ -17,8 +18,6 @@ def _cleanse_active_packet(
     attacker: Any, target: Any, time: float, item: str
 ) -> dict[str, Any]:
     """One self-cast cleanse-kind packet for a cleanse active item."""
-    from .cleanse_declarations import item_declaration
-
     declaration = item_declaration(item)
     return _packet(
         attacker=attacker,
@@ -36,8 +35,6 @@ def _cleanse_active_packet(
 
 def _cleanse_movement_entry(item: str) -> dict[str, Any] | None:
     """*item*'s atom-backed movement entry, or ``None`` when it grants none."""
-    from .cleanse_declarations import item_declaration
-
     return movement_entry(item_declaration(item))
 
 
@@ -48,7 +45,6 @@ def _self_cleanse_items(names: Iterable[str]) -> tuple[str, ...]:
     is a property of the registry every reader can see and not of whatever
     order a request happened to list its items in.
     """
-    from .cleanse_declarations import ITEM_CLEANSE_DECLARATIONS
 
     held = frozenset(names)
     return tuple(
@@ -224,7 +220,7 @@ def _intervention_packets(ctx: SupportCtx) -> list[dict[str, Any]]:
     intervention.declared(PacketKind.DAMAGE)
     true_damage_ratio = intervention.value("enemy_max_health_true_damage_ratio")
     for target in (actor for actor in all_actors if not _same_side(attacker, actor)):
-        amount = max(0.0, float(target.stats.get("health", 0.0))) * true_damage_ratio
+        amount = max(0.0, float(target.stats["health"])) * true_damage_ratio
         packets.append(
             _packet(
                 attacker=attacker,

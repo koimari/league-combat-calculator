@@ -148,9 +148,9 @@ def _never_called(*_args, **_kwargs):
     raise AssertionError("network path reached in a test that must not fetch")
 
 
-# MERGE: the champion catalogue now fails closed when a validated module has
+# MERGE: the champion catalog now fails closed when a validated module has
 # no cached row -- a module whose row vanished would leave the engine's own
-# attacker out of the picker.  ``run_bis`` builds that catalogue, so a fixture
+# attacker out of the picker.  ``run_bis`` builds that catalog, so a fixture
 # cache has to be a cache the roster agrees with: every registered champion
 # gets a bare row, and the named fixtures are what the test is about.
 _REGISTERED = tuple(registered_champion_names())
@@ -166,7 +166,7 @@ def _write_champions(tmp_path: Path, names=("Fixture", "Other"), *, roster=False
     """A fixture champion cache.
 
     ``roster=True`` adds a bare row for every registered champion, which the
-    catalogue build below requires; the callers that read the key set back
+    catalog build below requires; the callers that read the key set back
     leave it off.
     """
     path = tmp_path / "champions.json"

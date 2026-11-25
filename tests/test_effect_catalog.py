@@ -22,7 +22,7 @@ def test_effect_catalog_preserves_wiki_order_signals():
 
 
 def test_checked_in_effect_catalog_is_not_stale():
-    """The served effect catalogue must match a rebuild from current item data.
+    """The served effect catalog must match a rebuild from current item data.
 
     Compares the derived items rather than `source.sha256`, which covers every
     byte of data/items.json and so reported staleness for any patch that
@@ -34,7 +34,7 @@ def test_checked_in_effect_catalog_is_not_stale():
     fresh = build_catalog(ROOT / "data" / "items.json", PATCH)
 
     assert checked_in["item_count"] == fresh["item_count"]
-    assert checked_in["items"] == fresh["items"], f"catalogue stale — {REBUILD}"
+    assert checked_in["items"] == fresh["items"], f"catalog stale — {REBUILD}"
 
 
 def test_checked_in_effect_catalog_records_the_data_it_was_built_from():

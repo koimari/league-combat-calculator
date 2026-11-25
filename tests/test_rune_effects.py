@@ -822,16 +822,30 @@ class TestRefreshRuneEffects:
     def test_refresh_rereads_the_cache_in_place(self, monkeypatch):
         try:
             monkeypatch.setattr(
-                rune_effects, "_load_rune_cache", lambda: {"Stub": {"name": "Stub"}}
+                rune_effects,
+                "_load_rune_cache",
+                lambda: {
+                    "Stub": {"name": "Stub"},
+                    "shards": {"slots": []},
+                    "adaptive_force": {},
+                },
             )
             rune_effects.refresh_rune_effects()
             assert set(rune_effects.RUNE_EFFECTS) == {"Stub"}
+            assert rune_effects.RUNE_SHARDS == {"slots": []}
         finally:
             monkeypatch.undo()
             rune_effects.refresh_rune_effects()
         assert "Electrocute" in rune_effects.RUNE_EFFECTS
         assert rune_effects.RUNE_SHARDS["slots"]
         assert rune_effects.ADAPTIVE_FORCE["attack_damage_ratio"] == 0.6
+
+    @pytest.mark.parametrize("missing", ["shards", "adaptive_force"])
+    def test_a_cache_without_a_table_refuses(self, missing):
+        contents = {"Stub": {"name": "Stub"}, "shards": {}, "adaptive_force": {}}
+        del contents[missing]
+        with pytest.raises(KeyError, match=missing):
+            rune_effects._split_cache(contents)
 
 
 class TestTheSharedTableAccessors:

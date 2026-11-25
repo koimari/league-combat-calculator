@@ -354,16 +354,19 @@ def run_fight(
     # unregistered name both keep the conservative one-cast rule (CF18).
     ultimate_recasts = get_champion_ultimate_recasts(champion_data.get("name", ""))
     windup = champion_windup(champion_data)
+    champion_name = champion_data.get("name")
     engine_config = (
         params
         if params.enforce_resource_limits
         and params.ultimate_recasts == ultimate_recasts
         and params.windup == windup
+        and params.champion_name == champion_name
         else replace(
             params,
             enforce_resource_limits=True,
             ultimate_recasts=ultimate_recasts,
             windup=windup,
+            champion_name=champion_name,
         )
     )
     result = calculate_fight_damage(

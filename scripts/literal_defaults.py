@@ -23,6 +23,7 @@ fresh scan against it.
 from __future__ import annotations
 
 import ast
+import json
 import re
 import sys
 from collections import Counter
@@ -120,6 +121,69 @@ def _enclosing(tree: ast.AST) -> dict[int, str]:
     return scope
 
 
+def _string_constants(tree: ast.Module) -> dict[str, str]:
+    """Every top-level ``NAME = "text"`` binding in one module."""
+    found: dict[str, str] = {}
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target, value = node.targets[0], node.value
+        elif isinstance(node, ast.AnnAssign) and node.value is not None:
+            target, value = node.target, node.value
+        else:
+            continue
+        if (
+            isinstance(target, ast.Name)
+            and isinstance(value, ast.Constant)
+            and isinstance(value.value, str)
+        ):
+            found[target.id] = value.value
+    return found
+
+
+def _imported_module(path: Path, node: ast.ImportFrom) -> Path | None:
+    """The package file a relative ``from`` import reads, if it is one."""
+    if not node.level:
+        return None
+    base = path.parent
+    for _ in range(node.level - 1):
+        base = base.parent
+    dotted = base.joinpath(*(node.module.split(".") if node.module else ()))
+    for candidate in (dotted.with_suffix(".py"), dotted / "__init__.py"):
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _named_keys(path: Path, tree: ast.Module) -> dict[str, str]:
+    """The string constants one module can name a key by: its own, and imported.
+
+    ``options.get(W_CHARGE, 0)`` is a named-key read exactly like
+    ``options.get("w_charge", 0)``; without this the name reads as an index
+    and the literal fallback is invisible.
+    """
+    names = _string_constants(tree)
+    for node in tree.body:
+        if not isinstance(node, ast.ImportFrom):
+            continue
+        module = _imported_module(path, node)
+        if module is None:
+            continue
+        constants = _string_constants(
+            ast.parse(module.read_text(encoding="utf-8"), filename=str(module))
+        )
+        for alias in node.names:
+            if alias.name in constants:
+                names[alias.asname or alias.name] = constants[alias.name]
+    return names
+
+
+def _resolved_key(key: ast.AST | None, names: Mapping[str, str]) -> ast.AST | None:
+    """*key* with a named string constant replaced by its literal."""
+    if isinstance(key, ast.Name) and key.id in names:
+        return ast.copy_location(ast.Constant(names[key.id]), key)
+    return key
+
+
 def _indexing(get_call: ast.Call, key: ast.AST | None, default: ast.AST) -> bool:
     """True when the read is an index into an accumulator, not a field read."""
     named = isinstance(key, ast.Constant) and isinstance(key.value, str)
@@ -130,10 +194,17 @@ def _indexing(get_call: ast.Call, key: ast.AST | None, default: ast.AST) -> bool
     )
 
 
-def _flagged(node: ast.AST) -> tuple[str, ast.AST | None, ast.AST] | None:
-    """The (kind, key, default) this node reads behind a literal fallback."""
+def _flagged(
+    node: ast.AST, names: Mapping[str, str]
+) -> tuple[str, ast.AST | None, ast.AST] | None:
+    """The (kind, key, default) this node reads behind a literal fallback.
+
+    A key spelled by a named string constant is judged and reported as the
+    literal it names.
+    """
     if _is_get_call(node) and len(node.args) == 2 and not node.keywords:
-        key, default = node.args
+        default = node.args[1]
+        key = _resolved_key(node.args[0], names)
         if _is_literal(default) and not _indexing(node, key, default):
             return "dict.get", key, default
         return None
@@ -155,10 +226,20 @@ def _flagged(node: ast.AST) -> tuple[str, ast.AST | None, ast.AST] | None:
         and _is_get_call(node.values[-2])
     ):
         coalesced = node.values[-2]
-        key = coalesced.args[0] if coalesced.args else None
+        key = _resolved_key(coalesced.args[0], names) if coalesced.args else None
         if not _indexing(coalesced, key, node.values[-1]):
             return "or-default", key, node.values[-1]
     return None
+
+
+def _key_text(key: ast.AST | None, source: str) -> str:
+    """A key as the baseline spells it; a resolved name as its literal."""
+    if key is None:
+        return ""
+    segment = ast.get_source_segment(source, key)
+    if isinstance(key, ast.Constant) and segment is not None and segment.isidentifier():
+        return json.dumps(key.value)
+    return _text(key, source)
 
 
 def scan(paths: Iterable[Path]) -> list[Finding]:
@@ -168,8 +249,9 @@ def scan(paths: Iterable[Path]) -> list[Finding]:
         source = path.read_text(encoding="utf-8")
         tree = ast.parse(source, filename=str(path))
         scope = _enclosing(tree)
+        names = _named_keys(path, tree)
         for node in ast.walk(tree):
-            flagged = _flagged(node)
+            flagged = _flagged(node, names)
             if flagged is None:
                 continue
             kind, key, default = flagged
@@ -178,7 +260,7 @@ def scan(paths: Iterable[Path]) -> list[Finding]:
                     str(path),
                     node.lineno,
                     kind,
-                    _text(key, source) if key is not None else "",
+                    _key_text(key, source),
                     _text(default, source),
                     _text(node, source),
                     scope.get(node.lineno, "<module>"),

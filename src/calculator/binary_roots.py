@@ -134,6 +134,45 @@ def _breakpoint_level(step: Any) -> float:
     raise RuntimeError(f"calculation breakpoint row without a numeric mLevel: {step!r}")
 
 
+def _breakpoint_parts(
+    spell_obj: dict[str, Any], calculation_name: str
+) -> list[dict[str, Any]]:
+    """A calculation's formula parts, each ``mSubpart`` read in its parent's place.
+
+    A stat-scaled breakpoint ratio (Camille's ``ShieldAmount``: max health
+    times 10% plus 5% per breakpoint) nests the level table one level down.
+    """
+    parts = []
+    for part in _formula_parts(spell_obj, calculation_name):
+        if not isinstance(part, dict):
+            continue
+        subpart = part.get("mSubpart")
+        parts.append(subpart if isinstance(subpart, dict) else part)
+    return parts
+
+
+def calculation_breakpoint_value(
+    spell_obj: dict[str, Any], calculation_name: str, level: int
+) -> float:
+    """A level-breakpoint calculation's value at one character *level*.
+
+    The tier is the count of breakpoints whose ``mLevel`` the level has
+    reached, so the table's own levels decide the band, not a caller's copy.
+    """
+    tiers = calculation_breakpoints(spell_obj, calculation_name)
+    for part in _breakpoint_parts(spell_obj, calculation_name):
+        if "mLevel1Value" in part:
+            # calculation_breakpoints above already refused a non-list table.
+            steps = part.get("mBreakpoints")
+            if steps is None:
+                return tiers[0]
+            reached = sum(1 for step in steps if _breakpoint_level(step) <= level)
+            return tiers[reached]
+    raise RuntimeError(
+        f"calculation {calculation_name!r}: no level-breakpoint formula part"
+    )
+
+
 def calculation_breakpoints(
     spell_obj: dict[str, Any], calculation_name: str
 ) -> tuple[float, ...]:
@@ -145,8 +184,8 @@ def calculation_breakpoints(
     champion modules index by level band.  Snap and fail-closed rules match
     :func:`data_value`.
     """
-    for part in _formula_parts(spell_obj, calculation_name):
-        if isinstance(part, dict) and "mLevel1Value" in part:
+    for part in _breakpoint_parts(spell_obj, calculation_name):
+        if "mLevel1Value" in part:
             try:
                 current = float(part["mLevel1Value"])
             except (TypeError, ValueError) as exc:
@@ -299,6 +338,25 @@ def _data_value_at_index(
             )
         return _snapped(values[value_index], f"{label} {index_label}")
     raise RuntimeError(f"{label} not found")
+
+
+def uniform_spell_field(spell_obj: dict[str, Any], field: str) -> float:
+    """An ``mSpell`` field that states one value: a scalar, or one at every rank.
+
+    Galio's R lands when its ``mChannelDuration`` ends, the same 2.75 s at
+    every rank; a row whose ranks differ raises, since one number would then
+    misstate the others.  ``missileSpeed`` is a scalar.
+    """
+    label = f"spell field {field!r}"
+    row = _dig(spell_obj, "mSpell", field, want=(list, int, float), label=label)
+    if isinstance(row, bool):
+        raise RuntimeError(f"{label}: a bool is not a number")
+    values = {
+        _snapped(value, label) for value in (row if isinstance(row, list) else [row])
+    }
+    if len(values) != 1:
+        raise RuntimeError(f"{label}: ranks differ ({sorted(values)})")
+    return values.pop()
 
 
 def data_value(spell_obj: dict[str, Any], value_name: str) -> float:

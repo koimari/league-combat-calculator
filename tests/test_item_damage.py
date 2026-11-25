@@ -3474,7 +3474,7 @@ class TestUmbralGlaiveNightstalker(_FightHarness):
             auto_attack_uptime=1.0,
             one_rotation=True,
         )
-        unavailable = calculate_fight_damage(
+        withheld = calculate_fight_damage(
             self._stats(), {}, _build("Umbral Glaive"), config
         )
         ready = calculate_fight_damage(
@@ -3484,7 +3484,7 @@ class TestUmbralGlaiveNightstalker(_FightHarness):
             config,
             item_options={"Umbral Glaive": {"nightstalker_ready": 1}},
         )
-        assert "on_hit_once_Umbral Glaive" not in unavailable["breakdown"]
+        assert "on_hit_once_Umbral Glaive" not in withheld["breakdown"]
         assert ready["breakdown"]["on_hit_once_Umbral Glaive"][
             "total_damage"
         ] == pytest.approx(77.0)
@@ -5163,7 +5163,7 @@ class TestOnHitItemSwingEvents(_FightHarness):
         )
         assert "on_hit_Wit's End" in result["timeline_coverage"]["exact_sources"]
 
-    def test_bork_authors_declining_per_swing_events(self) -> None:
+    def test_bork_authors_decreasing_per_swing_events(self) -> None:
         """BoRK's current-HP simulation emits its per-swing values."""
         result = self._timed_fight([{"name": "Blade of the Ruined King"}])
 

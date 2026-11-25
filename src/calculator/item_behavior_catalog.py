@@ -136,6 +136,7 @@ from .item_behavior import (
     ShapedChargeRule,
     ShieldAbsorbs,
     ShieldBypassRule,
+    ShieldStacking,
     SpellbladeRule,
     StackedStatRule,
     StackGate,
@@ -2927,7 +2928,11 @@ def _cooldown_proc_rule(source: ValueSource, entry: Mapping[str, Any]) -> Behavi
             ),
             charged=charged,
             stacks=StackGate(*stack_refs) if stack_refs is not None else None,
-            self_shield=SelfShield(*shield_refs) if shield_refs is not None else None,
+            self_shield=(
+                SelfShield(*shield_refs, stacking=ShieldStacking.ADDITIVE)
+                if shield_refs is not None
+                else None
+            ),
         ),
         compilability=(
             COMPILED_KERNEL_CANNOT_SELF_SHIELD
@@ -5177,13 +5182,54 @@ def _compile_defense(
 ) -> tuple[BehaviorRule, ...]:
     """Compile the defences of one family that a registry entry declares.
 
-    An entry declaring none compiles none, and that is an answer: Guardian
-    Angel's mechanic is a resurrection, so this compiler returns nothing.
+    None of *this* family is an answer (Guardian Angel's is a revive); a
+    defence entry no mechanic claims is a dropped key, and raises on refresh.
     """
+    _require_a_claiming_defense(source.owner, entry)
     return tuple(
         _defense_rule(mechanic, source)
         for mechanic in defense_mechanics_for(family, entry)
         if _defense_flag_holds(mechanic, entry)
+    )
+
+
+#: The families whose tagged entries must each be claimed by a defence.
+_DEFENSE_TAG_FAMILIES = frozenset(
+    {
+        RuleFamily.OPENING_DEFENSE,
+        RuleFamily.THRESHOLD_DEFENSE,
+        RuleFamily.COMBAT_STATE,
+        RuleFamily.REACTIVE,
+    }
+)
+
+
+def _tagged_a_defense(entry: Mapping[str, Any]) -> bool:
+    """Whether *entry*'s own type tag files it under a defence family."""
+    return TAG_FAMILY.get(str(entry.get("type"))) in _DEFENSE_TAG_FAMILIES
+
+
+def _claimed_by_a_defense(entry: Mapping[str, Any]) -> bool:
+    """Whether one declared defence mechanic claims *entry* by its signature."""
+    return any(
+        declaration.shape.claims(entry) for declaration in DEFENSE_DECLARATIONS.values()
+    )
+
+
+def _require_a_claiming_defense(owner: str, entry: Mapping[str, Any]) -> None:
+    """Raise, naming every signature key, when no defence claims a defence entry."""
+    if not _tagged_a_defense(entry) or _claimed_by_a_defense(entry):
+        return
+    signatures = sorted(
+        {
+            key
+            for declaration in DEFENSE_DECLARATIONS.values()
+            for key in declaration.shape.signature_keys
+        }
+    )
+    raise KeyError(
+        f"ITEM_EFFECTS[{owner!r}] is tagged a defence but carries no declared "
+        f"mechanic's signature key (one of {signatures}); a parse dropped it"
     )
 
 
@@ -6327,26 +6373,11 @@ def _validate_defense_migration() -> None:
 
 def _validate_defense_entry_closure() -> None:
     """Every defence-tagged registry entry is claimed by at least one mechanic."""
-    defence_families = frozenset(
-        {
-            RuleFamily.OPENING_DEFENSE,
-            RuleFamily.THRESHOLD_DEFENSE,
-            RuleFamily.COMBAT_STATE,
-            RuleFamily.REACTIVE,
-        }
-    )
     unclaimed: list[str] = []
     for owner, entry in item_effects.ITEM_EFFECTS.items():
-        if not isinstance(entry, Mapping):
+        if not isinstance(entry, Mapping) or not _tagged_a_defense(entry):
             continue
-        family = TAG_FAMILY.get(str(entry.get("type")))
-        if family not in defence_families:
-            continue
-        claimed = any(
-            declaration.shape.claims(entry)
-            for declaration in DEFENSE_DECLARATIONS.values()
-        )
-        if not claimed:
+        if not _claimed_by_a_defense(entry):
             unclaimed.append(owner)
     if unclaimed:
         raise RuntimeError(

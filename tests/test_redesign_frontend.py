@@ -162,7 +162,7 @@ def test_solo_verdict_shows_absolutes_and_an_enable_affordance(
 # ---------------------------------------------------------------------------
 
 
-def test_item_stat_lines_actually_resolve_from_the_served_catalogue():
+def test_item_stat_lines_actually_resolve_from_the_served_catalog():
     """The stat line the UI shows is the served entry, so /api/items must
     carry real numbers (an older cache generation sent zeroes for all)."""
     client = app_module.app.test_client()
@@ -172,7 +172,7 @@ def test_item_stat_lines_actually_resolve_from_the_served_catalogue():
         for name, entry in served.items()
         if any(entry[field] for field in ("ap", "ad", "hp", "armor", "mr"))
     ]
-    assert len(with_stats) > len(served) // 2, "served catalogue must carry stats"
+    assert len(with_stats) > len(served) // 2, "served catalog must carry stats"
     deathcap = served["Rabadon's Deathcap"]
     assert deathcap["ap"] > 0
     assert deathcap["price"] > 0

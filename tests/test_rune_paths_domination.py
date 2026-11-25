@@ -1,12 +1,12 @@
-"""Domination's minor runes: what each one prices, and what each one declines.
+"""Domination's minor runes: what each one prices, and what each one refuses.
 
 Four of the nine reach the fight — Cheap Shot's bonus true damage on the
 impaired trigger stream, Sudden Impact's on a declared dash, Taste of Blood's
 heal on the self-healing ledger, and Ultimate Hunter's ultimate haste — and
 all four are pinned here against the cache and through the real pipeline. The
 other five are compiled refusals, so the test that matters for them is not
-"does it price" but "does it decline for the right reason, with the number it
-declined to price named".
+"does it price" but "does it refuse for the right reason, with the number it
+refused to price named".
 
 The distinction is the disposition: ``WITHHELD`` is a real number this engine
 holds no channel for, ``STRUCTURAL_ZERO`` is a rune whose answer is zero.

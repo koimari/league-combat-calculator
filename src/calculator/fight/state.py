@@ -77,6 +77,8 @@ class FightState:
     # live Ferocity walk seeds its stack state from the same option the
     # module parse consumed.
     champion_options: Mapping[str, Any]
+    # ``FightConfig.champion_name``: whose stack walks this fight runs.
+    champion_name: str | None
     actualizer_active_until: float
     actualizer_basic_cooldown_multiplier: float
     actualizer_resource_cost_multiplier: float

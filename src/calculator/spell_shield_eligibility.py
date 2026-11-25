@@ -170,11 +170,11 @@ def resolve_cast_identity(action: PacketFacts) -> tuple[str, str]:
     can be formed, on which the decision path fails closed and never spends
     the shield.
     """
-    instance = getattr(action, "ability_instance", None)
+    instance = action.ability_instance
     if instance is not None and str(instance):
         return str(instance), "sourced"
-    source_key = str(getattr(action, "source_key", "") or "")
-    raw_time = getattr(action, "time", None)
+    source_key = str(action.source_key or "")
+    raw_time = action.time
     if raw_time is None and not source_key:
         return "", "unknown"
     try:

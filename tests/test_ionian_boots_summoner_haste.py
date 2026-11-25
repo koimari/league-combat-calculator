@@ -95,8 +95,8 @@ from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.fight.config import FightConfig
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
+    numeric_effect_value,
     required_effect_value,
-    sustain_effect_value,
 )
 from src.calculator.stats import calculate_total_stats, effective_cooldown
 from tests.app_config import app_config
@@ -241,7 +241,7 @@ def test_malformed_registry_value_fails_loud_never_silent_fallback(
     for bad_value in ("ten", True):
         monkeypatch.setitem(ITEM_EFFECTS, BOOTS, {SUMMONER_SPELL_HASTE_KEY: bad_value})
         with pytest.raises(TypeError) as excinfo:
-            sustain_effect_value(BOOTS, SUMMONER_SPELL_HASTE_KEY)
+            numeric_effect_value(BOOTS, SUMMONER_SPELL_HASTE_KEY)
         message = str(excinfo.value)
         assert BOOTS in message
         assert SUMMONER_SPELL_HASTE_KEY in message

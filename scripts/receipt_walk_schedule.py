@@ -109,13 +109,13 @@ NAMED_DELIVERY_FAMILY = "damage_routing"
 AMENDMENT_P_DELIVERY: dict[str, tuple[str, ...]] = {
     "DamageDeferralRule": (
         "program.events.Defer",
-        "survival.actions.SurvivalAction.deferred",
-        "survival.actions.SurvivalAction.deferred_batch_slot",
+        "survival.typed_action.SurvivalAction.deferred",
+        "survival.typed_action.SurvivalAction.deferred_batch_slot",
     ),
     "ExecuteRule": (
         "program.events.Execute",
-        "survival.actions.SurvivalAction.execute_threshold_ratio",
-        "survival.actions.SurvivalAction.execute_source",
+        "survival.typed_action.SurvivalAction.execute_threshold_ratio",
+        "survival.typed_action.SurvivalAction.execute_source",
     ),
     "ShieldBypassRule": ("shield_ledger.ShieldPools.venom_factor",),
 }
@@ -552,7 +552,7 @@ def _kernel_mechanisms() -> dict[str, frozenset[str]]:
     """
     return {
         "program.events": frozenset(kind.__name__ for kind in events.RIDER_KINDS),
-        "survival.actions.SurvivalAction": frozenset(ACTION_FIELDS),
+        "survival.typed_action.SurvivalAction": frozenset(ACTION_FIELDS),
         "shield_ledger.ShieldPools": frozenset(
             field.name for field in dataclasses.fields(shield_ledger.ShieldPools)
         ),

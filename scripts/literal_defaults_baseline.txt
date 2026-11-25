@@ -73,15 +73,19 @@
 # The covered set.
 root|__init__.py
 root|ability_atoms.py
+root|ability_dps_matrix.py
 root|ability_prose.py
 root|ability_spec.py
+root|ally_effects.py
 root|ally_packet_recipient.py
 root|application_errors.py
 root|attack_cadence.py
 root|attack_windows.py
+root|auto_attack_policy.py
 root|binary_roots.py
 root|breakdown_row.py
 root|build_search.py
+root|calculate.py
 root|capabilities.py
 root|capability_fields.py
 root|cast_dependency.py
@@ -91,18 +95,22 @@ root|cast_order_overrides.py
 root|certified_casts.py
 root|champion_cleanses.py
 root|champion_growth.py
+root|champion_opening_defenses.py
 root|champions
 root|cleanse_declarations.py
 root|combat_events.py
 root|composed_event_row.py
 root|control_spec.py
 root|coverage_evidence.py
+root|crowd_control_eligibility.py
 root|damage.py
 root|damage_event_row.py
 root|data_fetcher.py
 root|data_registry.py
 root|data_updater.py
 root|defense_composition.py
+root|defensive_effects.py
+root|delivery_eligibility.py
 root|economics_data.py
 root|event_row_field.py
 root|fight
@@ -110,14 +118,18 @@ root|fight_receipts.py
 root|fight_request_bounds.py
 root|fight_result_row.py
 root|heal_event_row.py
+root|healing.py
 root|healing_helpers.py
 root|interpreters
+root|item_behavior.py
 root|item_coverage.py
 root|item_effects.py
 root|item_outcomes.py
 root|item_source.py
 root|item_source_merge.py
 root|item_stat_block.py
+root|item_support_actives.py
+root|item_support_shred.py
 root|ledger_declarations.py
 root|ledger_inputs.py
 root|ledger_projection.py
@@ -125,6 +137,7 @@ root|manaflow_ledger.py
 root|minion_stats.py
 root|passive_parser.py
 root|patch_identity.py
+root|practice_dummy.py
 root|program/__init__.py
 root|program/amp.py
 root|program/build.py
@@ -135,6 +148,7 @@ root|program/events.py
 root|program/identity.py
 root|program/precision.py
 root|program/route.py
+root|program/rung.py
 root|program/scope.py
 root|program/sums.py
 root|program/tagged.py
@@ -146,6 +160,7 @@ root|program/views/survival.py
 root|program/views/survival_blocks.py
 root|program/views/tdd.py
 root|program/views/view_tag.py
+root|projectile_defense.py
 root|public_response.py
 root|quantity.py
 root|rank_allocation.py
@@ -155,10 +170,12 @@ root|resistance.py
 root|resource_events.py
 root|resource_ledger.py
 root|role_quests.py
+root|rotation_resolver.py
 root|rune_effects.py
 root|rune_parser.py
 root|rune_paths
 root|rune_pull.py
+root|self_state_effects.py
 root|shield_ledger.py
 root|shield_pools.py
 root|spell_shield_rearm.py
@@ -166,11 +183,12 @@ root|stack_rules.py
 root|starting_defenses.py
 root|stat_conversion.py
 root|stat_formulas.py
+root|state_lifecycle.py
 root|stats.py
 root|support_context.py
 root|survival/__init__.py
-root|survival/action_families.py
 root|survival/accumulate.py
+root|survival/action_families.py
 root|survival/compile.py
 root|survival/defense_contracts.py
 root|survival/event_slots.py
@@ -211,7 +229,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|87
+er5-tail-ceiling|69
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
@@ -287,6 +305,7 @@ AUTHORED_DECLARATION|champions/slot_cc.py|_validate_cc_event_contract|or-default
 AUTHORED_DECLARATION|champions/slot_control.py|parse|dict.get|"control_events" 1
 AUTHORED_DECLARATION|champions/slot_control.py|parse|dict.get|"control_source_atoms" 1
 AUTHORED_DECLARATION|champions/slot_control.py|parse|dict.get|"parts" 1
+AUTHORED_DECLARATION|champions/slot_control.py|park_control_interval|dict.get|"_pending_control_events" 1
 AUTHORED_DECLARATION|champions/slot_entries.py|parse|or-default|"parts" 1
 AUTHORED_DECLARATION|champions/slot_entries.py|parse|or-default|"total_raw" 1
 AUTHORED_DECLARATION|champions/smolder.py|parse|dict.get|"total_raw" 2
@@ -387,6 +406,19 @@ AUTHORED_DECLARATION|rune_paths/sorcery.py|_compile_waterwalking|dict.get|"effec
 AUTHORED_DECLARATION|rune_pull.py|reparse_cached_rune_effects|dict.get|"slots" 1
 AUTHORED_DECLARATION|stats.py|calculate_total_stats|dict.get|"ability_haste" 1
 AUTHORED_DECLARATION|stats.py|calculate_total_stats|dict.get|"ability_power" 2
+AUTHORED_DECLARATION|program/rung.py|reason_of|getattr|"reason" 1
+AUTHORED_DECLARATION|rotation_resolver.py|build_rotation_receipt|dict.get|"slot" 1
+AUTHORED_DECLARATION|state_lifecycle.py|start|or-default|"source" 1
+AUTHORED_DECLARATION|item_behavior.py|_validate_stat_derivation|getattr|"granted" 1
+AUTHORED_DECLARATION|ability_dps_matrix.py|rank_ability_dps|dict.get|"cooldown" 1
+AUTHORED_DECLARATION|ability_dps_matrix.py|rank_ability_dps|dict.get|"total_raw" 1
+AUTHORED_DECLARATION|ability_dps_matrix.py|rank_ability_dps|or-default|"cooldown" 1
+AUTHORED_DECLARATION|ability_dps_matrix.py|rank_ability_dps|or-default|"total_raw" 1
+AUTHORED_DECLARATION|self_state_effects.py|derive_self_state_effects|dict.get|"kind" 1
+AUTHORED_DECLARATION|self_state_effects.py|derive_self_state_effects|dict.get|"rank" 1
+AUTHORED_DECLARATION|self_state_effects.py|derive_self_state_effects|dict.get|"source" 1
+AUTHORED_DECLARATION|self_state_effects.py|derive_self_state_effects|dict.get|"time_offset" 1
+AUTHORED_DECLARATION|self_state_effects.py|derive_self_state_effects|or-default|"time_offset" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"attribute" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"effects" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"leveling" 1
@@ -523,6 +555,7 @@ CACHED_SOURCE_ROW|item_source.py|sr_availability|or-default|"name" 1
 CACHED_SOURCE_ROW|item_source.py|sr_availability|or-default|"prices" 1
 CACHED_SOURCE_ROW|item_source.py|sr_availability|or-default|"rank" 1
 CACHED_SOURCE_ROW|item_source.py|sr_availability|or-default|"shop" 1
+CACHED_SOURCE_ROW|item_source.py|sr_availability|dict.get|"classic sr 5v5" 1
 CACHED_SOURCE_ROW|item_source_merge.py|_champion_restriction|or-default|"champion" 1
 CACHED_SOURCE_ROW|item_source_merge.py|_champion_restriction|or-default|key 1
 CACHED_SOURCE_ROW|item_source_merge.py|_merge_effect_branches|or-default|"branches" 1
@@ -568,6 +601,9 @@ CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"healthRegen" 2
 CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"mana" 2
 CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"manaRegen" 2
 CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"perLevel" 3
+CACHED_SOURCE_ROW|auto_attack_policy.py|_source_cast_time|dict.get|"abilities" 1
+CACHED_SOURCE_ROW|ally_effects.py|_cached_producer_passive|dict.get|"name" 1
+CACHED_SOURCE_ROW|ally_effects.py|_cached_producer_passive|dict.get|"passives" 1
 LOADOUT_NAMES|item_effects.py|_cached_sustain_stat|or-default|"name" 1
 LOADOUT_NAMES|item_effects.py|_resolve_damage_effects_uncached|dict.get|"name" 1
 LOADOUT_NAMES|item_effects.py|active_secondary_ad_item_name|dict.get|"name" 1
@@ -577,6 +613,10 @@ LOADOUT_NAMES|item_effects.py|hydra_secondary_item_name|dict.get|"name" 1
 LOADOUT_NAMES|item_effects.py|resolve_damage_effects|dict.get|"name" 1
 LOADOUT_NAMES|item_effects.py|target_class_denials|dict.get|"name" 1
 LOADOUT_NAMES|item_effects.py|target_class_denials|or-default|"name" 1
+LOADOUT_NAMES|defensive_effects.py|resolve_starting_defenses|dict.get|"name" 1
+LOADOUT_NAMES|healing.py|derive_self_healing|dict.get|"name" 1
+LOADOUT_NAMES|projectile_defense.py|resolve_projectile_defense|dict.get|"name" 1
+LOADOUT_NAMES|ally_effects.py|resolve_ally_stat_effects|dict.get|"name" 1
 MODULE_DECLARATION|champions/__init__.py|_module_declaration|getattr|attribute 1
 MODULE_DECLARATION|champions/module_contract.py|contract_from_module|getattr|"MODULE_COVERAGE" 1
 MODULE_DECLARATION|champions/module_contract.py|contract_from_module|getattr|"SLOTS" 1
@@ -602,6 +642,8 @@ MODULE_DECLARATION|interpreters/__init__.py|_validate_authority_agreement|getatt
 MODULE_DECLARATION|interpreters/cast_proc.py|self_shield_owners|getattr|"self_shield" 1
 MODULE_DECLARATION|interpreters/defense_state.py|_policy_reference|getattr|name 1
 MODULE_DECLARATION|item_coverage.py|_prices_holder_durability|getattr|field 1
+MODULE_DECLARATION|healing.py|_load_declarations|getattr|"SELF_HEALING_RULE" 1
+MODULE_DECLARATION|champion_opening_defenses.py|_champion_starting_revive|getattr|"starting_revive_defense" 1
 OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_ap_per_unit" 1
 OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_health_per_unit" 1
 OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_mana_per_unit" 1
@@ -641,6 +683,7 @@ REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"eminence_stac
 REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"feast_active_seconds" 1
 REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"shared_riches_gold" 1
 REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"ward_uses" 1
+REQUEST_ITEM_STATE|item_effects.py|actualizer_active_seconds|or-default|"Actualizer" 1
 WIKI_TRAVERSALS|ability_atoms.py|_valid_atom_hash|dict.get|"hash" 1
 WIKI_TRAVERSALS|ability_atoms.py|ranked_ability_atom_value|dict.get|"values" 1
 WIKI_TRAVERSALS|ability_atoms.py|required_ability_atom|dict.get|"evidence" 1

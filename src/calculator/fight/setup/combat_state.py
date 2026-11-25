@@ -451,6 +451,7 @@ def _resolve_combat_state(
         auto_attack_uptime=auto_attack_uptime,
         item_options=item_options,
         champion_options=dict(champion_options or {}),
+        champion_name=config.champion_name,
         actualizer_active_until=actualizer_active_until,
         actualizer_basic_cooldown_multiplier=actualizer_basic_cooldown_multiplier,
         actualizer_resource_cost_multiplier=actualizer_resource_cost_multiplier,

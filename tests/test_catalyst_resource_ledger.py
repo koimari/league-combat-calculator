@@ -48,7 +48,7 @@ from src.calculator.interpreters import (
     uncompilable_item_receipt,
 )
 from src.calculator.item_behavior import ReceiptOnly, ReceiptScope
-from src.calculator.item_effects import sustain_effect_value
+from src.calculator.item_effects import numeric_effect_value
 from src.calculator.item_sustain_events import _item_self_healing_events
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
@@ -82,10 +82,10 @@ CAP_PER_SECOND = 20.0
 
 def _typed_values():
     return (
-        sustain_effect_value(CATALYST, "damage_taken_to_mana_ratio"),
-        sustain_effect_value(CATALYST, "mana_spent_heal_ratio"),
-        sustain_effect_value(CATALYST, "mana_spent_heal_cap_per_cast"),
-        sustain_effect_value(CATALYST, "mana_spent_heal_cap_per_second"),
+        numeric_effect_value(CATALYST, "damage_taken_to_mana_ratio"),
+        numeric_effect_value(CATALYST, "mana_spent_heal_ratio"),
+        numeric_effect_value(CATALYST, "mana_spent_heal_cap_per_cast"),
+        numeric_effect_value(CATALYST, "mana_spent_heal_cap_per_second"),
     )
 
 

@@ -7,6 +7,7 @@ import pytest
 
 from src.calculator.binary_roots import (
     _BIN_DIR,
+    calculation_breakpoint_value,
     calculation_breakpoints,
     calculation_coefficient,
     calculation_coefficients,
@@ -18,6 +19,7 @@ from src.calculator.binary_roots import (
     data_value_at_rank,
     record_value,
     spell_object,
+    uniform_spell_field,
 )
 from src.calculator.champions import aphelios_weapons
 
@@ -1458,3 +1460,105 @@ class TestBatch40RootedMelConstants:
         assert calculation_coefficient(
             spell, "PassiveBonusMissileDamage"
         ) == pytest.approx(mel._P_MISSILE_AP_RATIO)
+
+
+def _breakpoint_spell(part: dict) -> dict:
+    """A spell object whose one calculation ``Ratio`` holds *part*."""
+    return {"mSpell": {"mSpellCalculations": {"Ratio": {"mFormulaParts": [part]}}}}
+
+
+_LEVEL_TABLE = {
+    "mLevel1Value": 0.1,
+    "mBreakpoints": [
+        {"mLevel": 13, "mAdditionalBonusAtThisLevel": 0.05},
+        {"mLevel": 7, "mAdditionalBonusAtThisLevel": 0.05},
+    ],
+}
+
+
+class TestCalculationBreakpointValue:
+    """The tier a level reaches comes from the table's own breakpoint levels."""
+
+    @pytest.mark.parametrize(
+        ("level", "expected"),
+        [(1, 0.1), (6, 0.1), (7, 0.15), (12, 0.15), (13, 0.2), (20, 0.2)],
+    )
+    def test_top_level_table(self, level, expected):
+        spell = _breakpoint_spell(_LEVEL_TABLE)
+        assert calculation_breakpoint_value(spell, "Ratio", level) == pytest.approx(
+            expected
+        )
+
+    def test_a_stat_scaled_subpart_is_read_in_its_parents_place(self):
+        spell = _breakpoint_spell({"mStat": 12, "mSubpart": _LEVEL_TABLE})
+        assert calculation_breakpoints(spell, "Ratio") == pytest.approx(
+            (0.1, 0.15, 0.2)
+        )
+        assert calculation_breakpoint_value(spell, "Ratio", 9) == pytest.approx(0.15)
+
+    def test_a_calculation_with_no_table_raises(self):
+        spell = _breakpoint_spell({"mNumber": 0.67})
+        with pytest.raises(RuntimeError, match="no level-breakpoint formula part"):
+            calculation_breakpoint_value(spell, "Ratio", 1)
+
+
+class TestUniformSpellField:
+    """An mSpell field read as one number: a scalar, or one value at every rank."""
+
+    def test_a_scalar_and_a_uniform_row_read_as_their_value(self):
+        spell = {"mSpell": {"missileSpeed": 1750.0, "mChannelDuration": [2.75] * 7}}
+        assert uniform_spell_field(spell, "missileSpeed") == 1750.0
+        assert uniform_spell_field(spell, "mChannelDuration") == 2.75
+
+    def test_a_row_whose_ranks_differ_raises(self):
+        spell = {"mSpell": {"mChannelDuration": [1.0, 1.5]}}
+        with pytest.raises(RuntimeError, match="ranks differ"):
+            uniform_spell_field(spell, "mChannelDuration")
+
+    @pytest.mark.parametrize("value", [None, True, "fast"])
+    def test_an_absent_or_non_numeric_field_raises(self, value):
+        with pytest.raises(RuntimeError):
+            uniform_spell_field({"mSpell": {"missileSpeed": value}}, "missileSpeed")
+
+
+class TestSourcedChampionTimings:
+    """Each module constant below is the binary value it now reads."""
+
+    def test_galio(self):
+        from src.calculator.champions import galio
+
+        assert galio._Q_TORNADO_TICKS == 4
+        assert galio._Q_TORNADO_TICK_INTERVAL == pytest.approx(0.5)
+        assert galio._W_MAX_CHARGE == pytest.approx(2.0)
+        assert galio._R_LANDING_TIME == pytest.approx(2.75)
+
+    def test_kaisa_taliyah_vi(self):
+        from src.calculator.champions import kaisa, taliyah, vi
+
+        assert kaisa._W_MISSILE_SPEED == pytest.approx(1750.0)
+        assert taliyah._Q_NORMAL_INITIAL_SPEED == pytest.approx(3600.0)
+        assert vi._Q_MAX_CHARGE_SECONDS == pytest.approx(1.25)
+
+    def test_aurelion_sol_and_kennen(self):
+        from src.calculator.champions import aurelion_sol, kennen
+
+        assert aurelion_sol._Q_CHANNEL_SECONDS == pytest.approx(3.25)
+        assert kennen._BOLT_INTERVAL == pytest.approx(0.5)
+        assert kennen._BOLT_OFFSET == kennen._BOLT_INTERVAL
+
+    def test_aurelion_sol_bursts_per_channel(self):
+        from src.calculator.champions import aurelion_sol_stardust
+
+        assert aurelion_sol_stardust._Q_BURSTS_PER_CHANNEL == 3
+
+    def test_yasuo_and_yone_share_one_crit_damage_mod(self, monkeypatch):
+        from src.calculator.champions import yasuo_yone
+
+        assert yasuo_yone.CRIT_DAMAGE_MULTIPLIER_FACTOR == pytest.approx(0.9)
+        monkeypatch.setattr(
+            yasuo_yone,
+            "data_value",
+            lambda spell, name: 0.9 if spell["mScriptName"] == "YasuoPassive" else 1.0,
+        )
+        with pytest.raises(RuntimeError, match="CritDamageMod differ"):
+            yasuo_yone._shared_crit_damage_mod()

@@ -573,16 +573,16 @@
   "mechanisms_by_declaration": {
    "deaths_dance.ignore_pain (DamageDeferralRule)": [
     "program.events.Defer",
-    "survival.actions.SurvivalAction.deferred",
-    "survival.actions.SurvivalAction.deferred_batch_slot"
+    "survival.typed_action.SurvivalAction.deferred",
+    "survival.typed_action.SurvivalAction.deferred_batch_slot"
    ],
    "serpents_fang.shield_bypass (ShieldBypassRule)": [
     "shield_ledger.ShieldPools.venom_factor"
    ],
    "the_collector.execute (ExecuteRule)": [
     "program.events.Execute",
-    "survival.actions.SurvivalAction.execute_threshold_ratio",
-    "survival.actions.SurvivalAction.execute_source"
+    "survival.typed_action.SurvivalAction.execute_threshold_ratio",
+    "survival.typed_action.SurvivalAction.execute_source"
    ]
   },
   "owners": [

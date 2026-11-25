@@ -158,3 +158,41 @@ def test_the_unexamined_remainder_is_what_the_count_reports():
     totals = _committed()["totals"]
     assert totals["ADJUDICATED"] > 0
     assert totals.get("CANDIDATE", 0) == 0
+
+
+def _credited(source: str) -> set[str]:
+    """The module files every ``from src.calculator...`` line in *source* credits."""
+    found: set[str] = set()
+    for match in triage._FROM_CALCULATOR_IMPORT.finditer(source):
+        found |= triage._imported_modules(match.group(1), match.group(2))
+    return found
+
+
+def test_a_submodule_imported_from_its_package_is_credited_itself():
+    """``from <pkg> import <module>`` names the module, not the package."""
+    assert _credited("from src.calculator.fight import authorship\n") == {
+        "fight/authorship.py"
+    }
+    assert _credited("from src.calculator.fight import authorship as au\n") == {
+        "fight/authorship.py"
+    }
+
+
+def test_a_name_that_is_no_submodule_credits_the_module_it_came_from():
+    assert _credited("from src.calculator.item_effects import a as b, c\n") == {
+        "item_effects.py"
+    }
+    assert _credited("from src.calculator.fight import not_a_module\n") == {
+        "fight/__init__.py"
+    }
+
+
+def test_a_grouped_import_reads_every_name_past_a_comment():
+    source = (
+        "from src.calculator import (\n"
+        "    damage,  # first, with a comma in the comment\n"
+        "    stats,\n"
+        "    not_a_module,\n"
+        ")\n"
+    )
+    assert _credited(source) == {"damage.py", "stats.py"}

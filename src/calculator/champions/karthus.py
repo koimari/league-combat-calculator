@@ -33,9 +33,13 @@ from .source_receipts import load_champion_sources
 _KARTHUS_W_SPELL = spell_object("Karthus", "KarthusWallOfPain")
 _W_MR_REDUCTION_PERCENT = data_value(_KARTHUS_W_SPELL, "MagicResistShred")
 _W_DEBUFF_DURATION = data_value(_KARTHUS_W_SPELL, "DebuffDuration")
-_Q_CONSERVATIVE_DETONATION_DELAY = 0.75
-_E_TICK_INTERVAL = 0.25
 _E_MAX_SELECTED_TICKS = 40
+
+# Cached Q: it "detonates after 0.528 seconds - 0.759 seconds", and the
+# cached note says that delay "is inconsistent, but always matches up with
+# the VFX" (a game bug), so nothing to model it on: a late-side pick.
+_Q_CONSERVATIVE_DETONATION_DELAY = 0.75
+_E_TICK_INTERVAL = 0.25  # cached E: "deals magic damage every 0.25 seconds"
 # Timed mode prices the toggle in one-second pulses: the sourced drain is
 # "mana per second" and 4 ticks x the sourced per-tick row is exactly the
 # sourced "Damage Per Second" row (cross-checked at parse time).

@@ -533,7 +533,6 @@
       "zyra.py": 1
     },
     "input_vocabularies": "src/calculator/champions/inputs.py \u2014 the declared defaults that replaced the forbidden literals, each with a reason and a producer its name is asserted against",
-    "issue": "issue #213",
     "produced_fallbacks_by_receiver": {
       "entry": 13,
       "fix": 2,

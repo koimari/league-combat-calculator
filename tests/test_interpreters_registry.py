@@ -773,7 +773,7 @@ def test_the_walk_venom_equals_the_registry_accessor_it_replaced(
     key = "shield_reduction_melee" if holder_is_melee else "shield_reduction_ranged"
     before = (
         1.0 - item_effects.required_effect_value("Serpent's Fang", key),
-        item_effects.sustain_effect_value("Serpent's Fang", "venom_duration"),
+        item_effects.numeric_effect_value("Serpent's Fang", "venom_duration"),
     )
     after = damage_routing.walk_venom(
         ["Serpent's Fang"],

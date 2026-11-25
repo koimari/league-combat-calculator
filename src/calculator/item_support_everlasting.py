@@ -55,7 +55,7 @@ def _everlasting_packets(ctx: SupportCtx) -> list[dict[str, Any]]:
     everlasting_events = [
         event for event in _cc_event_stream(result) if arming.is_candidate(event)
     ]
-    is_melee = bool(attacker.stats.get("is_melee", False))
+    is_melee = bool(attacker.stats["is_melee"])
     champion_stats = result.get("champion_stats", attacker.stats)
     if not isinstance(champion_stats, Mapping):
         champion_stats = attacker.stats

@@ -55,7 +55,7 @@ from src.calculator.item_behavior_catalog import (
 from src.calculator.item_effects import (
     ALLY_ITEM_EFFECTS,
     ITEM_EFFECTS,
-    sustain_effect_value,
+    numeric_effect_value,
 )
 from src.calculator.value_ref import Const
 
@@ -518,10 +518,10 @@ def test_cinderbloom_prices_the_multiplier_the_page_states_as_a_fraction() -> No
     """The registry keeps 120%; the chain gets 0.2, by a declared subtraction."""
     slot = _cinderbloom_slot("Shadowflame")
     assert slot is not None
-    multiplier = sustain_effect_value("Shadowflame", "crit_multiplier")
+    multiplier = numeric_effect_value("Shadowflame", "crit_multiplier")
     assert slot.bonus_fraction == multiplier - 1.0
     assert slot.value(amp_magnitude.LIVE_THRESHOLD_FIELD) == pytest.approx(
-        sustain_effect_value("Shadowflame", "health_threshold")
+        numeric_effect_value("Shadowflame", "health_threshold")
     )
 
 
@@ -790,12 +790,12 @@ def test_the_ability_amp_is_the_registry_base_plus_its_bonus_mana_rate() -> None
     assert amp is not None
     assert amp.owner == "Actualizer"
     assert amp.multiplier({"bonus_mana": 0.0}) == pytest.approx(
-        1.0 + sustain_effect_value("Actualizer", "base_amp")
+        1.0 + numeric_effect_value("Actualizer", "base_amp")
     )
     assert amp.multiplier({"bonus_mana": 300.0}) == pytest.approx(
         1.0
-        + sustain_effect_value("Actualizer", "base_amp")
-        + sustain_effect_value("Actualizer", "amp_per_100_bonus_mana") * 3.0
+        + numeric_effect_value("Actualizer", "base_amp")
+        + numeric_effect_value("Actualizer", "amp_per_100_bonus_mana") * 3.0
     )
 
 
@@ -845,9 +845,9 @@ def test_the_basic_amp_declares_its_range_assumption_as_a_derivation() -> None:
     )
     assert ranged is not None
     assert melee is not None
-    max_amp = sustain_effect_value("Hexoptics C44", "max_amp")
-    assumed = sustain_effect_value("Hexoptics C44", "melee_assumed_distance")
-    reach = sustain_effect_value("Hexoptics C44", "max_distance")
+    max_amp = numeric_effect_value("Hexoptics C44", "max_amp")
+    assumed = numeric_effect_value("Hexoptics C44", "melee_assumed_distance")
+    reach = numeric_effect_value("Hexoptics C44", "max_distance")
     assert ranged.multiplier({}) == pytest.approx(1.0 + max_amp)
     assert melee.multiplier({}) == pytest.approx(
         1.0 + max_amp * (min(assumed, reach) / reach)

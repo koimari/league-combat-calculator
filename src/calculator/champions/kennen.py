@@ -83,9 +83,12 @@ _STORM_STACK_CAP = CachedSentence(
 )
 _MARK_EFFECT = 0
 _STUN_EFFECT = 1
-#: Bolt cadence Slicing Maelstrom's own row authors (cast + 0.5s, every 0.5s).
-_BOLT_OFFSET = 0.5
-_BOLT_INTERVAL = 0.5
+# Bolt cadence: the binary KennenShurikenStorm KennenRTickRate, the first
+# bolt one tick after the cast and one every tick after it.
+_BOLT_INTERVAL = data_value(
+    spell_object("Kennen", "KennenShurikenStorm"), "KennenRTickRate"
+)
+_BOLT_OFFSET = _BOLT_INTERVAL
 
 
 @ranked_slot

@@ -32,7 +32,7 @@ def test_role_contract_covers_every_role_and_quest_state():
             assert set(rule["by_role"][role]) == {"incomplete", "complete"}
 
 
-def test_frontend_consumes_domain_contracts_and_the_fetched_boot_catalogue():
+def test_frontend_consumes_domain_contracts_and_the_fetched_boot_catalog():
     assert "applyDomainContract(config.domain_contract || {})" in APP_JS
     assert "engine.boots = Array.isArray(bootCatalog) ? bootCatalog : [];" in APP_JS
     assert "engine.bootIds = new Set(engine.boots.map" in APP_JS

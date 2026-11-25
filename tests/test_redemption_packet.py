@@ -859,7 +859,7 @@ def test_heal_and_damage_target_scopes_and_range_assumption():
     assert all(p["beam_delay"] == pytest.approx(2.5) for p in packets)
 
 
-def test_no_teammates_self_only_heal():
+def test_no_allies_self_only_heal():
     """Without a teammate roster the heal is self-only (attacker + empty
     teammate list); the enemy damage packets still fire."""
     combat = _calculate(_main(enemies=[_enemy()]))

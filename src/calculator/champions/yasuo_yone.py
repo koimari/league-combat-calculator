@@ -3,9 +3,9 @@
 The cached P prose is verbatim Yasuo's for both ("total critical strike
 chance is doubled ... every 1% ... converted into 0.5 bonus attack damage
 ... 90% of the critical damage champions usually have"); both champions
-carry the champion stat criticalStrikeDamageModifier.flat = 0.9; the
-binaries corroborate CritDamageMod 0.9 + CritToAD 50.0 (the x2 chance is
-script-side).  The Q's degraded "Critical Strike Damage" rows (189% +
+carry the champion stat criticalStrikeDamageModifier.flat = 0.9, which
+both passives' binary CritDamageMod states (the x2 chance and the AD
+conversion are script-side, stated only in the prose).  The Q's degraded "Critical Strike Damage" rows (189% +
 28.35% AD = 1.05 x 1.8 + 1.05 x 0.27; 198% + 29.7% AD = 1.1 x 1.8 + 1.1 x
 0.27) are the display of this same converted system.
 """
@@ -16,15 +16,33 @@ from typing import Any
 
 from ..ability_prose import extract_description_control_duration
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import DAMAGE, SlotCtx, SlotParser
 from .module_helpers import ranked_slot
 from .shared_option_keys import GATHERING_STORM_OPTION
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 
+# Cached P prose: total critical strike chance "is doubled", and "every 1%
+# critical strike chance in excess of 100% is converted into 0.5 bonus
+# attack damage".
 CRIT_CHANCE_MULTIPLIER = 2.0
-CRIT_DAMAGE_MULTIPLIER_FACTOR = 0.9
 EXCESS_CRIT_BONUS_AD_PER_PERCENT = 0.5
+
+
+def _shared_crit_damage_mod() -> float:
+    """Both passives' binary CritDamageMod, which must agree to be shared."""
+    yasuo = data_value(spell_object("Yasuo", "YasuoPassive"), "CritDamageMod")
+    yone = data_value(spell_object("Yone", "YonePassive"), "CritDamageMod")
+    if yasuo != yone:
+        raise RuntimeError(
+            f"Yasuo and Yone CritDamageMod differ ({yasuo} vs {yone}); the "
+            "shared crit conversion no longer holds for both"
+        )
+    return yasuo
+
+
+CRIT_DAMAGE_MULTIPLIER_FACTOR = _shared_crit_damage_mod()
 
 
 def crit_conversion_payload() -> dict[str, Any]:

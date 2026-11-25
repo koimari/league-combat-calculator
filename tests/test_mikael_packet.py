@@ -630,7 +630,7 @@ def test_heal_is_priced_at_the_selected_allys_own_level():
     )
 
 
-def test_no_teammates_fails_closed():
+def test_no_allies_fails_closed():
     """Without a teammate roster Mikael's authors NO Purify packet and NO
     receipts (fail closed) — the item is present and the option is set,
     but there is no selected ally to target."""

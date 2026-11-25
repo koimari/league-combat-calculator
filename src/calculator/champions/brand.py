@@ -31,6 +31,7 @@ from .slot_extract import (
     ability_name,
     extract_cooldown,
     extract_named,
+    extract_value,
     pct_health_per_hit,
 )
 from .slotlib import simple_damage
@@ -44,9 +45,11 @@ _ABLAZE_DOT_PCT_MAX_HP = (
     data_value(spell_object("Brand", "BrandPassive"), "PercentHealthDamage") / 100.0
 )  # per stack, full 4 s burn
 
-_ABLAZE_DURATION_S = 4.0  # every tick is ability damage: refreshes item burns
+# Cached P prose: "apply a stack of Ablaze to enemies hit for 4 seconds,
+# stacking up to 3 times".  Every tick is ability damage, so it refreshes
+# item burns.
+_ABLAZE_DURATION_S = 4.0
 _ABLAZE_MAX_STACKS = 3
-_R_MAX_BOUNCES = 3
 
 # Pillar of Flame erupts on its own delay, and the cached note fixes the
 # offset's origin for us: "After a 0.627 seconds delay, Brand erupts a
@@ -58,9 +61,23 @@ _R_MAX_BOUNCES = 3
 _W_ERUPTION_FROM_CAST_START_S = 0.891
 
 
-def _r_bounces(ctx: SlotCtx) -> int:
-    """Pyroclasm bounces hitting the target, clamped to the in-game 1-3."""
-    return max(1, min(_R_MAX_BOUNCES, int(ctx.option("r_bounces"))))
+def _r_bounces(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> int:
+    """Pyroclasm bounces hitting the target, clamped to 1 and the cached cap.
+
+    The cap is the cache's own "Total Single-Target Damage" over its
+    per-bounce "Magic Damage": three, since four bounces alternate between
+    the one target and Brand.
+    """
+    ratio = extract_value(ability, "Total Single-Target Damage", rank) / (
+        extract_value(ability, "Magic Damage", rank)
+    )
+    cap = round(ratio)
+    if cap < 1 or abs(ratio - cap) > 1e-9:
+        raise ValueError(
+            f"Brand R: single-target total over per-bounce damage is {ratio}, "
+            "not a whole bounce count"
+        )
+    return max(1, min(cap, int(ctx.option("r_bounces"))))
 
 
 @ranked_slot
@@ -69,7 +86,7 @@ def _pyroclasm(
 ) -> dict[str, Any] | None:
     """R: per-bounce damage x the r_bounces option (never the JSON total)."""
     per_bounce = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    total = per_bounce * _r_bounces(ctx)
+    total = per_bounce * _r_bounces(ctx, ability, rank)
     entry = damage_entry(
         ability_name(ability),
         rank,
@@ -84,7 +101,7 @@ def _pyroclasm(
         DamagePart(
             "magic",
             per_bounce,
-            count=_r_bounces(ctx),
+            count=_r_bounces(ctx, ability, rank),
             time_offset=0.0,
             hit_interval=0.15,
         ),
@@ -105,8 +122,9 @@ def _blaze(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """
 
     applications = sum(1 for slot in ("Q", "W", "E") if slot in ctx.results)
-    if "R" in ctx.results:
-        applications += _r_bounces(ctx)
+    ranked_r = ctx.ranked("R") if "R" in ctx.results else None
+    if ranked_r is not None:
+        applications += _r_bounces(ctx, *ranked_r)
     if applications < 1:
         return None
 

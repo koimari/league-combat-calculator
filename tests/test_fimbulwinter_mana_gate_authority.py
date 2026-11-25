@@ -31,8 +31,8 @@ from src.calculator.stats import calculate_total_stats
 
 FIMBULWINTER = "Fimbulwinter"
 EVERLASTING = "Fimbulwinter — Everlasting"
-UNAVAILABLE_REASON = "mana_gate_authority_unavailable"
-SOURCE_UNAVAILABLE = "source_unavailable"
+WITHHELD_REASON = "mana_gate_authority_unavailable"
+SOURCE_WITHHELD = "source_unavailable"
 MISSING = object()
 GATE_DENIED_REASON = "mana_gate"
 # The base shield still lands when the holder-centered range has no spatial
@@ -55,7 +55,7 @@ def _desourced_gate():
     entry = ITEM_EFFECTS[FIMBULWINTER]
     status = entry["everlasting_mana_gate_status"]
     ratio = entry.pop("everlasting_mana_threshold_ratio")
-    entry["everlasting_mana_gate_status"] = SOURCE_UNAVAILABLE
+    entry["everlasting_mana_gate_status"] = SOURCE_WITHHELD
     try:
         yield
     finally:
@@ -147,13 +147,13 @@ def _gate_state_receipt() -> dict:
     return next(row for row in rows if row["item"] == FIMBULWINTER)
 
 
-def _assert_unavailable(packets: list[dict]) -> dict:
+def _assert_withheld(packets: list[dict]) -> dict:
     assert _shields(packets) == []
     rows = _denials(packets)
     assert len(rows) == 1
     row = rows[0]
-    assert row["reason"] == UNAVAILABLE_REASON
-    assert row["mana_gate_status"] == SOURCE_UNAVAILABLE
+    assert row["reason"] == WITHHELD_REASON
+    assert row["mana_gate_status"] == SOURCE_WITHHELD
     assert row["source_url"].endswith("/Fimbulwinter")
     assert row["source_revision_id"] == 3984419
     return row
@@ -181,23 +181,23 @@ class TestAuthorizedGateContract:
         assert receipt["mana_comparison"] == "current_mana > maximum_mana * ratio"
 
 
-class TestUnavailableAuthorityContract:
+class TestWithheldAuthorityContract:
     """A de-sourced gate cannot control shield eligibility, and says so."""
 
-    def test_state_receipt_marks_the_gate_unavailable(self) -> None:
+    def test_state_receipt_marks_the_gate_withheld(self) -> None:
         with _desourced_gate():
             receipt = _gate_state_receipt()
 
-        assert receipt["mana_gate_status"] == SOURCE_UNAVAILABLE
+        assert receipt["mana_gate_status"] == SOURCE_WITHHELD
         assert receipt["mana_threshold_ratio"] is None
         assert receipt["mana_comparison"] is None
 
     @pytest.mark.parametrize("resource_after", [900.0, 200.0, 150.0])
-    def test_all_threshold_positions_emit_the_same_unavailable_receipt(
+    def test_all_threshold_positions_emit_the_same_withheld_receipt(
         self, resource_after: float
     ) -> None:
         with _desourced_gate():
-            row = _assert_unavailable(_run(resource_after=resource_after))
+            row = _assert_withheld(_run(resource_after=resource_after))
 
         assert row["event_id"] == "mana-gate-event"
 
@@ -274,7 +274,7 @@ class TestTwentyPercentBoundaryIsAuthored:
         self, resource_after: float
     ) -> None:
         with _desourced_gate():
-            row = _assert_unavailable(_run(resource_after=resource_after))
+            row = _assert_withheld(_run(resource_after=resource_after))
 
         assert row["current_mana"] == pytest.approx(resource_after)
         assert row["maximum_mana"] == pytest.approx(1_000.0)

@@ -13,7 +13,7 @@ from .ability_atoms import (
     required_ability_atom,
     required_ranked_attribute_atom,
 )
-from .champions import renata_bailout_authority
+from .champions import renata_bailout_authority, renata_glasc
 from .event_row_field import build_stat_field
 from .item_behavior import PacketKind
 
@@ -113,8 +113,6 @@ def _bailout_denied_components() -> tuple[str, ...]:
 
 def _bailout_w_source() -> Mapping[str, Any]:
     """Return the reviewed W wiki-entry receipt (url + revision)."""
-    from .champions import renata_glasc
-
     for entry in renata_glasc.SOURCES:
         if str(entry.get("label", "")) == _BAILOUT_W_SOURCE_LABEL:
             return entry

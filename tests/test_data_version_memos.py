@@ -46,10 +46,17 @@ SRC_ROOT = Path(__file__).resolve().parent.parent / "src"
 
 
 def _combatant_stub() -> SimpleNamespace:
-    """The two attributes the survival prototype's key reads, and no more."""
+    """What the survival prototype's key reads, and the projectile defence resolver.
+
+    The key reads ``defenses`` and ``stats``; the resolver reads the declared
+    ``champion_data`` and ``request``, which an unnamed champion with no
+    options answers with no defence window.
+    """
     from src.calculator.starting_defenses import StartingDefenses
 
     return SimpleNamespace(
+        champion_data={"name": ""},
+        request=SimpleNamespace(champion_options=None),
         defenses=StartingDefenses(),
         stats={
             "armor": 40.0,

@@ -32,8 +32,9 @@ live meanings of that word already.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import dataclass, is_dataclass
+from dataclasses import dataclass
 from dataclasses import fields as dataclass_fields
+from dataclasses import is_dataclass
 from enum import Enum
 from typing import ClassVar, NamedTuple, get_args
 
@@ -1109,6 +1110,14 @@ class StackGate:
     window_seconds: AnyValueRef
 
 
+class ShieldStacking(Enum):
+    """How the survival walk combines overlapping grants of one shield."""
+
+    #: Each grant adds its own pool; the game's keep-the-strongest selection
+    #: is not modelled, and the receipt says so.
+    ADDITIVE = "additive"
+
+
 @dataclass(frozen=True, slots=True)
 class SelfShield:
     """A shield a proc grants its holder when it completes."""
@@ -1118,6 +1127,7 @@ class SelfShield:
     melee_bonus_ad_ratio: AnyValueRef
     ranged_bonus_ad_ratio: AnyValueRef
     duration: AnyValueRef
+    stacking: ShieldStacking
 
 
 @dataclass(frozen=True, slots=True)
@@ -3764,7 +3774,7 @@ class DefenseSubject:
     @property
     def is_melee(self) -> bool:
         """Whether the subject pays the melee rate of a range-split defence."""
-        return bool(self.stats.get("is_melee", False))
+        return bool(self.stats["is_melee"])
 
     def option(self, owner: str, option: DefenseOption) -> float:
         """One declared input option, validated, zero when none was supplied.
@@ -4035,6 +4045,7 @@ __all__ = [
     "Scaling",
     "SecondaryTargetRule",
     "SelfShield",
+    "ShieldStacking",
     "ShapedChargeRule",
     "ShieldAbsorbs",
     "ShieldBypassRule",

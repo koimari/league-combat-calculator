@@ -111,8 +111,8 @@ class ControlProfile:
 
 
 def _action_cc_kind(action: PacketFacts) -> str:
-    """Read the typed control-kind marker, defaulting to ""."""
-    return str(getattr(action, "cc_kind", "") or "").strip().lower()
+    """Read the typed control-kind marker; an unset one reads as ""."""
+    return str(action.cc_kind or "").strip().lower()
 
 
 def classify_control(action: PacketFacts) -> ControlProfile:
@@ -211,7 +211,7 @@ class CrowdControlEligibility:
         """
         profile = classify_control(action)
         event_key = stable_event_key(action)
-        event_time = float(getattr(action, "time", 0.0) or 0.0)
+        event_time = float(action.time)
         if profile.unknown:
             return CrowdControlDecision(
                 eligible=False,

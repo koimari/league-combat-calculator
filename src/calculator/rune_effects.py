@@ -61,7 +61,14 @@ def _load_rune_cache() -> dict[str, Any]:
 def _split_cache(
     contents: Mapping[str, Any],
 ) -> tuple[dict[str, dict[str, Any]], dict[str, Any], dict[str, Any]]:
-    """Split the cache into runes, the shard table, and the adaptive block."""
+    """Split the cache into runes, the shard table, and the adaptive block.
+
+    Both tables are required: a cache that lost one would otherwise serve a
+    rune page with no shards or no adaptive split, silently.
+    """
+    for key in (SHARDS_KEY, ADAPTIVE_FORCE_KEY):
+        if not isinstance(contents.get(key), Mapping):
+            raise KeyError(f"data/runes.json has no {key!r} table")
     runes = {
         name: entry
         for name, entry in contents.items()
@@ -69,8 +76,8 @@ def _split_cache(
     }
     return (
         runes,
-        dict(contents.get(SHARDS_KEY) or {}),
-        dict(contents.get(ADAPTIVE_FORCE_KEY) or {}),
+        dict(contents[SHARDS_KEY]),
+        dict(contents[ADAPTIVE_FORCE_KEY]),
     )
 
 

@@ -16,6 +16,7 @@ from .defensive_effects import resolve_starting_defenses
 from .fight import authorship
 from .fight.ledger.trace import fight_trace
 from .fight_params import FightParams
+from .fight_result_row import result_timeline_coverage
 from .fight_request_bounds import ONE_ROTATION_DURATION
 from .item_coverage import require_certified_target_timeline
 from .participant_timeline import build_participant_timeline
@@ -72,7 +73,7 @@ def _comparison_curve(
                     params,
                 )
                 require_certified_target_timeline(
-                    list(enemy.item_data), target_result.get("timeline_coverage", {})
+                    list(enemy.item_data), result_timeline_coverage(target_result)
                 )
                 target_results.append(serialize_fight_result(target_result))
             result = aggregate_public_results(target_results)
@@ -261,7 +262,7 @@ def _calculate_resolved(
         )
         if not params.one_rotation:
             require_certified_target_timeline(
-                list(enemy.item_data), result.get("timeline_coverage", {})
+                list(enemy.item_data), result_timeline_coverage(result)
             )
         target_rows.append(
             {

@@ -74,11 +74,11 @@ class SourceSelection:
         """Whether one event is selected; returns (selected, reason)."""
         if not self.blocked_sources and not self.blocked_event_ids:
             return True, ""
-        event_id = str(getattr(action, "event_id", "") or "")
+        event_id = str(action.event_id or "")
         if self.blocked_event_ids and event_id and event_id in self.blocked_event_ids:
             return True, ""
-        source_key = str(getattr(action, "source_key", "") or "")
-        source = str(getattr(action, "source", "") or "")
+        source_key = str(action.source_key or "")
+        source = str(action.source or "")
         attacker_name = _attacker_name(attacker)
         candidates = {
             source_key.casefold(),
@@ -201,7 +201,7 @@ class DefenseEligibility:
     ) -> EligibilityDecision:
         """Decide eligibility for one event (deterministic, receipted)."""
         profile = classify_delivery(action)
-        event_time = float(getattr(action, "time", 0.0) or 0.0)
+        event_time = float(action.time)
         if not self.window.active_at(event_time):
             return EligibilityDecision(
                 eligible=False,

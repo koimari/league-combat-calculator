@@ -5733,11 +5733,11 @@ def _regen_combatant(*item_names: str) -> Combatant:
 def test_the_regeneration_window_compiles_the_declarations_own_numbers():
     """Every number the walk pays is the key the retired branch read.
 
-    Asserted against ``sustain_effect_value`` rather than literals: this
+    Asserted against ``numeric_effect_value`` rather than literals: this
     migration claims the declaration reproduces the five hand reads, and a
     literal would still pass on the commit that broke the reference.
     """
-    from src.calculator.item_effects import sustain_effect_value
+    from src.calculator.item_effects import numeric_effect_value
 
     (window,) = _regeneration_windows([_regen_combatant("Doran's Shield")])
 
@@ -5750,7 +5750,7 @@ def test_the_regeneration_window_compiles_the_declarations_own_numbers():
         ("missing_health_cap", "enduring_focus_missing_health_cap"),
         ("tick_interval", "health_regen_tick_interval"),
     ):
-        assert getattr(window, field_name) == sustain_effect_value(
+        assert getattr(window, field_name) == numeric_effect_value(
             "Doran's Shield", key
         )
 
@@ -5801,16 +5801,16 @@ def test_a_ledger_without_the_capability_flags_is_refused():
 def test_the_below_half_bonus_compiles_the_declarations_own_number():
     """The walk's bonus is the key ``receipt_state`` read by item name.
 
-    Asserted against ``sustain_effect_value`` rather than a literal, for the
+    Asserted against ``numeric_effect_value`` rather than a literal, for the
     reason the regeneration window is: this migration's claim is that the
     declaration reproduces the hand read exactly, and a literal would still
     pass on the commit that broke the reference.
     """
-    from src.calculator.item_effects import sustain_effect_value
+    from src.calculator.item_effects import numeric_effect_value
     from src.calculator.participant_timeline import _below_half_healing_bonuses
 
     assert _below_half_healing_bonuses([_regen_combatant("Immortal Path")]) == (
-        sustain_effect_value(
+        numeric_effect_value(
             "Immortal Path", "health_state_healing_multiplier_below_half"
         ),
     )

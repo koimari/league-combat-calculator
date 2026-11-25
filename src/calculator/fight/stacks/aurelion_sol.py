@@ -4,11 +4,16 @@ from typing import Any
 
 from ...cast_event_row import cast_ordinal, cast_slot
 from ...cast_event_row import cast_time as cast_event_time
+from ...champions.aurelion_sol_stardust import (
+    _Q_BURSTS_PER_CHANNEL,
+    _STARDUST_PER_Q_BURST,
+    AURELION_SOL_STARDUST_RULE,
+)
 from ...champions.shared_option_keys import AURELION_SOL_STARDUST_STACKS
 from ..config import _seeded_option_stacks
 from ..results import RotationResult
 from ..state import FightState
-from .account import StackEvent, _resource_ledger, _StackAccount
+from .account import StackEvent, _resource_ledger, _StackAccount, walks_for
 
 
 def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> None:
@@ -26,13 +31,10 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
     ``resource_ledger["stardust"]`` (kind "stardust") sub-section — the
     mana account is never replaced — and never re-prices any damage.
     """
+    if not walks_for(state, "Aurelion Sol"):
+        return
     if AURELION_SOL_STARDUST_STACKS not in (state.champion_options):
         return
-    from ...champions.aurelion_sol_stardust import (
-        _Q_BURSTS_PER_CHANNEL,
-        _STARDUST_PER_Q_BURST,
-        AURELION_SOL_STARDUST_RULE,
-    )
 
     option = state.champion_options
     seeded = _seeded_option_stacks(

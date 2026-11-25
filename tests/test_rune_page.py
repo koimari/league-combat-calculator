@@ -523,7 +523,7 @@ APP_JS = Path(__file__).resolve().parent.parent / "static" / "js" / "app.js"
 
 @pytest.fixture(scope="module")
 def rune_page_ui(tmp_path_factory):
-    """Run app.js's rune-page code over the catalogue /api/config publishes."""
+    """Run app.js's rune-page code over the catalog /api/config publishes."""
     if shutil.which("node") is None:
         pytest.skip("node is not installed")
     config = app_module.app.test_client().get("/api/config").get_json()

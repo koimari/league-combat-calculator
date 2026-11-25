@@ -1,4 +1,4 @@
-"""One concept has one spelling in ``src/`` and ``scripts/``.
+"""One concept has one spelling in ``src/``, ``scripts/`` and ``tests/``.
 
 The vocabulary and its reasons live in ``scripts/one_spelling.py``; this file
 is the gate's pytest row and the guard over its two tables.

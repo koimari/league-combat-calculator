@@ -13,6 +13,7 @@ from typing import Any
 
 from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object, uniform_spell_field
 from .engine import SlotCtx, build_parser
 from .inputs import float_option, int_option
 from .module_helpers import ability_slot, named_damage, ranked_slot
@@ -27,14 +28,22 @@ from .slot_extract import (
 from .source_receipts import load_champion_sources
 
 _Q_TORNADO_FIRST_TICK = 0.75
-_Q_TORNADO_TICK_INTERVAL = 0.5
-_Q_TORNADO_TICKS = 4
-_W_MAX_CHARGE = 2.0
-_W_DAMAGE_CAP_TIME = 1.25
+_W_DAMAGE_CAP_TIME = 1.25  # cached W: "over the first 1.25 seconds of the channel"
 _W_DAMAGE_STEP = 0.16
-_W_RECAST_LOCKOUT = 0.4
-_E_DASH_SPEED = 2300.0
-_R_LANDING_TIME = 2.75
+_W_RECAST_LOCKOUT = 0.4  # cached W: "for 0.4 seconds after the recast"
+_E_DASH_SPEED = 2300.0  # cached E speed field: "2300"
+
+# Binary GalioQ TornadoTicks over its SuperQDuration (4 over 2 s), GalioW
+# MaxChargeDuration, and GalioR's channel, which R's landing ends.
+_GALIO_Q_SPELL = spell_object("Galio", "GalioQ")
+_Q_TORNADO_TICKS = int(data_value(_GALIO_Q_SPELL, "TornadoTicks"))
+_Q_TORNADO_TICK_INTERVAL = (
+    data_value(_GALIO_Q_SPELL, "SuperQDuration") / _Q_TORNADO_TICKS
+)
+_W_MAX_CHARGE = data_value(spell_object("Galio", "GalioW"), "MaxChargeDuration")
+_R_LANDING_TIME = uniform_spell_field(
+    spell_object("Galio", "GalioR"), "mChannelDuration"
+)
 
 
 # "Whenever Galio hits at least one enemy champion or epic monster with an

@@ -237,6 +237,25 @@ def test_missing_stasis_key_raises_keyerror_naming_item_and_key(monkeypatch):
     assert "stasis_duration" in message
 
 
+def test_a_recompiled_entry_missing_its_signature_key_raises(monkeypatch):
+    """A rebuilt entry that lost its signature key raises; it does not vanish.
+
+    ``refresh_item_effects()`` swaps in new entry objects, so the compiled
+    rules are rebuilt from them.  An entry with no ``stasis_duration`` is then
+    claimed by no defence, and before the compile-time claim check it compiled
+    to nothing: stasis 0.0 with no note.
+    """
+    rebuilt = {
+        key: value
+        for key, value in ITEM_EFFECTS[ZHONYA].items()
+        if key != "stasis_duration"
+    }
+    monkeypatch.setitem(ITEM_EFFECTS, ZHONYA, rebuilt)
+
+    with pytest.raises(KeyError, match="stasis_duration"):
+        _zhonya_defenses(item_options={ZHONYA: {"stasis_active_seconds": 2.0}})
+
+
 # ---------------------------------------------------------------------------
 # 2. Input validation matrix
 # ---------------------------------------------------------------------------

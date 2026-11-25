@@ -432,7 +432,7 @@ def test_a_threshold_regeneration_resolves_without_inventing_a_fight() -> None:
 
     It runs before any walk, so it has no level and no target; every number
     is asserted against the registry key the retired
-    ``sustain_effect_value("<item>", key)`` branch read, because reproducing
+    ``numeric_effect_value("<item>", key)`` branch read, because reproducing
     those exactly is the migration's whole claim.
     """
     slots = declared_stat_derivations(["Warmog's Armor"], ThresholdRegenRule)
@@ -445,7 +445,7 @@ def test_a_threshold_regeneration_resolves_without_inventing_a_fight() -> None:
         ("tick_interval", "heart_tick_interval"),
         ("champion_damage_cooldown", "heart_champion_damage_cooldown"),
     ):
-        assert slot.value(field) == item_effects.sustain_effect_value(
+        assert slot.value(field) == item_effects.numeric_effect_value(
             "Warmog's Armor", key
         )
 

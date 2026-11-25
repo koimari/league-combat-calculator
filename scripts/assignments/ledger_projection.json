@@ -2,7 +2,7 @@
  "source": "src/calculator/ledger_projection.py",
  "decisions": [
   "extract_modules.py refuses any new module that reads a name left in the residue, so every assignment here is downward closed: the residue sits at the top of the dependency order and imports its children.",
-  "The map's two modules are a cycle: LedgerInputs.raw_stat reads DECLARATIONS, so the declaration table cannot sit above the typed facts. The table takes its own home, ledger_declarations.py, with the vocabulary it is stated in (AdequacyCondition, AdequacyDeclaration, LedgerDemand, UndeclaredStatRead and the eleven reader keys). That is one idea per module: what a condition demands, what a decision reads, which owner holds it.",
+  "The map's two modules are a cycle: LedgerInputs.raw_stat reads DECLARATIONS, so the declaration table cannot sit above the typed facts. The table takes its own home, ledger_declarations.py, with the vocabulary it is stated in (AdequacyCondition, AdequacyDeclaration, LedgerDemand and the eleven reader keys). That is one idea per module: what a condition demands, what a decision reads, which owner holds it.",
   "The fan-out arm still relocates rather than clears: the ten interpreter and registry imports follow the owner probes into ledger_adequacy.py, and tests/test_ledger_projection.py reading DECLARATIONS gives ledger_declarations.py a second importer. Re-audit after the stage, as the plan says."
  ]
 }
