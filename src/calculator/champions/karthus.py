@@ -13,6 +13,7 @@ alive-window model in both modes.
 """
 
 import math
+import re
 from collections.abc import Mapping
 from typing import Any
 
@@ -37,14 +38,29 @@ _E_MAX_SELECTED_TICKS = 40
 
 # Cached Q: it "detonates after 0.528 seconds - 0.759 seconds", and the
 # cached note says that delay "is inconsistent, but always matches up with
-# the VFX" (a game bug), so nothing to model it on: a late-side pick.
-_Q_CONSERVATIVE_DETONATION_DELAY = 0.75
+# the VFX" (a game bug), so there is no axis to price it along: the late
+# bound, read off that sentence, is the conservative pick.
+_Q_DETONATION_RANGE = re.compile(
+    r"detonates after ([0-9.]+) seconds\s*[-\u2212\u2013]\s*([0-9.]+) seconds"
+)
 _E_TICK_INTERVAL = 0.25  # cached E: "deals magic damage every 0.25 seconds"
 # Timed mode prices the toggle in one-second pulses: the sourced drain is
 # "mana per second" and 4 ticks x the sourced per-tick row is exactly the
 # sourced "Damage Per Second" row (cross-checked at parse time).
 _E_PULSE_SECONDS = 1.0
 _R_CHANNEL_DURATION = 3.0
+
+
+def _q_detonation_delay(ability: dict[str, Any]) -> float:
+    """The late bound of Lay Waste's cached detonation range."""
+    for effect in ability["effects"]:
+        found = _Q_DETONATION_RANGE.search(effect["description"])
+        if found is not None:
+            return float(found.group(2))
+    raise KeyError(
+        "Karthus Q: no cached effect states its detonation range "
+        "('detonates after X seconds - Y seconds')"
+    )
 
 
 def _sequence_start(ctx: SlotCtx) -> float:
@@ -88,7 +104,7 @@ def _lay_waste(
     isolated = requested_isolated and roster_count <= 1
     attribute = "Isolated Enhanced Damage" if isolated else "Magic Damage"
     raw = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
-    hit_time = _sequence_start(ctx) + _Q_CONSERVATIVE_DETONATION_DELAY
+    hit_time = _sequence_start(ctx) + _q_detonation_delay(ability)
     entry = damage_entry(
         ability_name(ability),
         rank,
@@ -288,8 +304,8 @@ ASSUMPTIONS = [
     "channel can delay it.",
     "The cadence stays one second against ability haste, and Navori is not "
     "counteracted.",
-    "Lay Waste uses the sourced upper 0.75s detonation delay: the wiki records 0.5 to "
-    "0.75 inconsistently.",
+    "Lay Waste detonates at the cached late bound, 0.759s: the wiki records 0.528 to "
+    "0.759, inconsistently.",
     "Death Defied is outside the alive-window model: its 7s post-death window is a "
     "zero-damage boundary.",
     "The fight engine has no death event for the attacker.",

@@ -360,3 +360,20 @@ class TestKarthus:
         assert data["breakdown"]["Q"]["total_damage"] == pytest.approx(232.0)
         assert data["breakdown"]["E"]["total_damage"] == pytest.approx(137.5)
         assert data["breakdown"]["R"]["total_damage"] == pytest.approx(500.0)
+
+
+def test_lay_waste_detonates_at_the_cached_late_bound():
+    """Cached Q: it "detonates after 0.528 seconds - 0.759 seconds"; the late
+    bound is read off that sentence, never typed."""
+    from src.calculator.champions import karthus
+    from src.calculator.data_fetcher import get_champion
+
+    (ability,) = get_champion("Karthus")["abilities"]["Q"][:1]
+    assert karthus._q_detonation_delay(ability) == pytest.approx(0.759)
+
+
+def test_a_cache_with_no_detonation_range_fails_closed():
+    from src.calculator.champions import karthus
+
+    with pytest.raises(KeyError, match="detonation range"):
+        karthus._q_detonation_delay({"effects": [{"description": "No timing here."}]})
