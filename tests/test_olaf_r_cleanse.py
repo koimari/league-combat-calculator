@@ -1949,3 +1949,39 @@ class TestScoreFailClosed:
             "_event_id": "main:olaf:r:cleanse:0",
         }
         assert unrepresentable_template_receipt(template) is None
+
+
+def test_ragnarok_resists_follow_the_skill_order_when_the_request_names_no_ranks():
+    """A request without ability_ranks prices R at its skill-order rank.
+
+    Level 18 holds R at rank 3, so the stat buff carries the binary's rank-3
+    Resists (20); falling back to rank 1 priced it at 10.
+    """
+    payload = {
+        "champion": "Olaf",
+        "level": 18,
+        "items": [],
+        "role": "top",
+        "fight_mode": "time_based",
+        "fight_duration": 8,
+        "include_auto_attacks": False,
+        "enemies": [
+            {
+                "champion": "Garen",
+                "level": 18,
+                "items": [],
+                "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+            }
+        ],
+    }
+    with _testing_client() as client:
+        response = client.post("/api/calculate", json=payload)
+    assert response.status_code == 200
+    buffs = [
+        event
+        for event in response.get_json()["combat"]["support_events"]
+        if event.get("kind") == "stat_buff" and "Ragnarok" in str(event.get("source"))
+    ]
+    assert buffs
+    assert {event["bonus_armor"] for event in buffs} == {20.0}
+    assert {event["bonus_magic_resistance"] for event in buffs} == {20.0}
