@@ -174,7 +174,7 @@ def _high_note(
         DamagePart("magic", base, time_offset=0.0),
         DamagePart(
             "magic",
-            hp_scaled_damage=lambda missing, base=base: base
+            hp_scaled_damage=lambda missing, *, base=base: base
             * _Q_MISSING_HEALTH_MAX_BONUS
             * max(0.0, min(1.0, missing)),
             time_offset=0.0,
