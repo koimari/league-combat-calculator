@@ -49,3 +49,18 @@ class TestReviewedCrowdControl:
         assert "slowing them by 90% decaying over 1.5 seconds" in text
         assert "blade's reach knocks up enemies hit for 1 second" in text
         assert _w_kinds(form) == [kind]
+
+
+def test_darkin_reaping_slash_health_part_ignores_the_live_max_health_argument():
+    """The walk calls the part as ``f(missing, max_health)``; the captured
+    health share must survive that call, not become the target's max health."""
+    from src.calculator.survival.transitions import evaluate_live_raw_formula
+    from tests import champion_closure as closure
+
+    parsed = closure.abilities("Kayn", options={"form": "darkin"})
+    _, health = parsed["Q"]["parts"]
+    share = 2000.0 * (0.06 + 0.035 * closure.stats("Kayn")["bonus_attack_damage"] / 100)
+    assert health.amount == pytest.approx(share)
+    assert evaluate_live_raw_formula(health.hp_scaled_damage, 0.4, 9999.0) == (
+        pytest.approx(share)
+    )
