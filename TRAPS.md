@@ -242,6 +242,10 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 - **`Resists.resolve_magic()` keeps the stored `reduced_mr`.** A copy with a new
   `base_mr` serves the old reduced MR after an accepted R; `Resists.resolve()`
   re-derives every figure.
+- **The walk calls an `hp_scaled_damage` formula as `f(missing, max_health)`**, falling
+  back to one argument only on `TypeError`, so `lambda m, base=base:` binds max
+  health over `base`. Seraphine and Darkin Kayn headlines read up to twice their damage.
+  Capture keyword-only (`lambda m, *, base=base:`).
 - **A packet re-priced after the fact may have met its own resistance** (an
   ability's own penetration). `_LiveResistance.met_served_pipeline` re-prices
   only a packet whose `resistance_met` the fight served.
