@@ -85,10 +85,11 @@ def cc_kind_reviewed(kind: str | None) -> bool:
 HARD_CONTROL_CC_KINDS = IMMOBILIZING_CC_KINDS | frozenset({"polymorph", "berserk"})
 
 # The kinds that stop a champion from taking a normal action for the
-# authored interval, the one set the fight's action downtime reads. It is
-# the hard set today; a root, which in the game stops movement but not
-# attacks or casts, is where the two would part.
-ACTION_BLOCKING_CC_KINDS = HARD_CONTROL_CC_KINDS
+# authored interval, the one set the fight's action downtime reads: the
+# hard set less root and snare, which stop movement and dashes while the
+# target still attacks and casts.
+# https://wiki.leagueoflegends.com/en-us/Root
+ACTION_BLOCKING_CC_KINDS = HARD_CONTROL_CC_KINDS - frozenset({"root", "snare"})
 
 
 # The other half of the same classification: real control the target keeps
@@ -96,7 +97,9 @@ ACTION_BLOCKING_CC_KINDS = HARD_CONTROL_CC_KINDS
 # outcome of a swing and silence the ability to cast — none of them is
 # action downtime. The two halves must partition the vocabulary
 # (tests/test_cc_kind_vocabulary.py), so a new kind cannot arrive unclassified.
-NON_BLOCKING_CC_KINDS = frozenset({"blind", "cripple", "silence", "slow"})
+NON_BLOCKING_CC_KINDS = frozenset(
+    {"blind", "cripple", "root", "silence", "slow", "snare"}
+)
 
 
 class ControlScope(Enum):

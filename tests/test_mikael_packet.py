@@ -755,7 +755,9 @@ def test_app_level_cleanse_removes_the_allied_control():
 def test_supported_controls_are_removed(kind):
     """A supported control kind active on the ally at activation is
     removed: the tail is truncated, the interval ends at activation, and
-    the downtime reflects the truncation."""
+    the downtime reflects the truncation.  A root is cleansed the same way
+    but never cost the ally an action: a rooted champion still attacks and
+    casts."""
     result = _simulate([_control(1.0, kind, 2.0)], [_purify(1.5)])
     target = result["target"]
     receipt = target["cleanse"]
@@ -772,7 +774,7 @@ def test_supported_controls_are_removed(kind):
     assert [
         (i["kind"], i["start"], i["end"]) for i in target["crowd_control_intervals"]
     ] == [(kind, 1.0, 1.5)]
-    assert target["action_downtime"] == pytest.approx(0.5)
+    assert target["action_downtime"] == pytest.approx(0.0 if kind == "root" else 0.5)
     assert receipt["heal"]["amount"] == pytest.approx(100.0)
 
 

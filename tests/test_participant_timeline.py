@@ -4074,7 +4074,7 @@ def test_standalone_crowd_control_blocks_actions_and_merges_downtime():
                 "time": 1.0,
                 "kind": "crowd_control",
                 "damage": 0.0,
-                "cc_kind": "root",
+                "cc_kind": "charm",
                 "cc_duration": 2.0,
                 "attacker": "source",
                 "target": "target",
