@@ -237,6 +237,11 @@ OPTIONS = [
     ),
 ]
 
+# Charm first: Encore's charm blocks the target's own casts while it holds,
+# so a crowd-control enemy cannot interrupt Beat Drop, Surround Sound and
+# High Note, which lands last on the most missing health.
+CAST_ORDER = ("R", "E", "W", "Q")
+
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
     "W (Surround Sound) pulses its sourced missing-health heal after 2.5s if "
