@@ -840,6 +840,9 @@ class TestRefreshRuneEffects:
         assert rune_effects.RUNE_SHARDS["slots"]
         assert rune_effects.ADAPTIVE_FORCE["attack_damage_ratio"] == 0.6
 
+    def test_an_absent_cache_is_no_runes(self):
+        assert rune_effects._split_cache({}) == ({}, {}, {})
+
     @pytest.mark.parametrize("missing", ["shards", "adaptive_force"])
     def test_a_cache_without_a_table_refuses(self, missing):
         contents = {"Stub": {"name": "Stub"}, "shards": {}, "adaptive_force": {}}
