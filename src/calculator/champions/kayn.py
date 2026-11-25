@@ -41,7 +41,7 @@ def _reaping_slash(
                 "physical",
                 health_part,
                 count=hits,
-                hp_scaled_damage=lambda _missing, amount=health_part: amount,
+                hp_scaled_damage=lambda _missing, *, amount=health_part: amount,
                 time_offset=0.1,
                 hit_interval=0.15,
             ),
