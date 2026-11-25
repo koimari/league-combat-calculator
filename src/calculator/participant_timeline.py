@@ -2254,7 +2254,7 @@ def _routing_build(
     packet rather than scaling one, so ``target_bonus_health`` is 0.
     """
     return [str(item.get("name", "")) for item in combatant.items], FightFacts(
-        level=int(combatant.stats.get("level", 1) or 1),
+        level=int(combatant.level),
         fight_duration_seconds=duration,
         target_bonus_health=0.0,
         holder_is_melee=bool(combatant.stats.get("is_melee", True)),
