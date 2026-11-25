@@ -111,8 +111,8 @@ def _option_affects_slot(
     option: Mapping[str, Any], slot: str, ability_names: Mapping[str, list[str]]
 ) -> bool:
     """Whether one OPTIONS entry is a player-controlled input for ``slot``."""
-    key = str(option.get("key", "")).lower()
-    label = str(option.get("label", ""))
+    key = str(option["key"]).lower()
+    label = str(option["label"])
     if key in _OPTION_SLOT_OVERRIDES:
         return _OPTION_SLOT_OVERRIDES[key] == slot
     prefix = key.split("_", 1)[0]
@@ -286,18 +286,18 @@ def _slot_certainty(
 def derive_certainty(champion: str, champion_data: Mapping[str, Any]) -> dict[str, Any]:
     """Per-slot certainty for one champion, from module + audit evidence."""
     meta = get_champion_module_meta(champion)
-    options = meta.get("options") or []
-    assumptions = meta.get("assumptions") or []
-    coverage = meta.get("coverage") or {}
-    module_slots = meta.get("slots") or []
-    registration = meta.get("registration") or "unregistered"
+    options = meta["options"]
+    assumptions = meta["assumptions"]
+    coverage = meta["coverage"]
+    module_slots = meta["slots"]
+    registration = meta["registration"]
     audit = _audit_entries().get(champion)
 
     ability_names: dict[str, list[str]] = {}
-    for slot, entries in (champion_data.get("abilities") or {}).items():
+    for slot, entries in champion_data["abilities"].items():
         if isinstance(entries, list):
             names = [
-                str(entry.get("name", "")).strip()
+                str(entry["name"]).strip()
                 for entry in entries
                 if isinstance(entry, dict) and entry.get("name")
             ]
