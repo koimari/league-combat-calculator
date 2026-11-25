@@ -57,7 +57,7 @@ def score_leaves(
             {
                 "participant_id": actor.participant_id,
                 "team": actor.team,
-                "champion": actor.champion_data.get("name", ""),
+                "champion": actor.champion_data["name"],
                 "level": actor.level,
                 "survival": rows[actor.participant_id],
             }

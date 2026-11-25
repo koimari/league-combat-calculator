@@ -17,7 +17,7 @@ def _validate_ability_ranks(
     """Validate manual roster ranks; omitted ranks stay sourced level defaults."""
     if not supplied:
         return
-    name = str(champion_data.get("name", ""))
+    name = str(champion_data["name"])
     effective = {
         slot: int(supplied.get(slot, get_ability_rank(slot, level, name)))
         for slot in ("Q", "W", "E", "R")

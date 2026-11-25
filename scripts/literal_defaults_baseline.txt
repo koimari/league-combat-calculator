@@ -75,10 +75,12 @@ root|__init__.py
 root|ability_atoms.py
 root|ability_dps_matrix.py
 root|ability_prose.py
+root|ability_ranks.py
 root|ability_spec.py
 root|ally_effects.py
 root|ally_packet_recipient.py
 root|application_errors.py
+root|atom_spelling.py
 root|attack_cadence.py
 root|attack_windows.py
 root|auto_attack_policy.py
@@ -156,6 +158,7 @@ root|program/views/__init__.py
 root|program/views/breakdown.py
 root|program/views/dispositions.py
 root|program/views/leaf.py
+root|program/views/score.py
 root|program/views/survival.py
 root|program/views/survival_blocks.py
 root|program/views/tdd.py
@@ -189,6 +192,7 @@ root|support_context.py
 root|survival/__init__.py
 root|survival/accumulate.py
 root|survival/action_families.py
+root|survival/classify.py
 root|survival/compile.py
 root|survival/defense_contracts.py
 root|survival/event_slots.py
@@ -229,7 +233,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|69
+er5-tail-ceiling|65
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
