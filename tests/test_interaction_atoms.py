@@ -535,6 +535,11 @@ def test_additional_defensive_windows_use_selected_sources_and_expire(
                     "level": 18,
                     "items": [],
                     "champion_options": option,
+                    # Only the defending slot: a defender whose kit stuns
+                    # Ezreal first would push his Q past the window.
+                    "ability_ranks": {
+                        key: (5 if key == slot else 0) for key in ("Q", "W", "E", "R")
+                    },
                 }
             ],
         }

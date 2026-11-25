@@ -1133,11 +1133,11 @@ def test_d6_target_state_gate_runs_before_projectile_defense():
     ]
 
 
-def test_d6_attacker_state_gate_runs_after_full_block_prepare():
-    """Gate order: the full-block prepare runs before the attacker-state
-    gate.  A CC'd attacker's hit still consumes the first use (receipt
-    present, damage zeroed, later hit reduced) — the kernel should decide
-    whether a state-skipped packet may consume a use."""
+def test_d6_a_held_attackers_cast_waits_and_then_meets_the_full_block():
+    """Braum's R knocks Ezreal up for 0-2 s, so the Q he planned at 0.25 s
+    waits until he is free and lands at 2.0 s, still inside Unbreakable,
+    which full-blocks it and spends its first use.  The later hit is
+    reduced and the one after the window lands untouched."""
     combat = _calculate(
         {
             **_ezreal_timed(),
@@ -1157,16 +1157,16 @@ def test_d6_attacker_state_gate_runs_after_full_block_prepare():
         _events(combat, attacker="main", target="enemy:Braum", source="Q"),
         key=_BY_TIME,
     )
-    cc_hit, later, after = q_events
-    assert cc_hit["time"] == pytest.approx(0.25)
-    assert cc_hit["projectile_defense"]["mode"] == "full_block"
-    assert cc_hit["skipped_reason"] == "attacker_state_blocked"
+    held, later, after = q_events
+    assert held["time"] == pytest.approx(2.0)
+    assert held["projectile_defense"]["mode"] == "full_block"
+    assert held["skipped_reason"] == "braum_unbreakable"
     assert later["time"] == pytest.approx(3.5)
     assert later["projectile_defense"]["mode"] == "reduced"
     assert after["time"] == pytest.approx(6.75)
     assert "projectile_defense" not in after
     assert survival_of(combat, "enemy:Braum")["projectile_defense_blocked"] == [
-        {"time": 0.25, "source": "Q", "mode": "full_block"}
+        {"time": 2.0, "source": "Q", "mode": "full_block"}
     ]
 
 

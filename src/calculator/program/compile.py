@@ -230,6 +230,7 @@ def _enriched_damage_event(
     *,
     is_ability: bool,
     ability_instance: Any,
+    cast_time: float | None,
     basic_attack: bool,
     wound: tuple[float, str] | None,
     time_value: float,
@@ -254,6 +255,8 @@ def _enriched_damage_event(
         "is_ability": is_ability,
         "ability_instance": ability_instance,
     }
+    if cast_time is not None:
+        enriched["_cast_time"] = cast_time
     if basic_attack:
         enriched["basic_attack"] = True
     if wound is not None:
@@ -345,6 +348,30 @@ def is_authored_ability_event(event: Mapping[str, Any]) -> bool:
     if "is_ability" in event:
         return bool(event["is_ability"])
     return optional_field(event, "source_key", str) in _CAST_SLOTS
+
+
+def cast_time_for_event(
+    event: Mapping[str, Any], cast_timeline: Iterable[Mapping[str, Any]]
+) -> float | None:
+    """When the cast an ability packet belongs to was made, or ``None``.
+
+    The same owning cast :func:`ability_instance_for_event` names: the latest
+    cast of the packet's slot at or before the packet.
+    """
+    if not is_authored_ability_event(event):
+        return None
+    slot = optional_field(event, "source_key", str) or ""
+    try:
+        event_time = optional_field(event, "time", float) or 0.0
+    except (TypeError, ValueError):
+        return None
+    times = [
+        float(_row_cast_time(cast))
+        for cast in cast_timeline
+        if str(_row_cast_slot(cast)) == slot
+        and float(_row_cast_time(cast)) <= event_time
+    ]
+    return max(times) if times else None
 
 
 def ability_instance_for_event(
@@ -565,6 +592,7 @@ _FROM_EVENT: Mapping[str, _Reader] = {
     "is_ability": _flag("is_ability"),
     "basic_attack": _flag("basic_attack"),
     "ability_instance": _value("ability_instance"),
+    "cast_time": _optional_number("_cast_time"),
     "immobilized": _immobilized,
     "cc_kind": _cc_kind,
     "cc_duration": _share("cc_duration"),
@@ -1102,6 +1130,11 @@ class WalkCompiler:
                 cc_kind = ""
                 cc_duration = 0.0
                 ability_instance = None
+                # The cast a packet belongs to is the one fact a light row
+                # can still answer: it is read off the slot and the time.
+                cast_time = cast_time_for_event(
+                    {"source_key": source_key, "time": time_value}, cast_timeline
+                )
             else:
                 damage_type = row["damage_type"]
                 wound_damage = row["damage"]
@@ -1146,6 +1179,7 @@ class WalkCompiler:
                 ability_instance = row.get("ability_instance")
                 if ability_instance is None:
                     ability_instance = ability_instance_for_event(row, cast_timeline)
+                cast_time = cast_time_for_event(row, cast_timeline)
             if index < known_ids:
                 event_id = id_strings[index]
             else:
@@ -1235,6 +1269,7 @@ class WalkCompiler:
                         damage_over_time=damage_over_time,
                         area_damage=area_damage,
                         ability_instance=ability_instance,
+                        cast_time=cast_time,
                     )
                 )
                 if time_value <= duration:
@@ -1253,6 +1288,7 @@ class WalkCompiler:
                         event_id,
                         is_ability=is_ability,
                         ability_instance=ability_instance,
+                        cast_time=cast_time,
                         basic_attack=basic_attack,
                         wound=wound,
                         time_value=time_value,
@@ -1303,6 +1339,9 @@ class WalkCompiler:
                 "ability_instance": instance,
                 **baseline_fields,
             }
+            control_cast_time = cast_time_for_event(event, cast_timeline)
+            if control_cast_time is not None:
+                event["_cast_time"] = control_cast_time
             # The control stream is 18 rows across the whole coupled set,
             # far too thin to license a fail-closed read, so what a row does
             # not spell stays optional here.
@@ -2108,6 +2147,7 @@ def stage_knights_vow_redirect_actions(
             declared=routed_declaration(action.declared, fraction),
             is_ability=action.is_ability,
             ability_instance=action.ability_instance,
+            cast_time=action.cast_time,
             area_damage=action.area_damage,
         )
         aidx += 1

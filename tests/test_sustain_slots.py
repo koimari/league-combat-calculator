@@ -25,9 +25,12 @@ from src.calculator.data_fetcher import get_champion
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _ENEMY = {"champion": "Ahri", "level": 18, "items": [], "role": "mid"}
+_VEIL = "Banshee's Veil"
 
 
-def _fight(champion, *, options=None, duration=10, autos=True, enemy_ranks=None):
+def _fight(
+    champion, *, options=None, duration=10, autos=True, enemy_ranks=None, enemy_items=()
+):
     """One level-18 ``/api/calculate`` fight, returned whole."""
     payload = {
         "champion": champion,
@@ -38,7 +41,13 @@ def _fight(champion, *, options=None, duration=10, autos=True, enemy_ranks=None)
         "fight_duration": duration,
         "include_auto_attacks": autos,
         "ability_ranks": dict(_RANKS),
-        "enemies": [dict(_ENEMY, ability_ranks=enemy_ranks or dict(_RANKS))],
+        "enemies": [
+            dict(
+                _ENEMY,
+                ability_ranks=enemy_ranks or dict(_RANKS),
+                items=list(enemy_items),
+            )
+        ],
     }
     if options is not None:
         payload["champion_options"] = options
@@ -313,20 +322,17 @@ class TestViBlastShield:
         assert _main_survival(payload)["shield_absorbed"] > 0.0
         assert payload["combat"]["item_denial_receipts"] == []
 
-    def test_a_charmed_carrier_moves_the_shield_to_the_ability_that_lands(self):
+    def test_a_blocked_carrier_moves_the_shield_to_the_ability_that_lands(self):
         """The rider binds to the first ability that lands, not the first authored.
 
-        Ahri charms Vi at 0.0, so the Q the payload was hung on is published
-        ``attacker_state_blocked``.  Which packets land is decided inside the
+        Ahri holds Banshee's Veil, so the Q the payload was hung on is
+        published ``spell_shield``.  Which packets land is decided inside the
         ordered survival walk, so the walk is where the rider re-binds: it
-        waits at the trigger gate and arms on Vi's E at 3.221, the first
+        waits at the trigger gate and arms on Vi's E at 2.324, the first
         ability packet she lands.  In game that hit grants Blast Shield.
-
-        The shield is 292.8 for 3 s from 3.221, and it absorbs the 228.4 Ahri
-        deals before 6.221 (49.5 + 129.3 + 49.5).  Writeup:
-        ``docs/self-shield-rebinding.md``.
+        Writeup: ``docs/self-shield-rebinding.md``.
         """
-        payload = _fight("Vi")
+        payload = _fight("Vi", enemy_items=(_VEIL,))
         survival = _main_survival(payload)
         (rider,) = [
             event
@@ -334,8 +340,8 @@ class TestViBlastShield:
             if event["source"] == "Blast Shield"
         ]
         assert rider["amount"] == pytest.approx(0.12 * survival["max_health"], abs=0.05)
-        assert rider["time"] == pytest.approx(3.221)
-        assert rider["expires_at"] == pytest.approx(6.221)
+        assert rider["time"] == pytest.approx(2.324)
+        assert rider["expires_at"] == pytest.approx(5.324)
         assert rider["applied_amount"] == pytest.approx(292.8, abs=0.1)
         assert rider.get("skipped_reason") is None
         # The carrier it moved to is the E packet, not the Q it was authored
@@ -346,22 +352,22 @@ class TestViBlastShield:
             if event["event_id"] == rider["trigger_event_id"]
         ]
         assert carrier["source"] == "E"
-        assert carrier["time"] == pytest.approx(3.221)
+        assert carrier["time"] == pytest.approx(2.324)
         assert not carrier.get("skipped_reason")
-        assert survival["shield_absorbed"] == pytest.approx(228.4, abs=0.1)
+        assert survival["shield_absorbed"] == pytest.approx(99.0, abs=0.1)
         assert payload["combat"]["item_denial_receipts"] == []
 
     def test_a_holder_blocked_through_every_candidate_keeps_the_denial(self):
         """Nothing to re-bind to is a receipt, not a silent zero.
 
-        In a 3 s window Vi's only ability packets are the Q at 1.721 and
-        E's claimed swing and the W it procs at 1.774, all
-        ``attacker_state_blocked`` by the charm, so no carrier ever lands and
-        the rider is refused for real.  The named denial says the
-        amount was withheld, which carrier was authored and which candidate
-        the rider gave up on.
+        In a 2 s window Vi's only ability packets are the Q at 1.721, which
+        Banshee's Veil blocks, and the W it procs at 1.774, which Ahri's charm
+        blocks; her E lands after the window.  So no carrier ever lands and
+        the rider is refused for real.  The named denial says the amount was
+        withheld, which carrier was authored and which candidate the rider
+        gave up on.
         """
-        payload = _fight("Vi", duration=3)
+        payload = _fight("Vi", duration=2, enemy_items=(_VEIL,))
         survival = _main_survival(payload)
         (rider,) = [
             event
@@ -381,7 +387,7 @@ class TestViBlastShield:
             "target": "main",
             "event_id": "main:enemy:Ahri:1:shield",
             "carrier_event_id": "main:enemy:Ahri:1",
-            "carrier_skipped_reason": "attacker_state_blocked",
+            "carrier_skipped_reason": "spell_shield",
             # W at 1.774, the last in-window ability packet Vi authored.
             "last_candidate_event_id": "main:enemy:Ahri:3",
             "last_candidate_skipped_reason": "attacker_state_blocked",

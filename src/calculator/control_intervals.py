@@ -44,6 +44,31 @@ def merged_spans(
     return tuple((start, end) for start, end in merged)
 
 
+def held_span(
+    intervals: Sequence[Mapping[str, Any]], at: float, *, began_before: bool = False
+) -> tuple[float, float] | None:
+    """The fused ``[start, end)`` span of *intervals* holding an actor at *at*.
+
+    Back-to-back controls fuse, so the span ends when the last of them does.
+    *began_before* counts only a span that started strictly before *at*, so a
+    control landing at the same instant as an action does not decide it by
+    the order the two were read.  ``None`` when nothing holds the actor.
+    """
+    if not intervals:
+        return None
+    for start, end in merged_spans(_interval_bounds(row) for row in intervals):
+        opened = start < at - _EPS if began_before else start <= at + _EPS
+        if opened and end > at + _EPS:
+            return start, end
+    return None
+
+
+def free_at(intervals: Sequence[Mapping[str, Any]], at: float) -> float | None:
+    """When an actor held at *at* by *intervals* is free again; ``None`` if not held."""
+    span = held_span(intervals, at)
+    return None if span is None else span[1]
+
+
 def merged_interval_duration(intervals: Sequence[Mapping[str, Any]]) -> float:
     """The union length of authored inactive intervals, which both the
     truncation below and the survival row's published downtime call.

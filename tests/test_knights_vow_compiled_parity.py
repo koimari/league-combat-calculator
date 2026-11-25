@@ -1480,6 +1480,13 @@ def _damage_taken(result: dict) -> list[float]:
     ]
 
 
+def _death_times(result: dict) -> list[float | None]:
+    return [
+        participant["survival"].get("death_time")
+        for participant in result["participants"][:2]
+    ]
+
+
 def test_a_redirected_declaration_is_routed_not_paid_twice():
     """The redirect splits a declared packet's magnitude; it does not hand
     the whole declaration to both recipients.
@@ -1491,8 +1498,11 @@ def test_a_redirected_declaration_is_routed_not_paid_twice():
     without = _declared_source_fight(())
     with_vow = _declared_source_fight((ITEM_NAME,))
     # The tether moves a share onto a holder whose armour is higher (Knight's
-    # Vow itself grants 40), so the team total may fall; it may never rise.
-    assert sum(_damage_taken(with_vow)) < sum(_damage_taken(without))
+    # Vow itself grants 40), so the pair lives longer.  Living longer is also
+    # taking damage for longer, so the team total is no measure of the split;
+    # the per-tick shares below are.
+    for before, after in zip(_death_times(without), _death_times(with_vow)):
+        assert after is None or (before is not None and after >= before)
     redirected = [
         event
         for event in with_vow["events"]
