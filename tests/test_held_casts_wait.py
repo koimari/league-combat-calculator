@@ -9,6 +9,7 @@ is free, and every cast one hold blocks moves by the same shift.
 import pytest
 
 from src.calculator.calculate import calculate_payload
+from src.calculator.champions import registered_champion_names
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -106,3 +107,32 @@ def test_a_cast_made_at_the_holds_own_instant_still_lands_inside_it():
     )
     assert fear["kind"] == "fear"
     assert fear["start"] == pytest.approx(0.35)
+
+
+def test_a_cast_listed_to_the_millisecond_still_owns_its_packets():
+    """The cast timeline publishes three decimals: Thresh's R is cast at
+    0.8889 s and listed at 0.889 s.  Its packet still finds that cast, so the
+    charm holds it and it lands at 1.2 s instead of being dropped."""
+    events = _versus_ahri("Thresh")["combat"]["events"]
+    (ult,) = [e for e in events if e["attacker"] == "main" and e["source"] == "R"]
+    assert ult["time"] == pytest.approx(1.2)
+    assert not ult.get("skipped_reason")
+
+
+def test_no_ability_packet_is_dropped_for_its_casters_control():
+    """Against a casting Ahri, every registered champion's Q/W/E/R packets
+    either land or wait: none is skipped ``attacker_state_blocked``."""
+    dropped = {}
+    for champion in registered_champion_names():
+        if champion == "Ahri":
+            continue
+        rows = [
+            (event["time"], event["source"])
+            for event in _versus_ahri(champion)["combat"]["events"]
+            if event["attacker"] == "main"
+            and event["source"] in {"Q", "W", "E", "R"}
+            and event.get("skipped_reason") == "attacker_state_blocked"
+        ]
+        if rows:
+            dropped[champion] = rows
+    assert dropped == {}
