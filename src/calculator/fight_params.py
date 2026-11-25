@@ -160,7 +160,7 @@ class FightParams(FightConfig):
             maximum_index=MAX_ALLIES - 1,
         )
         rune_page, keystone_options = rune_page_from_request(data)
-        role = validate_role(data.get("role", ""))
+        role = validate_role(data.get("role"))
         role_quest_complete = request_bool(data, "role_quest_complete", False)
         if role_quest_complete and not role:
             raise ValueError("role is required when role_quest_complete is true")
@@ -228,17 +228,11 @@ class FightParams(FightConfig):
             raise ValueError(
                 f"Unknown ability rank keys: {', '.join(sorted(unknown_keys))}"
             )
-        for key in ("Q", "W", "E"):
-            value = self.ability_ranks.get(key, 0)
+        for key, value in self.ability_ranks.items():
             if isinstance(value, bool) or not isinstance(value, int):
                 raise ValueError(f"{key} rank must be an integer")
             if value < 0 or value > 6:
                 raise ValueError(f"{key} rank must be 0-6")
-        ultimate_rank = self.ability_ranks.get("R", 0)
-        if isinstance(ultimate_rank, bool) or not isinstance(ultimate_rank, int):
-            raise ValueError("R rank must be an integer")
-        if ultimate_rank < 0 or ultimate_rank > 6:
-            raise ValueError("R rank must be 0-6")
 
     def target_stats(self) -> dict[str, float]:
         """Build the champion-parser target context for a full-health target."""
