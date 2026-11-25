@@ -26,7 +26,12 @@ from .. import healing_helpers as _healing
 from ..ability_atoms import ability_field, ability_payload
 from ..ability_prose import extract_description_duration
 from ..ability_spec import DamagePart
-from ..binary_roots import data_value, spell_object
+from ..binary_roots import (
+    calculation_stat_coefficient,
+    data_value,
+    data_value_at_rank,
+    spell_object,
+)
 from ..damage_event_row import event_damage as _row_damage
 from .aphelios_weapons import (
     _Q_CC_BY_WEAPON,
@@ -228,15 +233,22 @@ def _r_followup_part(ctx: SlotCtx, followups: int) -> tuple[DamagePart, float]:
     )
 
 
+_APHELIOS_R_SPELL = spell_object("Aphelios", "ApheliosR")
+_R_BONUS_AD_RATIO = calculation_stat_coefficient(_APHELIOS_R_SPELL, "MaxDamage", 2)
+
+
 def _r(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("R")
     if not ability:
         return None
     r_rank = 1 if ctx.level < 11 else (2 if ctx.level < 16 else 3)
-    base = (125.0, 175.0, 225.0)[r_rank - 1]
+    # Binary ApheliosR MaxDamage: RBaseDamage at R's rank, plus its bonus-AD
+    # (mStat 2) coefficient, plus a coefficient-1.0 part with no stat named,
+    # the ability power the tooltip shows.
+    base = data_value_at_rank(_APHELIOS_R_SPELL, "RBaseDamage", r_rank)
     ad = float(ctx.stat("bonus_attack_damage"))
     ap = float(ctx.stat("ability_power"))
-    initial = base + 0.20 * ad + ap
+    initial = base + _R_BONUS_AD_RATIO * ad + ap
     total = initial
     followups = min(max(int(ctx.option("r_followup_targets")), 0), 5)
     blast = DamagePart(

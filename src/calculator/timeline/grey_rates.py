@@ -6,11 +6,18 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from ..binary_roots import data_value, data_value_at_rank, spell_object
 from ..champions.inputs import declared_option_defaults
 from ..champions.skill_orders import get_ability_rank
 from ..champions.slot_extract import extract_cooldown
 from ..composed_event_row import row_damage, row_raw_damage
 from .records import GreyShield
+
+
+def _ranked_row(spell: dict[str, Any], name: str) -> tuple[float, ...]:
+    """A binary DataValue row at ranks 1-5, the shape the rank tables index."""
+    return tuple(data_value_at_rank(spell, name, rank) for rank in range(1, 6))
+
 
 # ─────────────────────────────────────────────────────────────────────────
 # Grey-health primitive (E8a)
@@ -93,10 +100,11 @@ _RENGAR_W_CONSUME_HEAL_RATIO = 1.0
 #   the out-of-combat heal exactly as before.  The consume is modeled as
 #   one lump heal at the 4 s boundary; the wiki's 10%-max-health-per-
 #   0.264 s tick delivery is a rate detail with the same total.
-_TAHM_E_STORE_RANK = (0.15, 0.23, 0.31, 0.39, 0.47)
+_TAHM_E_SPELL = spell_object("Tahm Kench", "TahmKenchE")
+_TAHM_E_STORE_RANK = _ranked_row(_TAHM_E_SPELL, "GreyHealthRatio")
 
 
-_TAHM_E_STORE_MULTI_RANK = (0.42, 0.44, 0.46, 0.48, 0.50)
+_TAHM_E_STORE_MULTI_RANK = _ranked_row(_TAHM_E_SPELL, "GreyHealthRatioEnhanced")
 
 
 _TAHM_E_STORE_CAP_RATIO = 3.0
@@ -119,16 +127,17 @@ _TAHM_E_SHIELD_DURATION_SECONDS = 2.5
 #   time — the exact moment is a player decision, documented boundary).
 #   The Potential Shield decay and the active shield's exponential decay
 #   are state, not modeled.
-_MORDE_W_STORE_DEALT_RATIO = 0.45
+_MORDE_W_SPELL = spell_object("Mordekaiser", "MordekaiserW")
+_MORDE_W_STORE_DEALT_RATIO = data_value(_MORDE_W_SPELL, "DamageConversion")
 
 
-_MORDE_W_STORE_TAKEN_PRE_RATIO = 0.075
+_MORDE_W_STORE_TAKEN_PRE_RATIO = data_value(_MORDE_W_SPELL, "DamageTakenConversion")
 
 
-_MORDE_W_STORE_CAP_RATIO = 0.30
+_MORDE_W_STORE_CAP_RATIO = data_value(_MORDE_W_SPELL, "MaxHealthCap")
 
 
-_MORDE_W_SHIELD_TO_HEALING_RANK = (0.35, 0.375, 0.40, 0.425, 0.45)
+_MORDE_W_SHIELD_TO_HEALING_RANK = _ranked_row(_MORDE_W_SPELL, "HealingPercent")
 
 
 _MORDE_W_RECAST_AVAILABLE_SECONDS = 0.5
