@@ -3029,7 +3029,7 @@ def _apply_crowd_control(
     # Lulu's Whimsy against a Black Shield among them.
     if applied_amount <= 0.0 and action.amount > 0.0:
         return
-    if not profile.blocking and not profile.unknown:
+    if not profile.hard and not profile.unknown:
         # A known soft control (slow, silence, ...): no action-downtime
         # model — pinned pass-through, never an immunity decision.
         return
@@ -3110,7 +3110,7 @@ def _apply_crowd_control(
     ragnarok = state.get("ragnarok_immunity")
     if (
         ragnarok
-        and profile.blocking
+        and profile.hard
         and not profile.unknown
         and float(action.time) < float(_armed_field(ragnarok, "until"))
         and _hostile(ctx, action)
@@ -3128,7 +3128,7 @@ def _apply_crowd_control(
     if (
         resist
         and resist.get("armed")
-        and profile.blocking
+        and profile.hard
         and not profile.unknown
         and _hostile(ctx, action)
     ):
@@ -3145,14 +3145,15 @@ def _apply_crowd_control(
             "source": str(action.source or action.source_key or "Crowd control"),
         }
     )
-    state["action_downtime_intervals"].append(
-        {
-            "kind": action.cc_kind or "crowd_control",
-            "start": float(action.time),
-            "end": until,
-            "source": str(action.source or action.source_key or "Crowd control"),
-        }
-    )
+    if profile.blocking:
+        state["action_downtime_intervals"].append(
+            {
+                "kind": action.cc_kind or "crowd_control",
+                "start": float(action.time),
+                "end": until,
+                "source": str(action.source or action.source_key or "Crowd control"),
+            }
+        )
     ctx.ledger.write(
         action,
         crowd_control={

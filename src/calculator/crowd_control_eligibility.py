@@ -58,6 +58,7 @@ from typing import Any
 from .control_spec import (
     ACTION_BLOCKING_CC_KINDS,
     CC_KIND_VOCABULARY,
+    HARD_CONTROL_CC_KINDS,
     NO_CONTROL_KIND,
     NON_BLOCKING_CC_KINDS,
 )
@@ -90,13 +91,16 @@ class ControlProfile:
 
     ``kind`` is the lowercased authored ``cc_kind`` ("" for a packet with
     no control markers — a plain damage packet).  ``blocking`` is True
-    for ``ability_spec.ACTION_BLOCKING_CC_KINDS``; ``unknown`` is True for
+    for ``ability_spec.ACTION_BLOCKING_CC_KINDS`` (action downtime) and
+    ``hard`` for ``HARD_CONTROL_CC_KINDS`` (cleanse, immunity, Ragnarok,
+    Dr. Mundo's resist); ``unknown`` is True for
     kinds outside :data:`KNOWN_CONTROL_KINDS` (fail-closed marker).  A
     packet with no control markers is never unknown.
     """
 
     kind: str = ""
     blocking: bool = False
+    hard: bool = False
     unknown: bool = False
     unknown_markers: tuple[str, ...] = ()
 
@@ -126,10 +130,13 @@ def classify_control(action: PacketFacts) -> ControlProfile:
     kind = _action_cc_kind(action)
     if not kind:
         return ControlProfile(kind="", blocking=False, unknown=False)
-    if kind in ACTION_BLOCKING_CC_KINDS:
-        return ControlProfile(kind=kind, blocking=True, unknown=False)
-    if kind in NON_BLOCKING_CC_KINDS:
-        return ControlProfile(kind=kind, blocking=False, unknown=False)
+    if kind in HARD_CONTROL_CC_KINDS or kind in NON_BLOCKING_CC_KINDS:
+        return ControlProfile(
+            kind=kind,
+            blocking=kind in ACTION_BLOCKING_CC_KINDS,
+            hard=kind in HARD_CONTROL_CC_KINDS,
+            unknown=False,
+        )
     return ControlProfile(
         kind=kind,
         blocking=False,
@@ -220,7 +227,7 @@ class CrowdControlEligibility:
                 shield_source=self.holder_source,
                 event_key=event_key,
             )
-        if not profile.blocking:
+        if not profile.hard:
             return CrowdControlDecision(
                 eligible=False,
                 reason="control_not_blocking",
