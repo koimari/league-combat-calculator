@@ -241,9 +241,10 @@ _DECLARATIONS: tuple[AdequacyDeclaration, ...] = (
         reader=_WALK_READER,
         requires_fields=frozenset(),
         reason=(
-            "a damage-over-time tick carries when its stack was applied, "
-            "which the walk judges against its caster's control the way it "
-            "judges a cast, and the positional row has no field for it"
+            "a damage-over-time tick carries when the cast that applied its "
+            "stack was made, which the walk judges against its caster's "
+            "control the way it judges a cast, and the positional row has no "
+            "field for it"
         ),
     ),
     AdequacyDeclaration(

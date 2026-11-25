@@ -160,3 +160,16 @@ def test_a_burn_applied_before_the_hold_keeps_ticking_through_it():
     ticks = [e for e in events if e["attacker"] == "main" and e["source"] == "passive"]
     assert [tick["time"] for tick in ticks[:4]] == [0.25, 0.5, 0.75, 1.0]
     assert not any(tick.get("skipped_reason") for tick in ticks)
+
+
+def test_a_delayed_hit_stamps_its_stack_with_the_cast_that_launched_it():
+    """Brand's W erupts 0.891 s after its cast: a stack it applies belongs to
+    the cast, not the eruption, so a hold that begins in between does not
+    delay the ticks of a cast Brand made while free."""
+    from src.calculator.fight.rotation.precomputed_procs import _owning_cast_time
+
+    casts = [{"slot": "Q", "time": 0.0}, {"slot": "W", "time": 0.2}]
+    eruption = {"source_key": "W", "time": 1.091}
+    assert _owning_cast_time(casts, eruption) == pytest.approx(0.2)
+    rounded_up = {"source_key": "W", "time": 0.1996}
+    assert _owning_cast_time(casts, rounded_up) == pytest.approx(0.1996)
