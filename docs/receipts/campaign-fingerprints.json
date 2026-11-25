@@ -52,9 +52,9 @@
  "golden": {
   "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights",
   "entries": 672,
-  "leaves": 61226,
-  "numeric_leaves": 46994,
-  "src_tree_sha": "9892fe3ce736b83db673d371afa820dfdd9fa623"
+  "leaves": 61227,
+  "numeric_leaves": 46995,
+  "src_tree_sha": "9012e0551e4b22e2c3f58df2694922c5036a2aae"
  },
  "coupled_golden": {
   "sections": "coupled_scenarios",
