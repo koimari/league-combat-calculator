@@ -360,7 +360,9 @@ def cast_time_for_event(
     """When the cast an ability packet belongs to was made, or ``None``.
 
     The same owning cast :func:`ability_instance_for_event` names: the latest
-    cast of the packet's slot at or before the packet.
+    cast of the packet's slot at or before the packet.  A cast the timeline
+    rounded up past the packet was really made no later than the packet, so
+    the packet's own time is the closer instant and the one returned.
     """
     if not is_authored_ability_event(event):
         return None
@@ -375,7 +377,7 @@ def cast_time_for_event(
         if str(_row_cast_slot(cast)) == slot
         and float(_row_cast_time(cast)) <= event_time + _CAST_MATCH_EPS
     ]
-    return max(times) if times else None
+    return min(max(times), event_time) if times else None
 
 
 def ability_instance_for_event(

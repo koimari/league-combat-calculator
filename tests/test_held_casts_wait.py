@@ -137,3 +137,16 @@ def test_no_ability_packet_is_dropped_for_its_casters_control():
         if rows:
             dropped[champion] = rows
     assert dropped == {}
+
+
+def test_a_cast_the_timeline_rounded_up_keeps_its_packets_instant():
+    """A cast made at 0.8889 s is published as 0.889 s.  Its packet at 0.8889 s
+    still finds it, and keeps 0.8889 s as the cast instant, so a control that
+    lands at that same instant cannot be read as having come first."""
+    from src.calculator.program.compile import cast_time_for_event
+
+    timeline = [{"time": 0.889, "slot": "R"}]
+    packet = {"source_key": "R", "time": 0.8889, "is_ability": True}
+    assert cast_time_for_event(packet, timeline) == pytest.approx(0.8889)
+    later = {"source_key": "R", "time": 1.4, "is_ability": True}
+    assert cast_time_for_event(later, timeline) == pytest.approx(0.889)
