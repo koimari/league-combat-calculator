@@ -103,6 +103,13 @@
       "fights/0:Aatrox": "8220.1",
       "fights/1:Malphite": "10910.0"
     },
+    "darkin_form_walk_roster": {
+      "combat/0:main/incoming": "1381.2",
+      "combat/0:main/outgoing": "916.4",
+      "combat/1:enemy:Aatrox/incoming": "916.4",
+      "combat/1:enemy:Aatrox/outgoing": "1381.2",
+      "fights/0:Aatrox": "916.4"
+    },
     "dream_maker_roster": {
       "combat/0:main/incoming": "1049.6",
       "combat/0:main/outgoing": "377.2",
@@ -163,6 +170,13 @@
       "combat/2:enemy:Aatrox/incoming": "2840.1",
       "combat/2:enemy:Aatrox/outgoing": "787.9",
       "fights/0:Aatrox": "2423.1"
+    },
+    "missing_health_walk_roster": {
+      "combat/0:main/incoming": "918.6",
+      "combat/0:main/outgoing": "701.7",
+      "combat/1:enemy:Aatrox/incoming": "701.7",
+      "combat/1:enemy:Aatrox/outgoing": "918.6",
+      "fights/0:Aatrox": "713.2"
     },
     "mundo_3champ": {
       "combat/0:main/incoming": "1584.5",
@@ -289,16 +303,16 @@
     "champions_fetched_at": 1787268652.393148,
     "exact": true,
     "fingerprint": {
-      "entries": 30,
-      "leaves": 224,
+      "entries": 32,
+      "leaves": 234,
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "c677fe5f5f2b2e5042330439b93a1da81695d39c",
+    "git_head": "46ed831daec7fe85057614e0d78d505152f1abda",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
-    "scenario_count": 30,
+    "scenario_count": 32,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "80556ba0edcdbe6aa01d0c0987bece8b54e5f403"
+    "src_tree_sha": "1fac7b3bcc04d3d5b5a9dc08983eec22106ed245"
   }
 }

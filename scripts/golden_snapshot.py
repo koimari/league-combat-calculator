@@ -1472,6 +1472,30 @@ COUPLED_SCENARIOS = (
             auto_attack_uptime=1.0,
         ),
     ),
+    # The walk re-prices a missing-health packet as f(missing, max_health):
+    # High Note's amplifier is one, and a captured default once took the max
+    # health there while every other scenario walked none.
+    CoupledScenario(
+        "missing_health_walk_roster",
+        _roster_request(
+            "Seraphine",
+            (),
+            enemies=("Aatrox",),
+            allies=(),
+        ),
+    ),
+    # Darkin Kayn's Reaping Slash carries a max-health part through the
+    # same callback, and no other scenario selects the form.
+    CoupledScenario(
+        "darkin_form_walk_roster",
+        _roster_request(
+            "Kayn",
+            (),
+            enemies=("Aatrox",),
+            allies=(),
+            champion_options={"form": "darkin"},
+        ),
+    ),
     *_syndra_pin_scenarios(),
 )
 

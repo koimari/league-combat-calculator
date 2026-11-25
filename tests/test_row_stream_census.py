@@ -87,7 +87,7 @@ BASELINE = Path("scripts/golden_coupled_baseline.json")
 #: a field; that test prints the table it expected.
 CENSUS: dict[str, tuple[int, tuple[str, ...]]] = {
     "combat/events": (
-        1826,
+        1861,
         (
             "attacker",
             "damage",
@@ -104,7 +104,7 @@ CENSUS: dict[str, tuple[int, tuple[str, ...]]] = {
         ),
     ),
     "combat/healing_events": (
-        976,
+        992,
         (
             "amount",
             "applied_amount",
@@ -120,7 +120,7 @@ CENSUS: dict[str, tuple[int, tuple[str, ...]]] = {
         ),
     ),
     "combat/breakdown": (
-        77,
+        81,
         (
             "champion",
             "death_time",
@@ -154,7 +154,7 @@ CENSUS: dict[str, tuple[int, tuple[str, ...]]] = {
         ),
     ),
     "combat/participants": (
-        77,
+        81,
         (
             "champion",
             "level",
@@ -164,12 +164,11 @@ CENSUS: dict[str, tuple[int, tuple[str, ...]]] = {
         ),
     ),
     "combat/support_events": (
-        71,
+        73,
         (
             "amount",
             "applied_amount",
             "attacker",
-            "duration",
             "event_id",
             "kind",
             "raw_amount",
@@ -184,7 +183,7 @@ CENSUS: dict[str, tuple[int, tuple[str, ...]]] = {
         ),
     ),
     "fights/cast_timeline": (
-        207,
+        217,
         (
             "cast_id",
             "name",
@@ -198,7 +197,7 @@ CENSUS: dict[str, tuple[int, tuple[str, ...]]] = {
             "time",
         ),
     ),
-    "fights/damage_events": (774, ("damage", "damage_type", "phase", "source", "time")),
+    "fights/damage_events": (793, ("damage", "damage_type", "phase", "source", "time")),
     "fights/self_healing_events": (259, ("amount", "kind", "source", "time")),
 }
 
