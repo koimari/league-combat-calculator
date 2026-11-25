@@ -189,6 +189,7 @@ root|stat_formulas.py
 root|state_lifecycle.py
 root|stats.py
 root|support_context.py
+root|support_effects.py
 root|survival/__init__.py
 root|survival/accumulate.py
 root|survival/action_families.py
@@ -233,7 +234,7 @@ payload-receiver|target_debuff.
 # count without licensing a site: `participant_timeline.py` became itself plus
 # `timeline/`, whose two clean members joined the roots above and whose four
 # others carry the sites they always carried.
-er5-tail-ceiling|65
+er5-tail-ceiling|64
 
 # The frozen sites.
 ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
@@ -648,14 +649,15 @@ MODULE_DECLARATION|interpreters/defense_state.py|_policy_reference|getattr|name 
 MODULE_DECLARATION|item_coverage.py|_prices_holder_durability|getattr|field 1
 MODULE_DECLARATION|healing.py|_load_declarations|getattr|"SELF_HEALING_RULE" 1
 MODULE_DECLARATION|champion_opening_defenses.py|_champion_starting_revive|getattr|"starting_revive_defense" 1
-OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_ap_per_unit" 1
-OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_health_per_unit" 1
-OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_mana_per_unit" 1
 OPTION_SCHEMA|item_effects.py|_item_option_schemas|dict.get|"options" 1
 OPTION_SCHEMA|item_effects.py|input_option_float_value|dict.get|"step" 1
 OPTION_SCHEMA|item_effects.py|input_option_float_value|or-default|"step" 1
+OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_ap_per_unit" 1
+OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_health_per_unit" 1
+OPTION_SCHEMA|item_effects.py|input_option_stat_bonuses|dict.get|"bonus_mana_per_unit" 1
 OPTION_SCHEMA|item_effects.py|validate_item_input_options|dict.get|"step" 1
 OPTION_SCHEMA|item_effects.py|validate_item_input_options|or-default|"step" 1
+OPTION_SCHEMA|support_effects.py|derive_ally_effects|dict.get|"w_already_shielded" 1
 REQUEST_ITEM_STATE|item_effects.py|_manaflow_state|dict.get|"manaflow_bonus_mana" 1
 REQUEST_ITEM_STATE|item_effects.py|actualizer_active_seconds|dict.get|"mana_made_real_active" 1
 REQUEST_ITEM_STATE|item_effects.py|actualizer_active_seconds|dict.get|"mana_made_real_active_seconds" 1
