@@ -33,6 +33,7 @@ from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option
 from .module_helpers import no_damage_slot
+from .ranked_slots import ranked_at
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
@@ -147,17 +148,16 @@ def _q(ctx: SlotCtx) -> dict[str, Any] | None:
 # ---------------------------------------------------------------------------
 
 
-def _w_hammer(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_at("W", _HAMMER)
+def _w_hammer(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W Hammer: Lightning Field's 4 sourced ticks of the full-zone total.
 
     The JSON's "Total Magic Damage" is exactly 4x the "Magic Damage Per
     Tick" row at every rank (140/35 .. 440/110), so the field is priced
     as four per-second ticks over its 4-second duration.
     """
-    ranked = ctx.ranked("W", _HAMMER)
-    if ranked is None:
-        return None
-    ability, rank = ranked
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability_name(ability),
@@ -194,7 +194,10 @@ def _burst_attack_speed(ctx: SlotCtx) -> float:
     return min(burst, ATTACK_SPEED_CAP)
 
 
-def _hyper_charge(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_at("W", _CANNON)
+def _hyper_charge(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """W Cannon: 3 attacks whose AD ratio REPLACES the auto's own damage.
 
     The wiki's "modified physical damage" is a replacement, not a bonus:
@@ -212,11 +215,6 @@ def _hyper_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     The attacks crit normally ("Hyper Charge's total damage is affected
     by critical strike modifiers"), so the delta crits with them.
     """
-    ranked = ctx.ranked("W", _CANNON)
-    if ranked is None:
-        return None
-    ability, rank = ranked
-
     ratio = extract_value(ability, "Physical Damage", rank) / 100.0
     total_ad = ctx.stat("attack_damage")
     delta_ratio = ratio - 1.0

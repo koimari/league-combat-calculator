@@ -24,6 +24,7 @@ from .engine import SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat
 from .packet_module import build_packet_module
+from .ranked_slots import ranked_at
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 
@@ -51,12 +52,11 @@ _NILAH_R_HEAL_TO_SHIELD_MIN_RATIO = 0.20  # R: 20% : 50% by crit
 _NILAH_EXCESS_SHIELD_DURATION_SECONDS = 6.0
 
 
-def _formless_blade(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_at("Q", 0)
+def _formless_blade(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: minimum-row physical damage, scaled linearly by crit chance."""
-    ranked = ctx.ranked("Q", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
     min_damage = extract_named(
         ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target
     )

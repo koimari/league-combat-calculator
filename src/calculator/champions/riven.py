@@ -19,6 +19,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx
 from .module_helpers import ability_slot
 from .packet_module import build_packet_module
+from .ranked_slots import ranked_at
 from .slot_entries import damage_entry, on_hit_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 
@@ -39,17 +40,16 @@ _R_BUFF_DURATION = data_value(_RIVEN_R_SPELL, "Duration")
 _RUNIC_BLADE_CRIT_EFFECTIVENESS = 1.0
 
 
-def _blade_of_the_exile(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_at("R", 0)
+def _blade_of_the_exile(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R1: +20% of bonus AD as bonus AD for 15s (BUFF phase).
 
     Runs before every damage slot, so Q/W/R all scale off the buffed
     bonus AD within the ult window.  The amount is snapshot at cast
     ("factored upon cast, and does not change" — cached R[0] notes).
     """
-    ranked = ctx.ranked("R", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
     value = _R_BONUS_AD_RATIO * float(ctx.stat("bonus_attack_damage") or 0.0)
     ctx.stats["attack_damage"] = float(ctx.stat("attack_damage") or 0.0) + value
     ctx.stats["bonus_attack_damage"] = (

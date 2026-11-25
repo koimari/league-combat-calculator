@@ -28,6 +28,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import ability_slot, missing_hp_fraction, ranked_slot
+from .ranked_slots import ranked_at
 from .shared_option_keys import TARGET_MISSING_HP_OPTION
 from .slot_control import with_control
 from .slot_entries import ability_on_hit_entry, damage_entry
@@ -98,7 +99,6 @@ def _death_in_lavender(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] 
     override keeps attacks at full damage while scaling every on-hit rider
     (items, spellblade, R's ramping proc).
     """
-
     temp_as = PASSIVE_TEMP_BONUS_AS
     per_stack = _per_level_scaling(ability, 0, ctx.level)
     stacks = max(0, int(ctx.option("lavender_stacks")))
@@ -131,7 +131,6 @@ def _void_surge(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
     """Q: ``q_casts`` directional dashes, each 12-20 + 105% AD, can crit."""
-
     per_dash = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     casts = min(max(int(ctx.option("q_casts")), 1), 4)
     cooldown = Q_DIRECTION_COOLDOWNS[min(rank - 1, len(Q_DIRECTION_COOLDOWNS) - 1)]
@@ -173,7 +172,6 @@ def _royal_maelstrom(
 ) -> dict[str, Any] | None:
     """E: slash count from final bonus AS; per-slash damage interpolates
     between the JSON min/max attributes by target missing health."""
-
     missing = missing_hp_fraction(ctx)
     min_hit = extract_named(
         ability, "Minimum Physical Damage per hit", rank, ctx.stats, ctx.target
@@ -232,7 +230,6 @@ def _endless_banquet(
 ) -> dict[str, Any] | None:
     """R active: Void Coral explosion (true damage + 20% missing health),
     plus the True Form stat buff when the ``true_form`` option is on."""
-
     missing = missing_hp_fraction(ctx)
     max_hp = ctx.target_stat("target_max_health")
 
@@ -278,7 +275,10 @@ def _endless_banquet(
     return entry
 
 
-def _endless_banquet_onhit(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_at("R")
+def _endless_banquet_onhit(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R passive: ramping true damage on every attack and Q/E on-hit.
 
     Hit k deals k x (2/4/6 + 3% bonus AD) — stacks accumulate on one target
@@ -286,11 +286,6 @@ def _endless_banquet_onhit(ctx: SlotCtx) -> dict[str, Any] | None:
     the fight engine owns the hit sequence, and each carrier's on-hit
     modifier (100% autos/Q, 12-24% E) applies to that instance.
     """
-    ranked = ctx.ranked("R")
-    if ranked is None:
-        return None
-    ability, rank = ranked
-
     per_stack = extract_named(ability, "Bonus True Damage", rank, ctx.stats, ctx.target)
     name = "Endless Banquet (ramping on-hit)"
     return ability_on_hit_entry(
