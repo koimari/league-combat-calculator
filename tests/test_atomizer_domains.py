@@ -19,9 +19,9 @@ def test_item_domain_keeps_passive_and_active_evidence_separate() -> None:
     assert "active:Dash@kw:dash" in evidence
 
 
-def test_the_rune_catalog_keys_every_entry_by_its_cache_key() -> None:
-    """The cache's two page tables carry no name; keyed by name they both
-    landed on "?" and one overwrote the other."""
+def test_the_rune_catalog_holds_every_rune_and_no_page_table() -> None:
+    """Every cached rune keys by its cache key, and the two page tables
+    (shards, adaptive_force) are page-level facts, not runes."""
     import json
     from pathlib import Path
 
@@ -31,5 +31,7 @@ def test_the_rune_catalog_keys_every_entry_by_its_cache_key() -> None:
     runes = json.loads(path.read_text(encoding="utf-8"))
     atoms = atomize_rune_catalog(runes)
 
-    assert set(atoms) == set(runes)
+    from src.calculator.rune_parser import RESERVED_CACHE_KEYS
+
+    assert set(atoms) == set(runes) - set(RESERVED_CACHE_KEYS)
     assert "?" not in atoms

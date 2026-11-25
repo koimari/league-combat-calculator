@@ -19,6 +19,7 @@ from typing import Any
 
 from .atom_spelling import _snake, _stat_unit
 from .atomizer import Atomizer, number_and_unit, split_effect_fragments
+from .rune_parser import RESERVED_CACHE_KEYS
 
 # keyword -> (atom_id, behavior)
 # Coverage classes: damage, heal, shield, crowd-control
@@ -198,10 +199,10 @@ def atomize_rune_catalog(
     runes: Mapping[str, Mapping[str, Any]] | Iterable[Mapping[str, Any]] | None,
 ) -> dict[str, list[dict[str, Any]]]:
     out: dict[str, list[dict[str, Any]]] = {}
-    # A cached catalog is keyed by name; its two page tables (shards,
-    # adaptive_force) carry no name, so the key is the identity.
+    # A cached catalog is keyed by name. Its page tables (shards,
+    # adaptive_force) are page-level facts, not runes, and are left out.
     records = (
-        runes.items()
+        ((key, rune) for key, rune in runes.items() if key not in RESERVED_CACHE_KEYS)
         if isinstance(runes, Mapping)
         else ((rune["name"], rune) for rune in runes or ())
     )

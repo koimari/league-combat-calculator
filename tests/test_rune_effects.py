@@ -843,6 +843,22 @@ class TestRefreshRuneEffects:
     def test_an_absent_cache_is_no_runes(self):
         assert rune_effects._split_cache({}) == ({}, {}, {})
 
+    def test_only_a_missing_file_is_the_absent_cache(self, monkeypatch):
+        """A present cache that is empty raises; it is a broken pull, not
+        the no-runes state a missing file is."""
+
+        def missing():
+            raise FileNotFoundError("no data/runes.json")
+
+        def empty():
+            raise ValueError("data/runes.json holds no runes")
+
+        monkeypatch.setattr(rune_effects, "fetch_rune_data", missing)
+        assert rune_effects._load_rune_cache() == {}
+        monkeypatch.setattr(rune_effects, "fetch_rune_data", empty)
+        with pytest.raises(ValueError, match="no runes"):
+            rune_effects._load_rune_cache()
+
     @pytest.mark.parametrize("missing", ["shards", "adaptive_force"])
     def test_a_cache_without_a_table_refuses(self, missing):
         contents = {"Stub": {"name": "Stub"}, "shards": {}, "adaptive_force": {}}
