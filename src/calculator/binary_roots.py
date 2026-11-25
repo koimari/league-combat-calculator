@@ -359,6 +359,27 @@ def uniform_spell_field(spell_obj: dict[str, Any], field: str) -> float:
     return values.pop()
 
 
+def missile_movement_field(spell_obj: dict[str, Any], field: str) -> float:
+    """A scalar of the spell's missile ``movementComponent``.
+
+    Taliyah's shard decelerates: ``mAcceleration`` -5000 from ``mInitialSpeed``
+    3600 down to ``mMinSpeed`` 1500.
+    """
+    label = f"missile movement field {field!r}"
+    value = _dig(
+        spell_obj,
+        "mSpell",
+        "mMissileSpec",
+        "movementComponent",
+        field,
+        want=(int, float),
+        label=label,
+    )
+    if isinstance(value, bool):
+        raise RuntimeError(f"{label}: a bool is not a number")
+    return _snapped(value, label)
+
+
 def data_value(spell_obj: dict[str, Any], value_name: str) -> float:
     """Read the first finite, snapped entry of a named DataValue rank row."""
     return _data_value_at_index(spell_obj, value_name, 0, "first value")
