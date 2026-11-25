@@ -92,17 +92,12 @@ class TestTheVocabularyIsTheOnlyVocabulary:
         assert frozenset() == ACTION_BLOCKING_CC_KINDS & NON_BLOCKING_CC_KINDS
 
     def test_the_action_blocking_half_is_derived_from_the_immobilizes(self):
-        """Every immobilize blocks actions; polymorph and berserk block
-        them without immobilizing.  Re-spelling the fifteen was how the two
-        drifted."""
-        assert (
-            IMMOBILIZING_CC_KINDS
-            | {
-                "polymorph",
-                "berserk",
-            }
-            == ACTION_BLOCKING_CC_KINDS
-        )
+        """Every immobilize but root and snare blocks actions; polymorph and
+        berserk block them without immobilizing.  A rooted champion still
+        attacks and casts, so root stays hard control without blocking.
+        Re-spelling the fifteen was how the two drifted."""
+        assert HARD_CONTROL_CC_KINDS == IMMOBILIZING_CC_KINDS | {"polymorph", "berserk"}
+        assert ACTION_BLOCKING_CC_KINDS == HARD_CONTROL_CC_KINDS - {"root", "snare"}
 
     def test_immobilizing_and_non_immobilizing_partition_the_vocabulary(self):
         assert (

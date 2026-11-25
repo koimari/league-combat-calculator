@@ -695,6 +695,22 @@ def test_control_only_ability_is_an_ordered_survival_action():
     assert survival_of(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(2.5)
 
 
+def _assert_control_window(survival, kind, duration):
+    """A control's window lands on the target; only an action-blocking kind
+    costs it the action.  A rooted champion still attacks and casts, so a
+    root records its full crowd-control window and no downtime."""
+    if kind in ("root", "snare"):
+        assert survival["action_downtime"] == pytest.approx(0.0)
+        windows = [
+            interval["end"] - interval["start"]
+            for interval in survival["crowd_control_intervals"]
+            if interval["kind"] == kind
+        ]
+        assert windows == [pytest.approx(duration)]
+    else:
+        assert survival["action_downtime"] == pytest.approx(duration)
+
+
 def test_morgana_q_root_uses_the_sourced_rank_duration():
     combat = _calculate(
         {
@@ -711,7 +727,7 @@ def test_morgana_q_root_uses_the_sourced_rank_duration():
     q_event = _events(combat, attacker="main", target="enemy:Aatrox", source="Q")[0]
     assert q_event["cc_kind"] == "root"
     assert q_event["cc_duration"] == pytest.approx(3.0)
-    assert survival_of(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(3.0)
+    _assert_control_window(survival_of(combat, "enemy:Aatrox"), "root", 3.0)
 
 
 def test_morgana_r_stun_is_attached_to_the_tether_break_hit():
@@ -836,9 +852,7 @@ def test_structured_control_atoms_create_action_downtime(
         str(unit).strip().lower() in {"seconds", "s"}
         for unit in controls[0]["control_source_atoms"][0]["units"]
     )
-    assert survival_of(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(
-        duration
-    )
+    _assert_control_window(survival_of(combat, "enemy:Aatrox"), kind, duration)
 
 
 @pytest.mark.parametrize(
@@ -917,7 +931,7 @@ def test_delayed_control_atoms_keep_their_authored_hit_time():
     )
     assert root["time"] == pytest.approx(2.0)
     assert root["cc_duration"] == pytest.approx(2.0)
-    assert survival_of(karma, "enemy:Aatrox")["action_downtime"] == pytest.approx(2.0)
+    _assert_control_window(survival_of(karma, "enemy:Aatrox"), "root", 2.0)
 
 
 def test_evelynn_allure_requires_an_explicit_matured_mark_trigger_for_charm():
@@ -970,7 +984,7 @@ def test_soraka_e_root_is_a_delayed_control_only_event():
     assert root["damage"] == pytest.approx(0.0)
     assert root["time"] == pytest.approx(1.5)
     assert root["cc_duration"] == pytest.approx(2.0)
-    assert survival_of(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(2.0)
+    _assert_control_window(survival_of(combat, "enemy:Aatrox"), "root", 2.0)
 
 
 @pytest.mark.parametrize(
@@ -1150,6 +1164,4 @@ def test_stateful_control_atoms_create_timed_downtime(
     assert control["cc_duration"] == pytest.approx(duration)
     if champion == "Nocturne":
         assert control["time"] == pytest.approx(2.0)
-    assert survival_of(combat, "enemy:Aatrox")["action_downtime"] == pytest.approx(
-        duration
-    )
+    _assert_control_window(survival_of(combat, "enemy:Aatrox"), kind, duration)
