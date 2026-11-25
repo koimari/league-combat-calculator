@@ -408,6 +408,14 @@ class TransitionContext:
     cast_delays: dict[tuple[int, tuple[float, float]], float] = field(
         default_factory=dict, repr=False
     )
+    # Every attacker's cast times as planned, so a hold's shift is read off
+    # the first cast it blocks whatever order the packets land in.
+    planned_cast_times: dict[int, tuple[float, ...]] = field(
+        default_factory=dict, repr=False
+    )
+    # Packets moved by a hold and not yet walked, by identity, so a cleanse
+    # that ends the hold early can bring them back to when the caster is free.
+    pending_delays: dict[int, "PendingDelay"] = field(default_factory=dict, repr=False)
     # Derived per-walk speed fields.  The ledger capability
     # flags let the kernel skip building kwargs a no-op adapter would
     # drop, and ``_defense_profiles`` lazily caches each subject's
@@ -3789,49 +3797,107 @@ def _held_until(state: Mapping[str, Any], at: float) -> float | None:
     return None if span is None else span[1]
 
 
+@dataclass(frozen=True, slots=True)
+class PendingDelay:
+    """One packet a hold moved: where it came from and the hold that moved it."""
+
+    original: SurvivalAction
+    first_blocked: float
+    hold_end: float
+
+
+def _first_blocked(
+    ctx: TransitionContext, attacker: int, span: tuple[float, float]
+) -> float:
+    """The earliest planned cast of *attacker* that the hold *span* blocks."""
+    start, end = span
+    return min(
+        cast_time
+        for cast_time in ctx.planned_cast_times.get(attacker, ())
+        if start < cast_time < end
+    )
+
+
 def _cast_delay(
     ctx: TransitionContext, action: SurvivalAction, caster: Mapping[str, Any]
-) -> float:
+) -> tuple[float, float, float]:
     """How long the cast *action* belongs to waits for its caster to be free.
 
     The rotation resumes where the hold cut it: every cast one hold blocks
     moves by the same shift, the hold's end less the first cast it blocked,
     so the casts keep their spacing instead of landing at one instant.
+    Returns the shift with the first blocked cast and the hold's end.
     """
     cast_time = float(action.cast_time)
     span = _hold(caster, cast_time, began_before=True)
     if span is None:
-        return 0.0
+        return 0.0, cast_time, cast_time
     key = (action.attacker, span)
     if key not in ctx.cast_delays:
-        ctx.cast_delays[key] = span[1] - cast_time
-    return ctx.cast_delays[key]
+        ctx.cast_delays[key] = span[1] - _first_blocked(ctx, action.attacker, span)
+    shift = ctx.cast_delays[key]
+    return shift, span[1] - shift, span[1]
 
 
 def _delay_packet(
-    ctx: TransitionContext,
     actions: list[SurvivalAction],
     action: SurvivalAction,
     after: int,
     delay: float,
-) -> None:
+) -> SurvivalAction:
     """Re-insert *action* *delay* seconds later, in walk order, as the same slot."""
     time = float(action.time) + delay
+    sort_key = (time, *action.sort_key[1:])
     event = action.event
     if event is not None:
         event["time"] = time
         event["_delayed_by_control"] = round(delay, 6)
+        if "_sk" in event:
+            # The receipt orders published events by this key, so it moves
+            # with the time it carries.
+            event["_sk"] = sort_key
     moved = action._replace(
         time=time,
         cast_time=float(action.cast_time) + delay,
         # Only the time moves: the rest of the key is the packet's own
         # tie-break, which a score-path packet carries without an event dict.
-        sort_key=(time, *action.sort_key[1:]),
+        sort_key=sort_key,
     )
     insertion = after
     while insertion < len(actions) and actions[insertion].sort_key <= moved.sort_key:
         insertion += 1
     actions.insert(insertion, moved)
+    return moved
+
+
+def _rebase_cut_holds(
+    ctx: TransitionContext, actions: list[SurvivalAction], after: int, now: float
+) -> None:
+    """Bring forward every moved packet whose hold a cleanse ended early.
+
+    The packet keeps the hold's shift rule against the hold's new end, and
+    that end is *now* or later, so no packet moves into the walk's past.
+    """
+    for key, pending in list(ctx.pending_delays.items()):
+        original = pending.original
+        caster = ctx.states[original.attacker]
+        span = _hold(caster, float(original.cast_time), began_before=True)
+        free = now if span is None else span[1]
+        if free >= pending.hold_end - 1e-9:
+            continue
+        index = next(
+            (i for i in range(after, len(actions)) if id(actions[i]) == key), None
+        )
+        if index is None:
+            continue
+        del actions[index]
+        del ctx.pending_delays[key]
+        moved = _delay_packet(
+            actions, original, after, max(free - pending.first_blocked, 0.0)
+        )
+        ctx.pending_delays[id(moved)] = PendingDelay(
+            original, pending.first_blocked, free
+        )
 
 
 def run_survival_walk(actions: list[SurvivalAction], ctx: TransitionContext) -> None:
@@ -3850,9 +3916,30 @@ def run_survival_walk(actions: list[SurvivalAction], ctx: TransitionContext) -> 
     tracks_index = hasattr(ledger, "current_index")
     action_index = 0
     last_snapshot_time: float | None = None
+    planned: dict[int, set[float]] = {}
+    for planned_action in actions:
+        if planned_action.cast_time is not None:
+            planned.setdefault(planned_action.attacker, set()).add(
+                float(planned_action.cast_time)
+            )
+    ctx.planned_cast_times = {
+        attacker: tuple(sorted(times)) for attacker, times in planned.items()
+    }
+    # A cleanse can end a hold early; the packets it moved come back once
+    # the cleansing action has been walked.
+    cleansed_at: float | None = None
     while action_index < len(actions):
+        if cleansed_at is not None and ctx.pending_delays:
+            _rebase_cut_holds(ctx, actions, action_index, cleansed_at)
         action = actions[action_index]
         action_index += 1
+        cleansed_at = (
+            float(action.time)
+            if action.cleanse
+            or action.cleanse_item
+            or action.kind is ActionKind.UTILITY
+            else None
+        )
         if tracks_index:
             ledger.current_index = action_index - 1
         event_time = action.time
@@ -3907,9 +3994,24 @@ def run_survival_walk(actions: list[SurvivalAction], ctx: TransitionContext) -> 
             shield_pools.expire_threshold_health(pools, event_time)
 
         kind = action.kind
-        made_while_free = False
+        pending = ctx.pending_delays.pop(id(action), None)
+        made_while_free = pending is not None
+        if pending is not None:
+            # A packet a hold already moved meets that hold again: if a later
+            # control extended it, the packet moves by the extension alone.
+            span = _hold(
+                states[action.attacker], float(action.cast_time), began_before=True
+            )
+            if span is not None and span[1] > pending.hold_end + 1e-9:
+                moved = _delay_packet(
+                    actions, action, action_index, span[1] - pending.hold_end
+                )
+                ctx.pending_delays[id(moved)] = PendingDelay(
+                    pending.original, pending.first_blocked, span[1]
+                )
+                continue
         if (
-            phase >= TransitionRank.DAMAGE
+            not made_while_free
             and 0 <= action.attacker < len(states)
             and not action.reactive
             and not action.cast_while_disabled
@@ -3919,9 +4021,12 @@ def run_survival_walk(actions: list[SurvivalAction], ctx: TransitionContext) -> 
             # while the caster could act lands whatever holds the caster
             # later, and one made while the caster was stunned or charmed
             # waits until the caster is free, every packet by the same delay.
-            delay = _cast_delay(ctx, action, states[action.attacker])
+            # A control-only cast is staged before the damage phase and is
+            # judged here all the same.
+            delay, first, hold_end = _cast_delay(ctx, action, states[action.attacker])
             if delay > 0.0:
-                _delay_packet(ctx, actions, action, action_index, delay)
+                moved = _delay_packet(actions, action, action_index, delay)
+                ctx.pending_delays[id(moved)] = PendingDelay(action, first, hold_end)
                 continue
             made_while_free = True
         # Revive is a state transition rather than healing: it is allowed to
