@@ -147589,6 +147589,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].survival.action_downtime_intervals[1].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.action_downtime_intervals[1].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].survival.aftershock.bonus_armor": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -147916,7 +147924,7 @@
             "area_damage": true,
             "attacker": "main",
             "cc_duration": 1.5,
-            "cc_kind": "root",
+            "cc_kind": "stun",
             "control_source_atoms": [
               {
                 "atom_id": "ability.disable _duration",
@@ -147944,7 +147952,7 @@
             ],
             "crowd_control": {
               "duration": 1.5,
-              "kind": "root",
+              "kind": "stun",
               "until": 2.03
             },
             "damage": 113.8,
@@ -148646,7 +148654,7 @@
             },
             "stats_state": "pre_combat",
             "survival": {
-              "action_downtime": 1.75,
+              "action_downtime": 2.03,
               "action_downtime_intervals": [
                 {
                   "end": 1.75,
@@ -148654,6 +148662,13 @@
                   "recipient": "enemy:Aatrox",
                   "source": "R",
                   "start": 0.0
+                },
+                {
+                  "end": 2.03,
+                  "kind": "stun",
+                  "recipient": "enemy:Aatrox",
+                  "source": "E",
+                  "start": 0.53
                 }
               ],
               "aftershock": {
@@ -148674,7 +148689,7 @@
                 },
                 {
                   "end": 2.03,
-                  "kind": "root",
+                  "kind": "stun",
                   "recipient": "enemy:Aatrox",
                   "source": "E",
                   "start": 0.53
@@ -149228,7 +149243,7 @@
             },
             {
               "cc_duration": 1.5,
-              "cc_kind": "root",
+              "cc_kind": "stun",
               "control_source_atoms": [
                 {
                   "atom_id": "ability.disable _duration",
@@ -209985,15 +210000,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 28,
-      "leaves": 134111,
-      "numeric_leaves": 43489,
+      "leaves": 134120,
+      "numeric_leaves": 43491,
       "sections": "coupled_scenarios"
     },
-    "git_head": "69411b399fb5efa450a3bd588d1a1a2096518d4d",
+    "git_head": "5469dbca03e687e4502560eeec0c3e7b674151ef",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 28,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "f88dd0659f6bb7a9ce7a10fe799d960796ce1e7e"
+    "src_tree_sha": "fbd4db54a230a9d99efff95e734b0532de0f0d9f"
   }
 }
