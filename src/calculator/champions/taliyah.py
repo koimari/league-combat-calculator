@@ -22,7 +22,12 @@ import math
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..binary_roots import data_value, spell_object, uniform_spell_field
+from ..binary_roots import (
+    data_value,
+    missile_movement_field,
+    spell_object,
+    uniform_spell_field,
+)
 from ..stat_formulas import effective_cooldown
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
@@ -44,10 +49,10 @@ _TALIYAH_E_SPELL = spell_object("Taliyah", "TaliyahE")
 _E_ROW_INTERVAL = data_value(_TALIYAH_E_SPELL, "DelayBetweenRows")
 _E_DETONATION_MULTIPLIERS = (1.0, 0.75, 0.5, 0.25)
 _Q_NORMAL_LAUNCH_OFFSETS = (0.25, 0.75, 1.25, 1.5, 1.75)
-_Q_NORMAL_INITIAL_SPEED = uniform_spell_field(
-    spell_object("Taliyah", "TaliyahQMis"), "missileSpeed"
-)
-_Q_NORMAL_DECELERATION = 5000.0
+_TALIYAH_Q_MISSILE = spell_object("Taliyah", "TaliyahQMis")
+_Q_NORMAL_INITIAL_SPEED = uniform_spell_field(_TALIYAH_Q_MISSILE, "missileSpeed")
+_Q_NORMAL_DECELERATION = -missile_movement_field(_TALIYAH_Q_MISSILE, "mAcceleration")
+_Q_NORMAL_MIN_SPEED = missile_movement_field(_TALIYAH_Q_MISSILE, "mMinSpeed")
 _Q_WORKED_SPEED = 2000.0  # cached Q speed field: "3600 - 1800 • 2000"
 _Q_ORIGIN_OFFSET = 50.0
 _TALIYAH_Q_SPELL = spell_object("Taliyah", "TaliyahQ")
@@ -63,13 +68,20 @@ def _cast_start(ctx: SlotCtx, *before: str) -> float:
 
 
 def _normal_projectile_time(distance: float) -> float:
-    """Travel time for a shard's sourced decelerating projectile."""
+    """Travel time for a shard's sourced decelerating projectile.
+
+    It slows until it reaches its minimum speed, then holds that speed.
+    """
     travel = max(0.0, distance - _Q_ORIGIN_OFFSET)
-    discriminant = max(
-        0.0,
-        _Q_NORMAL_INITIAL_SPEED**2 - 2.0 * _Q_NORMAL_DECELERATION * travel,
+    speed, floor, slowing = (
+        _Q_NORMAL_INITIAL_SPEED,
+        _Q_NORMAL_MIN_SPEED,
+        _Q_NORMAL_DECELERATION,
     )
-    return (_Q_NORMAL_INITIAL_SPEED - math.sqrt(discriminant)) / _Q_NORMAL_DECELERATION
+    slowing_distance = (speed**2 - floor**2) / (2.0 * slowing)
+    if travel > slowing_distance:
+        return (speed - floor) / slowing + (travel - slowing_distance) / floor
+    return (speed - math.sqrt(speed**2 - 2.0 * slowing * travel)) / slowing
 
 
 def _worked_travel_time(distance: float) -> float:

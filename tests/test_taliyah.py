@@ -401,3 +401,21 @@ class TestReviewedCrowdControl:
         )
         assert {part.cc_kind for part in fresh["Q"]["parts"]} == {"none"}
         assert [part.cc_kind for part in fresh["E"]["parts"]] == ["slow"]
+
+
+def test_the_shard_decelerates_to_its_binary_floor_then_holds_it():
+    """TaliyahQMis's movementComponent: 3600 slowing by 5000 to 1500."""
+    from src.calculator.champions import taliyah
+
+    speed, slowing, floor = 3600.0, 5000.0, 1500.0
+    assert taliyah._Q_NORMAL_INITIAL_SPEED == speed
+    assert taliyah._Q_NORMAL_DECELERATION == slowing
+    assert taliyah._Q_NORMAL_MIN_SPEED == floor
+    offset = taliyah._Q_ORIGIN_OFFSET
+    slowing_distance = (speed**2 - floor**2) / (2.0 * slowing)
+    at_floor = (speed - floor) / slowing
+    reach = offset + slowing_distance
+    assert taliyah._normal_projectile_time(reach) == pytest.approx(at_floor)
+    assert taliyah._normal_projectile_time(reach + floor) == pytest.approx(
+        at_floor + 1.0
+    )
