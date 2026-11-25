@@ -126,7 +126,7 @@ def optimize_purchase(
         item = get_item_by_name(name)
         if not _legal_locked_shop_item(item):
             raise ValueError(f"{name} is not an ordinary non-boots shop item")
-        if "LEGENDARY" in item.get("rank", []) and name not in allowed_legendary_names:
+        if "LEGENDARY" in item["rank"] and name not in allowed_legendary_names:
             raise ValueError(f"{name} is not available in the selected role shop")
         require_optimizer_item_coverage(item)
         item_gold(item)
@@ -169,7 +169,7 @@ def optimize_purchase(
         ]
 
     def completed_first(item: dict[str, Any]) -> int:
-        ranks = set(item.get("rank", []))
+        ranks = set(item["rank"])
         return 0 if "LEGENDARY" in ranks else (1 if "EPIC" in ranks else 2)
 
     # Completed items before their components: the shop model always
