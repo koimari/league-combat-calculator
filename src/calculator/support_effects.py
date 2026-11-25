@@ -61,7 +61,7 @@ def derive_ally_effects(
     ``self``, one selected teammate, or all selected teammates.  A missing
     scope is never silently treated as an area effect.
     """
-    champion_name = str(champion_data.get("name", ""))
+    champion_name = str(champion_data["name"])
     if not _has_support_attributes(champion_data) and not any(
         (champion_name, slot) in _SUPPORT_STATE_SLOTS | _SUPPORT_BUFF_SLOTS
         for slot in ("Q", "W", "E", "R")

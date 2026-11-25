@@ -52,7 +52,6 @@ FIGHT_STEP = FrontierEntry(
 #: each one.  Listed one by one, for the reason the fight steps are: the set
 #: may not grow by accident.
 SPLIT_LEAVES = {
-    "atom_spelling": "atomizer_domains",
     "capability_fields": "capabilities",
     "ability_ranks": "scenario",
     "champion_opening_defenses": "defensive_effects",

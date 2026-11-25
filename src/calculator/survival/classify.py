@@ -171,7 +171,7 @@ def support_transition_rank(event: Mapping[str, Any]) -> TransitionRank:
     declared = event.get(SUPPORT_RANK_KEY)
     if declared is not None:
         return TransitionRank(declared)
-    kind = str(event.get("kind", ""))
+    kind = str(event["kind"])
     if kind in _STATE_GRANT_KINDS:
         return TransitionRank.STATE_GRANT
     if kind in BARRIER_GRANT_KINDS:
