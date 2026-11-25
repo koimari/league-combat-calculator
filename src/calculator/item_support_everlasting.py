@@ -22,6 +22,56 @@ from .survival.actions import event_timestamp
 from .survival.phases import TransitionRank
 
 
+def _authorized_mana_threshold(mana_gate: Mapping[str, Any]) -> float:
+    """The mana gate's threshold ratio, once its authority is one Everlasting trusts.
+
+    An unsupported status, an unusable ratio or a comparison other than the
+    script's own is a configuration error, raised rather than denied.
+    """
+    if mana_gate["status"] not in AUTHORIZED_MANA_GATE_STATUSES:
+        raise ValueError(
+            "Fimbulwinter Everlasting mana gate has an unsupported "
+            f"authority status: {mana_gate['status']!r}"
+        )
+    threshold_ratio, threshold_reason = _mana_input(
+        mana_gate["threshold_ratio"],
+        missing_reason="missing_mana_threshold_ratio",
+        invalid_reason="invalid_mana_threshold_ratio",
+    )
+    if threshold_reason is not None or threshold_ratio is None:
+        raise ValueError(
+            "script-authorized Fimbulwinter mana gate requires a valid "
+            "threshold_ratio"
+        )
+    if mana_gate["comparison"] != "current_mana > maximum_mana * ratio":
+        raise ValueError(
+            "script-authorized Fimbulwinter mana gate requires an exact "
+            "comparison contract"
+        )
+    return threshold_ratio
+
+
+def _range_multiplier(
+    attacker: Any, all_actors: Any, range_authority: Mapping[str, Any]
+) -> tuple[int, str | None, float]:
+    """``(nearby enemies, spatial refusal or None, shield multiplier)``.
+
+    An unreadable spatial input counts no enemies and keeps the base
+    multiplier, which the caller receipts as a named denial.
+    """
+    nearby_count, spatial_reason = enemies_within_range(
+        attacker, all_actors, range_authority["range_units"]
+    )
+    if spatial_reason is not None:
+        return 0, spatial_reason, 1.0
+    multiplier = (
+        range_authority["multiplier"]
+        if nearby_count >= range_authority["minimum_enemy_count"]
+        else 1.0
+    )
+    return nearby_count, None, multiplier
+
+
 def _everlasting_packets(ctx: SupportCtx) -> list[dict[str, Any]]:
     """Fimbulwinter's self shield, and a named receipt for every denial.
 
@@ -174,28 +224,9 @@ def _everlasting_packets(ctx: SupportCtx) -> list[dict[str, Any]]:
                 )
             )
             continue
-        if mana_gate["status"] not in AUTHORIZED_MANA_GATE_STATUSES:
-            raise ValueError(
-                "Fimbulwinter Everlasting mana gate has an unsupported "
-                f"authority status: {mana_gate['status']!r}"
-            )
+        threshold_ratio = _authorized_mana_threshold(mana_gate)
         if current_mana is None or maximum_mana is None:
             raise RuntimeError("validated Fimbulwinter mana state is unavailable")
-        threshold_ratio, threshold_reason = _mana_input(
-            mana_gate["threshold_ratio"],
-            missing_reason="missing_mana_threshold_ratio",
-            invalid_reason="invalid_mana_threshold_ratio",
-        )
-        if threshold_reason is not None or threshold_ratio is None:
-            raise ValueError(
-                "script-authorized Fimbulwinter mana gate requires a valid "
-                "threshold_ratio"
-            )
-        if mana_gate["comparison"] != "current_mana > maximum_mana * ratio":
-            raise ValueError(
-                "script-authorized Fimbulwinter mana gate requires an exact "
-                "comparison contract"
-            )
         if maximum_mana == 0.0 or current_mana <= maximum_mana * threshold_ratio:
             packets.append(
                 _denial(
@@ -217,13 +248,10 @@ def _everlasting_packets(ctx: SupportCtx) -> list[dict[str, Any]]:
         # Evaluate holder-centered range: count enemies whose
         # position is within the sourced 1200 units.  Spatial input
         # flows from the actor stats (stats.position tuple).
-        nearby_count: int
-        nearby_count, spatial_reason = enemies_within_range(
-            attacker, all_actors, range_authority["range_units"]
+        nearby_count, spatial_reason, multiplier = _range_multiplier(
+            attacker, all_actors, range_authority
         )
         if spatial_reason is not None:
-            nearby_count = 0
-            multiplier = 1.0
             packets.append(
                 _denial(
                     event,
@@ -234,12 +262,6 @@ def _everlasting_packets(ctx: SupportCtx) -> list[dict[str, Any]]:
                     requested_multi_target_multiplier=range_authority["multiplier"],
                     applied_multi_target_multiplier=multiplier,
                 )
-            )
-        else:
-            multiplier = (
-                range_authority["multiplier"]
-                if nearby_count >= range_authority["minimum_enemy_count"]
-                else 1.0
             )
         amount = (
             everlasting.value("everlasting_base_shield")
