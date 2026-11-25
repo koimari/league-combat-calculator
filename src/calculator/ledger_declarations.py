@@ -32,6 +32,7 @@ class AdequacyCondition(Enum):
     EXECUTE_THRESHOLD_STAMP = "execute_threshold_stamp"
     ORDERED_INTERACTION_METADATA = "ordered_interaction_metadata"
     SELF_SHIELD_PROC = "self_shield_proc"
+    STACK_APPLICATION_TIME = "stack_application_time"
     PAIR_OUTCOME_STREAM = "pair_outcome_stream"
 
 
@@ -97,6 +98,9 @@ _INTERACTION_ROW_READER = "fight.ledger.event_ledger._ordered_damage_events"
 
 
 _TAKEDOWN_READER = "trigger_stream.authored_triggers"
+
+
+_WALK_READER = "survival.transitions.run_survival_walk"
 
 
 _HEALING_READER = "healing.derive_self_healing"
@@ -230,6 +234,16 @@ _DECLARATIONS: tuple[AdequacyDeclaration, ...] = (
             "a cooldown proc attaches a self shield to the damage event it "
             "rides, and the positional row has no field for it, so the "
             "shield would be silently dropped"
+        ),
+    ),
+    AdequacyDeclaration(
+        condition=AdequacyCondition.STACK_APPLICATION_TIME,
+        reader=_WALK_READER,
+        requires_fields=frozenset(),
+        reason=(
+            "a damage-over-time tick carries when its stack was applied, "
+            "which the walk judges against its caster's control the way it "
+            "judges a cast, and the positional row has no field for it"
         ),
     ),
     AdequacyDeclaration(

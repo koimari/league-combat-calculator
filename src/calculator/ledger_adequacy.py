@@ -18,6 +18,7 @@ from .ledger_declarations import (
     _KEYSTONE_HEAL_READER,
     _LIFESTEAL_READER,
     _OMNIVAMP_READER,
+    _WALK_READER,
     AdequacyCondition,
 )
 from .ledger_inputs import HeldItemFacts, LedgerInputs, ThresholdHealFacts
@@ -206,6 +207,16 @@ def _empowered_auto_owners(inputs: LedgerInputs) -> tuple[MechanicOwner, ...]:
         if isinstance(ability, dict)
     )
     return (EngineOwner(_BASIC_ATTACK_READER),) if empowered else ()
+
+
+def _stack_application_owners(inputs: LedgerInputs) -> tuple[MechanicOwner, ...]:
+    """Whether a row authors ticks that carry their stack's application time."""
+    stamped = any(
+        ability.get("timeline_event_model") == "brand_blaze"
+        for ability in inputs.ability_damages.values()
+        if isinstance(ability, dict)
+    )
+    return (EngineOwner(_WALK_READER),) if stamped else ()
 
 
 def _raw_row_stream_owners(inputs: LedgerInputs) -> tuple[MechanicOwner, ...]:

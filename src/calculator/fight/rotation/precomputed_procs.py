@@ -226,6 +226,9 @@ def _add_precomputed_proc_damage(
                             "damage_type": dtype,
                             "damage": dot_damage / ticks,
                             "event_precision": "exact",
+                            # The walk judges a tick by when its stack was
+                            # applied, as it judges a cast by when it was made.
+                            "_applied_at": stack_time,
                         }
                         for tick_index in range(1, ticks + 1)
                     )
@@ -236,6 +239,7 @@ def _add_precomputed_proc_damage(
                             "damage_type": dtype,
                             "damage": detonation_damage,
                             "event_precision": "exact",
+                            "_applied_at": stack_times[-1],
                         }
                     )
                 if authored and math.isclose(

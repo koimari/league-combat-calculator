@@ -1186,6 +1186,10 @@ class WalkCompiler:
                 if ability_instance is None:
                     ability_instance = ability_instance_for_event(row, cast_timeline)
                 cast_time = cast_time_for_event(row, cast_timeline)
+                if cast_time is None:
+                    # A tick no cast owns is judged by when its stack was
+                    # applied, which the row that authored it states.
+                    cast_time = optional_field(row, "_applied_at", float)
             if index < known_ids:
                 event_id = id_strings[index]
             else:

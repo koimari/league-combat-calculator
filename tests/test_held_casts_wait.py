@@ -150,3 +150,13 @@ def test_a_cast_the_timeline_rounded_up_keeps_its_packets_instant():
     assert cast_time_for_event(packet, timeline) == pytest.approx(0.8889)
     later = {"source_key": "R", "time": 1.4, "is_ability": True}
     assert cast_time_for_event(later, timeline) == pytest.approx(0.889)
+
+
+def test_a_burn_applied_before_the_hold_keeps_ticking_through_it():
+    """Brand's Q lands at 0.0 s, before Ahri's charm holds him, so its Ablaze
+    stack ticks from 0.25 s through the charm: a burn on the target is not the
+    caster acting.  The stacks R applies are held with R and tick after it."""
+    events = _versus_ahri("Brand")["combat"]["events"]
+    ticks = [e for e in events if e["attacker"] == "main" and e["source"] == "passive"]
+    assert [tick["time"] for tick in ticks[:4]] == [0.25, 0.5, 0.75, 1.0]
+    assert not any(tick.get("skipped_reason") for tick in ticks)

@@ -54,6 +54,7 @@ from .ledger_adequacy import (
     _saturating_omnivamp_owners,
     _self_heal_rule_owners,
     _self_shield_proc_owners,
+    _stack_application_owners,
     _threshold_heal_owners,
 )
 from .ledger_declarations import (
@@ -82,6 +83,7 @@ _LEDGER_PROBES: Mapping[
         AdequacyCondition.EXECUTE_THRESHOLD_STAMP: _execute_threshold_owners,
         AdequacyCondition.ORDERED_INTERACTION_METADATA: _ordered_interaction_owners,
         AdequacyCondition.SELF_SHIELD_PROC: _self_shield_proc_owners,
+        AdequacyCondition.STACK_APPLICATION_TIME: _stack_application_owners,
     }
 )
 
