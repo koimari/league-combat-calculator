@@ -5705,6 +5705,13 @@ class StatBonuses:
     permanent_bonus_ap: float
     permanent_ap_multiplier: float
     permanent_bonus_ad: float
+    # The item-passive AP and bonus AD the adaptive-force choice does not
+    # compare: Rapids, Void Infusion, Archangel's and Seraph's Awe (AP) and
+    # Muramana's Awe (AD), per the wiki's Adaptive_force exceptions.  They
+    # stay in ``bonus_ap`` / ``bonus_ad``; ``stats.py`` takes them back out
+    # of the comparison alone.
+    adaptive_excluded_ap: float
+    adaptive_excluded_ad: float
 
 
 def resolve_stat_effects(
@@ -5740,12 +5747,16 @@ def resolve_stat_effects(
     effective_bonus_health = (bonus_health + mana_bonus_health) * health_multiplier
     dawncore_ap = dawncore_bonus_ap(items, bonus_mana_regen_percent)
     permanent_bonus_ap = mana_bonus_ap + dawncore_ap + input_bonus_ap
-    if "Riftmaker" in _item_names(items):
-        permanent_bonus_ap += riftmaker_bonus_ap(
-            bonus_health=effective_bonus_health, item_name="Riftmaker"
-        )
+    void_infusion_ap = (
+        riftmaker_bonus_ap(bonus_health=effective_bonus_health, item_name="Riftmaker")
+        if "Riftmaker" in _item_names(items)
+        else 0.0
+    )
+    permanent_bonus_ap += void_infusion_ap
+    rapids_ap = flowing_water_bonus_ap(items)
+    awe_ad = muramana_bonus_ad(items, max_mana)
     permanent_bonus_ad = (
-        muramana_bonus_ad(items, max_mana)
+        awe_ad
         + bloodmail_bonus_ad(items, effective_bonus_health)
         + steraks_bonus_ad(items, base_attack_damage)
     )
@@ -5786,7 +5797,7 @@ def resolve_stat_effects(
         else 0.0
     )
     return StatBonuses(
-        bonus_ap=permanent_bonus_ap + flowing_water_bonus_ap(items),
+        bonus_ap=permanent_bonus_ap + rapids_ap,
         bonus_health=mana_bonus_health,
         ap_multiplier=ap_multiplier(items),
         bonus_ad=permanent_bonus_ad + hubris_ad,
@@ -5805,4 +5816,6 @@ def resolve_stat_effects(
         permanent_bonus_ap=permanent_bonus_ap,
         permanent_ap_multiplier=permanent_ap_multiplier(items),
         permanent_bonus_ad=permanent_bonus_ad,
+        adaptive_excluded_ap=rapids_ap + void_infusion_ap + mana_bonus_ap,
+        adaptive_excluded_ad=awe_ad,
     )

@@ -231,18 +231,22 @@ def calculate_total_stats(
     # counts (Rabadon's Magical Opus among them) and the role quest. The
     # grants themselves stay out of the comparison, as in game, and out of
     # ``total_item_stats``, because adaptive force is not an item stat
-    # (Kai'Sa's evolutions exclude it). The basis also counts passives the
-    # page excludes, which docs/surface-area-backlog.md row SA4 holds.
+    # (Kai'Sa's evolutions exclude it). The passives the page excludes
+    # (``adaptive_excluded_*``) leave the comparison at their own raw value
+    # only: Magical Opus "is calculated using" them and still counts, so
+    # Rabadon's amplification of Rapids stays in the basis.
     adaptive_ad, adaptive_ap = adaptive_force_split(
         bonuses.adaptive_force + runes.adaptive_force,
         (total_item_stats["attack_damage"] + bonuses.bonus_ad)
-        * quest_bonus_ad_multiplier,
+        * quest_bonus_ad_multiplier
+        - bonuses.adaptive_excluded_ad,
         (
             base_stats["ability_power"]
             + total_item_stats["ability_power"]
             + bonuses.bonus_ap
         )
-        * (bonuses.ap_multiplier + quest_ap_multiplier),
+        * (bonuses.ap_multiplier + quest_ap_multiplier)
+        - bonuses.adaptive_excluded_ap,
         champion_data["adaptiveType"],
     )
 
