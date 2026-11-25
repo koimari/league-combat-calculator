@@ -48,13 +48,13 @@ from .timed_stacks import TimedStackState
 
 
 def _load_rune_cache() -> dict[str, Any]:
-    """Read ``data/runes.json``; an absent cache means no runes.
+    """Read ``data/runes.json``; only a missing file means no runes.
 
     Copied, because ``refresh_rune_effects`` clears these dicts in place.
     """
     try:
         return dict(fetch_rune_data())
-    except (FileNotFoundError, ValueError):
+    except FileNotFoundError:
         return {}
 
 
