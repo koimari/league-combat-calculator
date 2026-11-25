@@ -5,7 +5,7 @@ import pytest
 from src.calculator import stats as stats_module
 from src.calculator.champion_growth import get_champion_base_stats
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.item_effects import swiftmarch_adaptive_force
+from src.calculator.item_effects import resolve_stat_effects, swiftmarch_adaptive_force
 from src.calculator.item_stat_block import get_item_stats, item_mana_reaches_pool
 from src.calculator.rune_effects import (
     adaptive_force_attack_damage_ratio,
@@ -120,6 +120,65 @@ class TestSwiftmarchIsAdaptiveForce:
             get_champion(champion), 18, [get_item_by_name("Swiftmarch")]
         )
         assert stats[stat] == round(ratio * self._force(stats))
+
+
+class TestAdaptiveForceBasis:
+    """The passives Adaptive_force excludes do not vote in the stat choice.
+
+    The page lists Staff of Flowing Water's Rapids among item passives that
+    "do not contribute"; their AP stays on the champion but leaves the
+    comparison, so a build whose AP lead is Rapids alone takes bonus AD.
+    """
+
+    def _build(self, *names: str) -> dict:
+        return calculate_total_stats(
+            get_champion("Caitlyn"),
+            18,
+            [get_item_by_name(name) for name in ("Swiftmarch", *names)],
+        )
+
+    def test_rapids_does_not_win_the_choice_for_ability_power(self):
+        stats = self._build("Staff of Flowing Water", "B. F. Sword")
+        bonuses = resolve_stat_effects(
+            [get_item_by_name("Staff of Flowing Water")],
+            bonus_mana=0.0,
+            max_mana=0.0,
+            bonus_health=0.0,
+            base_attack_damage=0.0,
+            bonus_mana_regen_percent=0.0,
+            is_melee=False,
+            level=18,
+        )
+        rapids = bonuses.adaptive_excluded_ap
+        assert rapids > 0
+        sword_ad = get_item_stats(get_item_by_name("B. F. Sword"))["attack_damage"]
+        staff_ap = get_item_stats(get_item_by_name("Staff of Flowing Water"))[
+            "ability_power"
+        ]
+        # Bonus AD beats the counted AP (35) but not AP with Rapids (75).
+        assert staff_ap < sword_ad < staff_ap + rapids
+        force = swiftmarch_adaptive_force(
+            [get_item_by_name("Swiftmarch")], total_move_speed=stats["move_speed"]
+        )
+        assert stats["bonus_attack_damage"] == round(
+            sword_ad + adaptive_force_attack_damage_ratio() * force
+        )
+        assert stats["ability_power"] == round(staff_ap + rapids)
+
+    def test_the_excluded_passives_are_the_pages_list(self):
+        names = ("Staff of Flowing Water", "Riftmaker", "Archangel's Staff")
+        bonuses = resolve_stat_effects(
+            [get_item_by_name(name) for name in names],
+            bonus_mana=500.0,
+            max_mana=1500.0,
+            bonus_health=600.0,
+            base_attack_damage=60.0,
+            bonus_mana_regen_percent=0.0,
+            is_melee=False,
+            level=18,
+        )
+        assert bonuses.adaptive_excluded_ap == pytest.approx(bonuses.bonus_ap)
+        assert bonuses.adaptive_excluded_ad == 0.0
 
 
 class TestResourcePoolKind:

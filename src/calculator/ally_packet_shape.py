@@ -109,7 +109,7 @@ def _shred_ramp(
         sorted(frozenset(names)),
         resistance,
         facts=FightFacts(
-            level=int(attacker.stats.get("level", 1) or 1),
+            level=int(attacker.level),
             fight_duration_seconds=0.0,
             target_bonus_health=0.0,
             holder_is_melee=bool(attacker.stats.get("is_melee", False)),
