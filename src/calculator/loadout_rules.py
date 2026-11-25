@@ -126,7 +126,7 @@ def role_scoped_shop_items(
     candidates = list(items)
 
     def tags_of(item: Mapping[str, Any]) -> set[str]:
-        return {str(tag).upper() for tag in item.get("shop", {}).get("tags", [])}
+        return {str(tag).upper() for tag in item["shop"]["tags"]}
 
     if parsed_role == "support":
         return [item for item in candidates if "SUPPORT" in tags_of(item)]
@@ -177,7 +177,7 @@ def validate_resolved_loadout(
     parsed_role = validate_role(role)
     ordinary = list(ordinary_items)
     equipped = ([boots] if boots else []) + ordinary
-    names = [str(item.get("name", "")) for item in equipped]
+    names = [str(item["name"]) for item in equipped]
     if any(not name for name in names):
         raise ValueError("Every selected item must have a name")
     if len(set(names)) != len(names):
@@ -185,17 +185,17 @@ def validate_resolved_loadout(
     if len(equipped) > inventory_capacity(role, role_quest_complete):
         raise ValueError("Selected items exceed the available inventory slots")
 
-    boot_items = [item for item in equipped if "BOOTS" in item.get("rank", [])]
+    boot_items = [item for item in equipped if "BOOTS" in item["rank"]]
     if len(boot_items) > 1:
         raise ValueError("A build may contain at most one pair of boots")
     if boots is not None and boots not in boot_items:
-        raise ValueError(f"{boots.get('name', 'Selected boots')} is not a boots item")
+        raise ValueError(f"{boots['name']} is not a boots item")
     for item in ordinary:
-        if "BOOTS" in item.get("rank", []):
+        if "BOOTS" in item["rank"]:
             raise ValueError("Boots must use the dedicated boots slot")
     if boots is not None:
         expected_tier = required_boots_tier(role, role_quest_complete)
-        actual_tier = int(boots.get("tier", 0))
+        actual_tier = int(boots["tier"])
         if actual_tier != expected_tier:
             raise ValueError(
                 f"{boots['name']} is tier {actual_tier}; this role state "

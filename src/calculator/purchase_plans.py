@@ -100,7 +100,7 @@ class PurchaseSearch:
         boots — is monotone in added buys, so callers may prune a whole
         subtree when a prefix fails.
         """
-        non_boots = [item for item in buys if "BOOTS" not in item.get("rank", [])]
+        non_boots = [item for item in buys if "BOOTS" not in item["rank"]]
         if len(non_boots) > self.max_buys:
             return None
         try:
@@ -237,9 +237,9 @@ def enumerate_affordable_shapes(
     credit_start = sum(
         item_total(item)
         for item in search.owned
-        if component_ranks.intersection(item.get("rank", []))
+        if component_ranks.intersection(item["rank"])
     )
-    if sell is not None and component_ranks.intersection(sell.get("rank", [])):
+    if sell is not None and component_ranks.intersection(sell["rank"]):
         # Selling removes exactly one copy from the creditable inventory.
         credit_start -= item_total(sell)
     base_plan = search.price(sell, [])
@@ -273,9 +273,7 @@ def enumerate_affordable_shapes(
             # A consumed component would shrink the pool; keeping it is a
             # valid upper bound and stays conservative.
             grown_pool = credit_pool + (
-                totals[index]
-                if component_ranks.intersection(candidate.get("rank", []))
-                else 0
+                totals[index] if component_ranks.intersection(candidate["rank"]) else 0
             )
             walk(
                 index if is_stackable(candidate) else index + 1,
@@ -415,7 +413,7 @@ def score_exhaustive_purchase_plans(
                 continue
             inventory[int(item["id"])] = inventory.get(int(item["id"]), 0) + 1
         for buy in buys:
-            if "BOOTS" in {str(r).upper() for r in buy.get("rank", []) or []}:
+            if "BOOTS" in {str(r).upper() for r in buy["rank"]}:
                 continue
             inventory[int(buy["id"])] = inventory.get(int(buy["id"]), 0) + 1
         for combine_id, _demand, _fee in combine_candidates(inventory, by_id):

@@ -87,8 +87,7 @@ def _option_signature(
         return None
 
     declared = {
-        str(opt.get("key", ""))
-        for opt in get_champion_options_meta(champion_name).get("options", [])
+        str(opt["key"]) for opt in get_champion_options_meta(champion_name)["options"]
     }
     return frozenset(
         (key, _freeze_option_value(champion_options[key]))
@@ -226,13 +225,13 @@ def derive_champion_rule(
     rotations = get_champion_option_rotation(champion_name)
     slot_options: dict[str, list[str]] = {}
     option_receipts: list[str] = []
-    for opt in meta.get("options", []):
-        key = str(opt.get("key", ""))
+    for opt in meta["options"]:
+        key = str(opt["key"])
         decl = rotations.get(key)
         if not decl:
             option_receipts.append(f"option {key} (unclassified rotation semantics)")
             continue
-        role = str(decl.get("role", ""))
+        role = str(decl["role"])
         slot = decl.get("slot")
         if role in ("setup", "consume", "execute"):
             if slot:
