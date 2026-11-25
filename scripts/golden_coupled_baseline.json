@@ -146537,6 +146537,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[2].crowd_control.duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[2].crowd_control.until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[2].damage": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -147597,6 +147605,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].survival.action_downtime_intervals[2].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.action_downtime_intervals[2].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].survival.aftershock.bonus_armor": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -147626,6 +147642,14 @@
             "view_tag": "applied"
           },
           "participants[1].survival.crowd_control_intervals[1].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.crowd_control_intervals[2].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.crowd_control_intervals[2].start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -147881,7 +147905,7 @@
             "area_damage": true,
             "attacker": "main",
             "cc_duration": 1.5,
-            "cc_kind": "slow",
+            "cc_kind": "stun",
             "control_source_atoms": [
               {
                 "atom_id": "ability.disable _duration",
@@ -147907,6 +147931,11 @@
                 ]
               }
             ],
+            "crowd_control": {
+              "duration": 1.5,
+              "kind": "stun",
+              "until": 2.0
+            },
             "damage": 113.8,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:1",
@@ -148664,6 +148693,13 @@
                   "start": 0.0
                 },
                 {
+                  "end": 2.0,
+                  "kind": "stun",
+                  "recipient": "enemy:Aatrox",
+                  "source": "E",
+                  "start": 0.5
+                },
+                {
                   "end": 2.03,
                   "kind": "stun",
                   "recipient": "enemy:Aatrox",
@@ -148686,6 +148722,13 @@
                   "recipient": "enemy:Aatrox",
                   "source": "R",
                   "start": 0.0
+                },
+                {
+                  "end": 2.0,
+                  "kind": "stun",
+                  "recipient": "enemy:Aatrox",
+                  "source": "E",
+                  "start": 0.5
                 },
                 {
                   "end": 2.03,
@@ -149207,7 +149250,7 @@
             },
             {
               "cc_duration": 1.5,
-              "cc_kind": "slow",
+              "cc_kind": "stun",
               "control_source_atoms": [
                 {
                   "atom_id": "ability.disable _duration",
@@ -210000,15 +210043,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 28,
-      "leaves": 134120,
-      "numeric_leaves": 43491,
+      "leaves": 134145,
+      "numeric_leaves": 43497,
       "sections": "coupled_scenarios"
     },
-    "git_head": "5469dbca03e687e4502560eeec0c3e7b674151ef",
+    "git_head": "08d01c9139f44e981bce717ac3c7c88342164694",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 28,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "fbd4db54a230a9d99efff95e734b0532de0f0d9f"
+    "src_tree_sha": "618eaee8b5ab671b34296f0bf1531d8110b388ba"
   }
 }

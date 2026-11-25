@@ -249,8 +249,8 @@ CAST_ORDER = ("R", "E", "Q", "W")
 # "gains maximum stacks of Echo when the game starts".
 # Cached E: "Enemies that are already slowed are also rooted for the same
 # duration", and the echo lands 0.033s after the first Beat Drop's slow;
-# "Enemies that are immobilized or grounded are also stunned", so an echo
-# landing inside her own charm stuns instead.
+# "Enemies that are immobilized or grounded are also stunned", so a Beat
+# Drop landing inside her own charm, first cast or echo, stuns instead.
 CAST_ECHO = CastEcho(
     slots=("Q", "W", "E"),
     stacks_to_echo=2,
@@ -284,7 +284,7 @@ ASSUMPTIONS = [
     "The 25 bonus attack range per Note is state.",
     "Echo recasts the basic cast that finds 2 stacks 0.033s later; fights open full.",
     "An echoed E roots: the first cast already slowed its target.",
-    "An echoed E landing inside her own charm stuns instead.",
+    "An E landing inside her own charm stuns instead, first cast or echo.",
     "An echoed W's second shield is not priced.",
     "W (Surround Sound) is a sourced shield with no damage row: 60/80/100/120/140 + "
     "20% AP for 2.5s.",
