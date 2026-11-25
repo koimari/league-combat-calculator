@@ -246,6 +246,11 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   ability's own penetration). `_LiveResistance.met_served_pipeline` re-prices
   only a packet whose `resistance_met` the fight served.
 
+- **Replacing an `ITEM_EFFECTS` entry recompiles its owner's rules**, since
+  the rule memo checks entry identity. A recompiled defence missing its
+  signature key now raises; restore registry snapshots as `dict(ITEM_EFFECTS)`,
+  never deep copies.
+
 ## Platform and tooling
 
 - **Which writer produced a file decides its newlines on this CRLF tree.**
@@ -456,6 +461,13 @@ champion it bit.
   not at all, against a note claiming Energized "stacks but is not consumed".
   Apply an "on-hit at X% effectiveness" reduction to every per-attack effect unless
   an exclusion is verified in game.
+
+- **Binary per-rank rows do not share one index base.** `cooldownTime` and
+  `DataValues` put rank N at index N; `mana` puts rank 1 at index 0. Read ranks
+  through `binary_roots.data_value_at_rank`, and check a row's length first.
+- **A request's `ability_ranks` is empty when ranks follow the skill order.**
+  `.get("R", 1)` priced every such fight at rank 1 (Olaf's Ragnarok). Read ranks
+  through `interaction_atoms.rank_for`.
 
 ### Pricing shape
 
