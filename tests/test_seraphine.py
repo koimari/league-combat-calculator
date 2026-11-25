@@ -108,11 +108,19 @@ def test_seraphine_api_q_always_at_least_the_flat_base():
     enemy_stats = closure.enemy_stats(combat)
     base_mitigated = 160.0 * 100.0 / (100.0 + enemy_stats["magic_resistance"])
     max_mitigated = 280.0 * 100.0 / (100.0 + enemy_stats["magic_resistance"])
+    # Echo recasts the opening High Note 0.033s later, so each cast is
+    # bounded on its own: the events at one instant are one cast.
+    casts: dict[float, float] = {}
+    for event in closure.main_damage_events(combat, "Q"):
+        casts[event["time"]] = casts.get(event["time"], 0.0) + event["damage"]
+    assert len(casts) == 2
+    for total in casts.values():
+        assert total >= base_mitigated - 0.05
+        assert total <= max_mitigated + 0.05
+        assert total > base_mitigated + 0.5  # the amp is live
     row = closure.main_breakdown(combat)
     q = next(s for s in row["sources"] if s["name"] == "High Note")
-    assert q["total_damage"] >= base_mitigated - 0.05
-    assert q["total_damage"] <= max_mitigated + 0.05
-    assert q["total_damage"] > base_mitigated + 0.5  # the amp is live
+    assert q["total_damage"] == pytest.approx(sum(casts.values()), abs=0.1)
 
 
 def test_the_rotation_charms_first_so_crowd_control_cannot_interrupt_it():
@@ -141,5 +149,31 @@ def test_the_rotation_charms_first_so_crowd_control_cannot_interrupt_it():
 
     default_total, default_order = headline()
     assert default_order[0] == "R"
-    assert default_total == headline("REWQ")[0]
+    assert default_total == headline("REQW")[0]
     assert default_total > 2 * headline("ERQW")[0]
+
+
+def test_an_echoed_basic_cast_lands_again_a_beat_later():
+    """Every third basic cast, the first included, recasts 0.033 s later.
+
+    Seraphine opens with two Echo stacks, so the fight's first basic cast
+    echoes, and High Note is among the casts that land twice.
+    """
+    from src.calculator.calculate import calculate_payload
+
+    request = {
+        "champion": "Seraphine",
+        "level": 13,
+        "items": [],
+        "role": "mid",
+        "fight_mode": "time_based",
+        "fight_duration": 10,
+        "enemies": [{"champion": "Garen", "level": 13, "items": [], "role": "top"}],
+    }
+    events = calculate_payload(request, deterministic=True)["combat"]["events"]
+    q_times = {
+        round(event["time"], 3)
+        for event in events
+        if event.get("attacker") == "main" and event["source"] == "Q"
+    }
+    assert any(round(time + 0.033, 3) in q_times for time in q_times)
