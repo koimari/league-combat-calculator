@@ -13,19 +13,11 @@ def _public_build_receipt(
 ) -> dict[str, Any]:
     """Serialize one candidate withheld before ranking as an audit row."""
     boots = next(
-        (
-            str(item.get("name", ""))
-            for item in items
-            if "BOOTS" in item.get("rank", [])
-        ),
+        (str(item["name"]) for item in items if "BOOTS" in item["rank"]),
         None,
     )
     receipt = {
-        "items": [
-            str(item.get("name", ""))
-            for item in items
-            if "BOOTS" not in item.get("rank", [])
-        ],
+        "items": [str(item["name"]) for item in items if "BOOTS" not in item["rank"]],
         "boots": boots,
         "timeline_coverage": dict(coverage),
         "reason": str(reason),
@@ -39,11 +31,11 @@ def public_search_timeline_coverage(audit: Mapping[str, Any]) -> dict[str, Any]:
     """Serialize precision across every candidate evaluation in this search."""
     evaluations = int(audit["evaluations"])
     partial_evaluations = int(audit["partial_evaluations"])
-    excluded_evaluations = int(audit.get("excluded_evaluations", 0))
+    excluded_evaluations = int(audit["excluded_evaluations"])
     coarse_sources = sorted(audit["coarse_sources"])
     exact_sources = sorted(set(audit["exact_sources"]) - set(coarse_sources))
     scored_evaluations = max(0, evaluations - excluded_evaluations)
-    excluded_sources = sorted(audit.get("excluded_sources", set()))
+    excluded_sources = sorted(audit["excluded_sources"])
     complete = scored_evaluations > 0 and partial_evaluations == 0
     if complete:
         note = f"All {scored_evaluations:,} scored candidate evaluations are event-ordered."
