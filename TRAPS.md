@@ -11,6 +11,9 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   field `fight_duration_seconds`. To find such keys, wrap the request in a `dict` subclass that
   records `get`, `[]` and `in`, run the real parse, and list what it never read;
   `tests/test_frontend_capability_contract.py` does so for every roster capability.
+- **`test_gnar_mega_gamefile` pins every test file a case-insensitive grep for
+  "gnar" finds**, so a test that names Olaf's *Ragnarok* joins the set and fails CI.
+  Name the ultimate another way, or add the file to the pin with its reason.
 - **Four concurrent full `pytest -n auto` runs take this machine out of memory.**
   One integrator runs it once per wave on the merged tree; a worker runs only its
   files, one pytest at a time, and pylint with `--jobs=4`.
