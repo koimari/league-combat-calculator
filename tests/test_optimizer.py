@@ -1199,6 +1199,8 @@ def _purchase_item(name, rank, price):
         "name": name,
         "id": _PURCHASE_IDS[name],
         "rank": [rank],
+        "buildsFrom": [],
+        "specialRecipe": 0,
         "shop": {"prices": {"total": price}, "tags": []},
     }
 

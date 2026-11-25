@@ -59,7 +59,7 @@ def item_total(item: dict[str, Any]) -> int:
     stale buy prices (Redemption cached at 2250 while the real total is
     2300), so an item with no sourced row is withheld, never priced from it.
     """
-    name = str(item.get("name") or "Unknown item")
+    name = str(item["name"])
     total = sourced_total(item)
     if total is None:
         raise KeyError(f"{name}: economics-sourced per_item_sell.total")
@@ -75,7 +75,7 @@ def combine_cost(item: dict[str, Any]) -> int:
     Redemption) and derives from the cache only when the item has no sourced
     row, failing closed on any missing price.
     """
-    name = str(item.get("name") or "Unknown item")
+    name = str(item["name"])
     sourced = sourced_combine_cost(item)
     if sourced is not None:
         return sourced
@@ -97,14 +97,14 @@ def combine_cost(item: dict[str, Any]) -> int:
 def recipe_demand(item: Mapping[str, Any]) -> dict[int, int]:
     """Return the direct recipe demand as {item_id: count} (multiset)."""
     demand: dict[int, int] = collections.Counter()
-    for component_id in item.get("buildsFrom", []) or []:
+    for component_id in item["buildsFrom"]:
         demand[int(component_id)] += 1
     return dict(demand)
 
 
 def is_transformation_item(item: Mapping[str, Any]) -> bool:
     """True for an item reachable only by a ``specialRecipe`` transition."""
-    return bool(int(item.get("specialRecipe", 0) or 0))
+    return bool(int(item["specialRecipe"]))
 
 
 def is_purchasable(item: dict[str, Any], include_starters: bool = False) -> bool:
@@ -115,7 +115,7 @@ def is_purchasable(item: dict[str, Any], include_starters: bool = False) -> bool
     """
     if is_transformation_item(item):
         return False
-    ranks = {str(rank).upper() for rank in item.get("rank", []) or []}
+    ranks = {str(rank).upper() for rank in item["rank"]}
     if not ranks & _PURCHASABLE_RANKS:
         return False
     return not (STARTER in ranks and not include_starters)
@@ -131,25 +131,24 @@ def _stackable_epics() -> frozenset[str]:
     """
     counts: collections.Counter[int] = collections.Counter()
     for item in _item_by_id().values():
-        for component_id in item.get("buildsFrom", []) or []:
+        for component_id in item["buildsFrom"]:
             counts[int(component_id)] += 1
     by_id = _item_by_id()
     return frozenset(
         by_id[component_id]["name"]
         for component_id, count in counts.items()
-        if count >= 2
-        and EPIC in {str(r).upper() for r in by_id[component_id].get("rank", []) or []}
+        if count >= 2 and EPIC in {str(r).upper() for r in by_id[component_id]["rank"]}
     )
 
 
 def is_stackable(item: Mapping[str, Any]) -> bool:
     """Return whether duplicate copies of the item are legal mid-inventory."""
-    ranks = {str(rank).upper() for rank in item.get("rank", []) or []}
+    ranks = {str(rank).upper() for rank in item["rank"]}
     if ranks & _STACKABLE_RANKS:
         return True
     if LEGENDARY in ranks or STARTER in ranks or BOOTS in ranks:
         return False
-    name = str(item.get("name") or "")
+    name = str(item["name"])
     return name in _stackable_epics()
 
 
@@ -305,10 +304,10 @@ def apply_purchase_plan(
 
     boots = owned_boots
     for buy in buys:
-        name = str(buy.get("name") or "Unknown item")
+        name = str(buy["name"])
         if not is_purchasable(buy):
             raise ValueError(f"{name} is not purchasable in the modeled shop")
-        ranks = {str(rank).upper() for rank in buy.get("rank", []) or []}
+        ranks = {str(rank).upper() for rank in buy["rank"]}
         if BOOTS in ranks:
             cost = item_total(buy)
             if remaining < cost:
@@ -363,7 +362,7 @@ def apply_purchase_plan(
         )
 
     for combine in combine_items or ():
-        name = str(combine.get("name") or "Unknown item")
+        name = str(combine["name"])
         if not is_purchasable(combine) or is_transformation_item(combine):
             raise ValueError(f"{name} is not a combinable shop item")
         demand = recipe_demand(combine)
