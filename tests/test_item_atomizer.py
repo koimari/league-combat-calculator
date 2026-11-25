@@ -27,6 +27,12 @@ ROOT = Path(__file__).resolve().parents[1]
 KEYWORDS = {kw for kw, _, _ in _ITEM_KEYWORDS}
 
 
+def _row(item):
+    """A fixture as a cached row: every cached item carries a name, stats and
+    shop prices, which the atomizer indexes."""
+    return {"name": "Fixture", "stats": {}, "shop": {"prices": {}}, **item}
+
+
 def _evidence_atoms(atoms, kind, ename):
     prefix = f"{kind}:{ename}@kw:"
     return [a for a in atoms if any(ev.startswith(prefix) for ev in a["evidence"])]
@@ -50,7 +56,7 @@ def test_issue_fixture_active_not_absorbed_by_passive():
         "passives": [{"name": "Shield", "branches": ["Grants a shield."]}],
         "active": [{"name": "Dash", "branches": ["Dash to a target."]}],
     }
-    atoms = atomize_item(item)
+    atoms = atomize_item(_row(item))
     evidence = {ev for atom in atoms for ev in atom["evidence"]}
     assert "passive:Shield@kw:shield" in evidence
     assert "active:Dash@kw:dash" in evidence
@@ -130,7 +136,7 @@ def test_keyword_table_covers_fixture_classes():
         ),
     }
     for label, (item, expected_atom) in fixtures.items():
-        atoms = atomize_item(item)
+        atoms = atomize_item(_row(item))
         ids = [a["atom_id"] for a in atoms]
         assert expected_atom in ids, (label, ids)
 
@@ -147,7 +153,7 @@ def test_multiple_passives_each_get_own_atoms():
             {"name": "Vampirism", "branches": ["Heal for 30% of damage dealt."]},
         ],
     }
-    atoms = atomize_item(item)
+    atoms = atomize_item(_row(item))
     onslaught = _evidence_atoms(atoms, "passive", "Onslaught")
     vampirism = _evidence_atoms(atoms, "passive", "Vampirism")
     assert any(a["atom_id"] == "damage.physical" for a in onslaught)
@@ -165,7 +171,7 @@ def test_multiple_actives_each_get_own_atoms():
             {"name": "Blaze", "branches": ["Deal 100 magic damage and burn enemies."]},
         ],
     }
-    atoms = atomize_item(item)
+    atoms = atomize_item(_row(item))
     blink = _evidence_atoms(atoms, "active", "Blink")
     blaze = _evidence_atoms(atoms, "active", "Blaze")
     assert any(a["atom_id"] == "control.dash" for a in blink)
@@ -184,7 +190,7 @@ def test_same_atom_in_two_effects_merges_receipts():
         "passives": [{"name": "Aegis", "branches": ["Grants a shield."]}],
         "active": [{"name": "Bulwark", "branches": ["Shield the target ally."]}],
     }
-    atoms = atomize_item(item)
+    atoms = atomize_item(_row(item))
     shield_atoms = [a for a in atoms if a["atom_id"] == "shield.flat"]
     assert len(shield_atoms) == 1
     evidence = set(shield_atoms[0]["evidence"])
@@ -199,7 +205,7 @@ def test_unnamed_effect_falls_back_to_position_name():
         "name": "Mystery Orb",
         "passives": [{"branches": ["Grants a shield."]}],
     }
-    atoms = atomize_item(item)
+    atoms = atomize_item(_row(item))
     unnamed = _evidence_atoms(atoms, "passive", "Passive 1")
     assert unnamed, atoms
     assert any(a["atom_id"] == "shield.flat" for a in unnamed)
@@ -214,7 +220,7 @@ def test_mixed_stats_and_effects_keep_structured_receipts():
         "stats": {"health": {"flat": 150.0}},
         "passives": [{"name": "Vigor", "branches": ["Heal for 30% of damage dealt."]}],
     }
-    atoms = atomize_item(item)
+    atoms = atomize_item(_row(item))
     by_id = {a["atom_id"]: a for a in atoms}
     stat_atom = by_id["stat.health"]
     assert stat_atom["evidence"] == ["stats.health.flat"]  # structured, no @kw
@@ -259,7 +265,7 @@ def test_full_corpus_provenance_gate():
     assert items
     checked = 0
     for item in items.values():
-        atoms = atomize_item(item)
+        atoms = atomize_item(_row(item))
         frags = _effect_fragments(item)
         # every legitimate source path: effect fragments + stats/shop blocks
         all_paths = {path for paths in frags.values() for path, _ in paths}
@@ -309,7 +315,7 @@ def test_full_corpus_zero_silent_later_effects():
                 isinstance(b, str) and b.strip() for b in (effect.get("branches") or [])
             )
         ]
-        atoms = atomize_item(item)
+        atoms = atomize_item(_row(item))
         produced = {
             (m.group(1), m.group(2))
             for atom in atoms
