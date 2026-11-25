@@ -35,14 +35,14 @@
       "fights/2:Vayne": "541.4"
     },
     "catalyst_roster": {
-      "combat/0:main/incoming": "2012.6",
+      "combat/0:main/incoming": "2469.3",
       "combat/0:main/outgoing": "2318.4",
-      "combat/1:ally:Pantheon/incoming": "1753.0",
+      "combat/1:ally:Pantheon/incoming": "2179.0",
       "combat/1:ally:Pantheon/outgoing": "1646.8",
       "combat/2:enemy:Aatrox/incoming": "1973.1",
       "combat/2:enemy:Aatrox/outgoing": "2859.0",
       "combat/3:enemy:Malphite/incoming": "1992.1",
-      "combat/3:enemy:Malphite/outgoing": "906.6",
+      "combat/3:enemy:Malphite/outgoing": "1789.3",
       "fights/0:Aatrox": "1148.4",
       "fights/1:Malphite": "1170.0"
     },
@@ -59,14 +59,14 @@
       "fights/1:Malphite": "3457.1"
     },
     "cleave_copied_on_hit_bruiser_roster": {
-      "combat/0:main/incoming": "3513.5",
-      "combat/0:main/outgoing": "6775.5",
+      "combat/0:main/incoming": "3868.5",
+      "combat/0:main/outgoing": "6603.3",
       "combat/1:ally:Lulu/incoming": "2129.0",
-      "combat/1:ally:Lulu/outgoing": "1191.8",
-      "combat/2:enemy:Aatrox/incoming": "5291.0",
-      "combat/2:enemy:Aatrox/outgoing": "4629.0",
+      "combat/1:ally:Lulu/outgoing": "968.9",
+      "combat/2:enemy:Aatrox/incoming": "4895.9",
+      "combat/2:enemy:Aatrox/outgoing": "4238.4",
       "combat/3:enemy:Malphite/incoming": "2676.3",
-      "combat/3:enemy:Malphite/outgoing": "1013.5",
+      "combat/3:enemy:Malphite/outgoing": "1759.2",
       "fights/0:Aatrox": "4907.1",
       "fights/1:Malphite": "5199.6"
     },
@@ -154,12 +154,12 @@
       "fights/0:Aatrox": "3141.3"
     },
     "liandry_reprice_mage_roster": {
-      "combat/0:main/incoming": "473.1",
-      "combat/0:main/outgoing": "2257.8",
-      "combat/1:ally:Pantheon/incoming": "433.5",
+      "combat/0:main/incoming": "736.3",
+      "combat/0:main/outgoing": "2189.8",
+      "combat/1:ally:Pantheon/incoming": "678.9",
       "combat/1:ally:Pantheon/outgoing": "843.6",
-      "combat/2:enemy:Malphite/incoming": "3101.4",
-      "combat/2:enemy:Malphite/outgoing": "906.6",
+      "combat/2:enemy:Malphite/incoming": "3033.4",
+      "combat/2:enemy:Malphite/outgoing": "1415.2",
       "fights/0:Malphite": "2282.7"
     },
     "mandate_abyssal_curse_roster": {
@@ -280,14 +280,14 @@
       "fights/1:Dr. Mundo": "457.2"
     },
     "titanic_cone_bruiser_roster": {
-      "combat/0:main/incoming": "3765.0",
-      "combat/0:main/outgoing": "6627.3",
+      "combat/0:main/incoming": "4062.3",
+      "combat/0:main/outgoing": "6203.9",
       "combat/1:ally:Lulu/incoming": "2129.0",
-      "combat/1:ally:Lulu/outgoing": "1191.8",
-      "combat/2:enemy:Aatrox/incoming": "5142.8",
-      "combat/2:enemy:Aatrox/outgoing": "4880.5",
+      "combat/1:ally:Lulu/outgoing": "968.9",
+      "combat/2:enemy:Aatrox/incoming": "4496.5",
+      "combat/2:enemy:Aatrox/outgoing": "4553.6",
       "combat/3:enemy:Malphite/incoming": "2676.3",
-      "combat/3:enemy:Malphite/outgoing": "1013.5",
+      "combat/3:enemy:Malphite/outgoing": "1637.7",
       "fights/0:Aatrox": "4738.7",
       "fights/1:Malphite": "5128.4"
     },
@@ -308,11 +308,11 @@
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "536631711f0b84b81b8679f0e94b0a4af4c5e3ec",
+    "git_head": "c419bdfd8868be55fd53ad97d137caa84a430ec9",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 32,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "7efb7d66f97e9174ae9d2ea90d5b23cfd5f4ea3b"
+    "src_tree_sha": "de3e7724cccb9219c5c87bccc9bb3494b757e21c"
   }
 }

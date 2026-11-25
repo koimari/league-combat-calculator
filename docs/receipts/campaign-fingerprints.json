@@ -59,16 +59,16 @@
  "coupled_golden": {
   "sections": "coupled_scenarios",
   "entries": 28,
-  "leaves": 134312,
-  "numeric_leaves": 43533,
-  "src_tree_sha": "7efb7d66f97e9174ae9d2ea90d5b23cfd5f4ea3b"
+  "leaves": 134645,
+  "numeric_leaves": 43601,
+  "src_tree_sha": "de3e7724cccb9219c5c87bccc9bb3494b757e21c"
  },
  "coupled_golden_exact": {
   "sections": "coupled_scenarios",
   "entries": 32,
   "leaves": 234,
   "numeric_leaves": 0,
-  "src_tree_sha": "7efb7d66f97e9174ae9d2ea90d5b23cfd5f4ea3b"
+  "src_tree_sha": "de3e7724cccb9219c5c87bccc9bb3494b757e21c"
  },
  "bench": {
   "cassiopeia_3champ": {
@@ -793,7 +793,7 @@
   }
  ],
  "coupled_golden_exact_values": {
-  "sha256": "f270cb8fcd16d5f20b012b3cb5c99beb8f424ebfbd9101b123911c8863422867",
+  "sha256": "0ba079c70026e463331d13ebfe18bc3cf85d6cbcdd5de2f4de6dce318611441a",
   "over": "scripts/golden_coupled_exact.json coupled_scenarios",
   "rule": "scripts/golden_snapshot.exact_values_digest: sha256 over json.dumps({scenario: dict(sorted(totals))} sorted by scenario, sort_keys=True, separators=(',', ':')). The RULE is now code and a test recomputes it, so this field cannot go stale again.",
   "gate": "tests/test_golden_snapshot.py::TestFingerprintsReceipt::test_the_exact_values_digest_is_recomputable",
