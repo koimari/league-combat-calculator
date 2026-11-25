@@ -41,6 +41,7 @@ def _evaluate_cast_parts(
     damage_over_time: bool = False,
     ferocity_empowered: "tuple[bool, ...] | None" = None,
     empowered_parts: "tuple[DamagePart, ...] | None" = None,
+    empowered_parts_by_cast: "tuple[tuple[DamagePart, ...], ...] | None" = None,
     cc_reviewed: bool = False,
     cc_scope: ControlScope | None = None,
     landed_by: "Callable[[float], float] | None" = None,
@@ -90,9 +91,15 @@ def _evaluate_cast_parts(
         rock_solid_consumed = False
         # P3 package 3V: a live Ferocity-empowered cast prices the
         # module's empowered part set instead of the base parts.
+        empowered = (
+            empowered_parts_by_cast[cast_index]
+            if empowered_parts_by_cast is not None
+            and cast_index < len(empowered_parts_by_cast)
+            else empowered_parts
+        )
         cast_parts = (
-            empowered_parts
-            if empowered_parts is not None
+            empowered
+            if empowered is not None
             and ferocity_empowered is not None
             and cast_index < len(ferocity_empowered)
             and ferocity_empowered[cast_index]
