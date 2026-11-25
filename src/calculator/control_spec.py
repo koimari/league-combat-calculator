@@ -77,12 +77,18 @@ def cc_kind_reviewed(kind: str | None) -> bool:
     return kind is not None and str(kind).lower().strip() in CC_KIND_VOCABULARY
 
 
-# These control types stop a champion from taking a normal action for the
-# authored interval: every immobilize, plus the two kinds that lock a
+# Hard crowd control: every immobilize, plus the two kinds that lock a
 # champion's actions while it keeps moving — polymorph, and Renata's
-# berserk (a berserked champion's actions are the enemy's).
+# berserk (a berserked champion's actions are the enemy's). Cleanses,
+# crowd-control immunity, Ragnarok and Dr. Mundo's resist answer this set.
 # https://wiki.leagueoflegends.com/en-us/Types_of_Crowd_Control
-ACTION_BLOCKING_CC_KINDS = IMMOBILIZING_CC_KINDS | frozenset({"polymorph", "berserk"})
+HARD_CONTROL_CC_KINDS = IMMOBILIZING_CC_KINDS | frozenset({"polymorph", "berserk"})
+
+# The kinds that stop a champion from taking a normal action for the
+# authored interval, the one set the fight's action downtime reads. It is
+# the hard set today; a root, which in the game stops movement but not
+# attacks or casts, is where the two would part.
+ACTION_BLOCKING_CC_KINDS = HARD_CONTROL_CC_KINDS
 
 
 # The other half of the same classification: real control the target keeps

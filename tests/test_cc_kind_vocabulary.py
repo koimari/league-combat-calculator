@@ -32,6 +32,7 @@ from src.calculator.control_spec import (
     ACTION_BLOCKING_CC_KINDS,
     CC_KIND_VOCABULARY,
     DISPLACEMENT_CC_KINDS,
+    HARD_CONTROL_CC_KINDS,
     IMMOBILIZING_CC_KINDS,
     NO_CONTROL_KIND,
     NON_BLOCKING_CC_KINDS,
@@ -117,6 +118,24 @@ class TestTheVocabularyIsTheOnlyVocabulary:
         assert profile.unknown is False
         assert profile.kind == kind
         assert profile.blocking is (kind in ACTION_BLOCKING_CC_KINDS)
+        assert profile.hard is (kind in HARD_CONTROL_CC_KINDS)
+
+    def test_hard_and_blocking_are_separate_answers(self, monkeypatch):
+        """Cleanses, immunity, Ragnarok and Dr. Mundo read ``hard``; only
+        the fight's action downtime reads ``blocking``.  A kind taken out of
+        the blocking set alone stays hard: it is still cleansed and still
+        resisted, it just no longer stops the target acting."""
+        import src.calculator.crowd_control_eligibility as eligibility
+
+        monkeypatch.setattr(
+            eligibility,
+            "ACTION_BLOCKING_CC_KINDS",
+            ACTION_BLOCKING_CC_KINDS - {"root"},
+        )
+        root = classify_control(_Action("root"))
+        assert (root.hard, root.blocking, root.unknown) == (True, False, False)
+        stun = classify_control(_Action("stun"))
+        assert (stun.hard, stun.blocking) == (True, True)
 
     def test_a_kind_no_module_can_author_still_fails_closed(self):
         profile = classify_control(_Action("mesmerize"))
