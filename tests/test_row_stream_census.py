@@ -142,7 +142,7 @@ CENSUS: dict[str, tuple[int, tuple[str, ...]]] = {
         ),
     ),
     "combat/item_denial_receipts": (
-        5,
+        4,
         (
             "attacker",
             "event_id",
