@@ -190,12 +190,12 @@ def test_an_echoed_beat_drop_roots_the_target_its_first_cast_slowed():
     assert slows[:2] == [(0.0, "slow"), (pytest.approx(0.033), "root")]
 
 
-def test_an_echoed_beat_drop_inside_her_own_charm_stuns():
+def test_a_beat_drop_inside_her_own_charm_stuns():
     """Cached E: "Enemies that are immobilized or grounded are also stunned".
-    R charms first, so the echo lands on a held target and stuns it."""
+    R charms first, so both the cast and its echo land on a held target."""
     combat = _closure_fight("Seraphine", ranks={"Q": 5, "W": 5, "E": 5, "R": 3})
     (charm,) = closure.main_damage_events(combat, "R")[:1]
     beats = closure.main_damage_events(combat, "E")[:2]
     assert charm["cc_kind"] == "charm"
     assert beats[1]["time"] < charm["time"] + 1.75
-    assert [event["cc_kind"] for event in beats] == ["slow", "stun"]
+    assert [event["cc_kind"] for event in beats] == ["stun", "stun"]

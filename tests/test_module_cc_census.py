@@ -26,6 +26,7 @@ import pytest
 
 from src.calculator.champions import (
     _CHAMPION_MODULES,
+    get_champion_cast_echo,
     get_champion_module_contract,
     parse_abilities,
 )
@@ -353,12 +354,24 @@ def test_a_live_declaration_reaches_the_fight_or_is_pinned_as_uncarried(name):
         (str(row.get("source_key")), str(row.get("cc_kind")))
         for row in cc_review.fight_ledger(name)
     }
+    echo = get_champion_cast_echo(name)
     uncarried = {
         slot
         for slot, kind in live.items()
-        if (("passive" if slot == "P" else slot), kind) not in carried
+        if not any(
+            (("passive" if slot == "P" else slot), each) in carried
+            for each in _landing_kinds(echo, slot, kind)
+        )
     }
     assert uncarried == pinned, name
+
+
+def _landing_kinds(echo, slot, kind):
+    """*kind*, and what a module's sourced ``CastEcho`` grades it into."""
+    if echo is None:
+        return {kind}
+    grades = echo.regrades + echo.immobilized_regrades
+    return {kind, *(to for each, was, to in grades if (each, was) == (slot, kind))}
 
 
 def _authors_a_kind(keyword: ast.keyword) -> bool:

@@ -21,7 +21,8 @@ class CastEcho:
     ``regrades`` names, per slot, a control kind the echo lands as something
     else: ``("E", "slow", "root")`` because the second cast finds its target
     already slowed by the first. ``immobilized_regrades`` wins where the
-    target is already immobilized as the echo lands: ``("E", "slow", "stun")``.
+    target is already immobilized as a cast of the slot lands, the first
+    cast or its echo: ``("E", "slow", "stun")``.
     """
 
     slots: tuple[str, ...]
@@ -40,6 +41,18 @@ class CastEcho:
         for slot, _kind, _becomes in self.regrades + self.immobilized_regrades:
             if slot not in self.slots:
                 raise ValueError(f"CastEcho regrades {slot}, which never echoes")
+
+    def grades_landing(self, slot: str) -> bool:
+        """Whether a cast of *slot* lands as something else on a held target."""
+        return any(each == slot for each, _kind, _to in self.immobilized_regrades)
+
+    def landing_regraded(self, slot: str, *, immobilized: bool) -> dict[str, str]:
+        """The control kinds a first cast of *slot* lands as, keyed by the original."""
+        if not immobilized:
+            return {}
+        return {
+            kind: to for each, kind, to in self.immobilized_regrades if each == slot
+        }
 
     def regraded(self, slot: str, *, immobilized: bool = False) -> dict[str, str]:
         """The control kinds *slot*'s echo lands as instead, keyed by the original."""

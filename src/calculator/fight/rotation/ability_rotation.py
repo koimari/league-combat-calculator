@@ -45,28 +45,25 @@ from .resource_admission import _apply_resource_limits
 from .stack_timeline import _build_stack_timeline
 
 
-def _echoed_parts(
+def _graded_parts(
     parts: tuple[DamagePart, ...],
-    delay_seconds: float,
-    regraded: Callable[[float], Mapping[str, str]],
+    grades_at: Callable[[float], Mapping[str, str]],
     cast_time: float,
+    delay_seconds: float = 0.0,
 ) -> tuple[DamagePart, ...]:
-    """A cast's parts, then the same parts again *delay_seconds* later: its echo.
-
-    The echo's control is *regraded* by what the target is under as it lands.
-    """
-    echoed = []
+    """*parts* landing *delay_seconds* later, each control graded as it lands."""
+    graded = []
     for part in parts:
         offset = (part.time_offset or 0.0) + delay_seconds
-        grades = regraded(cast_time + offset)
-        echoed.append(
+        grades = grades_at(cast_time + offset)
+        graded.append(
             replace(
                 part,
                 time_offset=offset,
                 cc_kind=grades.get(part.cc_kind, part.cc_kind),
             )
         )
-    return parts + tuple(echoed)
+    return tuple(graded)
 
 
 def _immobilized_windows(
@@ -403,23 +400,31 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         )
         ferocity_parts = ability_info.get("ferocity_parts")
         echo_parts = None
-        if ferocity_empowered is None and any(echo_flags.get(ability_key, ())):
-            ferocity_empowered = echo_flags[ability_key]
-            windows = _immobilized_windows(state, ability_damages, plan)
+        if ferocity_empowered is None and cast_echo is not None:
+            flags = echo_flags.get(ability_key, ())
+            if any(flags) or cast_echo.grades_landing(ability_key):
+                windows = _immobilized_windows(state, ability_damages, plan)
 
-            def _regraded(at: float, slot: str = ability_key) -> Mapping[str, str]:
-                held = any(start <= at < end for start, end in windows)
-                return cast_echo.regraded(slot, immobilized=held)
+                def _held(at: float) -> bool:
+                    return any(start <= at < end for start, end in windows)
 
-            echo_parts = tuple(
-                _echoed_parts(
-                    tuple(ability_info["parts"]),
-                    cast_echo.delay_seconds,
-                    _regraded,
-                    cast_time,
+                def _landing(at: float, slot: str = ability_key) -> Mapping[str, str]:
+                    return cast_echo.landing_regraded(slot, immobilized=_held(at))
+
+                def _echo(at: float, slot: str = ability_key) -> Mapping[str, str]:
+                    return cast_echo.regraded(slot, immobilized=_held(at))
+
+                base = tuple(ability_info["parts"])
+                echo_parts = tuple(
+                    _graded_parts(base, _landing, cast_time)
+                    + (
+                        _graded_parts(base, _echo, cast_time, cast_echo.delay_seconds)
+                        if echoes
+                        else ()
+                    )
+                    for cast_time, echoes in zip(plan.times[ability_key], flags)
                 )
-                for cast_time in plan.times[ability_key]
-            )
+                ferocity_empowered = (True,) * len(echo_parts)
 
         # Hatefog's zone opens on an accepted R cast; an R the resource
         # budget refused opens nothing, and the served MR says so.
