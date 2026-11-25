@@ -59,16 +59,16 @@
  "coupled_golden": {
   "sections": "coupled_scenarios",
   "entries": 28,
-  "leaves": 134095,
-  "numeric_leaves": 43485,
-  "src_tree_sha": "0acf3079c12cc3a0f4773ba5135f190ed088a363"
+  "leaves": 134111,
+  "numeric_leaves": 43489,
+  "src_tree_sha": "f88dd0659f6bb7a9ce7a10fe799d960796ce1e7e"
  },
  "coupled_golden_exact": {
   "sections": "coupled_scenarios",
   "entries": 32,
   "leaves": 234,
   "numeric_leaves": 0,
-  "src_tree_sha": "0acf3079c12cc3a0f4773ba5135f190ed088a363"
+  "src_tree_sha": "f88dd0659f6bb7a9ce7a10fe799d960796ce1e7e"
  },
  "bench": {
   "cassiopeia_3champ": {

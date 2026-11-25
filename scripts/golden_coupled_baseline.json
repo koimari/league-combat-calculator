@@ -146581,6 +146581,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[3].crowd_control.duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[3].crowd_control.until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[3].damage": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -147605,6 +147613,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].survival.crowd_control_intervals[1].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.crowd_control_intervals[1].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].survival.crowd_control_until": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -147900,7 +147916,7 @@
             "area_damage": true,
             "attacker": "main",
             "cc_duration": 1.5,
-            "cc_kind": "slow",
+            "cc_kind": "root",
             "control_source_atoms": [
               {
                 "atom_id": "ability.disable _duration",
@@ -147926,6 +147942,11 @@
                 ]
               }
             ],
+            "crowd_control": {
+              "duration": 1.5,
+              "kind": "root",
+              "until": 2.03
+            },
             "damage": 113.8,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:2",
@@ -148650,9 +148671,16 @@
                   "recipient": "enemy:Aatrox",
                   "source": "R",
                   "start": 0.0
+                },
+                {
+                  "end": 2.03,
+                  "kind": "root",
+                  "recipient": "enemy:Aatrox",
+                  "source": "E",
+                  "start": 0.53
                 }
               ],
-              "crowd_control_until": 1.75,
+              "crowd_control_until": 2.03,
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
@@ -149200,7 +149228,7 @@
             },
             {
               "cc_duration": 1.5,
-              "cc_kind": "slow",
+              "cc_kind": "root",
               "control_source_atoms": [
                 {
                   "atom_id": "ability.disable _duration",
@@ -209957,15 +209985,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 28,
-      "leaves": 134095,
-      "numeric_leaves": 43485,
+      "leaves": 134111,
+      "numeric_leaves": 43489,
       "sections": "coupled_scenarios"
     },
-    "git_head": "34427f13ad051877a7d453e2fe71bf5c3040c5e7",
+    "git_head": "69411b399fb5efa450a3bd588d1a1a2096518d4d",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 28,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "0acf3079c12cc3a0f4773ba5135f190ed088a363"
+    "src_tree_sha": "f88dd0659f6bb7a9ce7a10fe799d960796ce1e7e"
   }
 }

@@ -42,3 +42,26 @@ def test_a_rule_no_cast_could_satisfy_is_refused(bad):
     fields = dict(slots=("Q",), stacks_to_echo=2, starts_full=True, delay_seconds=0.0)
     with pytest.raises(ValueError):
         CastEcho(**{**fields, **bad})
+
+
+def test_a_regrade_names_only_the_slot_it_changes():
+    echo = CastEcho(
+        slots=("Q", "E"),
+        stacks_to_echo=2,
+        starts_full=True,
+        delay_seconds=0.033,
+        regrades=(("E", "slow", "root"),),
+    )
+    assert echo.regraded("E") == {"slow": "root"}
+    assert echo.regraded("Q") == {}
+
+
+def test_a_regrade_on_a_slot_that_never_echoes_is_refused():
+    with pytest.raises(ValueError, match="never echoes"):
+        CastEcho(
+            slots=("Q",),
+            stacks_to_echo=2,
+            starts_full=True,
+            delay_seconds=0.033,
+            regrades=(("E", "slow", "root"),),
+        )

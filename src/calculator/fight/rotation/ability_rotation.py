@@ -45,11 +45,20 @@ from .stack_timeline import _build_stack_timeline
 
 
 def _echoed_parts(
-    parts: tuple[DamagePart, ...], delay_seconds: float
+    parts: tuple[DamagePart, ...],
+    delay_seconds: float,
+    regraded: Mapping[str, str],
 ) -> tuple[DamagePart, ...]:
-    """A cast's parts, then the same parts again *delay_seconds* later: its echo."""
+    """A cast's parts, then the same parts again *delay_seconds* later: its echo.
+
+    The echo's control is *regraded* where the first cast changed what it finds.
+    """
     return parts + tuple(
-        replace(part, time_offset=(part.time_offset or 0.0) + delay_seconds)
+        replace(
+            part,
+            time_offset=(part.time_offset or 0.0) + delay_seconds,
+            cc_kind=regraded.get(part.cc_kind, part.cc_kind),
+        )
         for part in parts
     )
 
@@ -358,7 +367,9 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         if ferocity_empowered is None and any(echo_flags.get(ability_key, ())):
             ferocity_empowered = echo_flags[ability_key]
             ferocity_parts = _echoed_parts(
-                tuple(ability_info["parts"]), cast_echo.delay_seconds
+                tuple(ability_info["parts"]),
+                cast_echo.delay_seconds,
+                cast_echo.regraded(ability_key),
             )
 
         # Hatefog's zone opens on an accepted R cast; an R the resource

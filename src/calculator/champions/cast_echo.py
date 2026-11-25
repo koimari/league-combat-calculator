@@ -18,12 +18,16 @@ class CastEcho:
 
     ``starts_full`` is the stacks a fight opens with at the cap, so its first
     basic cast echoes. The cast that spends the stacks banks none.
+    ``regrades`` names, per slot, a control kind the echo lands as something
+    else: ``("E", "slow", "root")`` because the second cast finds its target
+    already slowed by the first.
     """
 
     slots: tuple[str, ...]
     stacks_to_echo: int
     starts_full: bool
     delay_seconds: float
+    regrades: tuple[tuple[str, str, str], ...] = ()
 
     def __post_init__(self) -> None:
         """Refuse a rule no cast could satisfy."""
@@ -31,6 +35,13 @@ class CastEcho:
             raise ValueError(
                 f"CastEcho needs slots, a positive cap and a delay: {self}"
             )
+        for slot, _kind, _becomes in self.regrades:
+            if slot not in self.slots:
+                raise ValueError(f"CastEcho regrades {slot}, which never echoes")
+
+    def regraded(self, slot: str) -> dict[str, str]:
+        """The control kinds *slot*'s echo lands as instead, keyed by the original."""
+        return {kind: becomes for each, kind, becomes in self.regrades if each == slot}
 
 
 def echoed_casts(
