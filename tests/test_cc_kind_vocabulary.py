@@ -121,7 +121,7 @@ class TestTheVocabularyIsTheOnlyVocabulary:
         assert profile.hard is (kind in HARD_CONTROL_CC_KINDS)
 
     def test_hard_and_blocking_are_separate_answers(self, monkeypatch):
-        """Cleanses, immunity, Ragnarok and Dr. Mundo read ``hard``; only
+        """Cleanses, immunity, Olaf's ultimate and Dr. Mundo read ``hard``; only
         the fight's action downtime reads ``blocking``.  A kind taken out of
         the blocking set alone stays hard: it is still cleansed and still
         resisted, it just no longer stops the target acting."""
