@@ -187,6 +187,7 @@ def test_ability_cooldown_receipts_keep_modifier_indexes():
                             {"values": [4]},
                         ]
                     },
+                    "effects": [],
                 }
             ]
         }
@@ -209,7 +210,8 @@ def test_ability_atomizer_reads_prose_active_duration():
                         {
                             "description": (
                                 "The wall destroys projectiles for 4 seconds."
-                            )
+                            ),
+                            "leveling": [],
                         }
                     ],
                 }

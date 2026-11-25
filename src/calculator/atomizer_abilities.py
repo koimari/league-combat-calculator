@@ -33,18 +33,16 @@ def atomize_abilities(
 ) -> dict[str, list[dict[str, Any]]]:
     """Atomize one champion's ability slots -> effects -> leveling modifiers."""
     out: dict[str, list[dict[str, Any]]] = {}
-    for slot, entries in (champion.get("abilities") or {}).items():
+    for slot, entries in champion["abilities"].items():
         a = Atomizer("abilities", source_ref=f"{champion_name}.{slot}")
-        for entry_index, entry in enumerate(entries or []):
+        for entry_index, entry in enumerate(entries):
             ability_name = str(entry.get("name") or f"{slot}{entry_index}")
             # cooldown / cost
             cooldown = entry.get("cooldown")
             if isinstance(cooldown, dict):
-                for mod_index, mod in enumerate(cooldown.get("modifiers") or []):
+                for mod_index, mod in enumerate(cooldown["modifiers"]):
                     values = [
-                        float(v)
-                        for v in mod.get("values", [])
-                        if isinstance(v, (int, float))
+                        float(v) for v in mod["values"] if isinstance(v, (int, float))
                     ]
                     if values:
                         a.add(
@@ -68,7 +66,7 @@ def atomize_abilities(
             # dropped (the K'Sante R/Q over-claim).  Every control duration
             # is still preserved by the per-effect sequence rows.
             control_scalar_emitted = False
-            for effect_index, effect in enumerate(entry.get("effects") or []):
+            for effect_index, effect in enumerate(entry["effects"]):
                 if not isinstance(effect, dict):
                     continue
                 prose_duration = (
@@ -246,19 +244,17 @@ def atomize_abilities(
                             f"invulnerability duration@effects[{effect_index}].description"
                         ],
                     )
-                for leveling_index, leveling in enumerate(effect.get("leveling") or []):
+                for leveling_index, leveling in enumerate(effect["leveling"]):
                     if not isinstance(leveling, dict):
                         continue
-                    attribute = str(leveling.get("attribute") or "Unnamed")
-                    for mod_index, modifier in enumerate(
-                        leveling.get("modifiers") or []
-                    ):
+                    attribute = str(leveling["attribute"])
+                    for mod_index, modifier in enumerate(leveling["modifiers"]):
                         values = [
                             float(v)
-                            for v in modifier.get("values", [])
+                            for v in modifier["values"]
                             if isinstance(v, (int, float))
                         ]
-                        units = [str(u) for u in modifier.get("units", [])]
+                        units = [str(u) for u in modifier["units"]]
                         if not values:
                             continue
                         atom_id = f"ability.{_snake(attribute)}"
@@ -267,7 +263,7 @@ def atomize_abilities(
                         # ratio. Keep those pieces as separate typed atoms so
                         # a runtime accessor cannot read the first modifier
                         # and silently lose the rest.
-                        if len(leveling.get("modifiers") or []) > 1:
+                        if len(leveling["modifiers"]) > 1:
                             atom_id = f"{atom_id}.modifier_{mod_index}"
                         a.add(
                             atom_id,
