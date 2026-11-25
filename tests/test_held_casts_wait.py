@@ -112,10 +112,11 @@ def test_a_cast_made_at_the_holds_own_instant_still_lands_inside_it():
 def test_a_cast_listed_to_the_millisecond_still_owns_its_packets():
     """The cast timeline publishes three decimals: Thresh's R is cast at
     0.8889 s and listed at 0.889 s.  Its packet still finds that cast, so the
-    charm holds it and it lands at 1.2 s instead of being dropped."""
+    charm holds it instead of it being dropped: the hold ends at 1.2 s and
+    its first blocked cast was at 0.5 s, so R moves 0.7 s to 1.589 s."""
     events = _versus_ahri("Thresh")["combat"]["events"]
     (ult,) = [e for e in events if e["attacker"] == "main" and e["source"] == "R"]
-    assert ult["time"] == pytest.approx(1.2)
+    assert ult["time"] == pytest.approx(1.589)
     assert not ult.get("skipped_reason")
 
 
