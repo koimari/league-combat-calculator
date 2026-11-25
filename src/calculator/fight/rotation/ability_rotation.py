@@ -4,7 +4,7 @@
 controls, the carried item on-hits and the target debuff left behind.
 """
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import replace
 from typing import Any
 
@@ -13,7 +13,8 @@ from ...ability_spec import DamagePart
 from ...champions import get_champion_cast_echo
 from ...champions.armed_procs import declared_rule, stack_levels_for_casts
 from ...champions.cast_echo import echoed_casts
-from ...control_spec import ControlEvent
+from ...control_spec import IMMOBILIZING_CC_KINDS, ControlEvent
+from ...trigger_stream import is_immobilizing_event
 from ..autos.swing_schedule import (
     _auto_attack_timestamps,
     _prepare_hail_attack_schedule,
@@ -45,13 +46,59 @@ from .stack_timeline import _build_stack_timeline
 
 
 def _echoed_parts(
-    parts: tuple[DamagePart, ...], delay_seconds: float
+    parts: tuple[DamagePart, ...],
+    delay_seconds: float,
+    regraded: Callable[[float], Mapping[str, str]],
+    cast_time: float,
 ) -> tuple[DamagePart, ...]:
-    """A cast's parts, then the same parts again *delay_seconds* later: its echo."""
-    return parts + tuple(
-        replace(part, time_offset=(part.time_offset or 0.0) + delay_seconds)
-        for part in parts
-    )
+    """A cast's parts, then the same parts again *delay_seconds* later: its echo.
+
+    The echo's control is *regraded* by what the target is under as it lands.
+    """
+    echoed = []
+    for part in parts:
+        offset = (part.time_offset or 0.0) + delay_seconds
+        grades = regraded(cast_time + offset)
+        echoed.append(
+            replace(
+                part,
+                time_offset=offset,
+                cc_kind=grades.get(part.cc_kind, part.cc_kind),
+            )
+        )
+    return parts + tuple(echoed)
+
+
+def _immobilized_windows(
+    state: FightState,
+    ability_damages: Mapping[str, Any],
+    plan: CastPlan,
+) -> tuple[tuple[float, float], ...]:
+    """Every window the attacker's own planned casts hold this target immobilized."""
+    windows = []
+    for slot, info in ability_damages.items():
+        for control in ability_field(info, "control_events"):
+            if control.kind not in IMMOBILIZING_CC_KINDS:
+                continue
+            if state.combat_events is None and not control.scope.reaches(
+                state.roster_target_index
+            ):
+                continue
+            offset = float(control.time_offset or 0.0)
+            interval = float(control.hit_interval or 0.0)
+            for cast_time in plan.times.get(slot, ()):
+                for index in range(control.count):
+                    start = float(cast_time) + offset + interval * index
+                    windows.append((start, start + float(control.duration)))
+        for part in info["parts"]:
+            if not part.cc_duration or not is_immobilizing_event(
+                {"cc_kind": part.cc_kind}
+            ):
+                continue
+            for cast_time in plan.times.get(slot, ()):
+                start = float(cast_time) + (part.time_offset or 0.0)
+                windows.append((start, start + part.cc_duration))
+    return tuple(windows)
 
 
 def _with_stack_levels(
@@ -355,10 +402,23 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             else None
         )
         ferocity_parts = ability_info.get("ferocity_parts")
+        echo_parts = None
         if ferocity_empowered is None and any(echo_flags.get(ability_key, ())):
             ferocity_empowered = echo_flags[ability_key]
-            ferocity_parts = _echoed_parts(
-                tuple(ability_info["parts"]), cast_echo.delay_seconds
+            windows = _immobilized_windows(state, ability_damages, plan)
+
+            def _regraded(at: float, slot: str = ability_key) -> Mapping[str, str]:
+                held = any(start <= at < end for start, end in windows)
+                return cast_echo.regraded(slot, immobilized=held)
+
+            echo_parts = tuple(
+                _echoed_parts(
+                    tuple(ability_info["parts"]),
+                    cast_echo.delay_seconds,
+                    _regraded,
+                    cast_time,
+                )
+                for cast_time in plan.times[ability_key]
             )
 
         # Hatefog's zone opens on an accepted R cast; an R the resource
@@ -456,6 +516,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             ),
             ferocity_empowered=ferocity_empowered,
             empowered_parts=ferocity_parts,
+            empowered_parts_by_cast=echo_parts,
             cc_reviewed=bool(ability_info.get("cc_reviewed")),
             cc_scope=_entry_control_scope(ability_info),
             landed_by=_landed_by,

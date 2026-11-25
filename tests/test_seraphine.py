@@ -179,11 +179,23 @@ def test_an_echoed_basic_cast_lands_again_a_beat_later():
     assert any(round(time + 0.033, 3) in q_times for time in q_times)
 
 
-def test_an_echoed_beat_drop_carries_its_slow_a_beat_later():
-    """The echo copies E's parts, slow included: two slows, 0.033s apart."""
+def test_an_echoed_beat_drop_roots_the_target_its_first_cast_slowed():
+    """The first Beat Drop slows; the echo 0.033s later finds the target
+    "already slowed" and roots it, for the same duration."""
     combat = _closure_fight("Seraphine", ranks={"Q": 0, "W": 0, "E": 5, "R": 0})
     slows = [
         (event["time"], event["cc_kind"])
         for event in closure.main_damage_events(combat, "E")
     ]
-    assert slows[:2] == [(0.0, "slow"), (pytest.approx(0.033), "slow")]
+    assert slows[:2] == [(0.0, "slow"), (pytest.approx(0.033), "root")]
+
+
+def test_an_echoed_beat_drop_inside_her_own_charm_stuns():
+    """Cached E: "Enemies that are immobilized or grounded are also stunned".
+    R charms first, so the echo lands on a held target and stuns it."""
+    combat = _closure_fight("Seraphine", ranks={"Q": 5, "W": 5, "E": 5, "R": 3})
+    (charm,) = closure.main_damage_events(combat, "R")[:1]
+    beats = closure.main_damage_events(combat, "E")[:2]
+    assert charm["cc_kind"] == "charm"
+    assert beats[1]["time"] < charm["time"] + 1.75
+    assert [event["cc_kind"] for event in beats] == ["slow", "stun"]

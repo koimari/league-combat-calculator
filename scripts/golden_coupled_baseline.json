@@ -146581,6 +146581,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[3].crowd_control.duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[3].crowd_control.until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[3].damage": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -147581,6 +147589,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].survival.action_downtime_intervals[1].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.action_downtime_intervals[1].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].survival.aftershock.bonus_armor": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -147602,6 +147618,14 @@
             "view_tag": "applied"
           },
           "participants[1].survival.crowd_control_intervals[0].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.crowd_control_intervals[1].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.crowd_control_intervals[1].start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -147900,7 +147924,7 @@
             "area_damage": true,
             "attacker": "main",
             "cc_duration": 1.5,
-            "cc_kind": "slow",
+            "cc_kind": "stun",
             "control_source_atoms": [
               {
                 "atom_id": "ability.disable _duration",
@@ -147926,6 +147950,11 @@
                 ]
               }
             ],
+            "crowd_control": {
+              "duration": 1.5,
+              "kind": "stun",
+              "until": 2.03
+            },
             "damage": 113.8,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:2",
@@ -148625,7 +148654,7 @@
             },
             "stats_state": "pre_combat",
             "survival": {
-              "action_downtime": 1.75,
+              "action_downtime": 2.03,
               "action_downtime_intervals": [
                 {
                   "end": 1.75,
@@ -148633,6 +148662,13 @@
                   "recipient": "enemy:Aatrox",
                   "source": "R",
                   "start": 0.0
+                },
+                {
+                  "end": 2.03,
+                  "kind": "stun",
+                  "recipient": "enemy:Aatrox",
+                  "source": "E",
+                  "start": 0.53
                 }
               ],
               "aftershock": {
@@ -148650,9 +148686,16 @@
                   "recipient": "enemy:Aatrox",
                   "source": "R",
                   "start": 0.0
+                },
+                {
+                  "end": 2.03,
+                  "kind": "stun",
+                  "recipient": "enemy:Aatrox",
+                  "source": "E",
+                  "start": 0.53
                 }
               ],
-              "crowd_control_until": 1.75,
+              "crowd_control_until": 2.03,
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
@@ -149200,7 +149243,7 @@
             },
             {
               "cc_duration": 1.5,
-              "cc_kind": "slow",
+              "cc_kind": "stun",
               "control_source_atoms": [
                 {
                   "atom_id": "ability.disable _duration",
@@ -209957,15 +210000,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 28,
-      "leaves": 134095,
-      "numeric_leaves": 43485,
+      "leaves": 134120,
+      "numeric_leaves": 43491,
       "sections": "coupled_scenarios"
     },
-    "git_head": "34427f13ad051877a7d453e2fe71bf5c3040c5e7",
+    "git_head": "5469dbca03e687e4502560eeec0c3e7b674151ef",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 28,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "0acf3079c12cc3a0f4773ba5135f190ed088a363"
+    "src_tree_sha": "fbd4db54a230a9d99efff95e734b0532de0f0d9f"
   }
 }
