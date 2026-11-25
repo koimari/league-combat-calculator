@@ -62,6 +62,7 @@ _DELIVERY = frozenset(
         "is_ability",
         "basic_attack",
         "ability_instance",
+        "cast_time",
         "immobilized",
         "cc_kind",
         "skillshot",

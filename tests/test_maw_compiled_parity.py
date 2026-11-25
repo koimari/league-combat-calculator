@@ -1122,7 +1122,8 @@ def test_score_path_agrees_with_receipt_on_every_lifeline_observable():
     survival = _main_survival(receipt)
     assert survival["threshold_shield_triggered"] is True
     assert survival["shield_absorbed"] == pytest.approx(AHRi_SHIELD)
-    assert survival["threshold_shield_expired_at"] == pytest.approx(12.5)
+    # Cassiopeia's E at 6.625 s triggers it; the shield lasts 3 s.
+    assert survival["threshold_shield_expired_at"] == pytest.approx(9.625)
     # The context stays usable (candidate-local fallback today; the P3-3T
     # certification replaces the fallback with compiled panels).
     assert compiled_ctx.uncompilable is False
@@ -1152,8 +1153,9 @@ def test_trigger_event_stamps_threshold_and_omnivamp_receipts():
     assert maw_heals
     assert all(event["time"] > trigger["time"] for event in maw_heals)
     survival = _main_survival(receipt)
+    # Each heal and the total are published to one decimal on their own.
     assert survival["healing_received"] == pytest.approx(
-        sum(event["amount"] for event in maw_heals)
+        sum(event["amount"] for event in maw_heals), abs=0.05 * len(maw_heals)
     )
 
 

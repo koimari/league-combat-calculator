@@ -27,9 +27,10 @@ next ability packet the holder lands, at that packet's timestamp. The moved
 action keeps its ledger slot and its event dict, so the rider moves rather
 than being granted twice.
 
-Vi at level 18 against a ranked Ahri, 10 s: the charm at 0.0 blocks the Q at
-1.721 the payload was hung on, Vi's E lands at 3.221, and Blast Shield is
-granted there for 292.8 over 3 s, absorbing 228.4 before it expires at 6.221.
+Vi at level 18 against a ranked Ahri holding Banshee's Veil, 10 s: the spell
+shield blocks the Q at 1.721 the payload was hung on, Vi's E lands at 2.324,
+and Blast Shield is granted there for 292.8 over 3 s, absorbing 99.0 before it
+expires at 5.324.
 
 ## What declares the re-bind, and what does not
 

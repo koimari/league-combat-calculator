@@ -177,16 +177,17 @@ def test_mikaels_purify_on_participant_two_compiles_and_matches_the_walk():
     assert recipient["cleanse"]["item"] == MIKAELS
     assert recipient["cleanse"]["target"] == "ally:Ashe"
     # Amumu's ultimate stuns until 2.0s and Purify at 1.0 ends that
-    # interval, but his Q banks two casts (champions/charge_cadence.py), so
-    # the second Bandage Toss stuns this recipient again after the cleanse.
-    assert recipient["action_downtime"] == pytest.approx(2.0)
+    # interval.  His Q banks two casts (champions/charge_cadence.py), but the
+    # allies' casts their own stuns held land once they are free and kill
+    # him at 2.5s, before the second Bandage Toss.
+    assert recipient["action_downtime"] == pytest.approx(1.0)
     assert [
         row["control_kind"] for row in recipient["cleanse"]["removed_controls"]
     ] == ["stun"]
     unselected = _survival(compiled, "ally:Jinx")
     assert unselected["healing_received"] == pytest.approx(0.0)
     assert "cleanse" not in unselected
-    assert unselected["action_downtime"] == pytest.approx(3.0)
+    assert unselected["action_downtime"] == pytest.approx(2.0)
     # The caster's own use receipts are on the holder's row, one per item.
     caster = _survival(compiled, "main")
     assert caster["cleanse"]["item"] == QUICKSILVER

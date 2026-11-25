@@ -819,7 +819,8 @@ def test_score_path_agrees_with_receipt_on_every_observable():
             assert score_row["health_damage"] == receipt_row["health_damage"]
             assert score_row["death_time"] == receipt_row["death_time"]
             assert score_row["survived_window"] == receipt_row["survived_window"]
-    # The fixture actually exercised the Annul machine: one blocked cast.
+    # The fixture actually exercised the Annul machine: one blocked cast,
+    # every packet of it.
     survival = _main_survival(receipt)
     assert survival["spell_shield_used"] is True
     assert survival["spell_shield_source"] == SHIELD_SOURCE
@@ -829,8 +830,9 @@ def test_score_path_agrees_with_receipt_on_every_observable():
         for event in receipt["events"]
         if event.get("skipped_reason") == "spell_shield"
     ]
-    assert len(blocked) == 1
-    assert blocked[0]["spell_shield_source"] == SHIELD_SOURCE
+    assert blocked
+    assert {event["source"] for event in blocked} == {"Q"}
+    assert all(event["spell_shield_source"] == SHIELD_SOURCE for event in blocked)
     # The context stays usable (candidate-local fallback today; the P3-3U
     # certification replaces the fallback with compiled panels).
     assert compiled_ctx.uncompilable is False

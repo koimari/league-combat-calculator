@@ -1,0 +1,27 @@
+{
+  "slice": "walk-blocked-casts-wait",
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "coupled_exact": "scripts/golden_coupled_exact.json",
+    "rule": "golden does not move (it holds no enemy that casts); coupled_golden and coupled_exact are re-captured directly in this commit, so this receipt declares only the one key an older receipt also claims."
+  },
+  "what_changed": {
+    "blocked_casts_wait": "survival/transitions.py judges a cast when it is made: one made while a stun, charm or other action-blocking control holds the caster waits until the caster is free, every cast one hold blocks moving by the same shift, and one made while the caster could act lands whatever holds the caster later. Roots and snares never hold a cast. Before, every packet landing while its caster was crowd-controlled (roots included) was dropped.",
+    "override": "Older receipts declare these coupled_exact keys; the held casts now landing move each to the value named here, so this later receipt names those pairs."
+  },
+  "expected_diff_paths": {
+    "coupled_exact": {
+      "cassiopeia_5champ": {
+        "combat/1:ally:Alistar/incoming": {
+          "old": "475.8",
+          "new": "480.6"
+        },
+        "combat/2:enemy:Alistar/outgoing": {
+          "old": "665.4",
+          "new": "686.7"
+        }
+      }
+    }
+  }
+}

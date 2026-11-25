@@ -762,7 +762,8 @@ def test_participant_timeline_utility_receipts_cover_cp20_dimensions():
         - main["survival"]["health_damage"]
         + main["survival"]["healing_received"]
         - main["survival"]["overkill"] * 0.0,
-        abs=0.01,
+        # Three published one-decimal fields, each up to 0.05 off.
+        abs=0.15,
     )
 
 

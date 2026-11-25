@@ -170,6 +170,9 @@ class SurvivalAction:
     is_ability: bool = False
     basic_attack: bool = False
     ability_instance: Any = None
+    #: When the cast this packet belongs to was made; ``None`` for a packet
+    #: no cast authored (an attack, a passive row).
+    cast_time: float | None = None
     # The packet applied immobilizing crowd control: the trigger bus's answer
     # over the shared ``ability_spec.IMMOBILIZING_CC_KINDS`` vocabulary, or a
     # marker flag, never a set this module decides for itself.  Force of
