@@ -16,6 +16,7 @@ from .engine import BUFF, ONHIT, SlotCtx
 from .inputs import int_option
 from .module_helpers import ability_slot
 from .packet_module import build_packet_module
+from .ranked_slots import ranked_at
 from .slot_entries import ability_on_hit_entry
 from .slot_extract import ability_name, extract_value
 
@@ -43,7 +44,6 @@ _MAX_SOULS = 500
 @ability_slot()
 def _damnation(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: +1 AP and +1 bonus armor per Soul stack (BUFF phase)."""
-
     souls = int(ctx.options.get("souls", _DEFAULT_SOULS))
     souls = min(max(souls, 0), _MAX_SOULS)
     bonus_ap = _AP_PER_SOUL * souls
@@ -72,12 +72,11 @@ def _damnation(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
 _damnation.phase = BUFF
 
 
-def _flay_rows(ctx: SlotCtx) -> tuple[dict[str, Any], int, float] | None:
+@ranked_at("E")
+def _flay_rows(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> tuple[dict[str, Any], int, float] | None:
     """Flay's passive rows: the E entry, its rank and the per-Soul term."""
-    ranked = ctx.ranked("E")
-    if ranked is None:
-        return None
-    ability, rank = ranked
     per_soul = extract_value(ability, "Minimum Bonus Magic Damage", rank)
     souls = min(max(int(ctx.options.get("souls", _DEFAULT_SOULS)), 0), _MAX_SOULS)
     return ability, rank, per_soul * souls

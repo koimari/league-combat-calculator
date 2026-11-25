@@ -30,6 +30,7 @@ from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option
 from .module_helpers import ranked_slot
+from .ranked_slots import ranked_at
 from .shared_mechanics import with_self_shield
 from .slot_control import with_control
 from .slot_entries import damage_entry
@@ -69,7 +70,6 @@ def _precision_protocol(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
     """Q1: next basic attack deals +20-40% total AD physical, no crit."""
-
     bonus = extract_named(ability, "Bonus Physical Damage", rank, ctx.stats, ctx.target)
     total_ad = ctx.stat("attack_damage")
     return {
@@ -91,13 +91,11 @@ def _precision_protocol(
     }
 
 
-def _precision_protocol_recast(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_at("Q")
+def _precision_protocol_recast(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q2 (always delayed): doubled bonus, whole attack true-converted."""
-    ranked = ctx.ranked("Q")
-    if ranked is None:
-        return None
-    ability, rank = ranked
-
     bonus = extract_named(
         ability, "Increased Mixed Damage", rank, ctx.stats, ctx.target
     )
@@ -130,7 +128,6 @@ def _tactical_sweep(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
     """W: inner cone physical + optional outer-cone % max HP sweet spot."""
-
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     if ctx.option("w_outer_cone"):
         # Modifier 0: base % of target max health; modifier 1: extra %
@@ -184,7 +181,6 @@ def _hextech_ultimatum(
     _ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
     """R: zero upfront damage; current-health magic rider on zone autos."""
-
     percent = extract_value(ability, "Bonus Magic Damage", rank)
     window = extract_value(ability, "Zone Duration", rank)
     name = ability_name(ability)

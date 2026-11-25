@@ -37,6 +37,7 @@ from .module_helpers import (
     steroid_entry,
 )
 from .packet_module import build_packet_module
+from .ranked_slots import ranked_at
 from .slot_entries import damage_entry, on_hit_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .stat_grants import ATTACK_SPEED_ROW
@@ -130,12 +131,11 @@ def _cultivation_of_spirit(
     )
 
 
-def _cultivation_passive(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_at("Q")
+def _cultivation_passive(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q passive: bonus magic damage on every basic attack."""
-    ranked = ctx.ranked("Q")
-    if ranked is None:
-        return None
-    ability, rank = ranked
     transcendent = bool(ctx.option("r_transcendent"))
     row = _Q_COMBINED_ROW if transcendent else _Q_PASSIVE_ROW
     per_hit = _q_row(ctx, ability, row, rank)

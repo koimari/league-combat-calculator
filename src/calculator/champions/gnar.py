@@ -26,6 +26,7 @@ from ..control_spec import ControlEvent
 from ..stat_formulas import growth_stat
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
+from .ranked_slots import ranked_at
 from .shared_mechanics import reduced_secondary_hits
 from .slot_entries import ability_on_hit_entry, damage_entry
 from .slot_extract import (
@@ -157,7 +158,10 @@ _rage_gene.phase = BUFF
 # ---------------------------------------------------------------------------
 
 
-def _boomerang_throw(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_at("Q", 0)
+def _boomerang_throw(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q Mini: primary hit plus return-pass hits at the sourced 50% row.
 
     The cached prose: the boomerang "deals physical damage to enemies
@@ -168,10 +172,6 @@ def _boomerang_throw(ctx: SlotCtx) -> dict[str, Any] | None:
     enemy hit on the return pass takes one reduced hit (enemies can be
     hit only once per pass, so the primary never double-dips).
     """
-    ranked = ctx.ranked("Q", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
     return reduced_secondary_hits(
         ctx,
         ability,
@@ -254,12 +254,9 @@ def _w(ctx: SlotCtx) -> dict[str, Any] | None:
 # ---------------------------------------------------------------------------
 
 
-def _hop(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_at("E", 0)
+def _hop(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """E Mini: damage (6% of own max HP) + the Bonus Attack Speed buff."""
-    ranked = ctx.ranked("E", 0)
-    if ranked is None:
-        return None
-    ability, rank = ranked
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability_name(ability),

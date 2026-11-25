@@ -23,6 +23,7 @@ from .engine import BUFF, SlotCtx
 from .inputs import int_option
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
+from .ranked_slots import ranked_at
 from .slot_entries import STEROID_ZERO, damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .slotlib import with_item_on_hits
@@ -45,12 +46,11 @@ _R_BASE_AD_RATIO = data_value(_VIEGO_R_SPELL, "ADRatio")
 PACKET_SHA256 = "d0f43663666c21a592a44a6a4ee267b0e18e355d9908363bf4f8aa866160756b"
 
 
-def _blade_of_the_ruined_king(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_at("Q")
+def _blade_of_the_ruined_king(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: the active thrust plus the on-hit passive and mark second strike."""
-    ranked = ctx.ranked("Q")
-    if ranked is None:
-        return None
-    ability, rank = ranked
     active = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     second_strikes = min(max(int(ctx.option("q_second_strike")), 0), 20)
     second_damage = (
@@ -101,12 +101,11 @@ def _blade_of_the_ruined_king(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _heartbreaker(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_at("R")
+def _heartbreaker(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """R: the 120% AD base strike plus the live %missing-health bonus."""
-    ranked = ctx.ranked("R")
-    if ranked is None:
-        return None
-    ability, rank = ranked
     ad = float(ctx.stat("attack_damage"))
     base = _R_BASE_AD_RATIO * ad
     missing_pct = extract_value(ability, "Physical Damage", rank, 0)
@@ -162,7 +161,6 @@ def _harrowed_path(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
     """E: the 30-50% attack speed Viego holds while inside his own mist."""
-
     granted = extract_value(ability, "Bonus Attack Speed", rank)
     uptime = min(max(float(ctx.option("e_mist_uptime")), 0.0), 100.0) / 100.0
     bonus_as = granted * uptime

@@ -23,6 +23,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, SlotParser, build_parser
 from .inputs import int_option
 from .module_helpers import ability_slot, ranked_slot
+from .ranked_slots import ranked_at
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .slotlib import simple_damage
@@ -69,17 +70,9 @@ def _haste_factor(ctx: SlotCtx) -> float:
     return 1.0 + ctx.stat("ability_haste") / 100.0
 
 
-def _q_hasted_period(ctx: SlotCtx) -> float | None:
-    """Q's modeled cast period in real (post-haste) seconds, None unranked.
-
-    Assuming every Q hits, each cast refunds ``Q_REFUND_SECONDS`` off Q's
-    own cooldown once per cycle, so the period is the hasted cooldown minus
-    the refund, floored at ``Q_MIN_PERIOD``.
-    """
-    ranked = ctx.ranked("Q")
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_at("Q")
+def _q_hasted_period(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> float | None:
+    """Q's hasted cooldown less the per-cast refund, floored at ``Q_MIN_PERIOD``."""
     hasted = extract_cooldown(ability, rank) / _haste_factor(ctx)
     return max(Q_MIN_PERIOD, hasted - Q_REFUND_SECONDS)
 
@@ -164,7 +157,6 @@ def _mystic_shot(
     and the two never stack on one ability hit (item taxonomy:
     ``superseded_by_ability_proc``).
     """
-
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     period = _q_hasted_period(ctx)
     entry = damage_entry(

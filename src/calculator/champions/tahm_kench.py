@@ -26,6 +26,7 @@ from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, int_option
 from .module_helpers import innate_on_hit, ranked_slot
+from .ranked_slots import ranked_at
 from .shared_option_keys import TAHM_KENCH_GREY_SHIELD
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
@@ -83,11 +84,10 @@ def _tongue_lash(
     return entry
 
 
-def _regurgitate(ctx: SlotCtx) -> dict[str, Any] | None:
-    ranked = ctx.ranked("R", 1)
-    if ranked is None:
-        return None
-    ability, rank = ranked
+@ranked_at("R", 1)
+def _regurgitate(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability_name(ability),
