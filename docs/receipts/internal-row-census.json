@@ -47,6 +47,7 @@
   },
   "breakdown_damage_events": {
    "keys": {
+    "_stack_cast_time": 49,
     "basic_attack": 1786,
     "cast_while_disabled": 6,
     "cc_duration": 45,
@@ -115,6 +116,7 @@
   "damage_events": {
    "keys": {
     "_lk": 4194,
+    "_stack_cast_time": 49,
     "area_damage": 1051,
     "basic_attack": 17,
     "cast_while_disabled": 6,

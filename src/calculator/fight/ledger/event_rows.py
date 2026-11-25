@@ -191,6 +191,11 @@ def _damage_event_row(
     trigger_time = fields.get("trigger_time")
     if trigger_time is not None:
         row["trigger_time"] = float(trigger_time)
+    # When the cast that applied a tick's stack was made, which the walk
+    # judges against the caster's control (fight.rotation.precomputed_procs).
+    stack_cast = fields.get("_stack_cast_time")
+    if stack_cast is not None:
+        row["_stack_cast_time"] = float(stack_cast)
     if is_ability:
         row["is_ability"] = True
     # The event names its own shield; the entry's parallel list supplies one

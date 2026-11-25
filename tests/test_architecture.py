@@ -113,7 +113,9 @@ FIGHT_STEPS_WITHOUT_A_FRONT_DOOR = (
     "fight.rotation.cast_slot",
     "fight.rotation.energy_walk",
     "fight.rotation.mana_walk",
-    "fight.rotation.precomputed_procs",
+    # `fight.rotation.precomputed_procs` left this frontier when
+    # `tests/test_held_casts_wait.py` began asserting `_owning_cast_time`,
+    # the cast a stack's ticks are judged by, directly.
     "fight.rotation.stack_timeline",
     "fight.runes.amplifiers",
     "fight.runes.keystone_attacks",

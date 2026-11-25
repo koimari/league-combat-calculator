@@ -18,6 +18,24 @@ from ..results import RotationResult
 from ..state import FightState
 
 
+def _owning_cast_time(cast_events: Any, hit: dict[str, Any]) -> float:
+    """When the cast that landed *hit* was made: its slot's latest cast at or before it.
+
+    The cast ledger publishes three decimals, so the match allows half a
+    millisecond, and a cast rounded past its hit yields the hit's own time.
+    """
+    hit_time = float(hit["time"])
+    slot = hit["source_key"]
+    casts = [
+        float(cast["time"])
+        for cast in cast_events
+        if cast["slot"] == slot and float(cast["time"]) <= hit_time + 5e-4 + 1e-9
+    ]
+    if not casts:
+        raise KeyError(f"no cast of {slot} at or before its hit at {hit_time}")
+    return min(max(casts), hit_time)
+
+
 def _ability_hit_times(state: "FightState", rotation: Any) -> tuple[float, ...]:
     """When each accepted ability hit landed, for a kit that counts them.
 
@@ -194,12 +212,19 @@ def _add_precomputed_proc_damage(
                 cast_events=rotation.cast_events,
                 roster_target_index=state.ledger_target_index,
             )
-            stack_times = [
-                float(event["time"])
+            stacking_hits = [
+                event
                 for event in ability_events
                 if event.get("phase") == "ability"
                 and event.get("source_key") in state.ability_damages
             ][:stack_count]
+            stack_times = [float(event["time"]) for event in stacking_hits]
+            # The cast each stack came from: a delayed hit (W's eruption)
+            # lands after its cast, and the walk judges the cast.
+            stack_casts = [
+                _owning_cast_time(rotation.cast_events, event)
+                for event in stacking_hits
+            ]
             dot_damage = (
                 priced_part_instances[0][1]
                 if stack_count > 0 and priced_part_instances
@@ -219,13 +244,18 @@ def _add_precomputed_proc_damage(
                 ticks = round(
                     float(ability_field(info, "dot_duration")) / tick_interval
                 )
-                for stack_time in stack_times:
+                for stack_time, stack_cast in zip(
+                    stack_times, stack_casts, strict=True
+                ):
                     authored.extend(
                         {
                             "time": stack_time + tick_index * tick_interval,
                             "damage_type": dtype,
                             "damage": dot_damage / ticks,
                             "event_precision": "exact",
+                            # The walk judges a tick by when its stack was
+                            # applied, as it judges a cast by when it was made.
+                            "_stack_cast_time": stack_cast,
                         }
                         for tick_index in range(1, ticks + 1)
                     )
@@ -236,6 +266,7 @@ def _add_precomputed_proc_damage(
                             "damage_type": dtype,
                             "damage": detonation_damage,
                             "event_precision": "exact",
+                            "_stack_cast_time": stack_casts[-1],
                         }
                     )
                 if authored and math.isclose(

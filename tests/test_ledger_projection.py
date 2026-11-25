@@ -73,6 +73,7 @@ MATRIX: tuple[
     ("execute", "Annie", ("The Collector",), "", 0.0, (C.EXECUTE_THRESHOLD_STAMP,)),
     ("interaction", "Malphite", (), "", 0.0, (C.ORDERED_INTERACTION_METADATA,)),
     ("self_shield", "Annie", ("Eclipse",), "", 0.0, (C.SELF_SHIELD_PROC,)),
+    ("stack_application", "Brand", (), "", 0.0, (C.STACK_APPLICATION_TIME,)),
     ("pair_outcome", "Annie", ("Cryptbloom",), "", 0.0, (C.PAIR_OUTCOME_STREAM,)),
 )
 
@@ -150,11 +151,11 @@ def test_every_condition_is_declared_and_probed_exactly_once():
     assert set(ledger_declarations.DECLARATIONS) == set(C)
     probed = list(lp.LEDGER_CONDITIONS) + list(lp.SHIELD_OUTCOME_CONDITIONS)
     assert set(probed) == set(C)
-    # Thirteen ledger clauses — the original ten plus the keystone self-heal, the
-    # ordered interaction metadata and the self-shield proc — and two
-    # shield-outcome ones, sharing one, so the fifteen probe slots cover
-    # fourteen distinct conditions.
-    assert len(lp.LEDGER_CONDITIONS) == 13
+    # Fourteen ledger clauses — the original ten plus the keystone self-heal,
+    # the ordered interaction metadata, the self-shield proc and the stack
+    # application time — and two shield-outcome ones, sharing one, so the
+    # sixteen probe slots cover fifteen distinct conditions.
+    assert len(lp.LEDGER_CONDITIONS) == 14
     assert len(lp.SHIELD_OUTCOME_CONDITIONS) == 2
     assert len(probed) == len(set(probed)) + 1
 
