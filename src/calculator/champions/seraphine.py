@@ -28,6 +28,7 @@ from ..ability_atoms import (
 )
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .cast_echo import CastEcho
 from .engine import ONHIT, SlotCtx
 from .inputs import bool_option, int_option
 from .module_helpers import ability_slot, buff_window_share, ranked_slot
@@ -81,7 +82,7 @@ def _stage_presence(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | N
     entry["detail"] = (
         f"{notes} Note(s) of {per_note:.2f} bonus magic damage each "
         "(4 : 27.47 based on level + 4% AP) on one empowered attack; Notes "
-        "from allies (reduced by 75%) and Echo's free recast are unpriced"
+        "from allies (reduced by 75%) are unpriced"
     )
     return entry
 
@@ -237,10 +238,18 @@ OPTIONS = [
     ),
 ]
 
-# Charm first: Encore's charm blocks the target's own casts while it holds,
-# so a crowd-control enemy cannot interrupt Beat Drop, Surround Sound and
-# High Note, which lands last on the most missing health.
-CAST_ORDER = ("R", "E", "W", "Q")
+# Charm first, so the target's own casts cannot interrupt the rotation. The
+# derivation's execute-last rule then keeps High Note behind Beat Drop, so
+# this is the order the fight runs.
+CAST_ORDER = ("R", "E", "Q", "W")
+
+# Cached P: each basic ability cast "generate[s] a stack of Echo, stacking up
+# to 2 times. At 2 stacks, the next basic ability cast consumes them all to
+# cast an additional time at no cost after a 0.033 seconds delay", and she
+# "gains maximum stacks of Echo when the game starts".
+CAST_ECHO = CastEcho(
+    slots=("Q", "W", "E"), stacks_to_echo=2, starts_full=True, delay_seconds=0.033
+)
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
@@ -263,8 +272,9 @@ ASSUMPTIONS = [
     "attack has none.",
     "Notes from allies price 25% (binary AllyNoteDamagePercent 0.25), need allies in "
     "range, outside the 1v1.",
-    "Echo's free recast is outside it too, and the 25 bonus attack range per Note is "
-    "state.",
+    "The 25 bonus attack range per Note is state.",
+    "Echo recasts the basic cast that finds 2 stacks 0.033s later; fights open full.",
+    "An echoed W's second shield and an echoed E's second slow are not priced.",
     "W (Surround Sound) is a sourced shield with no damage row: 60/80/100/120/140 + "
     "20% AP for 2.5s.",
     "It covers Seraphine and nearby allies.",

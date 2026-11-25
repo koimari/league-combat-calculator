@@ -12,6 +12,7 @@ from typing import Any
 
 from ..cast_dependency import CastDependency
 from ..stat_conversion import BonusHealthConversion
+from .cast_echo import CastEcho
 from . import (
     aatrox,
     ahri,
@@ -471,6 +472,18 @@ def parse_champion_abilities(
 def get_champion_cast_order(champion_name: str) -> list[str] | None:
     """The module's ``CAST_ORDER`` where the engine's default misrepresents the kit."""
     return _optional_declaration(champion_name, "CAST_ORDER", list)
+
+
+def _cast_echo(declared: Any) -> CastEcho:
+    """A declared ``CAST_ECHO``, refused when it is not one."""
+    if not isinstance(declared, CastEcho):
+        raise TypeError(f"CAST_ECHO must be a CastEcho, not {type(declared).__name__}")
+    return declared
+
+
+def get_champion_cast_echo(champion_name: str) -> CastEcho | None:
+    """The module's ``CAST_ECHO``: basic casts that bank stacks and echo."""
+    return _optional_declaration(champion_name, "CAST_ECHO", _cast_echo)
 
 
 def _module_declaration(champion_name: str, attribute: str) -> Any:

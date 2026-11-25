@@ -332,9 +332,10 @@ class TestEmpoweredAttackRidersAreWithheld:
         assert "stat_buff" not in abilities["passive"]
 
     def test_withholding_is_documented(self):
+        assert "The 25 bonus attack range per Note is state." in ASSUMPTIONS
         assert (
-            "Echo's free recast is outside it too, and the 25 bonus attack "
-            "range per Note is state." in ASSUMPTIONS
+            "An echoed W's second shield and an echoed E's second slow are not priced."
+            in ASSUMPTIONS
         )
 
 

@@ -4,13 +4,15 @@
 controls, the carried item on-hits and the target debuff left behind.
 """
 
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from typing import Any
 
-from collections.abc import Mapping, Sequence
-
 from ...ability_atoms import ability_field
+from ...ability_spec import DamagePart
+from ...champions import get_champion_cast_echo
 from ...champions.armed_procs import declared_rule, stack_levels_for_casts
+from ...champions.cast_echo import echoed_casts
 from ...control_spec import ControlEvent
 from ..autos.swing_schedule import (
     _auto_attack_timestamps,
@@ -27,8 +29,8 @@ from .cast_parts import _apply_post_hit_proc, _evaluate_cast_parts
 from .cast_plan import _resolve_cast_plan
 from .cast_schedule import (
     _CAST_SCHEDULE_EPS,
-    _disclose_ultimate_cast_rule,
     CooldownRefunds,
+    _disclose_ultimate_cast_rule,
     _schedule_shared_casts,
     declares_swing_cooldown_refund,
 )
@@ -40,6 +42,16 @@ from .cast_slot import (
 )
 from .resource_admission import _apply_resource_limits
 from .stack_timeline import _build_stack_timeline
+
+
+def _echoed_parts(
+    parts: tuple[DamagePart, ...], delay_seconds: float
+) -> tuple[DamagePart, ...]:
+    """A cast's parts, then the same parts again *delay_seconds* later: its echo."""
+    return parts + tuple(
+        replace(part, time_offset=(part.time_offset or 0.0) + delay_seconds)
+        for part in parts
+    )
 
 
 def _with_stack_levels(
@@ -289,6 +301,20 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             "state_transitions": stack.public_receipt()["transitions"],
         }
 
+    # A kit that echoes basic casts (Seraphine) marks which planned casts
+    # land twice; an echoed cast prices its parts again ``delay_seconds``
+    # later, on the same per-cast seam Ferocity's empowered casts use.
+    cast_echo = (
+        get_champion_cast_echo(state.champion_name)
+        if state.champion_name is not None
+        else None
+    )
+    echo_flags = (
+        echoed_casts(cast_echo, plan.times, state.cast_order)
+        if cast_echo is not None
+        else {}
+    )
+
     for ability_key in state.cast_order:
         if ability_key not in ability_damages:
             continue
@@ -329,6 +355,11 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             else None
         )
         ferocity_parts = ability_info.get("ferocity_parts")
+        if ferocity_empowered is None and any(echo_flags.get(ability_key, ())):
+            ferocity_empowered = echo_flags[ability_key]
+            ferocity_parts = _echoed_parts(
+                tuple(ability_info["parts"]), cast_echo.delay_seconds
+            )
 
         # Hatefog's zone opens on an accepted R cast; an R the resource
         # budget refused opens nothing, and the served MR says so.
