@@ -334,9 +334,10 @@ class TestEmpoweredAttackRidersAreWithheld:
     def test_withholding_is_documented(self):
         assert "The 25 bonus attack range per Note is state." in ASSUMPTIONS
         assert (
-            "An echoed W's second shield and an echoed E's second slow are not priced."
+            "An echoed E lands as a second slow, not the root it is on an already-slowed target."
             in ASSUMPTIONS
         )
+        assert "An echoed W's second shield is not priced." in ASSUMPTIONS
 
 
 # ---------------------------------------------------------------------------

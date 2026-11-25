@@ -177,3 +177,13 @@ def test_an_echoed_basic_cast_lands_again_a_beat_later():
         if event.get("attacker") == "main" and event["source"] == "Q"
     }
     assert any(round(time + 0.033, 3) in q_times for time in q_times)
+
+
+def test_an_echoed_beat_drop_carries_its_slow_a_beat_later():
+    """The echo copies E's parts, slow included: two slows, 0.033s apart."""
+    combat = _closure_fight("Seraphine", ranks={"Q": 0, "W": 0, "E": 5, "R": 0})
+    slows = [
+        (event["time"], event["cc_kind"])
+        for event in closure.main_damage_events(combat, "E")
+    ]
+    assert slows[:2] == [(0.0, "slow"), (pytest.approx(0.033), "slow")]

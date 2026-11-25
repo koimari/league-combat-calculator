@@ -274,7 +274,8 @@ ASSUMPTIONS = [
     "range, outside the 1v1.",
     "The 25 bonus attack range per Note is state.",
     "Echo recasts the basic cast that finds 2 stacks 0.033s later; fights open full.",
-    "An echoed W's second shield and an echoed E's second slow are not priced.",
+    "An echoed E lands as a second slow, not the root it is on an already-slowed target.",
+    "An echoed W's second shield is not priced.",
     "W (Surround Sound) is a sourced shield with no damage row: 60/80/100/120/140 + "
     "20% AP for 2.5s.",
     "It covers Seraphine and nearby allies.",
