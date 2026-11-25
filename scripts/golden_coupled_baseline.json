@@ -5374,8 +5374,8 @@
             "healing_output": 0.0,
             "healing_received": 232.6,
             "healing_reduced": 0.0,
-            "health_damage": 2012.6,
-            "incoming_damage": 2012.6,
+            "health_damage": 2469.3,
+            "incoming_damage": 2469.3,
             "outgoing_damage_before_death": 2318.4,
             "participant_id": "main",
             "shield_absorbed": 0.0,
@@ -5458,8 +5458,8 @@
             "healing_output": 0.0,
             "healing_received": 0.0,
             "healing_reduced": 0.0,
-            "health_damage": 1753.0,
-            "incoming_damage": 1753.0,
+            "health_damage": 2179.0,
+            "incoming_damage": 2179.0,
             "outgoing_damage_before_death": 1646.8,
             "participant_id": "ally:Pantheon",
             "shield_absorbed": 0.0,
@@ -5620,7 +5620,7 @@
             "healing_reduced": 0.0,
             "health_damage": 1748.8,
             "incoming_damage": 1992.1,
-            "outgoing_damage_before_death": 906.6,
+            "outgoing_damage_before_death": 1789.3,
             "participant_id": "enemy:Malphite",
             "shield_absorbed": 243.3,
             "sources": [
@@ -5634,14 +5634,18 @@
               },
               {
                 "name": "Ground Slam",
-                "total_damage": 374.1
+                "total_damage": 748.2
+              },
+              {
+                "name": "Unstoppable Force",
+                "total_damage": 508.6
               }
             ],
             "support_shield_received": 243.3,
             "support_value": 243.3,
             "survived_window": true,
             "team": "enemy",
-            "total_damage": 906.6,
+            "total_damage": 1789.3,
             "utility_outcomes": {
               "applied_dimensions": [],
               "cleanse": {
@@ -5909,6 +5913,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "breakdown[3].sources[3].total_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "breakdown[3].support_shield_received": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -6081,22 +6089,12 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[16].cc_duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[16].control_source_atoms[0].values[0]": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[16].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[16].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[16].pair_damage": {
@@ -6111,22 +6109,12 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[17].cc_duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[17].control_source_atoms[0].values[0]": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[17].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[17].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[17].pair_damage": {
@@ -6485,6 +6473,22 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[32].cc_duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[32].control_source_atoms[0].values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[32].crowd_control.duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[32].crowd_control.until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[32].damage": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -6502,6 +6506,22 @@
             "view_tag": "applied"
           },
           "events[32].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[33].cc_duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[33].control_source_atoms[0].values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[33].crowd_control.duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[33].crowd_control.until": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -6938,13 +6958,11 @@
             "view_tag": "applied"
           },
           "events[52].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "outside_window",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[52].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "outside_window",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[52].pair_damage": {
@@ -6960,13 +6978,11 @@
             "view_tag": "applied"
           },
           "events[53].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "outside_window",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[53].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "outside_window",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[53].pair_damage": {
@@ -7993,6 +8009,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "objective.focus_survival.action_downtime_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.action_downtime_intervals[0].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "objective.focus_survival.aftershock.bonus_armor": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -8006,6 +8030,14 @@
             "view_tag": "applied"
           },
           "objective.focus_survival.crowd_control_immunity_until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.crowd_control_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.crowd_control_intervals[0].start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -8285,6 +8317,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].survival.action_downtime_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.action_downtime_intervals[0].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].survival.aftershock.bonus_armor": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -8298,6 +8338,14 @@
             "view_tag": "applied"
           },
           "participants[0].survival.crowd_control_immunity_until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.crowd_control_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.crowd_control_intervals[0].start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -8557,6 +8605,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].survival.action_downtime_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.action_downtime_intervals[0].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].survival.aftershock.bonus_armor": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -8570,6 +8626,14 @@
             "view_tag": "applied"
           },
           "participants[1].survival.crowd_control_immunity_until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.crowd_control_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.crowd_control_intervals[0].start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -9647,76 +9711,6 @@
             "time": 0.25
           },
           {
-            "area_damage": true,
-            "attacker": "enemy:Malphite",
-            "cc_duration": 1.5,
-            "cc_kind": "knockup",
-            "control_source_atoms": [
-              {
-                "atom_id": "timing.control_duration",
-                "behavior": "timing",
-                "evidence": [
-                  "control duration@effects[0].description"
-                ],
-                "hash": "e3de4d518dd5e28d",
-                "source": "Malphite.R[0].effects[0].description",
-                "units": [
-                  "s"
-                ],
-                "values": [
-                  1.5
-                ]
-              }
-            ],
-            "damage": 0.0,
-            "damage_type": "magic",
-            "event_id": "enemy:Malphite:ally:Pantheon:4",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 245.4,
-            "raw_damage": 400.0,
-            "sequence": 5,
-            "skipped_reason": "attacker_state_blocked",
-            "source": "R",
-            "target": "ally:Pantheon",
-            "time": 0.49
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Malphite",
-            "cc_duration": 1.5,
-            "cc_kind": "knockup",
-            "control_source_atoms": [
-              {
-                "atom_id": "timing.control_duration",
-                "behavior": "timing",
-                "evidence": [
-                  "control duration@effects[0].description"
-                ],
-                "hash": "e3de4d518dd5e28d",
-                "source": "Malphite.R[0].effects[0].description",
-                "units": [
-                  "s"
-                ],
-                "values": [
-                  1.5
-                ]
-              }
-            ],
-            "damage": 0.0,
-            "damage_type": "magic",
-            "event_id": "enemy:Malphite:main:4",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 263.2,
-            "raw_damage": 400.0,
-            "sequence": 5,
-            "skipped_reason": "attacker_state_blocked",
-            "source": "R",
-            "target": "main",
-            "time": 0.49
-          },
-          {
             "attacker": "main",
             "cc_kind": "none",
             "damage": 129.3,
@@ -9975,6 +9969,84 @@
             "time": 1.8
           },
           {
+            "area_damage": true,
+            "attacker": "enemy:Malphite",
+            "cc_duration": 1.5,
+            "cc_kind": "knockup",
+            "control_source_atoms": [
+              {
+                "atom_id": "timing.control_duration",
+                "behavior": "timing",
+                "evidence": [
+                  "control duration@effects[0].description"
+                ],
+                "hash": "e3de4d518dd5e28d",
+                "source": "Malphite.R[0].effects[0].description",
+                "units": [
+                  "s"
+                ],
+                "values": [
+                  1.5
+                ]
+              }
+            ],
+            "crowd_control": {
+              "duration": 1.5,
+              "kind": "knockup",
+              "until": 3.54
+            },
+            "damage": 245.4,
+            "damage_type": "magic",
+            "event_id": "enemy:Malphite:ally:Pantheon:4",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 245.4,
+            "raw_damage": 400.0,
+            "sequence": 5,
+            "source": "R",
+            "target": "ally:Pantheon",
+            "time": 2.04
+          },
+          {
+            "area_damage": true,
+            "attacker": "enemy:Malphite",
+            "cc_duration": 1.5,
+            "cc_kind": "knockup",
+            "control_source_atoms": [
+              {
+                "atom_id": "timing.control_duration",
+                "behavior": "timing",
+                "evidence": [
+                  "control duration@effects[0].description"
+                ],
+                "hash": "e3de4d518dd5e28d",
+                "source": "Malphite.R[0].effects[0].description",
+                "units": [
+                  "s"
+                ],
+                "values": [
+                  1.5
+                ]
+              }
+            ],
+            "crowd_control": {
+              "duration": 1.5,
+              "kind": "knockup",
+              "until": 3.54
+            },
+            "damage": 263.2,
+            "damage_type": "magic",
+            "event_id": "enemy:Malphite:main:4",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 263.2,
+            "raw_damage": 400.0,
+            "sequence": 5,
+            "source": "R",
+            "target": "main",
+            "time": 2.04
+          },
+          {
             "attacker": "enemy:Aatrox",
             "cc_kind": "slow",
             "damage": 67.5,
@@ -10168,6 +10240,38 @@
           },
           {
             "area_damage": true,
+            "attacker": "enemy:Malphite",
+            "cc_kind": "cripple",
+            "damage": 180.5,
+            "damage_type": "magic",
+            "event_id": "enemy:Malphite:ally:Pantheon:5",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 180.5,
+            "raw_damage": 294.2,
+            "sequence": 4,
+            "source": "E",
+            "target": "ally:Pantheon",
+            "time": 7.49
+          },
+          {
+            "area_damage": true,
+            "attacker": "enemy:Malphite",
+            "cc_kind": "cripple",
+            "damage": 193.6,
+            "damage_type": "magic",
+            "event_id": "enemy:Malphite:main:5",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 193.6,
+            "raw_damage": 294.2,
+            "sequence": 4,
+            "source": "E",
+            "target": "main",
+            "time": 7.49
+          },
+          {
+            "area_damage": true,
             "attacker": "main",
             "cc_kind": "none",
             "damage": 80.8,
@@ -10299,40 +10403,6 @@
             "source": "Q",
             "target": "main",
             "time": 8.85
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Malphite",
-            "cc_kind": "cripple",
-            "damage": 0.0,
-            "damage_type": "magic",
-            "event_id": "enemy:Malphite:ally:Pantheon:5",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 180.5,
-            "raw_damage": 294.2,
-            "sequence": 4,
-            "skipped_reason": "outside_window",
-            "source": "E",
-            "target": "ally:Pantheon",
-            "time": 9.04
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Malphite",
-            "cc_kind": "cripple",
-            "damage": 0.0,
-            "damage_type": "magic",
-            "event_id": "enemy:Malphite:main:5",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 193.6,
-            "raw_damage": 294.2,
-            "sequence": 4,
-            "skipped_reason": "outside_window",
-            "source": "E",
-            "target": "main",
-            "time": 9.04
           }
         ],
         "healing_events": [
@@ -10737,15 +10807,23 @@
         ],
         "item_denial_receipts": [],
         "objective": {
-          "enemy_team_damage_before_death": 3765.6,
+          "enemy_team_damage_before_death": 4648.3,
           "enemy_team_effective_health": 5572.3,
           "focus_damage_before_death": 2318.4,
           "focus_healing": 232.6,
           "focus_participant_id": "main",
           "focus_support_value": 0.0,
           "focus_survival": {
-            "action_downtime": 0.0,
-            "action_downtime_intervals": [],
+            "action_downtime": 1.5,
+            "action_downtime_intervals": [
+              {
+                "end": 3.54,
+                "kind": "knockup",
+                "recipient": "main",
+                "source": "R",
+                "start": 2.04
+              }
+            ],
             "aftershock": {
               "bonus_armor": 0.0,
               "bonus_magic_resistance": 0.0,
@@ -10754,19 +10832,27 @@
             },
             "crowd_control_immunity_source": "",
             "crowd_control_immunity_until": 0.0,
-            "crowd_control_intervals": [],
-            "crowd_control_until": 0.0,
+            "crowd_control_intervals": [
+              {
+                "end": 3.54,
+                "kind": "knockup",
+                "recipient": "main",
+                "source": "R",
+                "start": 2.04
+              }
+            ],
+            "crowd_control_until": 3.54,
             "damage_deferral_cleared": 0.0,
             "damage_deferral_fraction": 0.0,
             "damage_deferral_pending": 0.0,
-            "damage_taken": 2012.6,
+            "damage_taken": 2469.3,
             "death_time": null,
             "defy_heal_received": 0.0,
             "defy_trigger_time": null,
             "defy_triggered": false,
             "effective_health": 2890.6,
-            "ending_health": 878.1,
-            "ending_health_ratio": 0.33,
+            "ending_health": 421.3,
+            "ending_health_ratio": 0.16,
             "execute_source": "",
             "execute_time": null,
             "first_death_time": null,
@@ -10785,7 +10871,7 @@
             "healing_reduction_events": [],
             "healing_reduction_until": 0.0,
             "healing_reduction_window_sources": [],
-            "health_damage": 2012.6,
+            "health_damage": 2469.3,
             "invulnerable_until": 0.0,
             "jaksho": {
               "dynamic_bonus_armor": 0.0,
@@ -10939,8 +11025,16 @@
             },
             "stats_state": "pre_combat",
             "survival": {
-              "action_downtime": 0.0,
-              "action_downtime_intervals": [],
+              "action_downtime": 1.5,
+              "action_downtime_intervals": [
+                {
+                  "end": 3.54,
+                  "kind": "knockup",
+                  "recipient": "main",
+                  "source": "R",
+                  "start": 2.04
+                }
+              ],
               "aftershock": {
                 "bonus_armor": 0.0,
                 "bonus_magic_resistance": 0.0,
@@ -10949,19 +11043,27 @@
               },
               "crowd_control_immunity_source": "",
               "crowd_control_immunity_until": 0.0,
-              "crowd_control_intervals": [],
-              "crowd_control_until": 0.0,
+              "crowd_control_intervals": [
+                {
+                  "end": 3.54,
+                  "kind": "knockup",
+                  "recipient": "main",
+                  "source": "R",
+                  "start": 2.04
+                }
+              ],
+              "crowd_control_until": 3.54,
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 2012.6,
+              "damage_taken": 2469.3,
               "death_time": null,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
               "effective_health": 2890.6,
-              "ending_health": 878.1,
-              "ending_health_ratio": 0.33,
+              "ending_health": 421.3,
+              "ending_health_ratio": 0.16,
               "execute_source": "",
               "execute_time": null,
               "first_death_time": null,
@@ -10980,7 +11082,7 @@
               "healing_reduction_events": [],
               "healing_reduction_until": 0.0,
               "healing_reduction_window_sources": [],
-              "health_damage": 2012.6,
+              "health_damage": 2469.3,
               "invulnerable_until": 0.0,
               "jaksho": {
                 "dynamic_bonus_armor": 0.0,
@@ -11079,8 +11181,16 @@
             },
             "stats_state": "pre_combat",
             "survival": {
-              "action_downtime": 0.0,
-              "action_downtime_intervals": [],
+              "action_downtime": 1.5,
+              "action_downtime_intervals": [
+                {
+                  "end": 3.54,
+                  "kind": "knockup",
+                  "recipient": "ally:Pantheon",
+                  "source": "R",
+                  "start": 2.04
+                }
+              ],
               "aftershock": {
                 "bonus_armor": 0.0,
                 "bonus_magic_resistance": 0.0,
@@ -11089,19 +11199,27 @@
               },
               "crowd_control_immunity_source": "",
               "crowd_control_immunity_until": 0.0,
-              "crowd_control_intervals": [],
-              "crowd_control_until": 0.0,
+              "crowd_control_intervals": [
+                {
+                  "end": 3.54,
+                  "kind": "knockup",
+                  "recipient": "ally:Pantheon",
+                  "source": "R",
+                  "start": 2.04
+                }
+              ],
+              "crowd_control_until": 3.54,
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 1753.0,
+              "damage_taken": 2179.0,
               "death_time": null,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
               "effective_health": 2503.0,
-              "ending_health": 750.0,
-              "ending_health_ratio": 0.3,
+              "ending_health": 324.0,
+              "ending_health_ratio": 0.13,
               "execute_source": "",
               "execute_time": null,
               "first_death_time": null,
@@ -11120,7 +11238,7 @@
               "healing_reduction_events": [],
               "healing_reduction_until": 0.0,
               "healing_reduction_window_sources": [],
-              "health_damage": 1753.0,
+              "health_damage": 2179.0,
               "invulnerable_until": 0.0,
               "jaksho": {
                 "dynamic_bonus_armor": 0.0,
@@ -30776,13 +30894,13 @@
           {
             "champion": "Darius",
             "death_time": null,
-            "effective_health": 3774.6,
+            "effective_health": 3895.3,
             "healing_output": 0.0,
-            "healing_received": 954.6,
+            "healing_received": 1075.3,
             "healing_reduced": 0.0,
-            "health_damage": 3283.5,
-            "incoming_damage": 3513.5,
-            "outgoing_damage_before_death": 6775.5,
+            "health_damage": 3638.5,
+            "incoming_damage": 3868.5,
+            "outgoing_damage_before_death": 6603.3,
             "participant_id": "main",
             "shield_absorbed": 230.0,
             "sources": [
@@ -30796,15 +30914,15 @@
               },
               {
                 "name": "Hemorrhage (bleed)",
-                "total_damage": 601.6
+                "total_damage": 344.5
               },
               {
                 "name": "Crippling Strike",
-                "total_damage": 978.8
+                "total_damage": 1063.7
               },
               {
                 "name": "Noxian Guillotine",
-                "total_damage": 2384.9
+                "total_damage": 2385.0
               },
               {
                 "name": "Ravenous Hydra (active)",
@@ -30819,7 +30937,7 @@
             "support_value": 0.0,
             "survived_window": true,
             "team": "main",
-            "total_damage": 6775.5,
+            "total_damage": 6603.3,
             "utility_outcomes": {
               "applied_dimensions": [
                 "multi_target"
@@ -30886,14 +31004,14 @@
           },
           {
             "champion": "Lulu",
-            "death_time": 3.45,
+            "death_time": 3.0,
             "effective_health": 2129.0,
             "healing_output": 0.0,
             "healing_received": 0.0,
             "healing_reduced": 0.0,
             "health_damage": 2129.0,
             "incoming_damage": 2129.0,
-            "outgoing_damage_before_death": 1191.8,
+            "outgoing_damage_before_death": 968.9,
             "participant_id": "ally:Lulu",
             "shield_absorbed": 0.0,
             "sources": [
@@ -30903,11 +31021,11 @@
               },
               {
                 "name": "Auto Attacks",
-                "total_damage": 246.7
+                "total_damage": 164.0
               },
               {
                 "name": "Pix, Faerie Companion (on-hit)",
-                "total_damage": 423.8
+                "total_damage": 283.7
               },
               {
                 "name": "Help, Pix!",
@@ -30918,7 +31036,7 @@
             "support_value": 230.0,
             "survived_window": false,
             "team": "ally",
-            "total_damage": 1191.8,
+            "total_damage": 968.9,
             "utility_outcomes": {
               "applied_dimensions": [],
               "cleanse": {
@@ -30971,38 +31089,38 @@
           {
             "champion": "Aatrox",
             "death_time": null,
-            "effective_health": 6520.7,
+            "effective_health": 5871.6,
             "healing_output": 0.0,
-            "healing_received": 3932.7,
+            "healing_received": 3283.6,
             "healing_reduced": 0.0,
-            "health_damage": 5291.0,
-            "incoming_damage": 5291.0,
-            "outgoing_damage_before_death": 4629.0,
+            "health_damage": 4895.9,
+            "incoming_damage": 4895.9,
+            "outgoing_damage_before_death": 4238.4,
             "participant_id": "enemy:Aatrox",
             "shield_absorbed": 0.0,
             "sources": [
               {
                 "name": "Auto Attacks",
-                "total_damage": 930.1
+                "total_damage": 830.6
               },
               {
                 "name": "Deathbringer Stance (on-hit)",
-                "total_damage": 1424.1
+                "total_damage": 1365.8
               },
               {
                 "name": "The Darkin Blade",
-                "total_damage": 1992.2
+                "total_damage": 1833.5
               },
               {
                 "name": "Infernal Chains",
-                "total_damage": 282.6
+                "total_damage": 208.5
               }
             ],
             "support_shield_received": 0.0,
             "support_value": 0.0,
             "survived_window": true,
             "team": "enemy",
-            "total_damage": 4629.0,
+            "total_damage": 4238.4,
             "utility_outcomes": {
               "applied_dimensions": [],
               "cleanse": {
@@ -31054,14 +31172,14 @@
           },
           {
             "champion": "Malphite",
-            "death_time": 1.4,
+            "death_time": 3.01,
             "effective_health": 2676.3,
             "healing_output": 0.0,
             "healing_received": 0.0,
             "healing_reduced": 0.0,
             "health_damage": 2433.0,
             "incoming_damage": 2676.3,
-            "outgoing_damage_before_death": 1013.5,
+            "outgoing_damage_before_death": 1759.2,
             "participant_id": "enemy:Malphite",
             "shield_absorbed": 243.3,
             "sources": [
@@ -31071,7 +31189,7 @@
               },
               {
                 "name": "Auto Attacks",
-                "total_damage": 121.5
+                "total_damage": 364.5
               },
               {
                 "name": "Thunderclap",
@@ -31080,13 +31198,17 @@
               {
                 "name": "Ground Slam",
                 "total_damage": 369.8
+              },
+              {
+                "name": "Unstoppable Force",
+                "total_damage": 502.7
               }
             ],
             "support_shield_received": 243.3,
             "support_value": 243.3,
             "survived_window": false,
             "team": "enemy",
-            "total_damage": 1013.5,
+            "total_damage": 1759.2,
             "utility_outcomes": {
               "applied_dimensions": [],
               "cleanse": {
@@ -31387,6 +31509,10 @@
             "view_tag": "applied"
           },
           "breakdown[3].sources[3].total_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "breakdown[3].sources[4].total_damage": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -32485,11 +32611,13 @@
             "view_tag": "applied"
           },
           "events[145].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[145].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[145].pair_damage": {
@@ -32506,12 +32634,12 @@
           },
           "events[146].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[146].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[146].pair_damage": {
@@ -32527,13 +32655,11 @@
             "view_tag": "applied"
           },
           "events[147].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[147].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[147].pair_damage": {
@@ -32638,12 +32764,12 @@
           },
           "events[151].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[151].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[151].pair_damage": {
@@ -32659,11 +32785,13 @@
             "view_tag": "applied"
           },
           "events[152].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[152].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[152].pair_damage": {
@@ -32764,12 +32892,12 @@
           },
           "events[157].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "outside_window",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[157].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "outside_window",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[157].pair_damage": {
@@ -32785,13 +32913,11 @@
             "view_tag": "applied"
           },
           "events[158].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "outside_window",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[158].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "outside_window",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[158].pair_damage": {
@@ -33168,22 +33294,12 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[21].cc_duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[21].control_source_atoms[0].values[0]": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[21].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[21].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[21].pair_damage": {
@@ -33198,22 +33314,12 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[22].cc_duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[22].control_source_atoms[0].values[0]": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[22].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[22].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[22].pair_damage": {
@@ -33528,6 +33634,22 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[37].cc_duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[37].control_source_atoms[0].values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[37].crowd_control.duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[37].crowd_control.until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[37].damage": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -33545,6 +33667,22 @@
             "view_tag": "applied"
           },
           "events[37].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[38].cc_duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[38].control_source_atoms[0].values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[38].crowd_control.duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[38].crowd_control.until": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -33569,11 +33707,13 @@
             "view_tag": "applied"
           },
           "events[39].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[39].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[39].pair_damage": {
@@ -33609,11 +33749,13 @@
             "view_tag": "applied"
           },
           "events[40].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[40].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[40].pair_damage": {
@@ -33749,11 +33891,13 @@
             "view_tag": "applied"
           },
           "events[47].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[47].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[47].pair_damage": {
@@ -33886,12 +34030,12 @@
           },
           "events[52].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[52].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[52].pair_damage": {
@@ -33908,12 +34052,12 @@
           },
           "events[53].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[53].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[53].pair_damage": {
@@ -33929,11 +34073,13 @@
             "view_tag": "applied"
           },
           "events[54].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[54].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[54].pair_damage": {
@@ -33949,11 +34095,13 @@
             "view_tag": "applied"
           },
           "events[55].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[55].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[55].pair_damage": {
@@ -33969,13 +34117,11 @@
             "view_tag": "applied"
           },
           "events[56].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[56].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[56].pair_damage": {
@@ -33991,13 +34137,11 @@
             "view_tag": "applied"
           },
           "events[57].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[57].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[57].pair_damage": {
@@ -34033,13 +34177,11 @@
             "view_tag": "applied"
           },
           "events[59].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[59].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[59].pair_damage": {
@@ -34091,11 +34233,13 @@
             "view_tag": "applied"
           },
           "events[60].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[60].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[60].pair_damage": {
@@ -34112,12 +34256,12 @@
           },
           "events[61].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[61].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[61].pair_damage": {
@@ -34233,13 +34377,11 @@
             "view_tag": "applied"
           },
           "events[67].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[67].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[67].pair_damage": {
@@ -34255,13 +34397,11 @@
             "view_tag": "applied"
           },
           "events[68].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[68].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[68].pair_damage": {
@@ -34277,13 +34417,11 @@
             "view_tag": "applied"
           },
           "events[69].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[69].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[69].pair_damage": {
@@ -34423,11 +34561,13 @@
             "view_tag": "applied"
           },
           "events[75].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[75].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[75].pair_damage": {
@@ -34463,11 +34603,13 @@
             "view_tag": "applied"
           },
           "events[77].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[77].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[77].pair_damage": {
@@ -34505,11 +34647,13 @@
             "view_tag": "applied"
           },
           "events[79].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[79].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[79].pair_damage": {
@@ -34567,11 +34711,13 @@
             "view_tag": "applied"
           },
           "events[81].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[81].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[81].pair_damage": {
@@ -34607,11 +34753,13 @@
             "view_tag": "applied"
           },
           "events[83].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[83].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[83].pair_damage": {
@@ -35955,7 +36103,8 @@
             "view_tag": "applied"
           },
           "healing_events[36].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "trigger_event_skipped",
             "view_tag": "applied"
           },
           "healing_events[36].healing_reduction_factor": {
@@ -36019,7 +36168,8 @@
             "view_tag": "applied"
           },
           "healing_events[38].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "trigger_event_skipped",
             "view_tag": "applied"
           },
           "healing_events[38].healing_reduction_factor": {
@@ -36116,7 +36266,8 @@
             "view_tag": "applied"
           },
           "healing_events[40].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "trigger_event_skipped",
             "view_tag": "applied"
           },
           "healing_events[40].healing_reduction_factor": {
@@ -37696,6 +37847,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "objective.focus_survival.action_downtime_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.action_downtime_intervals[0].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "objective.focus_survival.aftershock.bonus_armor": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -37709,6 +37868,14 @@
             "view_tag": "applied"
           },
           "objective.focus_survival.crowd_control_immunity_until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.crowd_control_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.crowd_control_intervals[0].start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -37988,6 +38155,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].survival.action_downtime_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.action_downtime_intervals[0].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].survival.aftershock.bonus_armor": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -38001,6 +38176,14 @@
             "view_tag": "applied"
           },
           "participants[0].survival.crowd_control_immunity_until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.crowd_control_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.crowd_control_intervals[0].start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -38268,6 +38451,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].survival.action_downtime_intervals[1].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.action_downtime_intervals[1].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].survival.aftershock.bonus_armor": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -38281,6 +38472,14 @@
             "view_tag": "applied"
           },
           "participants[1].survival.crowd_control_immunity_until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.crowd_control_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.crowd_control_intervals[0].start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -39471,76 +39670,6 @@
           },
           {
             "area_damage": true,
-            "attacker": "enemy:Malphite",
-            "cc_duration": 1.5,
-            "cc_kind": "knockup",
-            "control_source_atoms": [
-              {
-                "atom_id": "timing.control_duration",
-                "behavior": "timing",
-                "evidence": [
-                  "control duration@effects[0].description"
-                ],
-                "hash": "e3de4d518dd5e28d",
-                "source": "Malphite.R[0].effects[0].description",
-                "units": [
-                  "s"
-                ],
-                "values": [
-                  1.5
-                ]
-              }
-            ],
-            "damage": 0.0,
-            "damage_type": "magic",
-            "event_id": "enemy:Malphite:ally:Lulu:5",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 263.2,
-            "raw_damage": 400.0,
-            "sequence": 5,
-            "skipped_reason": "attacker_state_blocked",
-            "source": "R",
-            "target": "ally:Lulu",
-            "time": 0.49
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Malphite",
-            "cc_duration": 1.5,
-            "cc_kind": "knockup",
-            "control_source_atoms": [
-              {
-                "atom_id": "timing.control_duration",
-                "behavior": "timing",
-                "evidence": [
-                  "control duration@effects[0].description"
-                ],
-                "hash": "e3de4d518dd5e28d",
-                "source": "Malphite.R[0].effects[0].description",
-                "units": [
-                  "s"
-                ],
-                "values": [
-                  1.5
-                ]
-              }
-            ],
-            "damage": 0.0,
-            "damage_type": "magic",
-            "event_id": "enemy:Malphite:main:5",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 239.5,
-            "raw_damage": 400.0,
-            "sequence": 5,
-            "skipped_reason": "attacker_state_blocked",
-            "source": "R",
-            "target": "main",
-            "time": 0.49
-          },
-          {
-            "area_damage": true,
             "attacker": "main",
             "cc_kind": "none",
             "damage": 460.2,
@@ -39780,29 +39909,109 @@
             "time": 1.24
           },
           {
+            "area_damage": true,
+            "attacker": "enemy:Malphite",
+            "cc_duration": 1.5,
+            "cc_kind": "knockup",
+            "control_source_atoms": [
+              {
+                "atom_id": "timing.control_duration",
+                "behavior": "timing",
+                "evidence": [
+                  "control duration@effects[0].description"
+                ],
+                "hash": "e3de4d518dd5e28d",
+                "source": "Malphite.R[0].effects[0].description",
+                "units": [
+                  "s"
+                ],
+                "values": [
+                  1.5
+                ]
+              }
+            ],
+            "crowd_control": {
+              "duration": 1.5,
+              "kind": "knockup",
+              "until": 2.74
+            },
+            "damage": 263.2,
+            "damage_type": "magic",
+            "event_id": "enemy:Malphite:ally:Lulu:5",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 263.2,
+            "raw_damage": 400.0,
+            "sequence": 5,
+            "source": "R",
+            "target": "ally:Lulu",
+            "time": 1.24
+          },
+          {
+            "area_damage": true,
+            "attacker": "enemy:Malphite",
+            "cc_duration": 1.5,
+            "cc_kind": "knockup",
+            "control_source_atoms": [
+              {
+                "atom_id": "timing.control_duration",
+                "behavior": "timing",
+                "evidence": [
+                  "control duration@effects[0].description"
+                ],
+                "hash": "e3de4d518dd5e28d",
+                "source": "Malphite.R[0].effects[0].description",
+                "units": [
+                  "s"
+                ],
+                "values": [
+                  1.5
+                ]
+              }
+            ],
+            "crowd_control": {
+              "duration": 1.5,
+              "kind": "knockup",
+              "until": 2.74
+            },
+            "damage": 239.5,
+            "damage_type": "magic",
+            "event_id": "enemy:Malphite:main:5",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 239.5,
+            "raw_damage": 400.0,
+            "sequence": 5,
+            "source": "R",
+            "target": "main",
+            "time": 1.24
+          },
+          {
             "attacker": "main",
-            "damage": 86.1,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "main:enemy:Aatrox:2",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 86.1,
-            "raw_damage": 86.1,
+            "raw_damage": 0.0,
             "sequence": 11,
+            "skipped_reason": "attacker_state_blocked",
             "source": "stacking_dot_passive",
             "target": "enemy:Aatrox",
             "time": 1.25
           },
           {
             "attacker": "main",
-            "damage": 84.9,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "main:enemy:Malphite:3",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 84.9,
-            "raw_damage": 84.9,
+            "raw_damage": 0.0,
             "sequence": 11,
+            "skipped_reason": "attacker_state_blocked",
             "source": "stacking_dot_passive",
             "target": "enemy:Malphite",
             "time": 1.25
@@ -39864,66 +40073,6 @@
             "time": 1.29
           },
           {
-            "attacker": "main",
-            "cc_kind": "slow",
-            "damage": 154.9,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:3",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 154.9,
-            "raw_damage": 266.4,
-            "sequence": 2,
-            "source": "W",
-            "target": "enemy:Aatrox",
-            "time": 1.4
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "slow",
-            "damage": 152.8,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Malphite:4",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 152.8,
-            "raw_damage": 266.4,
-            "sequence": 2,
-            "source": "W",
-            "target": "enemy:Malphite",
-            "time": 1.4
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "none",
-            "damage": 1192.5,
-            "damage_type": "true",
-            "event_id": "main:enemy:Aatrox:4",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 1192.5,
-            "raw_damage": 847.5,
-            "sequence": 6,
-            "source": "R",
-            "target": "enemy:Aatrox",
-            "time": 1.4
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "none",
-            "damage": 1192.4,
-            "damage_type": "true",
-            "event_id": "main:enemy:Malphite:5",
-            "event_precision": "exact",
-            "overkill": 0.1,
-            "pair_damage": 1192.5,
-            "raw_damage": 847.5,
-            "sequence": 6,
-            "source": "R",
-            "target": "enemy:Malphite",
-            "time": 1.4
-          },
-          {
             "attacker": "enemy:Aatrox",
             "cc_kind": "slow",
             "damage": 74.1,
@@ -39957,37 +40106,6 @@
           },
           {
             "attacker": "main",
-            "cc_kind": "slow",
-            "damage": 258.1,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:5",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 258.1,
-            "raw_damage": 444.0,
-            "sequence": 3,
-            "source": "W",
-            "target": "enemy:Aatrox",
-            "time": 1.66
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "slow",
-            "damage": 0.0,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Malphite:6",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 254.6,
-            "raw_damage": 444.0,
-            "sequence": 3,
-            "skipped_reason": "target_dead",
-            "source": "W",
-            "target": "enemy:Malphite",
-            "time": 1.66
-          },
-          {
-            "attacker": "main",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "main:enemy:Malphite:7",
@@ -39996,7 +40114,7 @@
             "pair_damage": 49.1,
             "raw_damage": 0.0,
             "sequence": 24,
-            "skipped_reason": "target_dead",
+            "skipped_reason": "attacker_state_blocked",
             "source": "on_hit_secondary_Ravenous Hydra",
             "target": "enemy:Malphite",
             "targeting": {
@@ -40041,7 +40159,7 @@
           },
           {
             "attacker": "enemy:Malphite",
-            "damage": 0.0,
+            "damage": 63.7,
             "damage_type": "physical",
             "event_id": "enemy:Malphite:ally:Lulu:7",
             "event_precision": "exact",
@@ -40049,14 +40167,13 @@
             "pair_damage": 63.7,
             "raw_damage": 130.0,
             "sequence": 8,
-            "skipped_reason": "attacker_dead",
             "source": "auto_attacks",
             "target": "ally:Lulu",
             "time": 2.04
           },
           {
             "attacker": "enemy:Malphite",
-            "damage": 0.0,
+            "damage": 57.8,
             "damage_type": "physical",
             "event_id": "enemy:Malphite:main:7",
             "event_precision": "exact",
@@ -40064,14 +40181,13 @@
             "pair_damage": 57.8,
             "raw_damage": 130.0,
             "sequence": 8,
-            "skipped_reason": "attacker_dead",
             "source": "auto_attacks",
             "target": "main",
             "time": 2.04
           },
           {
             "attacker": "ally:Lulu",
-            "damage": 41.4,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "ally:Lulu:enemy:Aatrox:6",
             "event_precision": "exact",
@@ -40079,6 +40195,7 @@
             "pair_damage": 41.4,
             "raw_damage": 91.0,
             "sequence": 5,
+            "skipped_reason": "attacker_state_blocked",
             "source": "auto_attacks",
             "target": "enemy:Aatrox",
             "time": 2.28
@@ -40093,14 +40210,14 @@
             "pair_damage": 40.6,
             "raw_damage": 91.0,
             "sequence": 5,
-            "skipped_reason": "target_dead",
+            "skipped_reason": "attacker_state_blocked",
             "source": "auto_attacks",
             "target": "enemy:Malphite",
             "time": 2.28
           },
           {
             "attacker": "ally:Lulu",
-            "damage": 70.1,
+            "damage": 0.0,
             "damage_type": "magic",
             "event_id": "ally:Lulu:enemy:Aatrox:7",
             "event_precision": "exact",
@@ -40108,6 +40225,7 @@
             "pair_damage": 70.1,
             "raw_damage": 117.0,
             "sequence": 13,
+            "skipped_reason": "attacker_state_blocked",
             "source": "on_hit_ability_passive",
             "target": "enemy:Aatrox",
             "time": 2.28
@@ -40122,7 +40240,7 @@
             "pair_damage": 71.8,
             "raw_damage": 117.0,
             "sequence": 13,
-            "skipped_reason": "target_dead",
+            "skipped_reason": "attacker_state_blocked",
             "source": "on_hit_ability_passive",
             "target": "enemy:Malphite",
             "time": 2.28
@@ -40185,14 +40303,15 @@
           },
           {
             "attacker": "main",
-            "damage": 86.1,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "main:enemy:Aatrox:6",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 86.1,
-            "raw_damage": 86.1,
+            "raw_damage": 0.0,
             "sequence": 12,
+            "skipped_reason": "attacker_state_blocked",
             "source": "stacking_dot_passive",
             "target": "enemy:Aatrox",
             "time": 2.5
@@ -40207,14 +40326,74 @@
             "pair_damage": 84.9,
             "raw_damage": 0.0,
             "sequence": 12,
-            "skipped_reason": "target_dead",
+            "skipped_reason": "attacker_state_blocked",
             "source": "stacking_dot_passive",
             "target": "enemy:Malphite",
             "time": 2.5
           },
           {
+            "attacker": "main",
+            "cc_kind": "slow",
+            "damage": 154.9,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Aatrox:3",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 154.9,
+            "raw_damage": 266.4,
+            "sequence": 2,
+            "source": "W",
+            "target": "enemy:Aatrox",
+            "time": 2.74
+          },
+          {
+            "attacker": "main",
+            "cc_kind": "slow",
+            "damage": 152.8,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Malphite:4",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 152.8,
+            "raw_damage": 266.4,
+            "sequence": 2,
+            "source": "W",
+            "target": "enemy:Malphite",
+            "time": 2.74
+          },
+          {
+            "attacker": "main",
+            "cc_kind": "none",
+            "damage": 1192.5,
+            "damage_type": "true",
+            "event_id": "main:enemy:Aatrox:4",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 1192.5,
+            "raw_damage": 847.5,
+            "sequence": 6,
+            "source": "R",
+            "target": "enemy:Aatrox",
+            "time": 2.74
+          },
+          {
+            "attacker": "main",
+            "cc_kind": "none",
+            "damage": 1192.5,
+            "damage_type": "true",
+            "event_id": "main:enemy:Malphite:5",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 1192.5,
+            "raw_damage": 847.5,
+            "sequence": 6,
+            "source": "R",
+            "target": "enemy:Malphite",
+            "time": 2.74
+          },
+          {
             "attacker": "enemy:Malphite",
-            "damage": 0.0,
+            "damage": 63.7,
             "damage_type": "physical",
             "event_id": "enemy:Malphite:ally:Lulu:8",
             "event_precision": "exact",
@@ -40222,14 +40401,13 @@
             "pair_damage": 63.7,
             "raw_damage": 130.0,
             "sequence": 9,
-            "skipped_reason": "attacker_dead",
             "source": "auto_attacks",
             "target": "ally:Lulu",
             "time": 2.94
           },
           {
             "attacker": "enemy:Malphite",
-            "damage": 0.0,
+            "damage": 57.8,
             "damage_type": "physical",
             "event_id": "enemy:Malphite:main:8",
             "event_precision": "exact",
@@ -40237,7 +40415,6 @@
             "pair_damage": 57.8,
             "raw_damage": 130.0,
             "sequence": 9,
-            "skipped_reason": "attacker_dead",
             "source": "auto_attacks",
             "target": "main",
             "time": 2.94
@@ -40246,11 +40423,11 @@
             "area_damage": true,
             "attacker": "enemy:Aatrox",
             "cc_kind": "knockup",
-            "damage": 325.2,
+            "damage": 166.5,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:7",
             "event_precision": "hit",
-            "overkill": 0.0,
+            "overkill": 158.6,
             "pair_damage": 325.2,
             "raw_damage": 663.3,
             "sequence": 2,
@@ -40273,6 +40450,36 @@
             "source": "Q",
             "target": "main",
             "time": 3.0
+          },
+          {
+            "attacker": "main",
+            "cc_kind": "slow",
+            "damage": 258.1,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Aatrox:5",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 258.1,
+            "raw_damage": 444.0,
+            "sequence": 3,
+            "source": "W",
+            "target": "enemy:Aatrox",
+            "time": 3.01
+          },
+          {
+            "attacker": "main",
+            "cc_kind": "slow",
+            "damage": 84.9,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Malphite:6",
+            "event_precision": "exact",
+            "overkill": 169.7,
+            "pair_damage": 254.6,
+            "raw_damage": 444.0,
+            "sequence": 3,
+            "source": "W",
+            "target": "enemy:Malphite",
+            "time": 3.01
           },
           {
             "attacker": "main",
@@ -40327,7 +40534,7 @@
           {
             "attacker": "enemy:Aatrox",
             "cc_kind": "pull",
-            "damage": 74.1,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:8",
             "event_precision": "hit",
@@ -40336,6 +40543,7 @@
             "raw_damage": 151.2,
             "sequence": 7,
             "skillshot": true,
+            "skipped_reason": "target_dead",
             "source": "W",
             "target": "ally:Lulu",
             "time": 3.1
@@ -40358,7 +40566,7 @@
           },
           {
             "attacker": "ally:Lulu",
-            "damage": 41.4,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "ally:Lulu:enemy:Aatrox:8",
             "event_precision": "exact",
@@ -40366,6 +40574,7 @@
             "pair_damage": 41.4,
             "raw_damage": 91.0,
             "sequence": 6,
+            "skipped_reason": "attacker_dead",
             "source": "auto_attacks",
             "target": "enemy:Aatrox",
             "time": 3.33
@@ -40387,7 +40596,7 @@
           },
           {
             "attacker": "ally:Lulu",
-            "damage": 70.1,
+            "damage": 0.0,
             "damage_type": "magic",
             "event_id": "ally:Lulu:enemy:Aatrox:9",
             "event_precision": "exact",
@@ -40395,6 +40604,7 @@
             "pair_damage": 70.1,
             "raw_damage": 117.0,
             "sequence": 14,
+            "skipped_reason": "attacker_dead",
             "source": "on_hit_ability_passive",
             "target": "enemy:Aatrox",
             "time": 3.33
@@ -40416,7 +40626,7 @@
           },
           {
             "attacker": "enemy:Aatrox",
-            "damage": 99.5,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:11",
             "event_precision": "exact",
@@ -40424,6 +40634,7 @@
             "pair_damage": 99.5,
             "raw_damage": 203.0,
             "sequence": 11,
+            "skipped_reason": "target_dead",
             "source": "auto_attacks",
             "target": "ally:Lulu",
             "time": 3.45
@@ -40444,14 +40655,15 @@
           },
           {
             "attacker": "enemy:Aatrox",
-            "damage": 58.3,
+            "damage": 0.0,
             "damage_type": "magic",
             "event_id": "enemy:Aatrox:ally:Lulu:12",
             "event_precision": "exact",
-            "overkill": 81.7,
+            "overkill": 0.0,
             "pair_damage": 140.1,
             "raw_damage": 212.9,
             "sequence": 19,
+            "skipped_reason": "target_dead",
             "source": "on_hit_ability_passive",
             "target": "ally:Lulu",
             "time": 3.45
@@ -41397,6 +41609,40 @@
             "time": 7.47
           },
           {
+            "area_damage": true,
+            "attacker": "enemy:Malphite",
+            "cc_kind": "cripple",
+            "damage": 0.0,
+            "damage_type": "magic",
+            "event_id": "enemy:Malphite:ally:Lulu:14",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 193.6,
+            "raw_damage": 294.2,
+            "sequence": 4,
+            "skipped_reason": "target_dead",
+            "source": "E",
+            "target": "ally:Lulu",
+            "time": 7.49
+          },
+          {
+            "area_damage": true,
+            "attacker": "enemy:Malphite",
+            "cc_kind": "cripple",
+            "damage": 0.0,
+            "damage_type": "magic",
+            "event_id": "enemy:Malphite:main:14",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 176.2,
+            "raw_damage": 294.2,
+            "sequence": 4,
+            "skipped_reason": "attacker_dead",
+            "source": "E",
+            "target": "main",
+            "time": 7.49
+          },
+          {
             "attacker": "main",
             "damage": 86.1,
             "damage_type": "physical",
@@ -41575,40 +41821,6 @@
             "source": "Q",
             "target": "main",
             "time": 7.85
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Malphite",
-            "cc_kind": "cripple",
-            "damage": 0.0,
-            "damage_type": "magic",
-            "event_id": "enemy:Malphite:ally:Lulu:14",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 193.6,
-            "raw_damage": 294.2,
-            "sequence": 4,
-            "skipped_reason": "outside_window",
-            "source": "E",
-            "target": "ally:Lulu",
-            "time": 8.24
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Malphite",
-            "cc_kind": "cripple",
-            "damage": 0.0,
-            "damage_type": "magic",
-            "event_id": "enemy:Malphite:main:14",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 176.2,
-            "raw_damage": 294.2,
-            "sequence": 4,
-            "skipped_reason": "outside_window",
-            "source": "E",
-            "target": "main",
-            "time": 8.24
           },
           {
             "attacker": "main",
@@ -42235,11 +42447,11 @@
           },
           {
             "amount": 310.2,
-            "applied_amount": 310.2,
+            "applied_amount": 112.4,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:11:main",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 197.8,
             "raw_amount": 310.2,
             "reduced_amount": 310.2,
             "source": "Deathbringer Stance",
@@ -42250,11 +42462,11 @@
           },
           {
             "amount": 44.8,
-            "applied_amount": 44.8,
+            "applied_amount": 0.0,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:13:ally:Lulu",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 44.8,
             "raw_amount": 44.8,
             "reduced_amount": 44.8,
             "source": "Umbral Dash",
@@ -42265,11 +42477,11 @@
           },
           {
             "amount": 49.6,
-            "applied_amount": 49.6,
+            "applied_amount": 0.0,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:13:main",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 49.6,
             "raw_amount": 49.6,
             "reduced_amount": 49.6,
             "source": "Umbral Dash",
@@ -42327,13 +42539,14 @@
           },
           {
             "amount": 31.8,
-            "applied_amount": 31.8,
+            "applied_amount": 0.0,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:15:ally:Lulu",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 31.8,
             "raw_amount": 31.8,
             "reduced_amount": 31.8,
+            "skipped_reason": "trigger_event_skipped",
             "source": "Umbral Dash",
             "temporary_health": 0.0,
             "time": 3.45,
@@ -42357,13 +42570,14 @@
           },
           {
             "amount": 280.1,
-            "applied_amount": 280.1,
+            "applied_amount": 0.0,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:14:ally:Lulu",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 280.1,
             "raw_amount": 280.1,
             "reduced_amount": 280.1,
+            "skipped_reason": "trigger_event_skipped",
             "source": "Deathbringer Stance",
             "temporary_health": 0.0,
             "time": 3.45,
@@ -42387,13 +42601,14 @@
           },
           {
             "amount": 44.8,
-            "applied_amount": 44.8,
+            "applied_amount": 0.0,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:16:ally:Lulu",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 44.8,
             "raw_amount": 44.8,
             "reduced_amount": 44.8,
+            "skipped_reason": "trigger_event_skipped",
             "source": "Umbral Dash",
             "temporary_health": 0.0,
             "time": 3.45,
@@ -42650,13 +42865,13 @@
           },
           {
             "amount": 0.0,
-            "applied_amount": 744.3,
+            "applied_amount": 865.1,
             "attacker": "main",
             "event_id": "main:heal:4:enemy:Aatrox",
             "healing_reduction_factor": 1.0,
             "overheal": 0.0,
-            "raw_amount": 744.3,
-            "reduced_amount": 744.3,
+            "raw_amount": 865.1,
+            "reduced_amount": 865.1,
             "source": "Decimate",
             "temporary_health": 0.0,
             "time": 5.75,
@@ -43037,15 +43252,23 @@
         ],
         "item_denial_receipts": [],
         "objective": {
-          "enemy_team_damage_before_death": 5642.5,
-          "enemy_team_effective_health": 9197.0,
-          "focus_damage_before_death": 6775.5,
-          "focus_healing": 954.6,
+          "enemy_team_damage_before_death": 5997.6,
+          "enemy_team_effective_health": 8547.9,
+          "focus_damage_before_death": 6603.3,
+          "focus_healing": 1075.3,
           "focus_participant_id": "main",
           "focus_support_value": 0.0,
           "focus_survival": {
-            "action_downtime": 0.0,
-            "action_downtime_intervals": [],
+            "action_downtime": 1.5,
+            "action_downtime_intervals": [
+              {
+                "end": 2.74,
+                "kind": "knockup",
+                "recipient": "main",
+                "source": "R",
+                "start": 1.24
+              }
+            ],
             "aftershock": {
               "bonus_armor": 0.0,
               "bonus_magic_resistance": 0.0,
@@ -43054,19 +43277,27 @@
             },
             "crowd_control_immunity_source": "",
             "crowd_control_immunity_until": 0.0,
-            "crowd_control_intervals": [],
-            "crowd_control_until": 0.0,
+            "crowd_control_intervals": [
+              {
+                "end": 2.74,
+                "kind": "knockup",
+                "recipient": "main",
+                "source": "R",
+                "start": 1.24
+              }
+            ],
+            "crowd_control_until": 2.74,
             "damage_deferral_cleared": 0.0,
             "damage_deferral_fraction": 0.0,
             "damage_deferral_pending": 0.0,
-            "damage_taken": 3513.5,
+            "damage_taken": 3868.5,
             "death_time": null,
             "defy_heal_received": 0.0,
             "defy_trigger_time": null,
             "defy_triggered": false,
-            "effective_health": 3774.6,
-            "ending_health": 261.1,
-            "ending_health_ratio": 0.1,
+            "effective_health": 3895.3,
+            "ending_health": 26.7,
+            "ending_health_ratio": 0.01,
             "execute_source": "",
             "execute_time": null,
             "first_death_time": null,
@@ -43080,12 +43311,12 @@
               "cooldown_until": 0.0,
               "trigger_events": []
             },
-            "healing_received": 954.6,
+            "healing_received": 1075.3,
             "healing_reduced": 0.0,
             "healing_reduction_events": [],
             "healing_reduction_until": 0.0,
             "healing_reduction_window_sources": [],
-            "health_damage": 3283.5,
+            "health_damage": 3638.5,
             "invulnerable_until": 0.0,
             "jaksho": {
               "dynamic_bonus_armor": 0.0,
@@ -43193,8 +43424,8 @@
               "ward_uses": 0
             }
           },
-          "main_team_damage_before_death": 7967.3,
-          "main_team_effective_health": 5903.6,
+          "main_team_damage_before_death": 7572.2,
+          "main_team_effective_health": 6024.3,
           "surviving_main_team": 1,
           "total_healing_reduced": 0.0,
           "total_support_value": 473.3
@@ -43254,8 +43485,16 @@
             },
             "stats_state": "pre_combat",
             "survival": {
-              "action_downtime": 0.0,
-              "action_downtime_intervals": [],
+              "action_downtime": 1.5,
+              "action_downtime_intervals": [
+                {
+                  "end": 2.74,
+                  "kind": "knockup",
+                  "recipient": "main",
+                  "source": "R",
+                  "start": 1.24
+                }
+              ],
               "aftershock": {
                 "bonus_armor": 0.0,
                 "bonus_magic_resistance": 0.0,
@@ -43264,19 +43503,27 @@
               },
               "crowd_control_immunity_source": "",
               "crowd_control_immunity_until": 0.0,
-              "crowd_control_intervals": [],
-              "crowd_control_until": 0.0,
+              "crowd_control_intervals": [
+                {
+                  "end": 2.74,
+                  "kind": "knockup",
+                  "recipient": "main",
+                  "source": "R",
+                  "start": 1.24
+                }
+              ],
+              "crowd_control_until": 2.74,
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 3513.5,
+              "damage_taken": 3868.5,
               "death_time": null,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
-              "effective_health": 3774.6,
-              "ending_health": 261.1,
-              "ending_health_ratio": 0.1,
+              "effective_health": 3895.3,
+              "ending_health": 26.7,
+              "ending_health_ratio": 0.01,
               "execute_source": "",
               "execute_time": null,
               "first_death_time": null,
@@ -43290,12 +43537,12 @@
                 "cooldown_until": 0.0,
                 "trigger_events": []
               },
-              "healing_received": 954.6,
+              "healing_received": 1075.3,
               "healing_reduced": 0.0,
               "healing_reduction_events": [],
               "healing_reduction_until": 0.0,
               "healing_reduction_window_sources": [],
-              "health_damage": 3283.5,
+              "health_damage": 3638.5,
               "invulnerable_until": 0.0,
               "jaksho": {
                 "dynamic_bonus_armor": 0.0,
@@ -43394,14 +43641,21 @@
             },
             "stats_state": "pre_combat",
             "survival": {
-              "action_downtime": 4.55,
+              "action_downtime": 6.5,
               "action_downtime_intervals": [
+                {
+                  "end": 2.74,
+                  "kind": "knockup",
+                  "recipient": "ally:Lulu",
+                  "source": "R",
+                  "start": 1.24
+                },
                 {
                   "end": 8.0,
                   "kind": "death",
                   "recipient": "ally:Lulu",
-                  "source": "on_hit_ability_passive",
-                  "start": 3.45
+                  "source": "Q",
+                  "start": 3.0
                 }
               ],
               "aftershock": {
@@ -43412,13 +43666,21 @@
               },
               "crowd_control_immunity_source": "",
               "crowd_control_immunity_until": 0.0,
-              "crowd_control_intervals": [],
-              "crowd_control_until": 0.0,
+              "crowd_control_intervals": [
+                {
+                  "end": 2.74,
+                  "kind": "knockup",
+                  "recipient": "ally:Lulu",
+                  "source": "R",
+                  "start": 1.24
+                }
+              ],
+              "crowd_control_until": 2.74,
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 2210.7,
-              "death_time": 3.45,
+              "damage_taken": 2287.6,
+              "death_time": 3.0,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
@@ -43427,7 +43689,7 @@
               "ending_health_ratio": 0.0,
               "execute_source": "",
               "execute_time": null,
-              "first_death_time": 3.45,
+              "first_death_time": 3.0,
               "force_of_nature": {
                 "dynamic_bonus_magic_resistance": 0.0,
                 "events": [],
@@ -43453,7 +43715,7 @@
               },
               "max_health": 2129.0,
               "overhealing": 0.0,
-              "overkill": 81.7,
+              "overkill": 158.6,
               "permanent_bonus_health_events": [],
               "permanent_bonus_health_received": 0.0,
               "projectile_defense": null,
@@ -43573,14 +43835,14 @@
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 5291.0,
+              "damage_taken": 4895.9,
               "death_time": null,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
-              "effective_health": 6520.7,
-              "ending_health": 1229.7,
-              "ending_health_ratio": 0.48,
+              "effective_health": 5871.6,
+              "ending_health": 975.7,
+              "ending_health_ratio": 0.38,
               "execute_source": "",
               "execute_time": null,
               "first_death_time": null,
@@ -43594,12 +43856,12 @@
                 "cooldown_until": 0.0,
                 "trigger_events": []
               },
-              "healing_received": 3932.7,
+              "healing_received": 3283.6,
               "healing_reduced": 0.0,
               "healing_reduction_events": [],
               "healing_reduction_until": 0.0,
               "healing_reduction_window_sources": [],
-              "health_damage": 5291.0,
+              "health_damage": 4895.9,
               "invulnerable_until": 0.0,
               "jaksho": {
                 "dynamic_bonus_armor": 0.0,
@@ -43608,7 +43870,7 @@
                 "stacks": 0
               },
               "max_health": 2588.0,
-              "overhealing": 0.0,
+              "overhealing": 292.2,
               "overkill": 0.0,
               "permanent_bonus_health_events": [],
               "permanent_bonus_health_received": 0.0,
@@ -43698,7 +43960,7 @@
             },
             "stats_state": "pre_combat",
             "survival": {
-              "action_downtime": 7.6,
+              "action_downtime": 5.99,
               "action_downtime_intervals": [
                 {
                   "end": 1.0,
@@ -43711,8 +43973,8 @@
                   "end": 8.0,
                   "kind": "death",
                   "recipient": "enemy:Malphite",
-                  "source": "R",
-                  "start": 1.4
+                  "source": "W",
+                  "start": 3.01
                 }
               ],
               "aftershock": {
@@ -43736,8 +43998,8 @@
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 2676.4,
-              "death_time": 1.4,
+              "damage_taken": 2846.0,
+              "death_time": 3.01,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
@@ -43746,7 +44008,7 @@
               "ending_health_ratio": 0.0,
               "execute_source": "",
               "execute_time": null,
-              "first_death_time": 1.4,
+              "first_death_time": 3.01,
               "force_of_nature": {
                 "dynamic_bonus_magic_resistance": 0.0,
                 "events": [],
@@ -43772,7 +44034,7 @@
               },
               "max_health": 2433.0,
               "overhealing": 0.0,
-              "overkill": 0.1,
+              "overkill": 169.7,
               "permanent_bonus_health_events": [],
               "permanent_bonus_health_received": 0.0,
               "projectile_defense": null,
@@ -135064,9 +135326,9 @@
             "healing_output": 0.0,
             "healing_received": 169.0,
             "healing_reduced": 0.0,
-            "health_damage": 473.1,
-            "incoming_damage": 473.1,
-            "outgoing_damage_before_death": 2257.8,
+            "health_damage": 736.3,
+            "incoming_damage": 736.3,
+            "outgoing_damage_before_death": 2189.8,
             "participant_id": "main",
             "shield_absorbed": 0.0,
             "sources": [
@@ -135076,7 +135338,7 @@
               },
               {
                 "name": "Damage Amplification (Liandry's Torment)",
-                "total_damage": 65.8
+                "total_damage": 63.8
               },
               {
                 "name": "Orb of Deception",
@@ -135092,14 +135354,14 @@
               },
               {
                 "name": "Liandry's Torment (burn)",
-                "total_damage": 224.5
+                "total_damage": 158.4
               }
             ],
             "support_shield_received": 0.0,
             "support_value": 0.0,
             "survived_window": true,
             "team": "main",
-            "total_damage": 2257.8,
+            "total_damage": 2189.8,
             "utility_outcomes": {
               "applied_dimensions": [],
               "cleanse": {
@@ -135156,8 +135418,8 @@
             "healing_output": 0.0,
             "healing_received": 0.0,
             "healing_reduced": 0.0,
-            "health_damage": 433.5,
-            "incoming_damage": 433.5,
+            "health_damage": 678.9,
+            "incoming_damage": 678.9,
             "outgoing_damage_before_death": 843.6,
             "participant_id": "ally:Pantheon",
             "shield_absorbed": 0.0,
@@ -135240,9 +135502,9 @@
             "healing_output": 0.0,
             "healing_received": 400.0,
             "healing_reduced": 0.0,
-            "health_damage": 2798.1,
-            "incoming_damage": 3101.4,
-            "outgoing_damage_before_death": 906.6,
+            "health_damage": 2730.1,
+            "incoming_damage": 3033.4,
+            "outgoing_damage_before_death": 1415.2,
             "participant_id": "enemy:Malphite",
             "shield_absorbed": 303.3,
             "sources": [
@@ -135257,13 +135519,17 @@
               {
                 "name": "Ground Slam",
                 "total_damage": 374.1
+              },
+              {
+                "name": "Unstoppable Force",
+                "total_damage": 508.6
               }
             ],
             "support_shield_received": 303.3,
             "support_value": 303.3,
             "survived_window": true,
             "team": "enemy",
-            "total_damage": 906.6,
+            "total_damage": 1415.2,
             "utility_outcomes": {
               "applied_dimensions": [],
               "cleanse": {
@@ -135487,6 +135753,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "breakdown[2].sources[3].total_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "breakdown[2].support_shield_received": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -135579,22 +135849,12 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[12].cc_duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[12].control_source_atoms[0].values[0]": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[12].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[12].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[12].pair_damage": {
@@ -135609,22 +135869,12 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[13].cc_duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[13].control_source_atoms[0].values[0]": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[13].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[13].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[13].pair_damage": {
@@ -136091,6 +136341,22 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[34].cc_duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[34].control_source_atoms[0].values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[34].crowd_control.duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[34].crowd_control.until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[34].damage": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -136108,6 +136374,22 @@
             "view_tag": "applied"
           },
           "events[34].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[35].cc_duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[35].control_source_atoms[0].values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[35].crowd_control.duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[35].crowd_control.until": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -136132,11 +136414,13 @@
             "view_tag": "applied"
           },
           "events[36].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[36].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[36].pair_damage": {
@@ -136152,11 +136436,13 @@
             "view_tag": "applied"
           },
           "events[37].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[37].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[37].pair_damage": {
@@ -136172,11 +136458,13 @@
             "view_tag": "applied"
           },
           "events[38].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[38].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[38].pair_damage": {
@@ -136192,11 +136480,13 @@
             "view_tag": "applied"
           },
           "events[39].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[39].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[39].pair_damage": {
@@ -136232,11 +136522,13 @@
             "view_tag": "applied"
           },
           "events[40].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[40].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[40].pair_damage": {
@@ -136252,11 +136544,13 @@
             "view_tag": "applied"
           },
           "events[41].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[41].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[41].pair_damage": {
@@ -136611,6 +136905,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "objective.focus_survival.action_downtime_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.action_downtime_intervals[0].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "objective.focus_survival.aftershock.bonus_armor": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -136624,6 +136926,14 @@
             "view_tag": "applied"
           },
           "objective.focus_survival.crowd_control_immunity_until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.crowd_control_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.crowd_control_intervals[0].start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -136903,6 +137213,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].survival.action_downtime_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.action_downtime_intervals[0].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].survival.aftershock.bonus_armor": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -136916,6 +137234,14 @@
             "view_tag": "applied"
           },
           "participants[0].survival.crowd_control_immunity_until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.crowd_control_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.crowd_control_intervals[0].start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -137175,6 +137501,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].survival.action_downtime_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.action_downtime_intervals[0].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].survival.aftershock.bonus_armor": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -137188,6 +137522,14 @@
             "view_tag": "applied"
           },
           "participants[1].survival.crowd_control_immunity_until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.crowd_control_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.crowd_control_intervals[0].start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -137880,76 +138222,6 @@
             "time": 0.25
           },
           {
-            "area_damage": true,
-            "attacker": "enemy:Malphite",
-            "cc_duration": 1.5,
-            "cc_kind": "knockup",
-            "control_source_atoms": [
-              {
-                "atom_id": "timing.control_duration",
-                "behavior": "timing",
-                "evidence": [
-                  "control duration@effects[0].description"
-                ],
-                "hash": "e3de4d518dd5e28d",
-                "source": "Malphite.R[0].effects[0].description",
-                "units": [
-                  "s"
-                ],
-                "values": [
-                  1.5
-                ]
-              }
-            ],
-            "damage": 0.0,
-            "damage_type": "magic",
-            "event_id": "enemy:Malphite:ally:Pantheon:4",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 245.4,
-            "raw_damage": 400.0,
-            "sequence": 4,
-            "skipped_reason": "attacker_state_blocked",
-            "source": "R",
-            "target": "ally:Pantheon",
-            "time": 0.49
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Malphite",
-            "cc_duration": 1.5,
-            "cc_kind": "knockup",
-            "control_source_atoms": [
-              {
-                "atom_id": "timing.control_duration",
-                "behavior": "timing",
-                "evidence": [
-                  "control duration@effects[0].description"
-                ],
-                "hash": "e3de4d518dd5e28d",
-                "source": "Malphite.R[0].effects[0].description",
-                "units": [
-                  "s"
-                ],
-                "values": [
-                  1.5
-                ]
-              }
-            ],
-            "damage": 0.0,
-            "damage_type": "magic",
-            "event_id": "enemy:Malphite:main:4",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 263.2,
-            "raw_damage": 400.0,
-            "sequence": 4,
-            "skipped_reason": "attacker_state_blocked",
-            "source": "R",
-            "target": "main",
-            "time": 0.49
-          },
-          {
             "attacker": "main",
             "cc_kind": "none",
             "damage": 350.1,
@@ -138278,85 +138550,169 @@
             "time": 2.0
           },
           {
+            "area_damage": true,
+            "attacker": "enemy:Malphite",
+            "cc_duration": 1.5,
+            "cc_kind": "knockup",
+            "control_source_atoms": [
+              {
+                "atom_id": "timing.control_duration",
+                "behavior": "timing",
+                "evidence": [
+                  "control duration@effects[0].description"
+                ],
+                "hash": "e3de4d518dd5e28d",
+                "source": "Malphite.R[0].effects[0].description",
+                "units": [
+                  "s"
+                ],
+                "values": [
+                  1.5
+                ]
+              }
+            ],
+            "crowd_control": {
+              "duration": 1.5,
+              "kind": "knockup",
+              "until": 3.54
+            },
+            "damage": 245.4,
+            "damage_type": "magic",
+            "event_id": "enemy:Malphite:ally:Pantheon:4",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 245.4,
+            "raw_damage": 400.0,
+            "sequence": 4,
+            "source": "R",
+            "target": "ally:Pantheon",
+            "time": 2.04
+          },
+          {
+            "area_damage": true,
+            "attacker": "enemy:Malphite",
+            "cc_duration": 1.5,
+            "cc_kind": "knockup",
+            "control_source_atoms": [
+              {
+                "atom_id": "timing.control_duration",
+                "behavior": "timing",
+                "evidence": [
+                  "control duration@effects[0].description"
+                ],
+                "hash": "e3de4d518dd5e28d",
+                "source": "Malphite.R[0].effects[0].description",
+                "units": [
+                  "s"
+                ],
+                "values": [
+                  1.5
+                ]
+              }
+            ],
+            "crowd_control": {
+              "duration": 1.5,
+              "kind": "knockup",
+              "until": 3.54
+            },
+            "damage": 263.2,
+            "damage_type": "magic",
+            "event_id": "enemy:Malphite:main:4",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 263.2,
+            "raw_damage": 400.0,
+            "sequence": 4,
+            "source": "R",
+            "target": "main",
+            "time": 2.04
+          },
+          {
             "attacker": "main",
-            "damage": 22.0,
+            "damage": 0.0,
             "damage_type": "magic",
             "event_id": "main:enemy:Malphite:22",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 22.0,
-            "raw_damage": 22.0,
+            "raw_damage": 0.0,
             "sequence": 11,
+            "skipped_reason": "attacker_state_blocked",
             "source": "burn_Liandry's Torment",
             "target": "enemy:Malphite",
             "time": 2.5
           },
           {
             "attacker": "main",
-            "damage": 0.7,
+            "damage": 0.0,
             "damage_type": "magic",
             "event_id": "main:enemy:Malphite:23",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 0.7,
-            "raw_damage": 0.7,
+            "raw_damage": 0.0,
             "sequence": 29,
+            "skipped_reason": "attacker_state_blocked",
             "source": "damage_amp_Liandry's Torment",
             "target": "enemy:Malphite",
             "time": 2.5
           },
           {
             "attacker": "main",
-            "damage": 22.0,
+            "damage": 0.0,
             "damage_type": "magic",
             "event_id": "main:enemy:Malphite:24",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 22.0,
-            "raw_damage": 22.0,
+            "raw_damage": 0.0,
             "sequence": 12,
+            "skipped_reason": "attacker_state_blocked",
             "source": "burn_Liandry's Torment",
             "target": "enemy:Malphite",
             "time": 3.0
           },
           {
             "attacker": "main",
-            "damage": 0.7,
+            "damage": 0.0,
             "damage_type": "magic",
             "event_id": "main:enemy:Malphite:25",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 0.7,
-            "raw_damage": 0.7,
+            "raw_damage": 0.0,
             "sequence": 30,
+            "skipped_reason": "attacker_state_blocked",
             "source": "damage_amp_Liandry's Torment",
             "target": "enemy:Malphite",
             "time": 3.0
           },
           {
             "attacker": "main",
-            "damage": 22.0,
+            "damage": 0.0,
             "damage_type": "magic",
             "event_id": "main:enemy:Malphite:26",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 22.0,
-            "raw_damage": 22.0,
+            "raw_damage": 0.0,
             "sequence": 13,
+            "skipped_reason": "attacker_state_blocked",
             "source": "burn_Liandry's Torment",
             "target": "enemy:Malphite",
             "time": 3.5
           },
           {
             "attacker": "main",
-            "damage": 0.7,
+            "damage": 0.0,
             "damage_type": "magic",
             "event_id": "main:enemy:Malphite:27",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 0.7,
-            "raw_damage": 0.7,
+            "raw_damage": 0.0,
             "sequence": 31,
+            "skipped_reason": "attacker_state_blocked",
             "source": "damage_amp_Liandry's Torment",
             "target": "enemy:Malphite",
             "time": 3.5
@@ -138495,15 +138851,23 @@
         ],
         "item_denial_receipts": [],
         "objective": {
-          "enemy_team_damage_before_death": 906.6,
+          "enemy_team_damage_before_death": 1415.2,
           "enemy_team_effective_health": 4036.3,
-          "focus_damage_before_death": 2257.8,
+          "focus_damage_before_death": 2189.8,
           "focus_healing": 169.0,
           "focus_participant_id": "main",
           "focus_support_value": 0.0,
           "focus_survival": {
-            "action_downtime": 0.0,
-            "action_downtime_intervals": [],
+            "action_downtime": 1.5,
+            "action_downtime_intervals": [
+              {
+                "end": 3.54,
+                "kind": "knockup",
+                "recipient": "main",
+                "source": "R",
+                "start": 2.04
+              }
+            ],
             "aftershock": {
               "bonus_armor": 0.0,
               "bonus_magic_resistance": 0.0,
@@ -138512,19 +138876,27 @@
             },
             "crowd_control_immunity_source": "",
             "crowd_control_immunity_until": 0.0,
-            "crowd_control_intervals": [],
-            "crowd_control_until": 0.0,
+            "crowd_control_intervals": [
+              {
+                "end": 3.54,
+                "kind": "knockup",
+                "recipient": "main",
+                "source": "R",
+                "start": 2.04
+              }
+            ],
+            "crowd_control_until": 3.54,
             "damage_deferral_cleared": 0.0,
             "damage_deferral_fraction": 0.0,
             "damage_deferral_pending": 0.0,
-            "damage_taken": 473.1,
+            "damage_taken": 736.3,
             "death_time": null,
             "defy_heal_received": 0.0,
             "defy_trigger_time": null,
             "defy_triggered": false,
             "effective_health": 2827.0,
-            "ending_health": 2353.9,
-            "ending_health_ratio": 0.89,
+            "ending_health": 2090.7,
+            "ending_health_ratio": 0.79,
             "execute_source": "",
             "execute_time": null,
             "first_death_time": null,
@@ -138543,7 +138915,7 @@
             "healing_reduction_events": [],
             "healing_reduction_until": 0.0,
             "healing_reduction_window_sources": [],
-            "health_damage": 473.1,
+            "health_damage": 736.3,
             "invulnerable_until": 0.0,
             "jaksho": {
               "dynamic_bonus_armor": 0.0,
@@ -138636,7 +139008,7 @@
               "ward_uses": 0
             }
           },
-          "main_team_damage_before_death": 3101.4,
+          "main_team_damage_before_death": 3033.4,
           "main_team_effective_health": 5330.0,
           "surviving_main_team": 2,
           "total_healing_reduced": 0.0,
@@ -138699,8 +139071,16 @@
             },
             "stats_state": "pre_combat",
             "survival": {
-              "action_downtime": 0.0,
-              "action_downtime_intervals": [],
+              "action_downtime": 1.5,
+              "action_downtime_intervals": [
+                {
+                  "end": 3.54,
+                  "kind": "knockup",
+                  "recipient": "main",
+                  "source": "R",
+                  "start": 2.04
+                }
+              ],
               "aftershock": {
                 "bonus_armor": 0.0,
                 "bonus_magic_resistance": 0.0,
@@ -138709,19 +139089,27 @@
               },
               "crowd_control_immunity_source": "",
               "crowd_control_immunity_until": 0.0,
-              "crowd_control_intervals": [],
-              "crowd_control_until": 0.0,
+              "crowd_control_intervals": [
+                {
+                  "end": 3.54,
+                  "kind": "knockup",
+                  "recipient": "main",
+                  "source": "R",
+                  "start": 2.04
+                }
+              ],
+              "crowd_control_until": 3.54,
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 473.1,
+              "damage_taken": 736.3,
               "death_time": null,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
               "effective_health": 2827.0,
-              "ending_health": 2353.9,
-              "ending_health_ratio": 0.89,
+              "ending_health": 2090.7,
+              "ending_health_ratio": 0.79,
               "execute_source": "",
               "execute_time": null,
               "first_death_time": null,
@@ -138740,7 +139128,7 @@
               "healing_reduction_events": [],
               "healing_reduction_until": 0.0,
               "healing_reduction_window_sources": [],
-              "health_damage": 473.1,
+              "health_damage": 736.3,
               "invulnerable_until": 0.0,
               "jaksho": {
                 "dynamic_bonus_armor": 0.0,
@@ -138839,8 +139227,16 @@
             },
             "stats_state": "pre_combat",
             "survival": {
-              "action_downtime": 0.0,
-              "action_downtime_intervals": [],
+              "action_downtime": 1.5,
+              "action_downtime_intervals": [
+                {
+                  "end": 3.54,
+                  "kind": "knockup",
+                  "recipient": "ally:Pantheon",
+                  "source": "R",
+                  "start": 2.04
+                }
+              ],
               "aftershock": {
                 "bonus_armor": 0.0,
                 "bonus_magic_resistance": 0.0,
@@ -138849,19 +139245,27 @@
               },
               "crowd_control_immunity_source": "",
               "crowd_control_immunity_until": 0.0,
-              "crowd_control_intervals": [],
-              "crowd_control_until": 0.0,
+              "crowd_control_intervals": [
+                {
+                  "end": 3.54,
+                  "kind": "knockup",
+                  "recipient": "ally:Pantheon",
+                  "source": "R",
+                  "start": 2.04
+                }
+              ],
+              "crowd_control_until": 3.54,
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 433.5,
+              "damage_taken": 678.9,
               "death_time": null,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
               "effective_health": 2503.0,
-              "ending_health": 2069.5,
-              "ending_health_ratio": 0.83,
+              "ending_health": 1824.1,
+              "ending_health_ratio": 0.73,
               "execute_source": "",
               "execute_time": null,
               "first_death_time": null,
@@ -138880,7 +139284,7 @@
               "healing_reduction_events": [],
               "healing_reduction_until": 0.0,
               "healing_reduction_window_sources": [],
-              "health_damage": 433.5,
+              "health_damage": 678.9,
               "invulnerable_until": 0.0,
               "jaksho": {
                 "dynamic_bonus_armor": 0.0,
@@ -139026,14 +139430,14 @@
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 3101.4,
+              "damage_taken": 3033.4,
               "death_time": null,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
               "effective_health": 4036.3,
-              "ending_health": 934.9,
-              "ending_health_ratio": 0.28,
+              "ending_health": 1002.9,
+              "ending_health_ratio": 0.3,
               "execute_source": "",
               "execute_time": null,
               "first_death_time": null,
@@ -139052,7 +139456,7 @@
               "healing_reduction_events": [],
               "healing_reduction_until": 0.0,
               "healing_reduction_window_sources": [],
-              "health_damage": 2798.1,
+              "health_damage": 2730.1,
               "invulnerable_until": 0.0,
               "jaksho": {
                 "dynamic_bonus_armor": 0.0,
@@ -189835,13 +190239,13 @@
           {
             "champion": "Darius",
             "death_time": null,
-            "effective_health": 4316.6,
+            "effective_health": 4417.6,
             "healing_output": 0.0,
-            "healing_received": 896.6,
+            "healing_received": 997.6,
             "healing_reduced": 0.0,
-            "health_damage": 3535.0,
-            "incoming_damage": 3765.0,
-            "outgoing_damage_before_death": 6627.3,
+            "health_damage": 3832.3,
+            "incoming_damage": 4062.3,
+            "outgoing_damage_before_death": 6203.9,
             "participant_id": "main",
             "shield_absorbed": 230.0,
             "sources": [
@@ -189851,7 +190255,7 @@
               },
               {
                 "name": "Titanic Hydra (on-hit)",
-                "total_damage": 129.6
+                "total_damage": 111.0
               },
               {
                 "name": "Titanic Hydra (Titanic Crescent)",
@@ -189863,15 +190267,15 @@
               },
               {
                 "name": "Hemorrhage (bleed)",
-                "total_damage": 563.6
+                "total_damage": 322.7
               },
               {
                 "name": "Crippling Strike",
-                "total_damage": 923.7
+                "total_damage": 680.1
               },
               {
                 "name": "Noxian Guillotine",
-                "total_damage": 2207.1
+                "total_damage": 2286.7
               },
               {
                 "name": "Titanic Hydra Cleave (secondary)",
@@ -189882,7 +190286,7 @@
             "support_value": 0.0,
             "survived_window": true,
             "team": "main",
-            "total_damage": 6627.3,
+            "total_damage": 6203.9,
             "utility_outcomes": {
               "applied_dimensions": [
                 "multi_target"
@@ -189947,14 +190351,14 @@
           },
           {
             "champion": "Lulu",
-            "death_time": 3.45,
+            "death_time": 3.0,
             "effective_health": 2129.0,
             "healing_output": 0.0,
             "healing_received": 0.0,
             "healing_reduced": 0.0,
             "health_damage": 2129.0,
             "incoming_damage": 2129.0,
-            "outgoing_damage_before_death": 1191.8,
+            "outgoing_damage_before_death": 968.9,
             "participant_id": "ally:Lulu",
             "shield_absorbed": 0.0,
             "sources": [
@@ -189964,11 +190368,11 @@
               },
               {
                 "name": "Auto Attacks",
-                "total_damage": 246.7
+                "total_damage": 164.0
               },
               {
                 "name": "Pix, Faerie Companion (on-hit)",
-                "total_damage": 423.8
+                "total_damage": 283.7
               },
               {
                 "name": "Help, Pix!",
@@ -189979,7 +190383,7 @@
             "support_value": 230.0,
             "survived_window": false,
             "team": "ally",
-            "total_damage": 1191.8,
+            "total_damage": 968.9,
             "utility_outcomes": {
               "applied_dimensions": [],
               "cleanse": {
@@ -190032,38 +190436,38 @@
           {
             "champion": "Aatrox",
             "death_time": null,
-            "effective_health": 7104.1,
+            "effective_health": 6327.7,
             "healing_output": 0.0,
-            "healing_received": 4516.1,
+            "healing_received": 3739.7,
             "healing_reduced": 0.0,
-            "health_damage": 5142.8,
-            "incoming_damage": 5142.8,
-            "outgoing_damage_before_death": 4880.5,
+            "health_damage": 4496.5,
+            "incoming_damage": 4496.5,
+            "outgoing_damage_before_death": 4553.6,
             "participant_id": "enemy:Aatrox",
             "shield_absorbed": 0.0,
             "sources": [
               {
                 "name": "Auto Attacks",
-                "total_damage": 930.1
+                "total_damage": 830.6
               },
               {
                 "name": "Deathbringer Stance (on-hit)",
-                "total_damage": 1675.6
+                "total_damage": 1617.3
               },
               {
                 "name": "The Darkin Blade",
-                "total_damage": 1992.2
+                "total_damage": 1897.3
               },
               {
                 "name": "Infernal Chains",
-                "total_damage": 282.6
+                "total_damage": 208.5
               }
             ],
             "support_shield_received": 0.0,
             "support_value": 0.0,
             "survived_window": true,
             "team": "enemy",
-            "total_damage": 4880.5,
+            "total_damage": 4553.6,
             "utility_outcomes": {
               "applied_dimensions": [],
               "cleanse": {
@@ -190115,14 +190519,14 @@
           },
           {
             "champion": "Malphite",
-            "death_time": 1.4,
+            "death_time": 2.74,
             "effective_health": 2676.3,
             "healing_output": 0.0,
             "healing_received": 0.0,
             "healing_reduced": 0.0,
             "health_damage": 2433.0,
             "incoming_damage": 2676.3,
-            "outgoing_damage_before_death": 1013.5,
+            "outgoing_damage_before_death": 1637.7,
             "participant_id": "enemy:Malphite",
             "shield_absorbed": 243.3,
             "sources": [
@@ -190132,7 +190536,7 @@
               },
               {
                 "name": "Auto Attacks",
-                "total_damage": 121.5
+                "total_damage": 243.0
               },
               {
                 "name": "Thunderclap",
@@ -190141,13 +190545,17 @@
               {
                 "name": "Ground Slam",
                 "total_damage": 369.8
+              },
+              {
+                "name": "Unstoppable Force",
+                "total_damage": 502.7
               }
             ],
             "support_shield_received": 243.3,
             "support_value": 243.3,
             "survived_window": false,
             "team": "enemy",
-            "total_damage": 1013.5,
+            "total_damage": 1637.7,
             "utility_outcomes": {
               "applied_dimensions": [],
               "cleanse": {
@@ -190452,6 +190860,10 @@
             "view_tag": "applied"
           },
           "breakdown[3].sources[3].total_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "breakdown[3].sources[4].total_damage": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -191588,11 +192000,13 @@
             "view_tag": "applied"
           },
           "events[147].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[147].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[147].pair_damage": {
@@ -191608,13 +192022,11 @@
             "view_tag": "applied"
           },
           "events[148].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[148].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[148].pair_damage": {
@@ -191674,11 +192086,13 @@
             "view_tag": "applied"
           },
           "events[150].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[150].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[150].pair_damage": {
@@ -191717,12 +192131,12 @@
           },
           "events[152].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[152].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[152].pair_damage": {
@@ -191739,12 +192153,12 @@
           },
           "events[153].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[153].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[153].pair_damage": {
@@ -192545,22 +192959,12 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[25].cc_duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[25].control_source_atoms[0].values[0]": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[25].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[25].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[25].pair_damage": {
@@ -192575,22 +192979,12 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[26].cc_duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[26].control_source_atoms[0].values[0]": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[26].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[26].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[26].pair_damage": {
@@ -192925,6 +193319,22 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[41].cc_duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[41].control_source_atoms[0].values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[41].crowd_control.duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[41].crowd_control.until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[41].damage": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -192942,6 +193352,22 @@
             "view_tag": "applied"
           },
           "events[41].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[42].cc_duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[42].control_source_atoms[0].values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[42].crowd_control.duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[42].crowd_control.until": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -192966,11 +193392,13 @@
             "view_tag": "applied"
           },
           "events[43].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[43].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[43].pair_damage": {
@@ -192986,11 +193414,13 @@
             "view_tag": "applied"
           },
           "events[44].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[44].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[44].pair_damage": {
@@ -193162,11 +193592,13 @@
             "view_tag": "applied"
           },
           "events[51].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[51].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[51].pair_damage": {
@@ -193182,11 +193614,13 @@
             "view_tag": "applied"
           },
           "events[52].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[52].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[52].pair_damage": {
@@ -193202,11 +193636,13 @@
             "view_tag": "applied"
           },
           "events[53].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[53].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[53].pair_damage": {
@@ -193262,13 +193698,11 @@
             "view_tag": "applied"
           },
           "events[56].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[56].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[56].pair_damage": {
@@ -193305,12 +193739,12 @@
           },
           "events[58].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[58].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[58].pair_damage": {
@@ -193327,12 +193761,12 @@
           },
           "events[59].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[59].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[59].pair_damage": {
@@ -193384,11 +193818,13 @@
             "view_tag": "applied"
           },
           "events[60].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[60].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[60].pair_damage": {
@@ -193404,11 +193840,13 @@
             "view_tag": "applied"
           },
           "events[61].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[61].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[61].pair_damage": {
@@ -193424,13 +193862,11 @@
             "view_tag": "applied"
           },
           "events[62].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[62].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[62].pair_damage": {
@@ -193446,13 +193882,11 @@
             "view_tag": "applied"
           },
           "events[63].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[63].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[63].pair_damage": {
@@ -193488,13 +193922,11 @@
             "view_tag": "applied"
           },
           "events[65].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[65].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[65].pair_damage": {
@@ -193510,11 +193942,13 @@
             "view_tag": "applied"
           },
           "events[66].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[66].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[66].pair_damage": {
@@ -193531,12 +193965,12 @@
           },
           "events[67].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[67].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[67].pair_damage": {
@@ -193652,11 +194086,13 @@
             "view_tag": "applied"
           },
           "events[72].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[72].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[72].pair_damage": {
@@ -193673,12 +194109,12 @@
           },
           "events[73].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[73].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[73].pair_damage": {
@@ -193694,13 +194130,11 @@
             "view_tag": "applied"
           },
           "events[74].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[74].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[74].pair_damage": {
@@ -193716,13 +194150,11 @@
             "view_tag": "applied"
           },
           "events[75].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[75].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[75].pair_damage": {
@@ -193758,11 +194190,13 @@
             "view_tag": "applied"
           },
           "events[77].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[77].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[77].pair_damage": {
@@ -193904,11 +194338,13 @@
             "view_tag": "applied"
           },
           "events[83].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[83].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[83].pair_damage": {
@@ -193944,11 +194380,13 @@
             "view_tag": "applied"
           },
           "events[85].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[85].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[85].pair_damage": {
@@ -193986,11 +194424,13 @@
             "view_tag": "applied"
           },
           "events[87].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[87].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[87].pair_damage": {
@@ -194028,11 +194468,13 @@
             "view_tag": "applied"
           },
           "events[89].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[89].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[89].pair_damage": {
@@ -194088,11 +194530,13 @@
             "view_tag": "applied"
           },
           "events[91].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[91].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[91].pair_damage": {
@@ -194985,7 +195429,8 @@
             "view_tag": "applied"
           },
           "healing_events[29].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "trigger_event_skipped",
             "view_tag": "applied"
           },
           "healing_events[29].healing_reduction_factor": {
@@ -195082,7 +195527,8 @@
             "view_tag": "applied"
           },
           "healing_events[31].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "trigger_event_skipped",
             "view_tag": "applied"
           },
           "healing_events[31].healing_reduction_factor": {
@@ -195146,7 +195592,8 @@
             "view_tag": "applied"
           },
           "healing_events[33].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "trigger_event_skipped",
             "view_tag": "applied"
           },
           "healing_events[33].healing_reduction_factor": {
@@ -196467,6 +196914,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "objective.focus_survival.action_downtime_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.action_downtime_intervals[0].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "objective.focus_survival.aftershock.bonus_armor": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -196480,6 +196935,14 @@
             "view_tag": "applied"
           },
           "objective.focus_survival.crowd_control_immunity_until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.crowd_control_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "objective.focus_survival.crowd_control_intervals[0].start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -196759,6 +197222,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].survival.action_downtime_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.action_downtime_intervals[0].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].survival.aftershock.bonus_armor": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -196772,6 +197243,14 @@
             "view_tag": "applied"
           },
           "participants[0].survival.crowd_control_immunity_until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.crowd_control_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[0].survival.crowd_control_intervals[0].start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -197039,6 +197518,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].survival.action_downtime_intervals[1].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.action_downtime_intervals[1].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].survival.aftershock.bonus_armor": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -197052,6 +197539,14 @@
             "view_tag": "applied"
           },
           "participants[1].survival.crowd_control_immunity_until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.crowd_control_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.crowd_control_intervals[0].start": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -198298,76 +198793,6 @@
           },
           {
             "area_damage": true,
-            "attacker": "enemy:Malphite",
-            "cc_duration": 1.5,
-            "cc_kind": "knockup",
-            "control_source_atoms": [
-              {
-                "atom_id": "timing.control_duration",
-                "behavior": "timing",
-                "evidence": [
-                  "control duration@effects[0].description"
-                ],
-                "hash": "e3de4d518dd5e28d",
-                "source": "Malphite.R[0].effects[0].description",
-                "units": [
-                  "s"
-                ],
-                "values": [
-                  1.5
-                ]
-              }
-            ],
-            "damage": 0.0,
-            "damage_type": "magic",
-            "event_id": "enemy:Malphite:ally:Lulu:5",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 263.2,
-            "raw_damage": 400.0,
-            "sequence": 5,
-            "skipped_reason": "attacker_state_blocked",
-            "source": "R",
-            "target": "ally:Lulu",
-            "time": 0.49
-          },
-          {
-            "area_damage": true,
-            "attacker": "enemy:Malphite",
-            "cc_duration": 1.5,
-            "cc_kind": "knockup",
-            "control_source_atoms": [
-              {
-                "atom_id": "timing.control_duration",
-                "behavior": "timing",
-                "evidence": [
-                  "control duration@effects[0].description"
-                ],
-                "hash": "e3de4d518dd5e28d",
-                "source": "Malphite.R[0].effects[0].description",
-                "units": [
-                  "s"
-                ],
-                "values": [
-                  1.5
-                ]
-              }
-            ],
-            "damage": 0.0,
-            "damage_type": "magic",
-            "event_id": "enemy:Malphite:main:5",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 239.5,
-            "raw_damage": 400.0,
-            "sequence": 5,
-            "skipped_reason": "attacker_state_blocked",
-            "source": "R",
-            "target": "main",
-            "time": 0.49
-          },
-          {
-            "area_damage": true,
             "attacker": "main",
             "cc_kind": "none",
             "damage": 439.9,
@@ -198607,29 +199032,109 @@
             "time": 1.24
           },
           {
+            "area_damage": true,
+            "attacker": "enemy:Malphite",
+            "cc_duration": 1.5,
+            "cc_kind": "knockup",
+            "control_source_atoms": [
+              {
+                "atom_id": "timing.control_duration",
+                "behavior": "timing",
+                "evidence": [
+                  "control duration@effects[0].description"
+                ],
+                "hash": "e3de4d518dd5e28d",
+                "source": "Malphite.R[0].effects[0].description",
+                "units": [
+                  "s"
+                ],
+                "values": [
+                  1.5
+                ]
+              }
+            ],
+            "crowd_control": {
+              "duration": 1.5,
+              "kind": "knockup",
+              "until": 2.74
+            },
+            "damage": 263.2,
+            "damage_type": "magic",
+            "event_id": "enemy:Malphite:ally:Lulu:5",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 263.2,
+            "raw_damage": 400.0,
+            "sequence": 5,
+            "source": "R",
+            "target": "ally:Lulu",
+            "time": 1.24
+          },
+          {
+            "area_damage": true,
+            "attacker": "enemy:Malphite",
+            "cc_duration": 1.5,
+            "cc_kind": "knockup",
+            "control_source_atoms": [
+              {
+                "atom_id": "timing.control_duration",
+                "behavior": "timing",
+                "evidence": [
+                  "control duration@effects[0].description"
+                ],
+                "hash": "e3de4d518dd5e28d",
+                "source": "Malphite.R[0].effects[0].description",
+                "units": [
+                  "s"
+                ],
+                "values": [
+                  1.5
+                ]
+              }
+            ],
+            "crowd_control": {
+              "duration": 1.5,
+              "kind": "knockup",
+              "until": 2.74
+            },
+            "damage": 239.5,
+            "damage_type": "magic",
+            "event_id": "enemy:Malphite:main:5",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 239.5,
+            "raw_damage": 400.0,
+            "sequence": 5,
+            "source": "R",
+            "target": "main",
+            "time": 1.24
+          },
+          {
             "attacker": "main",
-            "damage": 80.7,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "main:enemy:Aatrox:4",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 80.7,
-            "raw_damage": 80.7,
+            "raw_damage": 0.0,
             "sequence": 11,
+            "skipped_reason": "attacker_state_blocked",
             "source": "stacking_dot_passive",
             "target": "enemy:Aatrox",
             "time": 1.25
           },
           {
             "attacker": "main",
-            "damage": 79.6,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "main:enemy:Malphite:5",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 79.6,
-            "raw_damage": 79.6,
+            "raw_damage": 0.0,
             "sequence": 11,
+            "skipped_reason": "attacker_state_blocked",
             "source": "stacking_dot_passive",
             "target": "enemy:Malphite",
             "time": 1.25
@@ -198691,66 +199196,6 @@
             "time": 1.29
           },
           {
-            "attacker": "main",
-            "cc_kind": "slow",
-            "damage": 146.2,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:5",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 146.2,
-            "raw_damage": 251.4,
-            "sequence": 2,
-            "source": "W",
-            "target": "enemy:Aatrox",
-            "time": 1.4
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "slow",
-            "damage": 144.2,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Malphite:6",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 144.2,
-            "raw_damage": 251.4,
-            "sequence": 2,
-            "source": "W",
-            "target": "enemy:Malphite",
-            "time": 1.4
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "none",
-            "damage": 1155.0,
-            "damage_type": "true",
-            "event_id": "main:enemy:Aatrox:6",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 1155.0,
-            "raw_damage": 810.0,
-            "sequence": 6,
-            "source": "R",
-            "target": "enemy:Aatrox",
-            "time": 1.4
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "none",
-            "damage": 1052.1,
-            "damage_type": "true",
-            "event_id": "main:enemy:Malphite:7",
-            "event_precision": "exact",
-            "overkill": 102.9,
-            "pair_damage": 1155.0,
-            "raw_damage": 810.0,
-            "sequence": 6,
-            "source": "R",
-            "target": "enemy:Malphite",
-            "time": 1.4
-          },
-          {
             "attacker": "enemy:Aatrox",
             "cc_kind": "slow",
             "damage": 74.1,
@@ -198784,45 +199229,15 @@
           },
           {
             "attacker": "main",
-            "cc_kind": "slow",
-            "damage": 243.6,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:7",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 243.6,
-            "raw_damage": 419.0,
-            "sequence": 3,
-            "source": "W",
-            "target": "enemy:Aatrox",
-            "time": 1.66
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "slow",
             "damage": 0.0,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Malphite:8",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 240.3,
-            "raw_damage": 419.0,
-            "sequence": 3,
-            "skipped_reason": "target_dead",
-            "source": "W",
-            "target": "enemy:Malphite",
-            "time": 1.66
-          },
-          {
-            "attacker": "main",
-            "damage": 18.5,
             "damage_type": "physical",
             "event_id": "main:enemy:Aatrox:8",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 18.5,
-            "raw_damage": 18.5,
+            "raw_damage": 0.0,
             "sequence": 22,
+            "skipped_reason": "attacker_state_blocked",
             "source": "on_hit_Titanic Hydra",
             "target": "enemy:Aatrox",
             "time": 1.66
@@ -198837,7 +199252,7 @@
             "pair_damage": 18.3,
             "raw_damage": 0.0,
             "sequence": 22,
-            "skipped_reason": "target_dead",
+            "skipped_reason": "attacker_state_blocked",
             "source": "on_hit_Titanic Hydra",
             "target": "enemy:Malphite",
             "time": 1.66
@@ -198852,7 +199267,7 @@
             "pair_damage": 54.9,
             "raw_damage": 0.0,
             "sequence": 29,
-            "skipped_reason": "target_dead",
+            "skipped_reason": "attacker_state_blocked",
             "source": "secondary_Titanic Hydra",
             "target": "enemy:Malphite",
             "targeting": {
@@ -198897,7 +199312,7 @@
           },
           {
             "attacker": "enemy:Malphite",
-            "damage": 0.0,
+            "damage": 63.7,
             "damage_type": "physical",
             "event_id": "enemy:Malphite:ally:Lulu:7",
             "event_precision": "exact",
@@ -198905,14 +199320,13 @@
             "pair_damage": 63.7,
             "raw_damage": 130.0,
             "sequence": 8,
-            "skipped_reason": "attacker_dead",
             "source": "auto_attacks",
             "target": "ally:Lulu",
             "time": 2.04
           },
           {
             "attacker": "enemy:Malphite",
-            "damage": 0.0,
+            "damage": 57.8,
             "damage_type": "physical",
             "event_id": "enemy:Malphite:main:7",
             "event_precision": "exact",
@@ -198920,14 +199334,13 @@
             "pair_damage": 57.8,
             "raw_damage": 130.0,
             "sequence": 8,
-            "skipped_reason": "attacker_dead",
             "source": "auto_attacks",
             "target": "main",
             "time": 2.04
           },
           {
             "attacker": "ally:Lulu",
-            "damage": 41.4,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "ally:Lulu:enemy:Aatrox:6",
             "event_precision": "exact",
@@ -198935,6 +199348,7 @@
             "pair_damage": 41.4,
             "raw_damage": 91.0,
             "sequence": 5,
+            "skipped_reason": "attacker_state_blocked",
             "source": "auto_attacks",
             "target": "enemy:Aatrox",
             "time": 2.28
@@ -198949,14 +199363,14 @@
             "pair_damage": 40.6,
             "raw_damage": 91.0,
             "sequence": 5,
-            "skipped_reason": "target_dead",
+            "skipped_reason": "attacker_state_blocked",
             "source": "auto_attacks",
             "target": "enemy:Malphite",
             "time": 2.28
           },
           {
             "attacker": "ally:Lulu",
-            "damage": 70.1,
+            "damage": 0.0,
             "damage_type": "magic",
             "event_id": "ally:Lulu:enemy:Aatrox:7",
             "event_precision": "exact",
@@ -198964,6 +199378,7 @@
             "pair_damage": 70.1,
             "raw_damage": 117.0,
             "sequence": 13,
+            "skipped_reason": "attacker_state_blocked",
             "source": "on_hit_ability_passive",
             "target": "enemy:Aatrox",
             "time": 2.28
@@ -198978,7 +199393,7 @@
             "pair_damage": 71.8,
             "raw_damage": 117.0,
             "sequence": 13,
-            "skipped_reason": "target_dead",
+            "skipped_reason": "attacker_state_blocked",
             "source": "on_hit_ability_passive",
             "target": "enemy:Malphite",
             "time": 2.28
@@ -199041,14 +199456,15 @@
           },
           {
             "attacker": "main",
-            "damage": 80.7,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "main:enemy:Aatrox:9",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 80.7,
-            "raw_damage": 80.7,
+            "raw_damage": 0.0,
             "sequence": 12,
+            "skipped_reason": "attacker_state_blocked",
             "source": "stacking_dot_passive",
             "target": "enemy:Aatrox",
             "time": 2.5
@@ -199063,10 +199479,70 @@
             "pair_damage": 79.6,
             "raw_damage": 0.0,
             "sequence": 12,
-            "skipped_reason": "target_dead",
+            "skipped_reason": "attacker_state_blocked",
             "source": "stacking_dot_passive",
             "target": "enemy:Malphite",
             "time": 2.5
+          },
+          {
+            "attacker": "main",
+            "cc_kind": "slow",
+            "damage": 146.2,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Aatrox:5",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 146.2,
+            "raw_damage": 251.4,
+            "sequence": 2,
+            "source": "W",
+            "target": "enemy:Aatrox",
+            "time": 2.74
+          },
+          {
+            "attacker": "main",
+            "cc_kind": "slow",
+            "damage": 144.2,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Malphite:6",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 144.2,
+            "raw_damage": 251.4,
+            "sequence": 2,
+            "source": "W",
+            "target": "enemy:Malphite",
+            "time": 2.74
+          },
+          {
+            "attacker": "main",
+            "cc_kind": "none",
+            "damage": 1155.0,
+            "damage_type": "true",
+            "event_id": "main:enemy:Aatrox:6",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 1155.0,
+            "raw_damage": 810.0,
+            "sequence": 6,
+            "source": "R",
+            "target": "enemy:Aatrox",
+            "time": 2.74
+          },
+          {
+            "attacker": "main",
+            "cc_kind": "none",
+            "damage": 1131.7,
+            "damage_type": "true",
+            "event_id": "main:enemy:Malphite:7",
+            "event_precision": "exact",
+            "overkill": 23.3,
+            "pair_damage": 1155.0,
+            "raw_damage": 810.0,
+            "sequence": 6,
+            "source": "R",
+            "target": "enemy:Malphite",
+            "time": 2.74
           },
           {
             "attacker": "enemy:Malphite",
@@ -199102,11 +199578,11 @@
             "area_damage": true,
             "attacker": "enemy:Aatrox",
             "cc_kind": "knockup",
-            "damage": 325.2,
+            "damage": 230.2,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:7",
             "event_precision": "hit",
-            "overkill": 0.0,
+            "overkill": 94.9,
             "pair_damage": 325.2,
             "raw_damage": 663.3,
             "sequence": 2,
@@ -199129,6 +199605,37 @@
             "source": "Q",
             "target": "main",
             "time": 3.0
+          },
+          {
+            "attacker": "main",
+            "cc_kind": "slow",
+            "damage": 243.6,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Aatrox:7",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 243.6,
+            "raw_damage": 419.0,
+            "sequence": 3,
+            "source": "W",
+            "target": "enemy:Aatrox",
+            "time": 3.01
+          },
+          {
+            "attacker": "main",
+            "cc_kind": "slow",
+            "damage": 0.0,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Malphite:8",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 240.3,
+            "raw_damage": 419.0,
+            "sequence": 3,
+            "skipped_reason": "target_dead",
+            "source": "W",
+            "target": "enemy:Malphite",
+            "time": 3.01
           },
           {
             "attacker": "main",
@@ -199212,7 +199719,7 @@
           {
             "attacker": "enemy:Aatrox",
             "cc_kind": "pull",
-            "damage": 74.1,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:8",
             "event_precision": "hit",
@@ -199221,6 +199728,7 @@
             "raw_damage": 151.2,
             "sequence": 7,
             "skillshot": true,
+            "skipped_reason": "target_dead",
             "source": "W",
             "target": "ally:Lulu",
             "time": 3.1
@@ -199243,7 +199751,7 @@
           },
           {
             "attacker": "ally:Lulu",
-            "damage": 41.4,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "ally:Lulu:enemy:Aatrox:8",
             "event_precision": "exact",
@@ -199251,6 +199759,7 @@
             "pair_damage": 41.4,
             "raw_damage": 91.0,
             "sequence": 6,
+            "skipped_reason": "attacker_dead",
             "source": "auto_attacks",
             "target": "enemy:Aatrox",
             "time": 3.33
@@ -199272,7 +199781,7 @@
           },
           {
             "attacker": "ally:Lulu",
-            "damage": 70.1,
+            "damage": 0.0,
             "damage_type": "magic",
             "event_id": "ally:Lulu:enemy:Aatrox:9",
             "event_precision": "exact",
@@ -199280,6 +199789,7 @@
             "pair_damage": 70.1,
             "raw_damage": 117.0,
             "sequence": 14,
+            "skipped_reason": "attacker_dead",
             "source": "on_hit_ability_passive",
             "target": "enemy:Aatrox",
             "time": 3.33
@@ -199301,7 +199811,7 @@
           },
           {
             "attacker": "enemy:Aatrox",
-            "damage": 99.5,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:11",
             "event_precision": "exact",
@@ -199309,6 +199819,7 @@
             "pair_damage": 99.5,
             "raw_damage": 203.0,
             "sequence": 11,
+            "skipped_reason": "target_dead",
             "source": "auto_attacks",
             "target": "ally:Lulu",
             "time": 3.45
@@ -199329,14 +199840,15 @@
           },
           {
             "attacker": "enemy:Aatrox",
-            "damage": 58.3,
+            "damage": 0.0,
             "damage_type": "magic",
             "event_id": "enemy:Aatrox:ally:Lulu:12",
             "event_precision": "exact",
-            "overkill": 81.7,
+            "overkill": 0.0,
             "pair_damage": 140.1,
             "raw_damage": 212.9,
             "sequence": 19,
+            "skipped_reason": "target_dead",
             "source": "on_hit_ability_passive",
             "target": "ally:Lulu",
             "time": 3.45
@@ -200142,37 +200654,6 @@
           },
           {
             "attacker": "main",
-            "cc_kind": "slow",
-            "damage": 243.6,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:20",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 243.6,
-            "raw_damage": 419.0,
-            "sequence": 4,
-            "source": "W",
-            "target": "enemy:Aatrox",
-            "time": 7.13
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "slow",
-            "damage": 0.0,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Malphite:25",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 240.3,
-            "raw_damage": 419.0,
-            "sequence": 4,
-            "skipped_reason": "target_dead",
-            "source": "W",
-            "target": "enemy:Malphite",
-            "time": 7.13
-          },
-          {
-            "attacker": "main",
             "damage": 18.5,
             "damage_type": "physical",
             "event_id": "main:enemy:Aatrox:21",
@@ -200317,6 +200798,40 @@
             "source": "auto_attacks",
             "target": "main",
             "time": 7.47
+          },
+          {
+            "area_damage": true,
+            "attacker": "enemy:Malphite",
+            "cc_kind": "cripple",
+            "damage": 0.0,
+            "damage_type": "magic",
+            "event_id": "enemy:Malphite:ally:Lulu:14",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 193.6,
+            "raw_damage": 294.2,
+            "sequence": 4,
+            "skipped_reason": "target_dead",
+            "source": "E",
+            "target": "ally:Lulu",
+            "time": 7.49
+          },
+          {
+            "area_damage": true,
+            "attacker": "enemy:Malphite",
+            "cc_kind": "cripple",
+            "damage": 0.0,
+            "damage_type": "magic",
+            "event_id": "enemy:Malphite:main:14",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 176.2,
+            "raw_damage": 294.2,
+            "sequence": 4,
+            "skipped_reason": "attacker_dead",
+            "source": "E",
+            "target": "main",
+            "time": 7.49
           },
           {
             "attacker": "main",
@@ -200499,38 +201014,36 @@
             "time": 7.85
           },
           {
-            "area_damage": true,
-            "attacker": "enemy:Malphite",
-            "cc_kind": "cripple",
+            "attacker": "main",
+            "cc_kind": "slow",
             "damage": 0.0,
-            "damage_type": "magic",
-            "event_id": "enemy:Malphite:ally:Lulu:14",
+            "damage_type": "physical",
+            "event_id": "main:enemy:Aatrox:20",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 193.6,
-            "raw_damage": 294.2,
+            "pair_damage": 243.6,
+            "raw_damage": 419.0,
             "sequence": 4,
             "skipped_reason": "outside_window",
-            "source": "E",
-            "target": "ally:Lulu",
-            "time": 8.24
+            "source": "W",
+            "target": "enemy:Aatrox",
+            "time": 8.48
           },
           {
-            "area_damage": true,
-            "attacker": "enemy:Malphite",
-            "cc_kind": "cripple",
+            "attacker": "main",
+            "cc_kind": "slow",
             "damage": 0.0,
-            "damage_type": "magic",
-            "event_id": "enemy:Malphite:main:14",
+            "damage_type": "physical",
+            "event_id": "main:enemy:Malphite:25",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 176.2,
-            "raw_damage": 294.2,
+            "pair_damage": 240.3,
+            "raw_damage": 419.0,
             "sequence": 4,
             "skipped_reason": "outside_window",
-            "source": "E",
-            "target": "main",
-            "time": 8.24
+            "source": "W",
+            "target": "enemy:Malphite",
+            "time": 8.48
           },
           {
             "attacker": "main",
@@ -201096,11 +201609,11 @@
           },
           {
             "amount": 382.0,
-            "applied_amount": 382.0,
+            "applied_amount": 68.3,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:11:main",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 313.7,
             "raw_amount": 382.0,
             "reduced_amount": 382.0,
             "source": "Deathbringer Stance",
@@ -201111,11 +201624,11 @@
           },
           {
             "amount": 44.8,
-            "applied_amount": 44.8,
+            "applied_amount": 0.0,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:13:ally:Lulu",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 44.8,
             "raw_amount": 44.8,
             "reduced_amount": 44.8,
             "source": "Umbral Dash",
@@ -201126,11 +201639,11 @@
           },
           {
             "amount": 61.1,
-            "applied_amount": 61.1,
+            "applied_amount": 0.0,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:13:main",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 61.1,
             "raw_amount": 61.1,
             "reduced_amount": 61.1,
             "source": "Umbral Dash",
@@ -201141,13 +201654,14 @@
           },
           {
             "amount": 31.8,
-            "applied_amount": 31.8,
+            "applied_amount": 0.0,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:15:ally:Lulu",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 31.8,
             "raw_amount": 31.8,
             "reduced_amount": 31.8,
+            "skipped_reason": "trigger_event_skipped",
             "source": "Umbral Dash",
             "temporary_health": 0.0,
             "time": 3.45,
@@ -201171,13 +201685,14 @@
           },
           {
             "amount": 280.1,
-            "applied_amount": 280.1,
+            "applied_amount": 0.0,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:14:ally:Lulu",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 280.1,
             "raw_amount": 280.1,
             "reduced_amount": 280.1,
+            "skipped_reason": "trigger_event_skipped",
             "source": "Deathbringer Stance",
             "temporary_health": 0.0,
             "time": 3.45,
@@ -201201,13 +201716,14 @@
           },
           {
             "amount": 44.8,
-            "applied_amount": 44.8,
+            "applied_amount": 0.0,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:16:ally:Lulu",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 44.8,
             "raw_amount": 44.8,
             "reduced_amount": 44.8,
+            "skipped_reason": "trigger_event_skipped",
             "source": "Umbral Dash",
             "temporary_health": 0.0,
             "time": 3.45,
@@ -201417,13 +201933,13 @@
           },
           {
             "amount": 0.0,
-            "applied_amount": 841.6,
+            "applied_amount": 942.7,
             "attacker": "main",
             "event_id": "main:heal:1:enemy:Aatrox",
             "healing_reduction_factor": 1.0,
             "overheal": 0.0,
-            "raw_amount": 841.6,
-            "reduced_amount": 841.6,
+            "raw_amount": 942.7,
+            "reduced_amount": 942.7,
             "source": "Decimate",
             "temporary_health": 0.0,
             "time": 6.4,
@@ -201713,15 +202229,23 @@
         ],
         "item_denial_receipts": [],
         "objective": {
-          "enemy_team_damage_before_death": 5894.0,
-          "enemy_team_effective_health": 9780.4,
-          "focus_damage_before_death": 6627.3,
-          "focus_healing": 896.6,
+          "enemy_team_damage_before_death": 6191.3,
+          "enemy_team_effective_health": 9004.0,
+          "focus_damage_before_death": 6203.9,
+          "focus_healing": 997.6,
           "focus_participant_id": "main",
           "focus_support_value": 0.0,
           "focus_survival": {
-            "action_downtime": 0.0,
-            "action_downtime_intervals": [],
+            "action_downtime": 1.5,
+            "action_downtime_intervals": [
+              {
+                "end": 2.74,
+                "kind": "knockup",
+                "recipient": "main",
+                "source": "R",
+                "start": 1.24
+              }
+            ],
             "aftershock": {
               "bonus_armor": 0.0,
               "bonus_magic_resistance": 0.0,
@@ -201730,19 +202254,27 @@
             },
             "crowd_control_immunity_source": "",
             "crowd_control_immunity_until": 0.0,
-            "crowd_control_intervals": [],
-            "crowd_control_until": 0.0,
+            "crowd_control_intervals": [
+              {
+                "end": 2.74,
+                "kind": "knockup",
+                "recipient": "main",
+                "source": "R",
+                "start": 1.24
+              }
+            ],
+            "crowd_control_until": 2.74,
             "damage_deferral_cleared": 0.0,
             "damage_deferral_fraction": 0.0,
             "damage_deferral_pending": 0.0,
-            "damage_taken": 3765.0,
+            "damage_taken": 4062.3,
             "death_time": null,
             "defy_heal_received": 0.0,
             "defy_trigger_time": null,
             "defy_triggered": false,
-            "effective_health": 4316.6,
-            "ending_health": 551.6,
-            "ending_health_ratio": 0.17,
+            "effective_health": 4417.6,
+            "ending_health": 355.4,
+            "ending_health_ratio": 0.11,
             "execute_source": "",
             "execute_time": null,
             "first_death_time": null,
@@ -201756,12 +202288,12 @@
               "cooldown_until": 0.0,
               "trigger_events": []
             },
-            "healing_received": 896.6,
+            "healing_received": 997.6,
             "healing_reduced": 0.0,
             "healing_reduction_events": [],
             "healing_reduction_until": 0.0,
             "healing_reduction_window_sources": [],
-            "health_damage": 3535.0,
+            "health_damage": 3832.3,
             "invulnerable_until": 0.0,
             "jaksho": {
               "dynamic_bonus_armor": 0.0,
@@ -201867,8 +202399,8 @@
               "ward_uses": 0
             }
           },
-          "main_team_damage_before_death": 7819.1,
-          "main_team_effective_health": 6445.6,
+          "main_team_damage_before_death": 7172.8,
+          "main_team_effective_health": 6546.6,
           "surviving_main_team": 1,
           "total_healing_reduced": 0.0,
           "total_support_value": 473.3
@@ -201928,8 +202460,16 @@
             },
             "stats_state": "pre_combat",
             "survival": {
-              "action_downtime": 0.0,
-              "action_downtime_intervals": [],
+              "action_downtime": 1.5,
+              "action_downtime_intervals": [
+                {
+                  "end": 2.74,
+                  "kind": "knockup",
+                  "recipient": "main",
+                  "source": "R",
+                  "start": 1.24
+                }
+              ],
               "aftershock": {
                 "bonus_armor": 0.0,
                 "bonus_magic_resistance": 0.0,
@@ -201938,19 +202478,27 @@
               },
               "crowd_control_immunity_source": "",
               "crowd_control_immunity_until": 0.0,
-              "crowd_control_intervals": [],
-              "crowd_control_until": 0.0,
+              "crowd_control_intervals": [
+                {
+                  "end": 2.74,
+                  "kind": "knockup",
+                  "recipient": "main",
+                  "source": "R",
+                  "start": 1.24
+                }
+              ],
+              "crowd_control_until": 2.74,
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 3765.0,
+              "damage_taken": 4062.3,
               "death_time": null,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
-              "effective_health": 4316.6,
-              "ending_health": 551.6,
-              "ending_health_ratio": 0.17,
+              "effective_health": 4417.6,
+              "ending_health": 355.4,
+              "ending_health_ratio": 0.11,
               "execute_source": "",
               "execute_time": null,
               "first_death_time": null,
@@ -201964,12 +202512,12 @@
                 "cooldown_until": 0.0,
                 "trigger_events": []
               },
-              "healing_received": 896.6,
+              "healing_received": 997.6,
               "healing_reduced": 0.0,
               "healing_reduction_events": [],
               "healing_reduction_until": 0.0,
               "healing_reduction_window_sources": [],
-              "health_damage": 3535.0,
+              "health_damage": 3832.3,
               "invulnerable_until": 0.0,
               "jaksho": {
                 "dynamic_bonus_armor": 0.0,
@@ -202068,14 +202616,21 @@
             },
             "stats_state": "pre_combat",
             "survival": {
-              "action_downtime": 4.55,
+              "action_downtime": 6.5,
               "action_downtime_intervals": [
+                {
+                  "end": 2.74,
+                  "kind": "knockup",
+                  "recipient": "ally:Lulu",
+                  "source": "R",
+                  "start": 1.24
+                },
                 {
                   "end": 8.0,
                   "kind": "death",
                   "recipient": "ally:Lulu",
-                  "source": "on_hit_ability_passive",
-                  "start": 3.45
+                  "source": "Q",
+                  "start": 3.0
                 }
               ],
               "aftershock": {
@@ -202086,13 +202641,21 @@
               },
               "crowd_control_immunity_source": "",
               "crowd_control_immunity_until": 0.0,
-              "crowd_control_intervals": [],
-              "crowd_control_until": 0.0,
+              "crowd_control_intervals": [
+                {
+                  "end": 2.74,
+                  "kind": "knockup",
+                  "recipient": "ally:Lulu",
+                  "source": "R",
+                  "start": 1.24
+                }
+              ],
+              "crowd_control_until": 2.74,
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 2210.7,
-              "death_time": 3.45,
+              "damage_taken": 2223.9,
+              "death_time": 3.0,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
@@ -202101,7 +202664,7 @@
               "ending_health_ratio": 0.0,
               "execute_source": "",
               "execute_time": null,
-              "first_death_time": 3.45,
+              "first_death_time": 3.0,
               "force_of_nature": {
                 "dynamic_bonus_magic_resistance": 0.0,
                 "events": [],
@@ -202127,7 +202690,7 @@
               },
               "max_health": 2129.0,
               "overhealing": 0.0,
-              "overkill": 81.7,
+              "overkill": 94.9,
               "permanent_bonus_health_events": [],
               "permanent_bonus_health_received": 0.0,
               "projectile_defense": null,
@@ -202247,14 +202810,14 @@
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 5142.8,
+              "damage_taken": 4496.5,
               "death_time": null,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
-              "effective_health": 7104.1,
-              "ending_health": 1961.3,
-              "ending_health_ratio": 0.76,
+              "effective_health": 6327.7,
+              "ending_health": 1831.2,
+              "ending_health_ratio": 0.71,
               "execute_source": "",
               "execute_time": null,
               "first_death_time": null,
@@ -202268,12 +202831,12 @@
                 "cooldown_until": 0.0,
                 "trigger_events": []
               },
-              "healing_received": 4516.1,
+              "healing_received": 3739.7,
               "healing_reduced": 0.0,
               "healing_reduction_events": [],
               "healing_reduction_until": 0.0,
               "healing_reduction_window_sources": [],
-              "health_damage": 5142.8,
+              "health_damage": 4496.5,
               "invulnerable_until": 0.0,
               "jaksho": {
                 "dynamic_bonus_armor": 0.0,
@@ -202282,7 +202845,7 @@
                 "stacks": 0
               },
               "max_health": 2588.0,
-              "overhealing": 0.0,
+              "overhealing": 419.7,
               "overkill": 0.0,
               "permanent_bonus_health_events": [],
               "permanent_bonus_health_received": 0.0,
@@ -202372,7 +202935,7 @@
             },
             "stats_state": "pre_combat",
             "survival": {
-              "action_downtime": 7.6,
+              "action_downtime": 6.26,
               "action_downtime_intervals": [
                 {
                   "end": 1.0,
@@ -202386,7 +202949,7 @@
                   "kind": "death",
                   "recipient": "enemy:Malphite",
                   "source": "R",
-                  "start": 1.4
+                  "start": 2.74
                 }
               ],
               "aftershock": {
@@ -202410,8 +202973,8 @@
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 2779.2,
-              "death_time": 1.4,
+              "damage_taken": 2699.6,
+              "death_time": 2.74,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
@@ -202420,7 +202983,7 @@
               "ending_health_ratio": 0.0,
               "execute_source": "",
               "execute_time": null,
-              "first_death_time": 1.4,
+              "first_death_time": 2.74,
               "force_of_nature": {
                 "dynamic_bonus_magic_resistance": 0.0,
                 "events": [],
@@ -202446,7 +203009,7 @@
               },
               "max_health": 2433.0,
               "overhealing": 0.0,
-              "overkill": 102.9,
+              "overkill": 23.3,
               "permanent_bonus_health_events": [],
               "permanent_bonus_health_received": 0.0,
               "projectile_defense": null,
@@ -210318,15 +210881,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 28,
-      "leaves": 134312,
-      "numeric_leaves": 43533,
+      "leaves": 134645,
+      "numeric_leaves": 43601,
       "sections": "coupled_scenarios"
     },
-    "git_head": "536631711f0b84b81b8679f0e94b0a4af4c5e3ec",
+    "git_head": "c419bdfd8868be55fd53ad97d137caa84a430ec9",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 28,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "7efb7d66f97e9174ae9d2ea90d5b23cfd5f4ea3b"
+    "src_tree_sha": "de3e7724cccb9219c5c87bccc9bb3494b757e21c"
   }
 }

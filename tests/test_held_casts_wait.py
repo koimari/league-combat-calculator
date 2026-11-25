@@ -9,6 +9,7 @@ is free, and every cast one hold blocks moves by the same shift.
 import pytest
 
 from src.calculator.calculate import calculate_payload
+from src.calculator.champions import registered_champion_names
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -106,3 +107,46 @@ def test_a_cast_made_at_the_holds_own_instant_still_lands_inside_it():
     )
     assert fear["kind"] == "fear"
     assert fear["start"] == pytest.approx(0.35)
+
+
+def test_a_cast_listed_to_the_millisecond_still_owns_its_packets():
+    """The cast timeline publishes three decimals: Thresh's R is cast at
+    0.8889 s and listed at 0.889 s.  Its packet still finds that cast, so the
+    charm holds it instead of it being dropped: the hold ends at 1.2 s and
+    its first blocked cast was at 0.5 s, so R moves 0.7 s to 1.589 s."""
+    events = _versus_ahri("Thresh")["combat"]["events"]
+    (ult,) = [e for e in events if e["attacker"] == "main" and e["source"] == "R"]
+    assert ult["time"] == pytest.approx(1.589)
+    assert not ult.get("skipped_reason")
+
+
+def test_no_ability_packet_is_dropped_for_its_casters_control():
+    """Against a casting Ahri, every registered champion's Q/W/E/R packets
+    either land or wait: none is skipped ``attacker_state_blocked``."""
+    dropped = {}
+    for champion in registered_champion_names():
+        if champion == "Ahri":
+            continue
+        rows = [
+            (event["time"], event["source"])
+            for event in _versus_ahri(champion)["combat"]["events"]
+            if event["attacker"] == "main"
+            and event["source"] in {"Q", "W", "E", "R"}
+            and event.get("skipped_reason") == "attacker_state_blocked"
+        ]
+        if rows:
+            dropped[champion] = rows
+    assert dropped == {}
+
+
+def test_a_cast_the_timeline_rounded_up_keeps_its_packets_instant():
+    """A cast made at 0.8889 s is published as 0.889 s.  Its packet at 0.8889 s
+    still finds it, and keeps 0.8889 s as the cast instant, so a control that
+    lands at that same instant cannot be read as having come first."""
+    from src.calculator.program.compile import cast_time_for_event
+
+    timeline = [{"time": 0.889, "slot": "R"}]
+    packet = {"source_key": "R", "time": 0.8889, "is_ability": True}
+    assert cast_time_for_event(packet, timeline) == pytest.approx(0.8889)
+    later = {"source_key": "R", "time": 1.4, "is_ability": True}
+    assert cast_time_for_event(later, timeline) == pytest.approx(0.889)
