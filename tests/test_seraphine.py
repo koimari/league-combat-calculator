@@ -113,3 +113,33 @@ def test_seraphine_api_q_always_at_least_the_flat_base():
     assert q["total_damage"] >= base_mitigated - 0.05
     assert q["total_damage"] <= max_mitigated + 0.05
     assert q["total_damage"] > base_mitigated + 0.5  # the amp is live
+
+
+def test_the_rotation_charms_first_so_crowd_control_cannot_interrupt_it():
+    """Encore opens the rotation: the charm blocks the target's own casts.
+
+    Against Ahri, whose charm otherwise lands on Seraphine first, the
+    previously derived E-R-Q-W order priced about a quarter of what a
+    charm-first rotation deals over the same ten seconds.
+    """
+    from src.calculator.calculate import calculate_payload
+
+    def headline(order=None):
+        request = {
+            "champion": "Seraphine",
+            "level": 13,
+            "items": [],
+            "role": "mid",
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "enemies": [{"champion": "Ahri", "level": 13, "items": [], "role": "mid"}],
+        }
+        if order is not None:
+            request["cast_order"] = list(order)
+        response = calculate_payload(request, deterministic=True)
+        return response["headline_total"], response["rotation"]["cast_order"]
+
+    default_total, default_order = headline()
+    assert default_order[0] == "R"
+    assert default_total == headline("REWQ")[0]
+    assert default_total > 2 * headline("ERQW")[0]
